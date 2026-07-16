@@ -3,25 +3,27 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>CloudBank — Your money, self-hosted</title>
+    <title>Carlo Ruggiero — CloudBank, Nutreek &amp; Cupid</title>
     <meta
       name="description"
-      content="CloudBank is a free, self-hosted, web-based personal finance manager — a web port of HomeBank. Open the app."
+      content="Projects by Carlo Ruggiero: CloudBank (free, self-hosted personal finance manager), Nutreek and Cupid. Get in touch if you're interested."
     />
     <meta name="theme-color" content="#0b1120" />
     <link rel="icon" type="image/svg+xml" href="logo.svg" />
-    <meta property="og:title" content="CloudBank — Your money, self-hosted" />
+    <meta property="og:title" content="Carlo Ruggiero — CloudBank, Nutreek &amp; Cupid" />
     <meta
       property="og:description"
-      content="A free, self-hosted personal finance manager. A web port of HomeBank."
+      content="CloudBank (open source), Nutreek and Cupid — projects by Carlo Ruggiero."
     />
     <meta property="og:type" content="website" />
 
-    <!-- ===== AdSense config =====================================================
-         Paste your AdSense publisher id to enable ads. Leave BOTH empty to
+    <!-- ===== Site config ========================================================
+         CONTACT_EMAIL: where "Contact me" messages are sent (mailto).
+         AdSense: paste your publisher id to enable ads. Leave BOTH empty to
          disable every ad (no external request, no cookies) — this is the
          "turn ads off" switch. -->
     <script>
+      window.CONTACT_EMAIL = "caesar.themaster@gmail.com";
       window.ADSENSE_CLIENT = "ca-pub-8801916031911396"; // e.g. "ca-pub-1234567890123456"
       window.ADSENSE_SLOT = "6336355352"; // the display ad unit's data-ad-slot id
     </script>
@@ -36,6 +38,7 @@
         --accent: #12b886;
         --accent-2: #15aabf;
         --blue: #5aa9f4;
+        --pink: #f06595;
       }
       @media (prefers-color-scheme: light) {
         :root {
@@ -119,24 +122,12 @@
         align-items: center;
         justify-content: center;
         text-align: center;
-        padding: 4rem 1.25rem 2rem;
+        padding: 3.5rem 1.25rem 2rem;
         gap: 1.4rem;
-      }
-      .logo {
-        width: 96px;
-        height: 96px;
-        filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.3));
-        animation: pop 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.4) both;
-      }
-      @keyframes pop {
-        from {
-          opacity: 0;
-          transform: translateY(10px) scale(0.9);
-        }
       }
       h1 {
         margin: 0;
-        font-size: clamp(2.6rem, 8vw, 4.6rem);
+        font-size: clamp(2.2rem, 7vw, 3.8rem);
         line-height: 1.02;
         letter-spacing: -0.02em;
         font-weight: 800;
@@ -149,9 +140,9 @@
       }
       .lead {
         margin: 0;
-        max-width: 40ch;
+        max-width: 52ch;
         color: var(--muted);
-        font-size: clamp(1.05rem, 2.6vw, 1.3rem);
+        font-size: clamp(1rem, 2.4vw, 1.2rem);
       }
       .cta-row {
         display: flex;
@@ -164,14 +155,15 @@
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
-        padding: 0.85rem 1.5rem;
+        padding: 0.8rem 1.4rem;
         border-radius: 999px;
         font-weight: 700;
-        font-size: 1.02rem;
+        font-size: 1rem;
         text-decoration: none;
         border: 1px solid var(--border);
         color: var(--text);
         background: var(--bg-2);
+        cursor: pointer;
         transition:
           transform 0.15s ease,
           box-shadow 0.25s ease,
@@ -190,20 +182,271 @@
         filter: brightness(1.06);
         box-shadow: 0 14px 32px -8px var(--accent);
       }
+      .btn.love {
+        border: none;
+        color: #3d0820;
+        background: linear-gradient(120deg, #ffa8c5, var(--pink));
+        box-shadow: 0 10px 26px -10px var(--pink);
+      }
+      .btn.love:hover {
+        filter: brightness(1.06);
+        box-shadow: 0 14px 32px -8px var(--pink);
+      }
       .chips {
         display: flex;
         flex-wrap: wrap;
         gap: 0.5rem;
         justify-content: center;
-        margin-top: 0.6rem;
       }
       .chip {
-        font-size: 0.85rem;
+        font-size: 0.82rem;
         color: var(--muted);
         border: 1px solid var(--border);
         border-radius: 999px;
         padding: 0.32rem 0.8rem;
         background: color-mix(in srgb, var(--bg-2) 60%, transparent);
+      }
+
+      /* ===== Project carousel ===== */
+      .carousel {
+        position: relative;
+        width: min(760px, 100%);
+        margin-top: 0.6rem;
+      }
+      .track {
+        display: flex;
+        gap: 1rem;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none;
+        border-radius: 26px;
+      }
+      .track::-webkit-scrollbar {
+        display: none;
+      }
+      .card {
+        flex: 0 0 100%;
+        scroll-snap-align: center;
+        scroll-snap-stop: always;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        padding: 2.2rem 1.6rem 2.4rem;
+        border: 1px solid var(--border);
+        border-radius: 26px;
+        background: color-mix(in srgb, var(--bg-2) 82%, transparent);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+      }
+      .card .icon {
+        width: 88px;
+        height: 88px;
+        filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.3));
+        animation: pop 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.4) both;
+      }
+      @keyframes pop {
+        from {
+          opacity: 0;
+          transform: translateY(10px) scale(0.9);
+        }
+      }
+      .card h2 {
+        margin: 0;
+        font-size: clamp(1.7rem, 4.5vw, 2.3rem);
+        letter-spacing: -0.02em;
+      }
+      .card h2 .grad {
+        background: linear-gradient(120deg, var(--accent), var(--accent-2) 55%, var(--blue));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .card .desc {
+        margin: 0;
+        max-width: 46ch;
+        color: var(--muted);
+        font-size: 1.02rem;
+        line-height: 1.55;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.42rem;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        border-radius: 999px;
+        padding: 0.3rem 0.85rem;
+      }
+      .badge::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: currentColor;
+      }
+      .badge.open {
+        color: #12b886;
+        background: color-mix(in srgb, #12b886 14%, transparent);
+        border: 1px solid color-mix(in srgb, #12b886 40%, transparent);
+      }
+      .badge.closed {
+        color: #b197fc;
+        background: color-mix(in srgb, #7048e8 14%, transparent);
+        border: 1px solid color-mix(in srgb, #7048e8 45%, transparent);
+      }
+      .nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 2;
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        border: 1px solid var(--border);
+        background: color-mix(in srgb, var(--bg-2) 88%, transparent);
+        color: var(--text);
+        font-size: 1.3rem;
+        line-height: 1;
+        cursor: pointer;
+        display: grid;
+        place-items: center;
+        transition:
+          transform 0.15s ease,
+          filter 0.2s ease;
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+      }
+      .nav:hover {
+        transform: translateY(-50%) scale(1.08);
+      }
+      .nav.prev {
+        left: -8px;
+      }
+      .nav.next {
+        right: -8px;
+      }
+      @media (min-width: 900px) {
+        .nav.prev {
+          left: -56px;
+        }
+        .nav.next {
+          right: -56px;
+        }
+      }
+      .dots {
+        display: flex;
+        gap: 0.55rem;
+        justify-content: center;
+        margin-top: 1rem;
+      }
+      .dot {
+        width: 9px;
+        height: 9px;
+        padding: 0;
+        border-radius: 50%;
+        border: none;
+        background: var(--border);
+        cursor: pointer;
+        transition:
+          background 0.25s ease,
+          transform 0.25s ease;
+      }
+      .dot[aria-current="true"] {
+        background: var(--accent);
+        transform: scale(1.35);
+      }
+
+      /* ===== Contact dialog ===== */
+      dialog#contact {
+        width: min(460px, calc(100vw - 2rem));
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        padding: 1.8rem 1.6rem;
+        color: var(--text);
+        background: var(--bg-2);
+        box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.55);
+      }
+      dialog#contact::backdrop {
+        background: rgba(4, 8, 18, 0.55);
+        backdrop-filter: blur(4px);
+      }
+      #contact h3 {
+        margin: 0 0 0.3rem;
+        font-size: 1.4rem;
+        letter-spacing: -0.01em;
+      }
+      #contact .sub {
+        margin: 0 0 1.1rem;
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+      #contact .close {
+        position: absolute;
+        top: 0.9rem;
+        right: 0.9rem;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--muted);
+        font-size: 1rem;
+        cursor: pointer;
+      }
+      #contact .close:hover {
+        color: var(--text);
+      }
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+        margin-bottom: 0.85rem;
+        text-align: left;
+      }
+      .field label {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--muted);
+      }
+      .field input,
+      .field select,
+      .field textarea {
+        font: inherit;
+        color: var(--text);
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 0.65rem 0.8rem;
+      }
+      .field textarea {
+        resize: vertical;
+        min-height: 96px;
+      }
+      .field input:focus,
+      .field select:focus,
+      .field textarea:focus {
+        outline: 2px solid var(--accent);
+        outline-offset: 1px;
+        border-color: transparent;
+      }
+      #contact .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        align-items: center;
+        margin-top: 1.1rem;
+      }
+      #contact .direct {
+        margin: 1rem 0 0;
+        font-size: 0.82rem;
+        color: var(--muted);
+      }
+      #contact .direct a {
+        color: var(--accent);
+        text-decoration: none;
       }
 
       /* Non-intrusive ad slot (hidden until configured) */
@@ -236,6 +479,17 @@
       footer a:hover {
         color: var(--text);
       }
+      footer button.linklike {
+        font: inherit;
+        color: var(--muted);
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+      }
+      footer button.linklike:hover {
+        color: var(--text);
+      }
       footer .sep {
         opacity: 0.5;
         margin: 0 0.5rem;
@@ -247,7 +501,7 @@
       }
       @media (prefers-reduced-motion: reduce) {
         .blob,
-        .logo {
+        .card .icon {
           animation: none;
         }
       }
@@ -261,23 +515,104 @@
     </div>
 
     <main>
-      <img class="logo" src="logo.svg" alt="CloudBank logo" width="96" height="96" />
-      <h1>Cloud<span class="grad">Bank</span></h1>
+      <h1>My <span class="grad">Projects</span></h1>
       <p class="lead">
-        A free, self-hosted personal finance manager — a from-scratch web port of
-        <strong>HomeBank</strong>. Your data on a server you control.
+        Things I build: <strong>CloudBank</strong> is free and open source —
+        <strong>Nutreek</strong> and <strong>Cupid</strong> are closed source and available for
+        purchase or licensing. Interested? Get in touch.
       </p>
-      <div class="cta-row">
-        <a class="btn primary" href="https://easly1989.github.io/cloudbank/">Open CloudBank →</a>
-        <a class="btn" href="https://github.com/easly1989/cloudbank" rel="noopener">View on GitHub</a>
-        <a class="btn" href="https://easly1989.github.io/cloudbank/donate/">Donate ♥</a>
-      </div>
-      <div class="chips">
-        <span class="chip">Self-hosted</span>
-        <span class="chip">One Docker container</span>
-        <span class="chip">AGPL-3.0</span>
-        <span class="chip">No tracking</span>
-      </div>
+
+      <!-- ===== Carousel ===== -->
+      <section class="carousel" aria-roledescription="carousel" aria-label="Projects">
+        <button class="nav prev" type="button" aria-label="Previous project">‹</button>
+
+        <div class="track" id="track" tabindex="0">
+          <!-- CloudBank -->
+          <article class="card" aria-roledescription="slide" aria-label="CloudBank — 1 of 3">
+            <img class="icon" src="logo.svg" alt="" width="88" height="88" />
+            <span class="badge open">Open source</span>
+            <h2>Cloud<span class="grad">Bank</span></h2>
+            <p class="desc">
+              A free, self-hosted personal finance manager — a from-scratch web port of
+              <strong>HomeBank</strong>. Track accounts, transactions and budgets with your data on
+              a server you control.
+            </p>
+            <div class="chips">
+              <span class="chip">Self-hosted</span>
+              <span class="chip">One Docker container</span>
+              <span class="chip">AGPL-3.0</span>
+              <span class="chip">No tracking</span>
+            </div>
+            <div class="cta-row">
+              <a class="btn primary" href="https://easly1989.github.io/cloudbank/"
+                >Open CloudBank →</a
+              >
+              <a class="btn" href="https://github.com/easly1989/cloudbank" rel="noopener"
+                >View on GitHub</a
+              >
+              <a class="btn" href="https://easly1989.github.io/cloudbank/donate/">Donate ♥</a>
+            </div>
+          </article>
+
+          <!-- Nutreek -->
+          <article class="card" aria-roledescription="slide" aria-label="Nutreek — 2 of 3">
+            <img class="icon" src="nutreek.svg" alt="" width="88" height="88" />
+            <span class="badge closed">Closed source</span>
+            <h2>Nutreek</h2>
+            <p class="desc">
+              A self-hosted weekly nutrition planner: build meal plans and track calories and
+              macros (protein, carbs, fat) per meal, day and week, backed by an offline
+              OpenFoodFacts ingredient database. Adaptive TDEE, weight and hydration tracking,
+              workouts and a coach mode for managing clients. One Go binary or one Docker
+              container.
+            </p>
+            <div class="chips">
+              <span class="chip">Weekly meal planning</span>
+              <span class="chip">Macros &amp; adaptive TDEE</span>
+              <span class="chip">Self-hosted · Docker</span>
+              <span class="chip">Coach mode</span>
+            </div>
+            <div class="cta-row">
+              <button class="btn primary" type="button" data-contact="Nutreek">
+                Interested? Contact me
+              </button>
+            </div>
+          </article>
+
+          <!-- Cupid -->
+          <article class="card" aria-roledescription="slide" aria-label="Cupid — 3 of 3">
+            <img class="icon" src="cupid.svg" alt="" width="88" height="88" />
+            <span class="badge closed">Closed source</span>
+            <h2>Cupid</h2>
+            <p class="desc">
+              A web management system for matchmaking &amp; dating agencies — a cloud-ready port
+              of the classic <em>“Cuore”</em> desktop app. Client records, partner preferences,
+              affinity matching, meetings, contracts and print-ready sheets, with email/Telegram
+              notifications, GDPR tools and encrypted cloud backups. Ships as a single Docker
+              container.
+            </p>
+            <div class="chips">
+              <span class="chip">Matchmaking agency CRM</span>
+              <span class="chip">Affinity matching</span>
+              <span class="chip">Self-hosted or hosted</span>
+              <span class="chip">Docker</span>
+            </div>
+            <div class="cta-row">
+              <button class="btn love" type="button" data-contact="Cupid">
+                Interested? Contact me
+              </button>
+            </div>
+          </article>
+        </div>
+
+        <button class="nav next" type="button" aria-label="Next project">›</button>
+
+        <div class="dots" role="tablist" aria-label="Choose project">
+          <button class="dot" type="button" role="tab" aria-label="CloudBank" aria-current="true"></button>
+          <button class="dot" type="button" role="tab" aria-label="Nutreek"></button>
+          <button class="dot" type="button" role="tab" aria-label="Cupid"></button>
+        </div>
+      </section>
 
       <!-- Ad slot: stays hidden (no network calls) until ADSENSE_CLIENT/SLOT are set. -->
       <aside id="ad" class="ad" hidden aria-label="Advertisement">
@@ -291,10 +626,53 @@
       </aside>
     </main>
 
+    <!-- ===== Contact dialog: builds a mailto — no data is sent to any server ===== -->
+    <dialog id="contact">
+      <button class="close" type="button" aria-label="Close">✕</button>
+      <h3>Get in touch</h3>
+      <p class="sub">
+        Interested in buying, licensing or just curious? Send me a message — it opens in your
+        email app.
+      </p>
+      <form id="contact-form">
+        <div class="field">
+          <label for="cf-name">Your name</label>
+          <input id="cf-name" name="name" type="text" autocomplete="name" required />
+        </div>
+        <div class="field">
+          <label for="cf-project">Project</label>
+          <select id="cf-project" name="project">
+            <option>Nutreek</option>
+            <option>Cupid</option>
+            <option>CloudBank</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="cf-message">Message</label>
+          <textarea
+            id="cf-message"
+            name="message"
+            required
+            placeholder="I'd like to know more about…"
+          ></textarea>
+        </div>
+        <div class="actions">
+          <button class="btn primary" type="submit">Send ✉</button>
+          <button class="btn" type="button" data-close>Cancel</button>
+        </div>
+      </form>
+      <p class="direct">
+        Prefer plain email? Write me at <a id="direct-mail" href="#">loading…</a>
+      </p>
+    </dialog>
+
     <footer>
       <a href="https://github.com/easly1989/cloudbank" rel="noopener">Source code</a>
       <span class="sep">·</span>
       <a href="https://easly1989.github.io/cloudbank/donate/">Donate</a>
+      <span class="sep">·</span>
+      <button class="linklike" type="button" data-contact="Other">Contact</button>
       <span class="sep">·</span>
       <a href="https://www.gethomebank.org/" rel="noopener">a web port of HomeBank</a>
       <div class="privacy" id="privacy" hidden>
@@ -304,7 +682,141 @@
     </footer>
 
     <script>
-      // Load AdSense only when configured; otherwise the page makes no ad calls.
+      // ===== Carousel =====
+      (function () {
+        var track = document.getElementById("track");
+        var cards = track.querySelectorAll(".card");
+        var dots = document.querySelectorAll(".dot");
+        var prev = document.querySelector(".nav.prev");
+        var next = document.querySelector(".nav.next");
+        var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var count = cards.length;
+        var index = 0;
+        var timer = null;
+
+        function slideWidth() {
+          return track.clientWidth;
+        }
+        function goTo(i, smooth) {
+          index = ((i % count) + count) % count;
+          track.scrollTo({
+            left: cards[index].offsetLeft,
+            behavior: smooth === false || reduceMotion ? "auto" : "smooth",
+          });
+        }
+        function syncDots() {
+          var i = Math.round(track.scrollLeft / slideWidth());
+          i = Math.max(0, Math.min(count - 1, i));
+          if (i !== index) index = i;
+          dots.forEach(function (d, k) {
+            if (k === index) d.setAttribute("aria-current", "true");
+            else d.removeAttribute("aria-current");
+          });
+        }
+
+        var raf = null;
+        track.addEventListener("scroll", function () {
+          if (raf) return;
+          raf = requestAnimationFrame(function () {
+            raf = null;
+            syncDots();
+          });
+        });
+
+        prev.addEventListener("click", function () {
+          stopAuto();
+          goTo(index - 1);
+        });
+        next.addEventListener("click", function () {
+          stopAuto();
+          goTo(index + 1);
+        });
+        dots.forEach(function (d, k) {
+          d.addEventListener("click", function () {
+            stopAuto();
+            goTo(k);
+          });
+        });
+        track.addEventListener("keydown", function (e) {
+          if (e.key === "ArrowLeft") {
+            stopAuto();
+            goTo(index - 1);
+            e.preventDefault();
+          } else if (e.key === "ArrowRight") {
+            stopAuto();
+            goTo(index + 1);
+            e.preventDefault();
+          }
+        });
+
+        // Gentle auto-advance; stops on any manual interaction.
+        function startAuto() {
+          if (reduceMotion || timer) return;
+          timer = setInterval(function () {
+            goTo(index + 1);
+          }, 6000);
+        }
+        function stopAuto() {
+          if (timer) {
+            clearInterval(timer);
+            timer = null;
+          }
+        }
+        ["pointerdown", "touchstart", "wheel"].forEach(function (ev) {
+          track.addEventListener(ev, stopAuto, { passive: true });
+        });
+        var carousel = document.querySelector(".carousel");
+        carousel.addEventListener("mouseenter", stopAuto);
+        startAuto();
+
+        window.addEventListener("resize", function () {
+          goTo(index, false);
+        });
+      })();
+
+      // ===== Contact dialog (mailto — nothing leaves the browser) =====
+      (function () {
+        var email = window.CONTACT_EMAIL || "";
+        var dialog = document.getElementById("contact");
+        var form = document.getElementById("contact-form");
+        var projectSel = document.getElementById("cf-project");
+        var direct = document.getElementById("direct-mail");
+
+        direct.textContent = email;
+        direct.href = "mailto:" + email;
+
+        document.querySelectorAll("[data-contact]").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            projectSel.value = btn.getAttribute("data-contact");
+            dialog.showModal();
+          });
+        });
+        dialog.querySelector(".close").addEventListener("click", function () {
+          dialog.close();
+        });
+        dialog.querySelector("[data-close]").addEventListener("click", function () {
+          dialog.close();
+        });
+
+        form.addEventListener("submit", function (e) {
+          e.preventDefault();
+          var name = document.getElementById("cf-name").value.trim();
+          var project = projectSel.value;
+          var message = document.getElementById("cf-message").value.trim();
+          var subject = "[" + project + "] Inquiry from " + name;
+          var body = message + "\n\n— " + name;
+          window.location.href =
+            "mailto:" +
+            email +
+            "?subject=" +
+            encodeURIComponent(subject) +
+            "&body=" +
+            encodeURIComponent(body);
+          dialog.close();
+        });
+      })();
+
+      // ===== AdSense: loads only when configured; otherwise no ad calls =====
       (function () {
         var client = window.ADSENSE_CLIENT,
           slot = window.ADSENSE_SLOT;
