@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" role="img" aria-label="Cupid">
+  <defs>
+    <linearGradient id="cpHeart" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffa8c5"/>
+      <stop offset=".55" stop-color="#f06595"/>
+      <stop offset="1" stop-color="#d6336c"/>
+    </linearGradient>
+    <linearGradient id="cpArrow" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffd43b"/>
+      <stop offset="1" stop-color="#fab005"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="32" cy="56.5" rx="19" ry="3" fill="#000" opacity=".07"/>
+  <!-- arrow tail (behind the heart) -->
+  <g stroke="url(#cpArrow)" stroke-width="3.4" stroke-linecap="round">
+    <path d="M10 54 21.5 42.5"/>
+  </g>
+  <g stroke="#fab005" stroke-width="2.6" stroke-linecap="round">
+    <path d="M9.5 47.5 10 54l6.5.5"/>
+    <path d="M13.5 43.5 14 50l6.5.5"/>
+  </g>
+  <!-- heart -->
+  <path fill="url(#cpHeart)"
+        d="M32 51.5C19.5 42.6 10.5 34.3 10.5 24.4 10.5 17.4 16 12 22.9 12c3.9 0 7.3 1.9 9.1 5.1C33.8 13.9 37.2 12 41.1 12 48 12 53.5 17.4 53.5 24.4c0 9.9-9 18.2-21.5 27.1z"/>
+  <path fill="#fff" opacity=".35"
+        d="M22.5 16.5c-3.6.4-6.7 3.3-7.3 7-.2 1.2 1.4 1.7 2 .6 1.2-2.6 3.3-4.7 5.9-5.7 1.1-.5.6-2-.6-1.9z"/>
+  <!-- arrow head (in front of the heart) -->
+  <g stroke="url(#cpArrow)" stroke-width="3.4" stroke-linecap="round">
+    <path d="M42.5 21.5 54 10"/>
+  </g>
+  <path fill="#fab005" d="M55.8 8.2 44.9 12l7.1 7.1L55.8 8.2z"/>
+</svg>
