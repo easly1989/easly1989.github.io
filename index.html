@@ -17,6 +17,10 @@
     />
     <meta property="og:type" content="website" />
 
+    <!-- AdSense site-ownership verification (static, no network request/cookies).
+         Keep this in sync with ADSENSE_CLIENT below. -->
+    <meta name="google-adsense-account" content="ca-pub-8801916031911396" />
+
     <!-- ===== Site config ========================================================
          CONTACT_EMAIL: where "Contact me" messages are sent (mailto).
          AdSense: paste your publisher id to enable ads. Leave BOTH empty to
@@ -29,16 +33,45 @@
     </script>
 
     <style>
+      /* Accent colors are registered as <color> so they can smoothly animate
+         between projects as the carousel changes (blue → green → red). */
+      @property --accent {
+        syntax: "<color>";
+        inherits: true;
+        initial-value: #3b82f6;
+      }
+      @property --accent-2 {
+        syntax: "<color>";
+        inherits: true;
+        initial-value: #38bdf8;
+      }
+      @property --accent-ink {
+        syntax: "<color>";
+        inherits: true;
+        initial-value: #04152e;
+      }
+      @property --glow {
+        syntax: "<color>";
+        inherits: true;
+        initial-value: #3b82f6;
+      }
+
       :root {
         --bg: #0b1120;
         --bg-2: #0f172a;
         --text: #e8eef7;
         --muted: #9fb0c6;
         --border: #1e293b;
-        --accent: #12b886;
-        --accent-2: #15aabf;
-        --blue: #5aa9f4;
-        --pink: #f06595;
+        /* default accent = CloudBank (blue); JS swaps these per active slide */
+        --accent: #3b82f6;
+        --accent-2: #38bdf8;
+        --accent-ink: #04152e;
+        --glow: #3b82f6;
+        transition:
+          --accent 0.55s ease,
+          --accent-2 0.55s ease,
+          --accent-ink 0.55s ease,
+          --glow 0.55s ease;
       }
       @media (prefers-color-scheme: light) {
         :root {
@@ -92,7 +125,7 @@
         animation: drift 18s ease-in-out infinite alternate;
       }
       .blob.a {
-        background: #12b886;
+        background: var(--accent);
         top: -12vw;
         left: -8vw;
       }
@@ -133,7 +166,7 @@
         font-weight: 800;
       }
       h1 .grad {
-        background: linear-gradient(120deg, var(--accent), var(--accent-2) 55%, var(--blue));
+        background: linear-gradient(120deg, var(--accent), var(--accent-2));
         -webkit-background-clip: text;
         background-clip: text;
         color: transparent;
@@ -174,23 +207,13 @@
       }
       .btn.primary {
         border: none;
-        color: #08240f;
+        color: var(--accent-ink);
         background: linear-gradient(120deg, var(--accent), var(--accent-2));
-        box-shadow: 0 10px 26px -10px var(--accent);
+        box-shadow: 0 10px 26px -10px var(--glow);
       }
       .btn.primary:hover {
         filter: brightness(1.06);
-        box-shadow: 0 14px 32px -8px var(--accent);
-      }
-      .btn.love {
-        border: none;
-        color: #3d0820;
-        background: linear-gradient(120deg, #ffa8c5, var(--pink));
-        box-shadow: 0 10px 26px -10px var(--pink);
-      }
-      .btn.love:hover {
-        filter: brightness(1.06);
-        box-shadow: 0 14px 32px -8px var(--pink);
+        box-shadow: 0 14px 32px -8px var(--glow);
       }
       .chips {
         display: flex;
@@ -257,7 +280,7 @@
         letter-spacing: -0.02em;
       }
       .card h2 .grad {
-        background: linear-gradient(120deg, var(--accent), var(--accent-2) 55%, var(--blue));
+        background: linear-gradient(120deg, var(--accent), var(--accent-2));
         -webkit-background-clip: text;
         background-clip: text;
         color: transparent;
@@ -500,6 +523,9 @@
         opacity: 0.7;
       }
       @media (prefers-reduced-motion: reduce) {
+        :root {
+          transition: none;
+        }
         .blob,
         .card .icon {
           animation: none;
@@ -517,9 +543,8 @@
     <main>
       <h1>My <span class="grad">Projects</span></h1>
       <p class="lead">
-        Things I build: <strong>CloudBank</strong> is free and open source —
-        <strong>Nutreek</strong> and <strong>Cupid</strong> are closed source and available for
-        purchase or licensing. Interested? Get in touch.
+        I'm <strong>Carlo Ruggiero</strong>, a full-stack developer. I build self-hosted web
+        apps — from open-source tools to products. Curious about one of them? Get in touch.
       </p>
 
       <!-- ===== Carousel ===== -->
@@ -598,7 +623,7 @@
               <span class="chip">Docker</span>
             </div>
             <div class="cta-row">
-              <button class="btn love" type="button" data-contact="Cupid">
+              <button class="btn primary" type="button" data-contact="Cupid">
                 Interested? Contact me
               </button>
             </div>
@@ -689,10 +714,27 @@
         var dots = document.querySelectorAll(".dot");
         var prev = document.querySelector(".nav.prev");
         var next = document.querySelector(".nav.next");
+        var carousel = document.querySelector(".carousel");
+        var root = document.documentElement;
         var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
         var count = cards.length;
         var index = 0;
         var timer = null;
+        var AUTO_MS = 5000;
+
+        // Per-project accent palettes: main, secondary, ink-on-accent.
+        var THEMES = [
+          { a: "#3b82f6", b: "#38bdf8", ink: "#04152e" }, // CloudBank — blue
+          { a: "#12b886", b: "#0ca678", ink: "#04231a" }, // Nutreek — green
+          { a: "#e5395a", b: "#ff7a94", ink: "#2e0512" }, // Cupid — red
+        ];
+        function applyTheme(i) {
+          var t = THEMES[i] || THEMES[0];
+          root.style.setProperty("--accent", t.a);
+          root.style.setProperty("--accent-2", t.b);
+          root.style.setProperty("--accent-ink", t.ink);
+          root.style.setProperty("--glow", t.a);
+        }
 
         function slideWidth() {
           return track.clientWidth;
@@ -704,7 +746,7 @@
             behavior: smooth === false || reduceMotion ? "auto" : "smooth",
           });
         }
-        function syncDots() {
+        function sync() {
           var i = Math.round(track.scrollLeft / slideWidth());
           i = Math.max(0, Math.min(count - 1, i));
           if (i !== index) index = i;
@@ -712,6 +754,7 @@
             if (k === index) d.setAttribute("aria-current", "true");
             else d.removeAttribute("aria-current");
           });
+          applyTheme(index);
         }
 
         var raf = null;
@@ -719,42 +762,39 @@
           if (raf) return;
           raf = requestAnimationFrame(function () {
             raf = null;
-            syncDots();
+            sync();
           });
         });
 
+        // Manual navigation. Auto-rotation is governed by hover/focus/touch
+        // state (below), so these just move — no need to kill the timer.
         prev.addEventListener("click", function () {
-          stopAuto();
           goTo(index - 1);
         });
         next.addEventListener("click", function () {
-          stopAuto();
           goTo(index + 1);
         });
         dots.forEach(function (d, k) {
           d.addEventListener("click", function () {
-            stopAuto();
             goTo(k);
           });
         });
         track.addEventListener("keydown", function (e) {
           if (e.key === "ArrowLeft") {
-            stopAuto();
             goTo(index - 1);
             e.preventDefault();
           } else if (e.key === "ArrowRight") {
-            stopAuto();
             goTo(index + 1);
             e.preventDefault();
           }
         });
 
-        // Gentle auto-advance; stops on any manual interaction.
+        // Auto-advance: loops continuously, pausing while the user interacts.
         function startAuto() {
           if (reduceMotion || timer) return;
           timer = setInterval(function () {
             goTo(index + 1);
-          }, 6000);
+          }, AUTO_MS);
         }
         function stopAuto() {
           if (timer) {
@@ -762,11 +802,58 @@
             timer = null;
           }
         }
-        ["pointerdown", "touchstart", "wheel"].forEach(function (ev) {
-          track.addEventListener(ev, stopAuto, { passive: true });
+
+        var hovering = false;
+        var pointerDown = false;
+        function maybeResume() {
+          if (hovering || pointerDown || reduceMotion) return;
+          startAuto();
+        }
+
+        carousel.addEventListener("mouseenter", function () {
+          hovering = true;
+          stopAuto();
         });
-        var carousel = document.querySelector(".carousel");
-        carousel.addEventListener("mouseenter", stopAuto);
+        carousel.addEventListener("mouseleave", function () {
+          hovering = false;
+          maybeResume();
+        });
+        carousel.addEventListener("focusin", stopAuto);
+        carousel.addEventListener("focusout", maybeResume);
+
+        track.addEventListener(
+          "pointerdown",
+          function () {
+            pointerDown = true;
+            stopAuto();
+          },
+          { passive: true },
+        );
+        window.addEventListener(
+          "pointerup",
+          function () {
+            if (!pointerDown) return;
+            pointerDown = false;
+            maybeResume();
+          },
+          { passive: true },
+        );
+        track.addEventListener("touchstart", stopAuto, { passive: true });
+        track.addEventListener("touchend", maybeResume, { passive: true });
+
+        // Trackpad/wheel has no "end" event: resume after it settles.
+        var wheelIdle = null;
+        track.addEventListener(
+          "wheel",
+          function () {
+            stopAuto();
+            if (wheelIdle) clearTimeout(wheelIdle);
+            wheelIdle = setTimeout(maybeResume, 2000);
+          },
+          { passive: true },
+        );
+
+        applyTheme(0);
         startAuto();
 
         window.addEventListener("resize", function () {
