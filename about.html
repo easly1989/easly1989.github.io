@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>About — Carlo Ruggiero</title>
+    <meta
+      name="description"
+      content="Carlo Ruggiero is a full-stack developer who builds self-hosted web apps and cross-platform mobile apps — Go backends, embedded SQLite and single-container deployments."
+    />
+    <meta name="theme-color" content="#0b1120" />
+    <link rel="icon" type="image/svg+xml" href="logo.svg" />
+    <meta property="og:title" content="About — Carlo Ruggiero" />
+    <meta
+      property="og:description"
+      content="Full-stack developer building self-hosted web apps and cross-platform mobile apps."
+    />
+    <meta property="og:type" content="profile" />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      :root {
+        --accent: #6366f1;
+        --accent-2: #38bdf8;
+        --accent-ink: #0a0f2e;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bg" aria-hidden="true">
+      <span class="blob a"></span>
+      <span class="blob b"></span>
+    </div>
+
+    <header class="site-nav">
+      <a class="brand" href="index.html">Carlo <span class="grad">Ruggiero</span></a>
+      <nav aria-label="Primary">
+        <a href="index.html">Projects</a>
+        <a href="about.html" aria-current="page">About</a>
+        <a href="https://github.com/easly1989" rel="noopener">GitHub</a>
+      </nav>
+    </header>
+
+    <main>
+      <div class="wrap">
+        <p class="crumb"><a href="index.html">Home</a> › About</p>
+
+        <section class="hero">
+          <h1>Hi, I'm <span class="grad">Carlo Ruggiero</span></h1>
+          <p class="tagline">
+            A full-stack developer who builds self-hosted web apps and cross-platform mobile apps —
+            complete products, not demos.
+          </p>
+          <div class="cta-row">
+            <a class="btn primary" href="mailto:caesar.themaster@gmail.com?subject=Hello">Get in touch</a>
+            <a class="btn" href="https://github.com/easly1989" rel="noopener">GitHub</a>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>What I do</h2>
+          <p>
+            I design and build software end to end — from the database and API up to the interface,
+            on the web and on mobile. I like shipping things that are <strong>whole</strong>: an app
+            you can actually run, own and rely on, rather than a proof of concept. Some of what I
+            build is open source; some is a product I license or host.
+          </p>
+          <p class="muted">
+            The projects on this site are a good picture of that: an open-source finance manager, a
+            nutrition planner, a matchmaking-agency system, and a group activity planner for phones
+            and the web.
+          </p>
+        </section>
+
+        <section class="section">
+          <h2>How I build</h2>
+          <div class="feature-grid">
+            <div class="feature">
+              <h3><span class="dot"></span>Go backends</h3>
+              <p>
+                Small, fast, dependency-light services in Go — clean architecture and a clear REST
+                API, easy to reason about and to operate.
+              </p>
+            </div>
+            <div class="feature">
+              <h3><span class="dot"></span>Embedded SQLite</h3>
+              <p>
+                Pure-Go SQLite means no separate database server to run or back up — the data is a
+                single file you control.
+              </p>
+            </div>
+            <div class="feature">
+              <h3><span class="dot"></span>One-container deploys</h3>
+              <p>
+                Each product ships as a single Docker container (often distroless), so it’s simple
+                to self-host and cheap to run.
+              </p>
+            </div>
+            <div class="feature">
+              <h3><span class="dot"></span>The right front end</h3>
+              <p>
+                Server-rendered HTMX, a React SPA, or Flutter for web + Android + iOS — whichever
+                fits the product best.
+              </p>
+            </div>
+            <div class="feature">
+              <h3><span class="dot"></span>Privacy by default</h3>
+              <p>
+                Self-hostable, no unnecessary tracking, and GDPR tooling where personal data is
+                involved. Your data stays yours.
+              </p>
+            </div>
+            <div class="feature">
+              <h3><span class="dot"></span>Shipped &amp; maintained</h3>
+              <p>
+                CI, tagged releases, backups and health checks — the unglamorous parts that make
+                software something you can depend on.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>What I've built</h2>
+          <div class="feature-grid">
+            <div class="feature">
+              <h3><span class="dot"></span><a href="cloudbank.html" style="text-decoration: none">CloudBank</a></h3>
+              <p>Free, open-source, self-hosted personal finance manager — a web port of HomeBank.</p>
+            </div>
+            <div class="feature">
+              <h3><span class="dot"></span><a href="planora.html" style="text-decoration: none">Planora</a></h3>
+              <p>A shared activity planner for groups, for web, Android and iOS. Free — coming soon.</p>
+            </div>
+            <div class="feature">
+              <h3><span class="dot"></span><a href="nutreek.html" style="text-decoration: none">Nutreek</a></h3>
+              <p>A self-hosted weekly nutrition planner with macros, adaptive TDEE and coach mode.</p>
+            </div>
+            <div class="feature">
+              <h3><span class="dot"></span><a href="cupid.html" style="text-decoration: none">Cupid</a></h3>
+              <p>A web management system for matchmaking &amp; dating agencies.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Get in touch</h2>
+          <p>
+            Interested in one of my products, a licence, or just want to talk shop? The fastest way
+            to reach me is email — I read everything.
+          </p>
+          <div class="cta-row" style="justify-content: flex-start">
+            <a class="btn primary" href="mailto:caesar.themaster@gmail.com?subject=Hello">Email me</a>
+            <a class="btn" href="https://github.com/easly1989" rel="noopener">See my GitHub</a>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer>
+      <a href="index.html">Home</a>
+      <span class="sep">·</span>
+      <a href="https://github.com/easly1989" rel="noopener">GitHub</a>
+    </footer>
+  </body>
+</html>

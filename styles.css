@@ -1,0 +1,460 @@
+/* =========================================================================
+   Shared design system for Carlo Ruggiero's project site (content pages).
+   The home page (index.html) keeps its own inline styles for the carousel;
+   this stylesheet powers the About page and the per-project detail pages.
+   Each project page sets its own --accent / --accent-2 / --accent-ink in a
+   small inline <style> so the page is themed to that project.
+   ========================================================================= */
+
+:root {
+  --bg: #0b1120;
+  --bg-2: #0f172a;
+  --text: #e8eef7;
+  --muted: #9fb0c6;
+  --border: #1e293b;
+  /* default accent (overridden per page) */
+  --accent: #3b82f6;
+  --accent-2: #38bdf8;
+  --accent-ink: #04152e;
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f6f9fc;
+    --bg-2: #ffffff;
+    --text: #0f172a;
+    --muted: #566579;
+    --border: #dbe4ee;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+html {
+  scroll-behavior: smooth;
+}
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family:
+    system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+a {
+  color: inherit;
+}
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Ambient aurora background (subtle, tinted by the page accent) */
+.bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+}
+.bg .blob {
+  position: absolute;
+  width: 46vw;
+  height: 46vw;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.35;
+}
+.bg .blob.a {
+  background: var(--accent);
+  top: -14vw;
+  left: -10vw;
+}
+.bg .blob.b {
+  background: var(--accent-2);
+  bottom: -16vw;
+  right: -10vw;
+  opacity: 0.28;
+}
+
+/* ===== Top navigation (shared with the home page) ===== */
+.site-nav {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem clamp(1rem, 4vw, 2.5rem);
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+.site-nav .brand {
+  font-weight: 800;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  color: var(--text);
+}
+.site-nav .brand .grad {
+  background: linear-gradient(120deg, var(--accent), var(--accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.site-nav nav {
+  display: flex;
+  gap: clamp(0.7rem, 2vw, 1.4rem);
+  align-items: center;
+}
+.site-nav nav a {
+  text-decoration: none;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: color 0.2s ease;
+}
+.site-nav nav a:hover,
+.site-nav nav a[aria-current="page"] {
+  color: var(--text);
+}
+
+/* ===== Layout ===== */
+main {
+  flex: 1;
+  width: 100%;
+}
+.wrap {
+  width: min(880px, 100%);
+  margin: 0 auto;
+  padding: 0 clamp(1rem, 4vw, 2rem);
+}
+.section {
+  margin: clamp(2.5rem, 6vw, 4rem) 0;
+}
+.section > h2 {
+  font-size: clamp(1.5rem, 3.5vw, 2rem);
+  letter-spacing: -0.02em;
+  margin: 0 0 1rem;
+}
+.section p {
+  color: var(--text);
+}
+.section .muted {
+  color: var(--muted);
+}
+
+/* ===== Breadcrumb ===== */
+.crumb {
+  padding-top: 1.4rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+.crumb a {
+  text-decoration: none;
+  color: var(--muted);
+}
+.crumb a:hover {
+  color: var(--text);
+}
+
+/* ===== Project / page hero ===== */
+.hero {
+  text-align: center;
+  padding: clamp(1.5rem, 5vw, 3rem) 0 0;
+}
+.hero .icon {
+  width: 92px;
+  height: 92px;
+  filter: drop-shadow(0 12px 26px rgba(0, 0, 0, 0.3));
+}
+.hero h1 {
+  font-size: clamp(2.2rem, 7vw, 3.4rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  font-weight: 800;
+  margin: 0.8rem 0 0.4rem;
+}
+.hero h1 .grad,
+.grad {
+  background: linear-gradient(120deg, var(--accent), var(--accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.hero .tagline {
+  max-width: 54ch;
+  margin: 0 auto;
+  color: var(--muted);
+  font-size: clamp(1.05rem, 2.4vw, 1.25rem);
+}
+
+/* ===== Chips & badges ===== */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: 1rem;
+}
+.chip {
+  font-size: 0.82rem;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.32rem 0.8rem;
+  background: color-mix(in srgb, var(--bg-2) 60%, transparent);
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 0.3rem 0.85rem;
+}
+.badge::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.badge.open {
+  color: #12b886;
+  background: color-mix(in srgb, #12b886 14%, transparent);
+  border: 1px solid color-mix(in srgb, #12b886 40%, transparent);
+}
+.badge.closed {
+  color: #b197fc;
+  background: color-mix(in srgb, #7048e8 14%, transparent);
+  border: 1px solid color-mix(in srgb, #7048e8 45%, transparent);
+}
+.badge.free {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+/* ===== Buttons ===== */
+.cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  justify-content: center;
+  margin-top: 1.3rem;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1.4rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 1rem;
+  text-decoration: none;
+  border: 1px solid var(--border);
+  color: var(--text);
+  background: var(--bg-2);
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.25s ease,
+    filter 0.2s ease;
+}
+.btn:hover {
+  transform: translateY(-2px);
+}
+.btn.primary {
+  border: none;
+  color: var(--accent-ink);
+  background: linear-gradient(120deg, var(--accent), var(--accent-2));
+  box-shadow: 0 10px 26px -10px var(--accent);
+}
+.btn.primary:hover {
+  filter: brightness(1.06);
+  box-shadow: 0 14px 32px -8px var(--accent);
+}
+
+/* ===== Feature grid ===== */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-top: 1.2rem;
+}
+.feature {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.2rem 1.2rem 1.3rem;
+  background: color-mix(in srgb, var(--bg-2) 70%, transparent);
+}
+.feature h3 {
+  margin: 0 0 0.4rem;
+  font-size: 1.05rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.feature h3 .dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: linear-gradient(120deg, var(--accent), var(--accent-2));
+  flex: none;
+}
+.feature p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+/* ===== Lifecycle / steps ===== */
+.steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 1rem;
+  justify-content: center;
+}
+.steps .step {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.4rem 0.95rem;
+  font-weight: 600;
+  font-size: 0.92rem;
+  background: color-mix(in srgb, var(--bg-2) 70%, transparent);
+}
+.steps .arrow {
+  color: var(--muted);
+}
+
+/* ===== Screenshots ===== */
+figure {
+  margin: 1.4rem 0 0;
+}
+figure img {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  box-shadow: 0 20px 50px -24px rgba(0, 0, 0, 0.6);
+  display: block;
+}
+figure figcaption {
+  margin-top: 0.55rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+/* ===== Tech table ===== */
+.tech {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  font-size: 0.95rem;
+}
+.tech th,
+.tech td {
+  text-align: left;
+  padding: 0.6rem 0.8rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.tech th {
+  color: var(--muted);
+  font-weight: 700;
+  width: 34%;
+  white-space: nowrap;
+}
+
+/* ===== Callout ===== */
+.callout {
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  background: color-mix(in srgb, var(--bg-2) 70%, transparent);
+  margin-top: 1.2rem;
+  color: var(--muted);
+}
+.callout strong {
+  color: var(--text);
+}
+
+/* ===== "Coming soon" store badges ===== */
+.stores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  justify-content: center;
+  margin-top: 1.3rem;
+}
+.store {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 1rem;
+  border-radius: 13px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg-2) 70%, transparent);
+  cursor: default;
+  filter: grayscale(1);
+  opacity: 0.62;
+  min-width: 158px;
+}
+.store-ico {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  color: var(--text);
+}
+.store-txt {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.12;
+  text-align: left;
+  color: var(--text);
+}
+.store-txt small {
+  font-size: 0.6rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.store-txt b {
+  font-size: 0.98rem;
+  font-weight: 700;
+}
+
+/* ===== Footer ===== */
+footer {
+  text-align: center;
+  padding: 2rem 1rem;
+  margin-top: 2rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  border-top: 1px solid var(--border);
+}
+footer a {
+  color: var(--muted);
+  text-decoration: none;
+}
+footer a:hover {
+  color: var(--text);
+}
+footer .sep {
+  opacity: 0.5;
+  margin: 0 0.5rem;
+}
