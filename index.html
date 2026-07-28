@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Carlo Ruggiero — CloudBank, Nutreek, Cupid &amp; Planora</title>
+    <title>Carlo Ruggiero — My Projects</title>
     <meta
       name="description"
       content="Projects by Carlo Ruggiero: CloudBank (free, self-hosted personal finance manager), Nutreek, Cupid and Planora. Get in touch if you're interested."
     />
     <meta name="theme-color" content="#0b1120" />
     <link rel="icon" type="image/svg+xml" href="logo.svg" />
-    <meta property="og:title" content="Carlo Ruggiero — CloudBank, Nutreek, Cupid &amp; Planora" />
+    <meta property="og:title" content="Carlo Ruggiero — My Projects" />
     <meta
       property="og:description"
       content="CloudBank (open source), Nutreek, Cupid and Planora — projects by Carlo Ruggiero."
@@ -228,6 +228,51 @@
         border-radius: 999px;
         padding: 0.32rem 0.8rem;
         background: color-mix(in srgb, var(--bg-2) 60%, transparent);
+      }
+
+      /* ===== Top navigation ===== */
+      .site-nav {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.85rem clamp(1rem, 4vw, 2.5rem);
+        background: color-mix(in srgb, var(--bg) 72%, transparent);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--border);
+      }
+      .site-nav .brand {
+        font-weight: 800;
+        font-size: 1.05rem;
+        letter-spacing: -0.01em;
+        text-decoration: none;
+        color: var(--text);
+      }
+      .site-nav .brand .grad {
+        background: linear-gradient(120deg, var(--accent), var(--accent-2));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .site-nav nav {
+        display: flex;
+        gap: clamp(0.7rem, 2vw, 1.4rem);
+        align-items: center;
+      }
+      .site-nav nav a {
+        text-decoration: none;
+        color: var(--muted);
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: color 0.2s ease;
+      }
+      .site-nav nav a:hover,
+      .site-nav nav a[aria-current="page"] {
+        color: var(--text);
       }
 
       /* ===== Project carousel ===== */
@@ -585,6 +630,15 @@
       <span class="blob c"></span>
     </div>
 
+    <header class="site-nav">
+      <a class="brand" href="index.html">Carlo <span class="grad">Ruggiero</span></a>
+      <nav aria-label="Primary">
+        <a href="index.html" aria-current="page">Projects</a>
+        <a href="about.html">About</a>
+        <a href="https://github.com/easly1989" rel="noopener">GitHub</a>
+      </nav>
+    </header>
+
     <main>
       <h1>My <span class="grad">Projects</span></h1>
       <p class="lead">
@@ -620,62 +674,12 @@
               <a class="btn" href="https://github.com/easly1989/cloudbank" rel="noopener"
                 >View on GitHub</a
               >
-              <a class="btn" href="https://easly1989.github.io/cloudbank/donate/">Donate ♥</a>
-            </div>
-          </article>
-
-          <!-- Nutreek -->
-          <article class="card" aria-roledescription="slide" aria-label="Nutreek — 2 of 4">
-            <img class="icon" src="nutreek.svg" alt="" width="88" height="88" />
-            <span class="badge closed">Closed source</span>
-            <h2>Nutreek</h2>
-            <p class="desc">
-              A self-hosted weekly nutrition planner: build meal plans and track calories and
-              macros (protein, carbs, fat) per meal, day and week, backed by an offline
-              OpenFoodFacts ingredient database. Adaptive TDEE, weight and hydration tracking,
-              workouts and a coach mode for managing clients. One Go binary or one Docker
-              container.
-            </p>
-            <div class="chips">
-              <span class="chip">Weekly meal planning</span>
-              <span class="chip">Macros &amp; adaptive TDEE</span>
-              <span class="chip">Self-hosted · Docker</span>
-              <span class="chip">Coach mode</span>
-            </div>
-            <div class="cta-row">
-              <button class="btn primary" type="button" data-contact="Nutreek">
-                Interested? Contact me
-              </button>
-            </div>
-          </article>
-
-          <!-- Cupid -->
-          <article class="card" aria-roledescription="slide" aria-label="Cupid — 3 of 4">
-            <img class="icon" src="cupid.svg" alt="" width="88" height="88" />
-            <span class="badge closed">Closed source</span>
-            <h2>Cupid</h2>
-            <p class="desc">
-              A web management system for matchmaking &amp; dating agencies — a cloud-ready port
-              of the classic <em>“Cuore”</em> desktop app. Client records, partner preferences,
-              affinity matching, meetings, contracts and print-ready sheets, with email/Telegram
-              notifications, GDPR tools and encrypted cloud backups. Ships as a single Docker
-              container.
-            </p>
-            <div class="chips">
-              <span class="chip">Matchmaking agency CRM</span>
-              <span class="chip">Affinity matching</span>
-              <span class="chip">Self-hosted or hosted</span>
-              <span class="chip">Docker</span>
-            </div>
-            <div class="cta-row">
-              <button class="btn primary" type="button" data-contact="Cupid">
-                Interested? Contact me
-              </button>
+              <a class="btn" href="cloudbank.html">Full details →</a>
             </div>
           </article>
 
           <!-- Planora -->
-          <article class="card" aria-roledescription="slide" aria-label="Planora — 4 of 4">
+          <article class="card" aria-roledescription="slide" aria-label="Planora — 2 of 4">
             <img class="icon" src="planora.svg" alt="" width="88" height="88" />
             <span class="badge closed">Closed source</span>
             <h2>Planora</h2>
@@ -708,6 +712,61 @@
                 <span class="store-txt"><small>Coming soon on</small><b>Google Play</b></span>
               </span>
             </div>
+            <div class="cta-row">
+              <a class="btn" href="planora.html">Full details →</a>
+            </div>
+          </article>
+
+          <!-- Nutreek -->
+          <article class="card" aria-roledescription="slide" aria-label="Nutreek — 3 of 4">
+            <img class="icon" src="nutreek.svg" alt="" width="88" height="88" />
+            <span class="badge closed">Closed source</span>
+            <h2>Nutreek</h2>
+            <p class="desc">
+              A self-hosted weekly nutrition planner: build meal plans and track calories and
+              macros (protein, carbs, fat) per meal, day and week, backed by an offline
+              OpenFoodFacts ingredient database. Adaptive TDEE, weight and hydration tracking,
+              workouts and a coach mode for managing clients. One Go binary or one Docker
+              container.
+            </p>
+            <div class="chips">
+              <span class="chip">Weekly meal planning</span>
+              <span class="chip">Macros &amp; adaptive TDEE</span>
+              <span class="chip">Self-hosted · Docker</span>
+              <span class="chip">Coach mode</span>
+            </div>
+            <div class="cta-row">
+              <button class="btn primary" type="button" data-contact="Nutreek">
+                Interested? Contact me
+              </button>
+              <a class="btn" href="nutreek.html">Full details →</a>
+            </div>
+          </article>
+
+          <!-- Cupid -->
+          <article class="card" aria-roledescription="slide" aria-label="Cupid — 4 of 4">
+            <img class="icon" src="cupid.svg" alt="" width="88" height="88" />
+            <span class="badge closed">Closed source</span>
+            <h2>Cupid</h2>
+            <p class="desc">
+              A web management system for matchmaking &amp; dating agencies — a cloud-ready port
+              of the classic <em>“Cuore”</em> desktop app. Client records, partner preferences,
+              affinity matching, meetings, contracts and print-ready sheets, with email/Telegram
+              notifications, GDPR tools and encrypted cloud backups. Ships as a single Docker
+              container.
+            </p>
+            <div class="chips">
+              <span class="chip">Matchmaking agency CRM</span>
+              <span class="chip">Affinity matching</span>
+              <span class="chip">Self-hosted or hosted</span>
+              <span class="chip">Docker</span>
+            </div>
+            <div class="cta-row">
+              <button class="btn primary" type="button" data-contact="Cupid">
+                Interested? Contact me
+              </button>
+              <a class="btn" href="cupid.html">Full details →</a>
+            </div>
           </article>
         </div>
 
@@ -715,9 +774,9 @@
 
         <div class="dots" role="tablist" aria-label="Choose project">
           <button class="dot" type="button" role="tab" aria-label="CloudBank" aria-current="true"></button>
+          <button class="dot" type="button" role="tab" aria-label="Planora"></button>
           <button class="dot" type="button" role="tab" aria-label="Nutreek"></button>
           <button class="dot" type="button" role="tab" aria-label="Cupid"></button>
-          <button class="dot" type="button" role="tab" aria-label="Planora"></button>
         </div>
       </section>
 
@@ -808,9 +867,9 @@
         // Per-project accent palettes: main, secondary, ink-on-accent.
         var THEMES = [
           { a: "#3b82f6", b: "#38bdf8", ink: "#04152e" }, // CloudBank — blue
+          { a: "#8b5cf6", b: "#a78bfa", ink: "#1c0a3e" }, // Planora — purple
           { a: "#12b886", b: "#0ca678", ink: "#04231a" }, // Nutreek — green
           { a: "#e5395a", b: "#ff7a94", ink: "#2e0512" }, // Cupid — red
-          { a: "#8b5cf6", b: "#a78bfa", ink: "#1c0a3e" }, // Planora — purple
         ];
         function applyTheme(i) {
           var t = THEMES[i] || THEMES[0];
