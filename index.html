@@ -3,17 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Carlo Ruggiero — CloudBank, Nutreek &amp; Cupid</title>
+    <title>Carlo Ruggiero — CloudBank, Nutreek, Cupid &amp; Planora</title>
     <meta
       name="description"
-      content="Projects by Carlo Ruggiero: CloudBank (free, self-hosted personal finance manager), Nutreek and Cupid. Get in touch if you're interested."
+      content="Projects by Carlo Ruggiero: CloudBank (free, self-hosted personal finance manager), Nutreek, Cupid and Planora. Get in touch if you're interested."
     />
     <meta name="theme-color" content="#0b1120" />
     <link rel="icon" type="image/svg+xml" href="logo.svg" />
-    <meta property="og:title" content="Carlo Ruggiero — CloudBank, Nutreek &amp; Cupid" />
+    <meta property="og:title" content="Carlo Ruggiero — CloudBank, Nutreek, Cupid &amp; Planora" />
     <meta
       property="og:description"
-      content="CloudBank (open source), Nutreek and Cupid — projects by Carlo Ruggiero."
+      content="CloudBank (open source), Nutreek, Cupid and Planora — projects by Carlo Ruggiero."
     />
     <meta property="og:type" content="website" />
 
@@ -34,7 +34,7 @@
 
     <style>
       /* Accent colors are registered as <color> so they can smoothly animate
-         between projects as the carousel changes (blue → green → red). */
+         between projects as the carousel changes (blue → green → red → purple). */
       @property --accent {
         syntax: "<color>";
         inherits: true;
@@ -472,6 +472,51 @@
         text-decoration: none;
       }
 
+      /* ===== "Coming soon" store badges (grayed out, non-clickable) ===== */
+      .stores {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.7rem;
+        justify-content: center;
+        margin-top: 0.2rem;
+      }
+      .store {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.5rem 1rem;
+        border-radius: 13px;
+        border: 1px solid var(--border);
+        background: color-mix(in srgb, var(--bg-2) 70%, transparent);
+        cursor: default;
+        filter: grayscale(1);
+        opacity: 0.62;
+        min-width: 158px;
+      }
+      .store-ico {
+        width: 26px;
+        height: 26px;
+        flex: none;
+        color: var(--text);
+      }
+      .store-txt {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.12;
+        text-align: left;
+        color: var(--text);
+      }
+      .store-txt small {
+        font-size: 0.6rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .store-txt b {
+        font-size: 0.98rem;
+        font-weight: 700;
+      }
+
       /* Non-intrusive ad slot (hidden until configured) */
       .ad {
         width: min(728px, 100%);
@@ -553,7 +598,7 @@
 
         <div class="track" id="track" tabindex="0">
           <!-- CloudBank -->
-          <article class="card" aria-roledescription="slide" aria-label="CloudBank — 1 of 3">
+          <article class="card" aria-roledescription="slide" aria-label="CloudBank — 1 of 4">
             <img class="icon" src="logo.svg" alt="" width="88" height="88" />
             <span class="badge open">Open source</span>
             <h2>Cloud<span class="grad">Bank</span></h2>
@@ -580,7 +625,7 @@
           </article>
 
           <!-- Nutreek -->
-          <article class="card" aria-roledescription="slide" aria-label="Nutreek — 2 of 3">
+          <article class="card" aria-roledescription="slide" aria-label="Nutreek — 2 of 4">
             <img class="icon" src="nutreek.svg" alt="" width="88" height="88" />
             <span class="badge closed">Closed source</span>
             <h2>Nutreek</h2>
@@ -605,7 +650,7 @@
           </article>
 
           <!-- Cupid -->
-          <article class="card" aria-roledescription="slide" aria-label="Cupid — 3 of 3">
+          <article class="card" aria-roledescription="slide" aria-label="Cupid — 3 of 4">
             <img class="icon" src="cupid.svg" alt="" width="88" height="88" />
             <span class="badge closed">Closed source</span>
             <h2>Cupid</h2>
@@ -628,6 +673,42 @@
               </button>
             </div>
           </article>
+
+          <!-- Planora -->
+          <article class="card" aria-roledescription="slide" aria-label="Planora — 4 of 4">
+            <img class="icon" src="planora.svg" alt="" width="88" height="88" />
+            <span class="badge closed">Closed source</span>
+            <h2>Planora</h2>
+            <p class="desc">
+              A mobile-first shared activity planner for groups — friends, family, couples and
+              teams. Build a shared backlog of ideas and, when someone hits <strong>Organize</strong>,
+              a guided wizard takes the whole group through date voting, the event and feedback.
+              One app for Web, Android and iOS.
+            </p>
+            <div class="chips">
+              <span class="chip">Group activity planner</span>
+              <span class="chip">Web · Android · iOS</span>
+              <span class="chip">Free</span>
+            </div>
+            <div class="stores" aria-label="Coming soon to the app stores">
+              <span class="store" role="img" aria-label="Coming soon on the App Store">
+                <svg class="store-ico" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path
+                    d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 8.66 7.35c1.31.07 2.22.72 2.99.72.76 0 2.24-.89 3.78-.76 1.66.13 2.9.79 3.72 2.05-3.19 1.92-2.68 6.14.7 7.14-.68 1.65-1.53 3.14-2.8 3.78zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"
+                  />
+                </svg>
+                <span class="store-txt"><small>Coming soon on the</small><b>App Store</b></span>
+              </span>
+              <span class="store" role="img" aria-label="Coming soon on Google Play">
+                <svg class="store-ico" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 2.5 12.5 12 4 21.5z" fill="#6f6f6f" />
+                  <path d="M4 2.5 20.5 12 12.5 12z" fill="#909090" />
+                  <path d="M4 21.5 20.5 12 12.5 12z" fill="#7d7d7d" />
+                </svg>
+                <span class="store-txt"><small>Coming soon on</small><b>Google Play</b></span>
+              </span>
+            </div>
+          </article>
         </div>
 
         <button class="nav next" type="button" aria-label="Next project">›</button>
@@ -636,6 +717,7 @@
           <button class="dot" type="button" role="tab" aria-label="CloudBank" aria-current="true"></button>
           <button class="dot" type="button" role="tab" aria-label="Nutreek"></button>
           <button class="dot" type="button" role="tab" aria-label="Cupid"></button>
+          <button class="dot" type="button" role="tab" aria-label="Planora"></button>
         </div>
       </section>
 
@@ -669,6 +751,7 @@
           <select id="cf-project" name="project">
             <option>Nutreek</option>
             <option>Cupid</option>
+            <option>Planora</option>
             <option>CloudBank</option>
             <option>Other</option>
           </select>
@@ -727,6 +810,7 @@
           { a: "#3b82f6", b: "#38bdf8", ink: "#04152e" }, // CloudBank — blue
           { a: "#12b886", b: "#0ca678", ink: "#04231a" }, // Nutreek — green
           { a: "#e5395a", b: "#ff7a94", ink: "#2e0512" }, // Cupid — red
+          { a: "#8b5cf6", b: "#a78bfa", ink: "#1c0a3e" }, // Planora — purple
         ];
         function applyTheme(i) {
           var t = THEMES[i] || THEMES[0];

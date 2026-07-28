@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" role="img" aria-label="Plenora">
+  <defs>
+    <linearGradient id="plBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#9a86e6" />
+      <stop offset="1" stop-color="#6d59ad" />
+    </linearGradient>
+    <linearGradient id="plCheck" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5b4a94" />
+      <stop offset="1" stop-color="#3f3270" />
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="56" height="56" rx="15" fill="url(#plBg)" />
+  <!-- location pin -->
+  <path
+    fill="#ffffff"
+    d="M32 13.6C24.6 13.6 18.6 19.6 18.6 27c0 7.6 8.2 16.4 12.5 21.7.5.6 1.3.6 1.8 0C37.2 43.4 45.4 34.6 45.4 27c0-7.4-6-13.4-13.4-13.4z"
+  />
+  <!-- check mark -->
+  <path
+    stroke="url(#plCheck)"
+    stroke-width="4"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    fill="none"
+    d="M25.5 26.8l4.8 4.8 8.8-9.2"
+  />
+</svg>
