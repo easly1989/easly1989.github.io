@@ -17,19 +17,10 @@
     />
     <meta property="og:type" content="website" />
 
-    <!-- AdSense site-ownership verification (static, no network request/cookies).
-         Keep this in sync with ADSENSE_CLIENT below. -->
-    <meta name="google-adsense-account" content="ca-pub-8801916031911396" />
-
-    <!-- ===== Site config ========================================================
-         CONTACT_EMAIL: where "Contact me" messages are sent (mailto).
-         AdSense: paste your publisher id to enable ads. Leave BOTH empty to
-         disable every ad (no external request, no cookies) — this is the
-         "turn ads off" switch. -->
+    <!-- ===== Site config =====================================================
+         CONTACT_EMAIL: where "Contact me" messages are sent (mailto). -->
     <script>
       window.CONTACT_EMAIL = "caesar.themaster@gmail.com";
-      window.ADSENSE_CLIENT = "ca-pub-8801916031911396"; // e.g. "ca-pub-1234567890123456"
-      window.ADSENSE_SLOT = "6336355352"; // the display ad unit's data-ad-slot id
     </script>
 
     <style>
@@ -562,22 +553,6 @@
         font-weight: 700;
       }
 
-      /* Non-intrusive ad slot (hidden until configured) */
-      .ad {
-        width: min(728px, 100%);
-        margin: 1.5rem auto 0;
-        text-align: center;
-      }
-      .ad-label {
-        display: block;
-        font-size: 0.68rem;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: var(--muted);
-        opacity: 0.7;
-        margin-bottom: 0.3rem;
-      }
-
       footer {
         text-align: center;
         padding: 1.5rem 1rem 2rem;
@@ -606,11 +581,6 @@
       footer .sep {
         opacity: 0.5;
         margin: 0 0.5rem;
-      }
-      .privacy {
-        margin-top: 0.6rem;
-        font-size: 0.75rem;
-        opacity: 0.7;
       }
       @media (prefers-reduced-motion: reduce) {
         :root {
@@ -779,17 +749,6 @@
           <button class="dot" type="button" role="tab" aria-label="Cupid"></button>
         </div>
       </section>
-
-      <!-- Ad slot: stays hidden (no network calls) until ADSENSE_CLIENT/SLOT are set. -->
-      <aside id="ad" class="ad" hidden aria-label="Advertisement">
-        <span class="ad-label">Advertisement</span>
-        <ins
-          class="adsbygoogle"
-          style="display: block"
-          data-ad-format="auto"
-          data-full-width-responsive="true"
-        ></ins>
-      </aside>
     </main>
 
     <!-- ===== Contact dialog: builds a mailto — no data is sent to any server ===== -->
@@ -842,10 +801,6 @@
       <button class="linklike" type="button" data-contact="Other">Contact</button>
       <span class="sep">·</span>
       <a href="https://www.gethomebank.org/" rel="noopener">a web port of HomeBank</a>
-      <div class="privacy" id="privacy" hidden>
-        This site shows ads via Google AdSense, which may use cookies. See Google's
-        <a href="https://policies.google.com/technologies/ads" rel="noopener">ads policy</a>.
-      </div>
     </footer>
 
     <script>
@@ -1044,29 +999,6 @@
             encodeURIComponent(body);
           dialog.close();
         });
-      })();
-
-      // ===== AdSense: loads only when configured; otherwise no ad calls =====
-      (function () {
-        var client = window.ADSENSE_CLIENT,
-          slot = window.ADSENSE_SLOT;
-        if (!client) return; // ads disabled
-        var s = document.createElement("script");
-        s.async = true;
-        s.crossOrigin = "anonymous";
-        s.src =
-          "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=" + client;
-        document.head.appendChild(s);
-        var privacy = document.getElementById("privacy");
-        if (privacy) privacy.hidden = false;
-        var box = document.getElementById("ad");
-        if (box && slot) {
-          box.hidden = false;
-          var ins = box.querySelector("ins.adsbygoogle");
-          ins.setAttribute("data-ad-client", client);
-          ins.setAttribute("data-ad-slot", slot);
-          (window.adsbygoogle = window.adsbygoogle || []).push({});
-        }
       })();
     </script>
   </body>
