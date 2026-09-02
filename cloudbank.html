@@ -6,14 +6,14 @@
     <title>CloudBank — Self-hosted personal finance manager · Carlo Ruggiero</title>
     <meta
       name="description"
-      content="CloudBank is a free, open-source, self-hosted personal finance manager — a from-scratch web port of HomeBank. Track accounts, transactions and budgets with your data on a server you control."
+      content="CloudBank is a free, open-source, self-hosted personal finance manager — a production-ready web port of HomeBank. Accounts, a powerful register, scheduled transactions, budgets, rich reports, automatic bank sync and a customizable dashboard."
     />
     <meta name="theme-color" content="#0b1120" />
     <link rel="icon" type="image/svg+xml" href="logo.svg" />
     <meta property="og:title" content="CloudBank — Self-hosted personal finance manager" />
     <meta
       property="og:description"
-      content="A free, open-source, self-hosted personal finance manager — a web port of HomeBank. Your money, on a server you control."
+      content="A free, open-source, self-hosted web port of HomeBank — now production-ready, with automatic bank sync and a fully customizable dashboard."
     />
     <meta property="og:type" content="website" />
     <link rel="stylesheet" href="styles.css" />
@@ -22,6 +22,30 @@
         --accent: #3b82f6;
         --accent-2: #38bdf8;
         --accent-ink: #04152e;
+      }
+      pre.code {
+        overflow-x: auto;
+        background: color-mix(in srgb, var(--bg-2) 80%, transparent);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1rem 1.1rem;
+        margin-top: 1rem;
+        font-size: 0.86rem;
+        line-height: 1.5;
+        font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+        color: var(--text);
+      }
+      code {
+        font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+        font-size: 0.9em;
+      }
+      .figrow {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.2rem;
+      }
+      .figrow figure {
+        margin-top: 0;
       }
     </style>
   </head>
@@ -48,11 +72,12 @@
           <img class="icon" src="logo.svg" alt="CloudBank logo" width="92" height="92" />
           <div class="chips" style="margin-top: 0.9rem">
             <span class="badge open">Open source</span>
+            <span class="badge free">v1.0 · production-ready</span>
           </div>
           <h1>Cloud<span class="grad">Bank</span></h1>
           <p class="tagline">
             Your money, self-hosted. A free, open-source personal finance manager — a from-scratch
-            web port of <strong>HomeBank</strong>.
+            web port of <strong>HomeBank</strong>, built for the browser and the cloud.
           </p>
           <div class="cta-row">
             <a class="btn primary" href="https://easly1989.github.io/cloudbank/">Open CloudBank →</a>
@@ -64,54 +89,171 @@
         <section class="section">
           <h2>What it is</h2>
           <p>
-            CloudBank is a free, self-hosted personal finance manager you run yourself — a
-            from-scratch web port of the well-known desktop app <strong>HomeBank</strong>. You keep
-            your accounts, transactions and budgets in one place, with your data living on a server
-            <strong>you</strong> control rather than in someone else’s cloud. It is released under
-            the AGPL-3.0 licence and ships as a single Docker container, with no tracking.
+            CloudBank brings the HomeBank workflow — accounts, a powerful transaction register,
+            scheduled transactions, budgets and rich reports — to a web UI you can reach from any
+            device, while your data stays in a SQLite database on a server
+            <strong>you</strong> control. It ships as a single Docker container, with no external
+            database to run.
           </p>
+          <p class="muted">
+            It’s an independent, clean-room reimplementation — it doesn’t copy or link any HomeBank
+            source code, and it tracks parity with current and future HomeBank releases. Released
+            under the AGPL-3.0 licence.
+          </p>
+          <figure>
+            <img
+              src="assets/cloudbank-dashboard.png"
+              alt="CloudBank dashboard with account balances, spending and upcoming transactions"
+              loading="lazy"
+            />
+            <figcaption>The dashboard — a fully customizable, free-form grid of widgets.</figcaption>
+          </figure>
         </section>
 
         <section class="section">
           <h2>Features</h2>
           <div class="feature-grid">
             <div class="feature">
-              <h3><span class="dot"></span>Accounts &amp; transactions</h3>
+              <h3><span class="dot"></span>Every account type</h3>
               <p>
-                Manage multiple accounts and record income and expenses, keeping a clear running
-                picture of where your money goes.
+                Bank, cash, checking, savings, credit card, liability, asset and investment
+                accounts — each with its own currency, default payment mode, and both today’s and a
+                projected future balance.
               </p>
             </div>
             <div class="feature">
-              <h3><span class="dot"></span>Budgets</h3>
+              <h3><span class="dot"></span>Transactions</h3>
               <p>
-                Set budgets and follow them over time so you can plan ahead instead of reacting at
-                the end of the month.
+                12 payment types, the cleared/reconciled lifecycle, category splits, free tags,
+                internal (and cross-currency) transfers, bulk edit and duplicate detection.
               </p>
             </div>
             <div class="feature">
-              <h3><span class="dot"></span>Self-hosted &amp; private</h3>
+              <h3><span class="dot"></span>Powerful register</h3>
               <p>
-                Runs in one Docker container on your own server. No third-party accounts, no
-                tracking — your financial data stays with you.
+                Running balance, rich filtering with a future-transactions toggle, per-user columns,
+                a live selection total, a reconciliation workflow and double-click-to-edit.
               </p>
             </div>
             <div class="feature">
-              <h3><span class="dot"></span>Open source (AGPL-3.0)</h3>
+              <h3><span class="dot"></span>Scheduled transactions</h3>
               <p>
-                The full source is on GitHub. Read it, run it, and contribute — it’s free software
-                you can trust and extend.
+                Automatic posting (optionally pre-registering up to three months ahead), per-period
+                income/expense summaries, templates, and assignment rules for auto-categorization.
+              </p>
+            </div>
+            <div class="feature">
+              <h3><span class="dot"></span>Budgets &amp; reports</h3>
+              <p>
+                Budgets plus a full report suite — Statistics, Trend Time, Balance, Budget and
+                Vehicle cost — with interactive charts and CSV/PNG export.
+              </p>
+            </div>
+            <div class="feature">
+              <h3><span class="dot"></span>Import &amp; export</h3>
+              <p>
+                Import HomeBank <code>.xhb</code>, QIF, OFX/QFX and CSV with an assistant; export
+                back to HomeBank <code>.xhb</code>, QIF and CSV.
+              </p>
+            </div>
+            <div class="feature">
+              <h3><span class="dot"></span>Automatic bank sync</h3>
+              <p>
+                Pull new transactions straight from your bank — de-duplicated and run through your
+                rules — via SimpleFIN (worldwide) or Enable Banking (EU/EEA + UK, PSD2). Your bank
+                credentials never touch CloudBank.
+              </p>
+            </div>
+            <div class="feature">
+              <h3><span class="dot"></span>Multi-currency &amp; multi-user</h3>
+              <p>
+                Manual and online (ECB / frankfurter.app) exchange rates, admin-managed users, a
+                responsive UI, and English &amp; Italian.
               </p>
             </div>
           </div>
         </section>
 
         <section class="section">
-          <h2>Open &amp; free</h2>
+          <h2>Make it yours</h2>
+          <p>
+            CloudBank is built to fit how <em>you</em> work. The dashboard is a free-form grid: place
+            and resize widgets anywhere, and add multiple instances of any widget — balances,
+            quick-add, spending donut, budget gauge, upcoming, account balance, recent transactions,
+            big-number key figures and free-text notes. Pick from light / dark / auto themes with an
+            accent-colour picker that follows you across devices, a collapsible and reorderable
+            sidebar, HomeBank-style smart amount entry, and a first-login tutorial you can restart
+            any time.
+          </p>
+          <div class="figrow">
+            <figure>
+              <img
+                src="assets/cloudbank-dashboard-customize.png"
+                alt="Customizing the CloudBank dashboard by placing and resizing widgets on a grid"
+                loading="lazy"
+              />
+              <figcaption>Customize the dashboard — drag, resize and add widgets from a palette.</figcaption>
+            </figure>
+            <figure>
+              <img
+                src="assets/cloudbank-register.png"
+                alt="CloudBank transaction register with running balance, filters and a selection total"
+                loading="lazy"
+              />
+              <figcaption>The register — running balance, filters and a live selection total.</figcaption>
+            </figure>
+          </div>
+          <figure>
+            <img
+              src="assets/cloudbank-reports.png"
+              alt="CloudBank reports with interactive charts"
+              loading="lazy"
+            />
+            <figcaption>Reports — Statistics, Trend Time, Balance, Budget and Vehicle cost, with export.</figcaption>
+          </figure>
+        </section>
+
+        <section class="section">
+          <h2>Run it yourself</h2>
+          <p>
+            You need Docker with the Compose plugin. One container, no external database — your data
+            lives in a volume you control:
+          </p>
+          <pre class="code">services:
+  cloudbank:
+    image: ghcr.io/easly1989/cloudbank:main   # latest stable release
+    container_name: cloudbank
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      CB_SECURE_COOKIES: "false"              # only for a plain-HTTP LAN install
+    volumes:
+      - cloudbank-data:/data
+
+volumes:
+  cloudbank-data:</pre>
+          <pre class="code">docker compose up -d
+# open http://localhost:8080 and complete the first-run admin setup</pre>
           <div class="callout">
-            <strong>Free and open source.</strong> CloudBank is the open-source project in this
-            lineup. Try the live app, browse the code on GitHub, or support the work with a
-            donation.
+            <strong>Note the tag scheme —</strong> it’s intentionally unconventional:
+            <code>:main</code> is the <strong>latest stable release</strong>, while
+            <code>:latest</code> is the bleeding-edge nightly. Pin deliberately. An interactive API
+            reference (Swagger UI) is served by the app at <code>/api/docs</code>.
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Open &amp; free — support it</h2>
+          <p>
+            CloudBank is an open-source labour of love, released under the AGPL-3.0. If it’s useful
+            to you, a donation genuinely helps and is much appreciated. ♥
+          </p>
+          <div class="cta-row" style="justify-content: flex-start">
+            <a class="btn primary" href="https://easly1989.github.io/cloudbank/donate/">Donate ♥</a>
+            <a class="btn" href="https://github.com/sponsors/easly1989" rel="noopener">GitHub Sponsors</a>
+            <a class="btn" href="https://paypal.me/carloruggiero" rel="noopener">PayPal</a>
+            <a class="btn" href="https://liberapay.com/amon2126/donate" rel="noopener">Liberapay</a>
           </div>
         </section>
 
