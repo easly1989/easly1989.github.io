@@ -72,7 +72,7 @@
           <img class="icon" src="logo.svg" alt="CloudBank logo" width="92" height="92" />
           <div class="chips" style="margin-top: 0.9rem">
             <span class="badge open">Open source</span>
-            <span class="badge free">v1.0 · production-ready</span>
+            <span class="badge free">v3.0 · production-ready</span>
           </div>
           <h1>Cloud<span class="grad">Bank</span></h1>
           <p class="tagline">
@@ -131,8 +131,9 @@
             <div class="feature">
               <h3><span class="dot"></span>Powerful register</h3>
               <p>
-                Running balance, rich filtering with a future-transactions toggle, per-user columns,
-                a live selection total, a reconciliation workflow and double-click-to-edit.
+                Running balance, rich filtering with a future-transactions toggle, full-text search
+                across memo/payee/category, per-user columns, a live selection total, reconciliation
+                and double-click-to-edit.
               </p>
             </div>
             <div class="feature">
@@ -150,6 +151,14 @@
               </p>
             </div>
             <div class="feature">
+              <h3><span class="dot"></span>Savings goals &amp; bills</h3>
+              <p>
+                Piggy-bank savings goals with contribute / withdraw, a progress bar and a target
+                date; plus a “what’s due” Bills view over your schedules (upcoming / due / overdue)
+                with one-click posting.
+              </p>
+            </div>
+            <div class="feature">
               <h3><span class="dot"></span>Import &amp; export</h3>
               <p>
                 Import HomeBank <code>.xhb</code>, QIF, OFX/QFX and CSV with an assistant; export
@@ -160,8 +169,8 @@
               <h3><span class="dot"></span>Automatic bank sync</h3>
               <p>
                 Pull new transactions straight from your bank — de-duplicated and run through your
-                rules — via SimpleFIN (worldwide) or Enable Banking (EU/EEA + UK, PSD2). Your bank
-                credentials never touch CloudBank.
+                rules — via SimpleFIN (worldwide) or Enable Banking (EU/EEA + UK, PSD2), refreshed
+                on a schedule in the background. Your bank credentials never touch the client.
               </p>
             </div>
             <div class="feature">
@@ -214,6 +223,76 @@
         </section>
 
         <section class="section">
+          <h2>Secure &amp; on every device</h2>
+          <p>
+            CloudBank v3 grew up: it installs like a native app and takes account security
+            seriously.
+          </p>
+          <div class="feature-grid">
+            <div class="feature">
+              <h3><span class="dot"></span>Two-factor auth (TOTP)</h3>
+              <p>
+                Optional per-user 2FA with authenticator apps — QR enrolment, one-time recovery
+                codes and a two-step login.
+              </p>
+            </div>
+            <div class="feature">
+              <h3><span class="dot"></span>Installable PWA</h3>
+              <p>
+                A web-app manifest, icons and an offline app shell — install CloudBank to your
+                phone’s home screen or your desktop.
+              </p>
+            </div>
+            <div class="feature">
+              <h3><span class="dot"></span>Web push reminders</h3>
+              <p>
+                Opt-in browser push notifications for schedule and bill-due reminders (VAPID keys
+                stored server-side).
+              </p>
+            </div>
+            <div class="feature">
+              <h3><span class="dot"></span>Personal API tokens</h3>
+              <p>
+                Scoped, revocable bearer tokens for programmatic access — the token secret is shown
+                once, at creation.
+              </p>
+            </div>
+            <div class="feature">
+              <h3><span class="dot"></span>Encrypted secrets at rest</h3>
+              <p>
+                Set <code>CB_SECRET_KEY</code> to encrypt bank credentials, AI keys, 2FA secrets and
+                the push key in the database with AES-256-GCM.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Optional AI — bring your own key</h2>
+          <p>
+            Entirely optional and provider-agnostic: you plug in your own API key, and it stays
+            server-side, write-only, and is never returned to the browser. Leave it off and
+            CloudBank makes no AI calls at all.
+          </p>
+          <div class="feature-grid">
+            <div class="feature">
+              <h3><span class="dot"></span>Category suggestions</h3>
+              <p>
+                Suggests a category for a transaction from its description — a nudge, not an
+                autopilot; you stay in control.
+              </p>
+            </div>
+            <div class="feature">
+              <h3><span class="dot"></span>Natural-language entry</h3>
+              <p>
+                Type “coffee 3.50 yesterday” and get a pre-filled transaction to review before you
+                save it.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
           <h2>Run it yourself</h2>
           <p>
             You need Docker with the Compose plugin. One container, no external database — your data
@@ -238,8 +317,10 @@ volumes:
           <div class="callout">
             <strong>Note the tag scheme —</strong> it’s intentionally unconventional:
             <code>:main</code> is the <strong>latest stable release</strong>, while
-            <code>:latest</code> is the bleeding-edge nightly. Pin deliberately. An interactive API
-            reference (Swagger UI) is served by the app at <code>/api/docs</code>.
+            <code>:latest</code> is the bleeding-edge nightly. Pin deliberately. Optional env vars
+            let you harden and tune it: <code>CB_SECRET_KEY</code> encrypts secrets at rest and
+            <code>CB_BANK_SYNC_INTERVAL</code> sets the background bank-sync cadence (default 12h).
+            An interactive API reference (Swagger UI) is served at <code>/api/docs</code>.
           </div>
         </section>
 
