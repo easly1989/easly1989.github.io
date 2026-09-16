@@ -43,6 +43,7 @@
   --glass-blur: blur(7px) saturate(1.3);
   --aura: 0.5;
   --grain: 0.055;
+  --shot-shadow: 0 10px 26px rgb(20 24 20 / 0.22);
   transition: --accent 700ms var(--ease);
 
   --display: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -81,6 +82,7 @@
     --glass-hi: rgb(255 255 255 / 0.1);
     --aura: 0.85;
     --grain: 0.07;
+    --shot-shadow: 0 10px 26px rgb(0 0 0 / 0.5);
   }
 }
 
@@ -591,11 +593,23 @@ figcaption {
   min-height: 2.8em;
 }
 
-/* One frame for every shot, so the page does not jump as they change. */
+/* One frame for every shot, so the page does not jump as they change. The
+   frame is always a little wider than a given screenshot, so the image is
+   drawn transparent and shadowed rather than boxed — otherwise the leftover
+   space reads as a pale panel with a small picture adrift in it. */
 .reel.is-live img {
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 3 / 2;
   object-fit: contain;
-  object-position: center top;
+  object-position: center center;
+  background: none;
+  border-color: transparent;
+  border-radius: 4px;
+  box-shadow: none;
+  filter: drop-shadow(var(--shot-shadow));
+}
+
+.reel.is-live figure:hover img {
+  box-shadow: none;
 }
 
 .reel-bar {
@@ -702,6 +716,102 @@ figcaption {
     transform: none;
     transition: opacity 0.001ms;
   }
+}
+
+
+/* ---- Enlarging a screenshot ---- */
+.zoom {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+  position: relative;
+}
+
+.zoom::after {
+  content: "";
+  position: absolute;
+  right: 0.7rem;
+  bottom: 0.7rem;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(currentColor, currentColor) center / 13px 2px no-repeat,
+    linear-gradient(currentColor, currentColor) center / 2px 13px no-repeat,
+    var(--glass);
+  box-shadow: inset 0 0 0 1px var(--glass-ring);
+  backdrop-filter: var(--glass-blur);
+  transition: opacity 0.25s var(--ease);
+}
+
+.pointer-fine .zoom:hover::after,
+.zoom:focus-visible::after {
+  opacity: 1;
+}
+
+.lightbox {
+  width: min(96vw, 84rem);
+  max-height: 94vh;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  backdrop-filter: none;
+  box-shadow: none;
+  overflow: visible;
+  color: var(--ink);
+}
+
+.lightbox::backdrop {
+  background: rgb(10 12 10 / 0.82);
+  backdrop-filter: blur(6px);
+}
+
+.lightbox img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 82vh;
+  object-fit: contain;
+  border-radius: 8px;
+  background: none;
+  border: 0;
+  box-shadow: none;
+  filter: drop-shadow(0 18px 50px rgb(0 0 0 / 0.55));
+}
+
+.lightbox .caption {
+  color: #e6e7e2;
+  margin: 1rem auto 0;
+  text-align: center;
+  max-width: 48rem;
+}
+
+.lightbox .close {
+  position: absolute;
+  top: -2.6rem;
+  right: 0;
+  display: grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  padding: 0;
+  font: inherit;
+  font-size: var(--t-base);
+  color: #e6e7e2;
+  background: none;
+  border: 1px solid rgb(230 231 226 / 0.4);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.lightbox .close:hover {
+  border-color: #e6e7e2;
 }
 
 /* ---- Flow: used only where the content really is a sequence ---- */
