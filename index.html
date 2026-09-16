@@ -3,19 +3,27 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Carlo Ruggiero — My Projects</title>
+    <title>Carlo Ruggiero — Projects</title>
     <meta
       name="description"
-      content="Projects by Carlo Ruggiero: CloudBank (free, self-hosted personal finance manager), Nutreek, Cupid and Planora. Get in touch if you're interested."
+      content="Four products built end to end by Carlo Ruggiero: CloudBank, a free open-source self-hosted personal finance manager; Planora; Nutreek; and Cupid."
     />
-    <meta name="theme-color" content="#0b1120" />
+    <meta name="theme-color" content="#bfc3bb" />
     <link rel="icon" type="image/svg+xml" href="logo.svg" />
-    <meta property="og:title" content="Carlo Ruggiero — My Projects" />
+    <meta property="og:title" content="Carlo Ruggiero — Projects" />
     <meta
       property="og:description"
-      content="CloudBank (open source), Nutreek, Cupid and Planora — projects by Carlo Ruggiero."
+      content="CloudBank, Planora, Nutreek and Cupid — complete products you can run yourself."
     />
     <meta property="og:type" content="website" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
 
     <!-- ===== Site config =====================================================
          CONTACT_EMAIL: where "Contact me" messages are sent (mailto). -->
@@ -24,944 +32,516 @@
     </script>
 
     <style>
-      /* Accent colors are registered as <color> so they can smoothly animate
-         between projects as the carousel changes (blue → green → red → purple). */
-      @property --accent {
-        syntax: "<color>";
-        inherits: true;
-        initial-value: #3b82f6;
-      }
-      @property --accent-2 {
-        syntax: "<color>";
-        inherits: true;
-        initial-value: #38bdf8;
-      }
-      @property --accent-ink {
-        syntax: "<color>";
-        inherits: true;
-        initial-value: #04152e;
-      }
-      @property --glow {
-        syntax: "<color>";
-        inherits: true;
-        initial-value: #3b82f6;
-      }
-
+      /* Product accents, taken from each logo mark rather than invented.
+         The index rows and the sections below both draw from these. */
       :root {
-        --bg: #0b1120;
-        --bg-2: #0f172a;
-        --text: #e8eef7;
-        --muted: #9fb0c6;
-        --border: #1e293b;
-        /* default accent = CloudBank (blue); JS swaps these per active slide */
-        --accent: #3b82f6;
-        --accent-2: #38bdf8;
-        --accent-ink: #04152e;
-        --glow: #3b82f6;
-        transition:
-          --accent 0.55s ease,
-          --accent-2 0.55s ease,
-          --accent-ink 0.55s ease,
-          --glow 0.55s ease;
+        --cloudbank: #2f6fd0;
+        --planora: #6d59ad;
+        --nutreek: #2f7d32;
+        --cupid: #c4356a;
       }
-      @media (prefers-color-scheme: light) {
+      @media (prefers-color-scheme: dark) {
         :root {
-          --bg: #f6f9fc;
-          --bg-2: #ffffff;
-          --text: #0f172a;
-          --muted: #566579;
-          --border: #dbe4ee;
-        }
-      }
-      * {
-        box-sizing: border-box;
-      }
-      html {
-        scroll-behavior: smooth;
-      }
-      body {
-        margin: 0;
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        font-family:
-          system-ui,
-          -apple-system,
-          "Segoe UI",
-          Roboto,
-          Helvetica,
-          Arial,
-          sans-serif;
-        color: var(--text);
-        background: var(--bg);
-        overflow-x: hidden;
-      }
-      a {
-        color: inherit;
-      }
-      /* Animated aurora background */
-      .bg {
-        position: fixed;
-        inset: 0;
-        z-index: -1;
-        overflow: hidden;
-      }
-      .blob {
-        position: absolute;
-        width: 46vw;
-        height: 46vw;
-        border-radius: 50%;
-        filter: blur(70px);
-        opacity: 0.5;
-        animation: drift 18s ease-in-out infinite alternate;
-      }
-      .blob.a {
-        background: var(--accent);
-        top: -12vw;
-        left: -8vw;
-      }
-      .blob.b {
-        background: #5aa9f4;
-        bottom: -14vw;
-        right: -8vw;
-        animation-delay: -6s;
-      }
-      .blob.c {
-        background: #7048e8;
-        top: 30vh;
-        right: 20vw;
-        opacity: 0.32;
-        animation-delay: -12s;
-      }
-      @keyframes drift {
-        to {
-          transform: translate3d(6vw, 4vh, 0) scale(1.12);
+          --cloudbank: #6fa6f2;
+          --planora: #a692e8;
+          --nutreek: #6fbf72;
+          --cupid: #f58ab0;
         }
       }
 
-      main {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        padding: 3.5rem 1.25rem 2rem;
-        gap: 1.4rem;
+      .hero {
+        padding: 3rem 0 1.5rem;
       }
-      h1 {
-        margin: 0;
-        font-size: clamp(2.2rem, 7vw, 3.8rem);
-        line-height: 1.02;
-        letter-spacing: -0.02em;
-        font-weight: 800;
-      }
-      h1 .grad {
-        background: linear-gradient(120deg, var(--accent), var(--accent-2));
-        -webkit-background-clip: text;
-        background-clip: text;
-        color: transparent;
-      }
-      .lead {
-        margin: 0;
-        max-width: 52ch;
-        color: var(--muted);
-        font-size: clamp(1rem, 2.4vw, 1.2rem);
-      }
-      .cta-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.8rem;
-        justify-content: center;
-        margin-top: 0.4rem;
-      }
-      .btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.8rem 1.4rem;
-        border-radius: 999px;
-        font-weight: 700;
-        font-size: 1rem;
-        text-decoration: none;
-        border: 1px solid var(--border);
-        color: var(--text);
-        background: var(--bg-2);
-        cursor: pointer;
-        transition:
-          transform 0.15s ease,
-          box-shadow 0.25s ease,
-          filter 0.2s ease;
-      }
-      .btn:hover {
-        transform: translateY(-2px);
-      }
-      .btn.primary {
-        border: none;
-        color: var(--accent-ink);
-        background: linear-gradient(120deg, var(--accent), var(--accent-2));
-        box-shadow: 0 10px 26px -10px var(--glow);
-      }
-      .btn.primary:hover {
-        filter: brightness(1.06);
-        box-shadow: 0 14px 32px -8px var(--glow);
-      }
-      .chips {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        justify-content: center;
-      }
-      .chip {
-        font-size: 0.82rem;
-        color: var(--muted);
-        border: 1px solid var(--border);
-        border-radius: 999px;
-        padding: 0.32rem 0.8rem;
-        background: color-mix(in srgb, var(--bg-2) 60%, transparent);
+      .hero .lede {
+        max-width: 36rem;
+        font-size: var(--t-md);
+        text-wrap: pretty;
       }
 
-      /* ===== Top navigation ===== */
-      .site-nav {
-        position: sticky;
-        top: 0;
-        z-index: 20;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-        padding: 0.85rem clamp(1rem, 4vw, 2.5rem);
-        background: color-mix(in srgb, var(--bg) 72%, transparent);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border-bottom: 1px solid var(--border);
+      /* ---- The index: every product, its state, one click away ---- */
+      .index {
+        margin: 2rem 0 0;
+        padding: 0 0.4rem;
       }
-      .site-nav .brand {
-        font-weight: 800;
-        font-size: 1.05rem;
-        letter-spacing: -0.01em;
-        text-decoration: none;
-        color: var(--text);
-      }
-      .site-nav .brand .grad {
-        background: linear-gradient(120deg, var(--accent), var(--accent-2));
-        -webkit-background-clip: text;
-        background-clip: text;
-        color: transparent;
-      }
-      .site-nav nav {
-        display: flex;
-        gap: clamp(0.7rem, 2vw, 1.4rem);
-        align-items: center;
-      }
-      .site-nav nav a {
-        text-decoration: none;
-        color: var(--muted);
-        font-weight: 600;
-        font-size: 0.95rem;
-        transition: color 0.2s ease;
-      }
-      .site-nav nav a:hover,
-      .site-nav nav a[aria-current="page"] {
-        color: var(--text);
-      }
-
-      /* ===== Project carousel ===== */
-      .carousel {
-        position: relative;
-        width: min(760px, 100%);
-        margin-top: 0.6rem;
-      }
-      .track {
-        display: flex;
-        gap: 1rem;
-        overflow-x: auto;
-        scroll-snap-type: x mandatory;
-        scrollbar-width: none;
-        border-radius: 26px;
-      }
-      .track::-webkit-scrollbar {
-        display: none;
-      }
-      .card {
-        flex: 0 0 100%;
-        scroll-snap-align: center;
-        scroll-snap-stop: always;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 1rem;
-        padding: 2.2rem 1.6rem 2.4rem;
-        border: 1px solid var(--border);
-        border-radius: 26px;
-        background: color-mix(in srgb, var(--bg-2) 82%, transparent);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-      }
-      .card .icon {
-        width: 88px;
-        height: 88px;
-        filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.3));
-        animation: pop 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.4) both;
-      }
-      @keyframes pop {
-        from {
-          opacity: 0;
-          transform: translateY(10px) scale(0.9);
-        }
-      }
-      .card h2 {
-        margin: 0;
-        font-size: clamp(1.7rem, 4.5vw, 2.3rem);
-        letter-spacing: -0.02em;
-      }
-      .card h2 .grad {
-        background: linear-gradient(120deg, var(--accent), var(--accent-2));
-        -webkit-background-clip: text;
-        background-clip: text;
-        color: transparent;
-      }
-      .card .desc {
-        margin: 0;
-        max-width: 46ch;
-        color: var(--muted);
-        font-size: 1.02rem;
-        line-height: 1.55;
-      }
-      .badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.42rem;
-        font-size: 0.78rem;
-        font-weight: 700;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        border-radius: 999px;
-        padding: 0.3rem 0.85rem;
-      }
-      .badge::before {
-        content: "";
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        background: currentColor;
-      }
-      .badge.open {
-        color: #12b886;
-        background: color-mix(in srgb, #12b886 14%, transparent);
-        border: 1px solid color-mix(in srgb, #12b886 40%, transparent);
-      }
-      .badge.closed {
-        color: #b197fc;
-        background: color-mix(in srgb, #7048e8 14%, transparent);
-        border: 1px solid color-mix(in srgb, #7048e8 45%, transparent);
-      }
-      .nav {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        z-index: 2;
-        width: 42px;
-        height: 42px;
-        border-radius: 50%;
-        border: 1px solid var(--border);
-        background: color-mix(in srgb, var(--bg-2) 88%, transparent);
-        color: var(--text);
-        font-size: 1.3rem;
-        line-height: 1;
-        cursor: pointer;
+      .entry {
         display: grid;
-        place-items: center;
+        grid-template-columns: 2.5rem minmax(9rem, 12rem) 1fr auto;
+        align-items: center;
+        gap: 0 1.5rem;
+        padding: 1.4rem 1.2rem;
+        border-bottom: 1px solid var(--rule-soft);
+        border-left: 4px solid transparent;
+        text-decoration: none;
+        background: transparent;
         transition:
-          transform 0.15s ease,
-          filter 0.2s ease;
-        backdrop-filter: blur(6px);
-        -webkit-backdrop-filter: blur(6px);
+          background-color 0.12s linear,
+          border-left-color 0.12s linear;
       }
-      .nav:hover {
-        transform: translateY(-50%) scale(1.08);
+      .entry:last-child {
+        border-bottom: 0;
       }
-      .nav.prev {
-        left: -8px;
+      .entry:hover,
+      .entry:focus-visible {
+        background: color-mix(in srgb, var(--accent) 7%, transparent);
+        border-left-color: var(--accent);
       }
-      .nav.next {
-        right: -8px;
+      .entry img {
+        width: 40px;
+        height: 40px;
       }
-      @media (min-width: 900px) {
-        .nav.prev {
-          left: -56px;
-        }
-        .nav.next {
-          right: -56px;
-        }
+      .entry .name {
+        font-variation-settings: "wdth" 118;
+        font-weight: 600;
+        font-size: var(--t-md);
+        letter-spacing: -0.015em;
       }
-      .dots {
+      .entry .what {
+        color: var(--ink-2);
+        font-size: var(--t-sm);
+      }
+      .entry .state {
+        font-size: var(--t-sm);
+        white-space: nowrap;
         display: flex;
+        align-items: center;
         gap: 0.55rem;
-        justify-content: center;
-        margin-top: 1rem;
       }
-      .dot {
+      .entry .state::before {
+        content: "";
         width: 9px;
         height: 9px;
-        padding: 0;
-        border-radius: 50%;
-        border: none;
-        background: var(--border);
-        cursor: pointer;
-        transition:
-          background 0.25s ease,
-          transform 0.25s ease;
-      }
-      .dot[aria-current="true"] {
+        flex: none;
         background: var(--accent);
-        transform: scale(1.35);
+      }
+      .entry .state.pending::before {
+        background: transparent;
+        box-shadow: inset 0 0 0 2px var(--accent);
+      }
+      @media (max-width: 52rem) {
+        .entry {
+          grid-template-columns: 2.5rem 1fr;
+          gap: 0.35rem 1.2rem;
+          padding-block: 1.2rem;
+        }
+        .entry img {
+          grid-row: span 3;
+          align-self: start;
+        }
       }
 
-      /* ===== Contact dialog ===== */
-      dialog#contact {
-        width: min(460px, calc(100vw - 2rem));
-        border: 1px solid var(--border);
-        border-radius: 22px;
-        padding: 1.8rem 1.6rem;
-        color: var(--text);
-        background: var(--bg-2);
-        box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.55);
+      /* ---- Product sections ---- */
+      .product {
+        padding: 4rem 0;
+        border-bottom: 1px solid var(--rule);
+        display: grid;
+        grid-template-columns: minmax(0, 30rem) minmax(0, 1fr);
+        gap: 3rem;
+        align-items: start;
       }
-      dialog#contact::backdrop {
-        background: rgba(4, 8, 18, 0.55);
+      .product:last-of-type {
+        border-bottom: 0;
+      }
+      @media (max-width: 58rem) {
+        .product {
+          grid-template-columns: 1fr;
+          gap: 2rem;
+        }
+      }
+      .product h2 {
+        font-variation-settings: "wdth" 118;
+        font-size: var(--t-xl);
+        font-weight: 600;
+        line-height: 1;
+        letter-spacing: -0.02em;
+        margin: 0 0 1.2rem;
+      }
+      .product .mark {
+        width: 52px;
+        height: 52px;
+        display: block;
+        margin-bottom: 1rem;
+      }
+      .product p {
+        margin: 0 0 1rem;
+        max-width: 34rem;
+      }
+      .product .stores {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+        font-size: var(--t-sm);
+        color: var(--ink-2);
+      }
+      .product .stores span {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .product .stores svg {
+        width: 18px;
+        height: 18px;
+        flex: none;
+      }
+      .product figure,
+      .product .reel {
+        margin: 0;
+      }
+      /* Cupid ships no screenshots on purpose — it handles sensitive data. */
+      .instead {
+        border-left: 3px solid var(--accent);
+        padding: 1.4rem 1.5rem;
+        font-size: var(--t-sm);
+        color: var(--ink-2);
+      }
+      .instead strong {
+        color: var(--ink);
+      }
+
+      /* ---- Contact ---- */
+      dialog {
+        width: min(34rem, calc(100vw - 2rem));
+        padding: 0;
+        border: 0;
+        background: color-mix(in srgb, var(--ground) 82%, transparent);
+        color: var(--ink);
+      }
+      dialog::backdrop {
+        background: rgb(12 14 12 / 0.5);
         backdrop-filter: blur(4px);
       }
-      #contact h3 {
-        margin: 0 0 0.3rem;
-        font-size: 1.4rem;
-        letter-spacing: -0.01em;
+      .sheet {
+        padding: 1.8rem;
       }
-      #contact .sub {
-        margin: 0 0 1.1rem;
-        color: var(--muted);
-        font-size: 0.92rem;
+      .sheet h2 {
+        font-variation-settings: "wdth" 118;
+        font-size: var(--t-lg);
+        font-weight: 600;
+        line-height: 1.1;
+        margin: 0 0 0.5rem;
       }
-      #contact .close {
-        position: absolute;
-        top: 0.9rem;
-        right: 0.9rem;
-        width: 34px;
-        height: 34px;
-        border-radius: 50%;
-        border: 1px solid var(--border);
-        background: transparent;
-        color: var(--muted);
-        font-size: 1rem;
-        cursor: pointer;
-      }
-      #contact .close:hover {
-        color: var(--text);
+      .sheet > p {
+        margin: 0 0 1.5rem;
+        font-size: var(--t-sm);
+        color: var(--ink-2);
       }
       .field {
-        display: flex;
-        flex-direction: column;
-        gap: 0.3rem;
-        margin-bottom: 0.85rem;
-        text-align: left;
+        display: block;
+        margin-bottom: 1rem;
       }
-      .field label {
-        font-size: 0.82rem;
-        font-weight: 700;
-        color: var(--muted);
+      .field span {
+        display: block;
+        font-size: var(--t-sm);
+        font-weight: 500;
+        margin-bottom: 0.35rem;
       }
       .field input,
       .field select,
       .field textarea {
+        width: 100%;
         font: inherit;
-        color: var(--text);
-        background: var(--bg);
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 0.65rem 0.8rem;
+        font-size: var(--t-sm);
+        color: inherit;
+        background: var(--ground);
+        border: 1px solid var(--rule);
+        padding: 0.55rem 0.7rem;
       }
       .field textarea {
+        min-height: 7rem;
         resize: vertical;
-        min-height: 96px;
       }
-      .field input:focus,
-      .field select:focus,
-      .field textarea:focus {
-        outline: 2px solid var(--accent);
-        outline-offset: 1px;
-        border-color: transparent;
+      .sheet .direct {
+        margin: 1.2rem 0 0;
+        font-size: var(--t-sm);
+        color: var(--ink-2);
       }
-      #contact .actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.6rem;
-        align-items: center;
-        margin-top: 1.1rem;
-      }
-      #contact .direct {
-        margin: 1rem 0 0;
-        font-size: 0.82rem;
-        color: var(--muted);
-      }
-      #contact .direct a {
-        color: var(--accent);
-        text-decoration: none;
-      }
-
-      /* ===== "Coming soon" store badges (grayed out, non-clickable) ===== */
-      .stores {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.7rem;
-        justify-content: center;
-        margin-top: 0.2rem;
-      }
-      .store {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.6rem;
-        padding: 0.5rem 1rem;
-        border-radius: 13px;
-        border: 1px solid var(--border);
-        background: color-mix(in srgb, var(--bg-2) 70%, transparent);
-        cursor: default;
-        filter: grayscale(1);
-        opacity: 0.62;
-        min-width: 158px;
-      }
-      .store-ico {
-        width: 26px;
-        height: 26px;
-        flex: none;
-        color: var(--text);
-      }
-      .store-txt {
-        display: flex;
-        flex-direction: column;
-        line-height: 1.12;
-        text-align: left;
-        color: var(--text);
-      }
-      .store-txt small {
-        font-size: 0.6rem;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-        color: var(--muted);
-      }
-      .store-txt b {
-        font-size: 0.98rem;
-        font-weight: 700;
-      }
-
-      footer {
-        text-align: center;
-        padding: 1.5rem 1rem 2rem;
-        color: var(--muted);
-        font-size: 0.85rem;
-        border-top: 1px solid var(--border);
-      }
-      footer a {
-        color: var(--muted);
-        text-decoration: none;
-      }
-      footer a:hover {
-        color: var(--text);
-      }
-      footer button.linklike {
+      .linklike {
         font: inherit;
-        color: var(--muted);
+        font-size: inherit;
+        color: inherit;
         background: none;
-        border: none;
+        border: 0;
         padding: 0;
         cursor: pointer;
-      }
-      footer button.linklike:hover {
-        color: var(--text);
-      }
-      footer .sep {
-        opacity: 0.5;
-        margin: 0 0.5rem;
-      }
-      @media (prefers-reduced-motion: reduce) {
-        :root {
-          transition: none;
-        }
-        .blob,
-        .card .icon {
-          animation: none;
-        }
+        text-decoration: underline;
       }
     </style>
+    <script src="site.js" defer></script>
   </head>
   <body>
-    <div class="bg" aria-hidden="true">
-      <span class="blob a"></span>
-      <span class="blob b"></span>
-      <span class="blob c"></span>
+    <div class="depth" aria-hidden="true">
+      <span class="aura one"></span>
+      <span class="aura two"></span>
+      <span class="spot"></span>
+      <span class="grain"></span>
     </div>
 
-    <header class="site-nav">
-      <a class="brand" href="index.html">Carlo <span class="grad">Ruggiero</span></a>
+    <header class="bar">
+      <a class="wordmark" href="index.html">Carlo Ruggiero</a>
       <nav aria-label="Primary">
         <a href="index.html" aria-current="page">Projects</a>
         <a href="about.html">About</a>
+        <a href="donate.html">Donate</a>
         <a href="https://github.com/easly1989" rel="noopener">GitHub</a>
       </nav>
     </header>
 
     <main>
-      <h1>My <span class="grad">Projects</span></h1>
-      <p class="lead">
-        I'm <strong>Carlo Ruggiero</strong>, a full-stack developer. I build self-hosted web
-        apps — from open-source tools to products. Curious about one of them? Get in touch.
-      </p>
+      <div class="wrap">
+        <section class="hero">
+          <h1 class="display unfurl">
+            <span>Whole products,</span>
+            <span>not demos.</span>
+          </h1>
+          <p class="lede">
+            I'm Carlo Ruggiero. I build software end to end — database, API and interface, on the
+            web and on phones. Three of these you host yourself; Planora is free and hosted for you.
+          </p>
+        </section>
 
-      <!-- ===== Carousel ===== -->
-      <section class="carousel" aria-roledescription="carousel" aria-label="Projects">
-        <button class="nav prev" type="button" aria-label="Previous project">‹</button>
+        <nav class="index pane reveal stagger" aria-label="Projects">
+          <a class="entry" href="cloudbank.html" style="--accent: var(--cloudbank)">
+            <img src="logo.svg" alt="" width="40" height="40" />
+            <span class="name">CloudBank</span>
+            <span class="what">Personal finance manager, open source</span>
+            <span class="state live">Shipping, v3.0</span>
+          </a>
+          <a class="entry" href="planora.html" style="--accent: var(--planora)">
+            <img src="planora.svg" alt="" width="40" height="40" />
+            <span class="name">Planora</span>
+            <span class="what">Shared activity planner for groups</span>
+            <span class="state pending">In testing</span>
+          </a>
+          <a class="entry" href="nutreek.html" style="--accent: var(--nutreek)">
+            <img src="nutreek.svg" alt="" width="40" height="40" />
+            <span class="name">Nutreek</span>
+            <span class="what">Weekly nutrition planner, self-hosted</span>
+            <span class="state">Available to license</span>
+          </a>
+          <a class="entry" href="cupid.html" style="--accent: var(--cupid)">
+            <img src="cupid.svg" alt="" width="40" height="40" />
+            <span class="name">Cupid</span>
+            <span class="what">Management system for matchmaking agencies</span>
+            <span class="state">Available to license</span>
+          </a>
+        </nav>
 
-        <div class="track" id="track" tabindex="0">
-          <!-- CloudBank -->
-          <article class="card" aria-roledescription="slide" aria-label="CloudBank — 1 of 4">
-            <img class="icon" src="logo.svg" alt="" width="88" height="88" />
-            <span class="badge open">Open source</span>
-            <h2>Cloud<span class="grad">Bank</span></h2>
-            <p class="desc">
+        <section class="product reveal" id="cloudbank" style="--accent: var(--cloudbank)" data-accent>
+          <div>
+            <img class="mark" src="logo.svg" alt="" width="52" height="52" />
+            <h2>CloudBank</h2>
+            <p>
               A free, self-hosted personal finance manager — a from-scratch web port of
-              <strong>HomeBank</strong>, now at <strong>v3.0</strong>. Accounts, a powerful
-              register, scheduled transactions, budgets and reports, plus automatic bank sync,
-              savings goals &amp; bills, an installable PWA with 2FA, and opt-in AI entry — all in
-              one Docker container you control.
+              <strong>HomeBank</strong>, now at v3.0. Accounts, a powerful register, scheduled
+              transactions, budgets and reports, plus automatic bank sync, savings goals and bills.
             </p>
-            <div class="chips">
-              <span class="chip">Self-hosted · Docker</span>
-              <span class="chip">Automatic bank sync</span>
-              <span class="chip">Installable PWA · 2FA</span>
-              <span class="chip">Optional AI (BYO-key)</span>
-              <span class="chip">AGPL-3.0</span>
+            <p>
+              It installs to your phone or desktop as a PWA, supports two-factor auth, and offers
+              opt-in AI entry with your own key. One Docker container, your data in a file you
+              control, AGPL-3.0.
+            </p>
+            <div class="actions">
+              <a class="action key" href="cloudbank.html#demo">Try the demo</a>
+              <a class="action" href="https://github.com/easly1989/cloudbank" rel="noopener">
+                View on GitHub
+              </a>
+              <a class="action" href="cloudbank.html">Read the details</a>
             </div>
-            <div class="cta-row">
-              <a class="btn primary" href="https://easly1989.github.io/cloudbank/"
-                >Open CloudBank →</a
-              >
-              <a class="btn" href="https://github.com/easly1989/cloudbank" rel="noopener"
-                >View on GitHub</a
-              >
-              <a class="btn" href="cloudbank.html">Full details →</a>
-            </div>
-          </article>
+          </div>
+          <div class="reel">
+            <figure>
+              <img
+                src="assets/cloudbank-dashboard.png"
+                alt="CloudBank dashboard with account balances, spending and upcoming transactions"
+                loading="lazy"
+              />
+              <figcaption>The dashboard is a free-form grid — place and resize any widget.</figcaption>
+            </figure>
+            <figure>
+              <img
+                src="assets/cloudbank-register.png"
+                alt="CloudBank transaction register with running balance, filters and a selection total"
+                loading="lazy"
+              />
+              <figcaption>The register: running balance, filters and a live selection total.</figcaption>
+            </figure>
+            <figure>
+              <img
+                src="assets/cloudbank-reports.png"
+                alt="CloudBank reports with interactive charts"
+                loading="lazy"
+              />
+              <figcaption>Reports — statistics, trends, balance, budget and vehicle cost.</figcaption>
+            </figure>
+            <figure>
+              <img
+                src="assets/cloudbank-dashboard-customize.png"
+                alt="Customizing the CloudBank dashboard by placing and resizing widgets on a grid"
+                loading="lazy"
+              />
+              <figcaption>Drag, resize and add widgets from a palette.</figcaption>
+            </figure>
+          </div>
+        </section>
 
-          <!-- Planora -->
-          <article class="card" aria-roledescription="slide" aria-label="Planora — 2 of 4">
-            <img class="icon" src="planora.svg" alt="" width="88" height="88" />
-            <span class="badge closed">Closed source</span>
+        <section class="product reveal" id="planora" style="--accent: var(--planora)" data-accent>
+          <div>
+            <img class="mark" src="planora.svg" alt="" width="52" height="52" />
             <h2>Planora</h2>
-            <p class="desc">
-              A mobile-first shared activity planner for groups — friends, family, couples and
-              teams. Build a shared backlog of ideas and, when someone hits <strong>Organize</strong>,
-              a guided wizard takes the whole group through date voting, the event and feedback.
-              One app for Web, Android and iOS.
+            <p>
+              A mobile-first shared activity planner for friends, family, couples and teams. The
+              group keeps a shared backlog of ideas; when someone hits <strong>Organize</strong>, a
+              wizard walks everyone through date voting, the event itself and the feedback after.
             </p>
-            <div class="chips">
-              <span class="chip">Group activity planner</span>
-              <span class="chip">Web · Android · iOS</span>
-              <span class="chip">Free</span>
-            </div>
+            <p>One codebase for Web, Android and iOS. Free, and hosted for you.</p>
             <div class="stores" aria-label="Coming soon to the app stores">
-              <span class="store" role="img" aria-label="Coming soon on the App Store">
-                <svg class="store-ico" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <span>
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                   <path
                     d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 8.66 7.35c1.31.07 2.22.72 2.99.72.76 0 2.24-.89 3.78-.76 1.66.13 2.9.79 3.72 2.05-3.19 1.92-2.68 6.14.7 7.14-.68 1.65-1.53 3.14-2.8 3.78zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"
                   />
                 </svg>
-                <span class="store-txt"><small>Coming soon on the</small><b>App Store</b></span>
+                Coming soon on the App Store
               </span>
-              <span class="store" role="img" aria-label="Coming soon on Google Play">
-                <svg class="store-ico" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M4 2.5 12.5 12 4 21.5z" fill="#6f6f6f" />
-                  <path d="M4 2.5 20.5 12 12.5 12z" fill="#909090" />
-                  <path d="M4 21.5 20.5 12 12.5 12z" fill="#7d7d7d" />
+              <span>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 2.5 12.5 12 4 21.5z" fill="currentColor" />
+                  <path d="M4 2.5 20.5 12 12.5 12z" fill="currentColor" opacity=".7" />
+                  <path d="M4 21.5 20.5 12 12.5 12z" fill="currentColor" opacity=".45" />
                 </svg>
-                <span class="store-txt"><small>Coming soon on</small><b>Google Play</b></span>
+                Coming soon on Google Play
               </span>
             </div>
-            <div class="cta-row">
-              <a class="btn" href="planora.html">Full details →</a>
+            <div class="actions">
+              <a class="action key" href="planora.html">Read the details</a>
+              <button class="action" type="button" data-contact="Planora">Ask me about it</button>
             </div>
-          </article>
+          </div>
+          <figure>
+            <img
+              src="assets/planora-preview.png"
+              alt="Planora: onboarding, the shared activity backlog and the Organize date-voting screen"
+              loading="lazy"
+            />
+            <figcaption>Onboarding, the shared backlog, and the Organize date-voting flow.</figcaption>
+          </figure>
+        </section>
 
-          <!-- Nutreek -->
-          <article class="card" aria-roledescription="slide" aria-label="Nutreek — 3 of 4">
-            <img class="icon" src="nutreek.svg" alt="" width="88" height="88" />
-            <span class="badge closed">Closed source</span>
+        <section class="product reveal" id="nutreek" style="--accent: var(--nutreek)" data-accent>
+          <div>
+            <img class="mark" src="nutreek.svg" alt="" width="52" height="52" />
             <h2>Nutreek</h2>
-            <p class="desc">
-              A self-hosted weekly nutrition planner: build meal plans and track calories and
-              macros (protein, carbs, fat) per meal, day and week, backed by an offline
-              OpenFoodFacts ingredient database. Adaptive TDEE, weight and hydration tracking,
-              workouts and a coach mode for managing clients. One Go binary or one Docker
-              container.
+            <p>
+              A self-hosted weekly nutrition planner. Build a week of meals from ingredients and
+              recipes and it computes calories, protein, carbs and fat per meal, per day and per
+              week, against your targets.
             </p>
-            <div class="chips">
-              <span class="chip">Weekly meal planning</span>
-              <span class="chip">Macros &amp; adaptive TDEE</span>
-              <span class="chip">Self-hosted · Docker</span>
-              <span class="chip">Coach mode</span>
+            <p>
+              Ingredient search runs offline against a local OpenFoodFacts index. Adaptive TDEE
+              keeps your targets honest, and coach mode manages plans for other people. One Go
+              binary, or one container.
+            </p>
+            <div class="actions">
+              <a class="action key" href="nutreek.html">Read the details</a>
+              <button class="action" type="button" data-contact="Nutreek">Ask me about it</button>
             </div>
-            <div class="cta-row">
-              <button class="btn primary" type="button" data-contact="Nutreek">
-                Interested? Contact me
-              </button>
-              <a class="btn" href="nutreek.html">Full details →</a>
-            </div>
-          </article>
+          </div>
+          <div class="reel">
+            <figure>
+              <img
+                src="assets/nutreek-dashboard.png"
+                alt="Nutreek weekly dashboard with meals, per-day and per-week macros and adherence bars"
+                loading="lazy"
+              />
+              <figcaption>The weekly dashboard: meals, macros per day and week, hydration.</figcaption>
+            </figure>
+            <figure>
+              <img
+                src="assets/nutreek-stats.png"
+                alt="Nutreek statistics screen with weekly summary and adaptive TDEE suggestion"
+                loading="lazy"
+              />
+              <figcaption>Statistics and adaptive TDEE, suggested from your own trend.</figcaption>
+            </figure>
+            <figure>
+              <img
+                src="assets/nutreek-coach.png"
+                alt="Nutreek coach panel: client management, plan assignment and a reusable plan library"
+                loading="lazy"
+              />
+              <figcaption>Coach panel: manage clients and reuse a plan library.</figcaption>
+            </figure>
+          </div>
+        </section>
 
-          <!-- Cupid -->
-          <article class="card" aria-roledescription="slide" aria-label="Cupid — 4 of 4">
-            <img class="icon" src="cupid.svg" alt="" width="88" height="88" />
-            <span class="badge closed">Closed source</span>
+        <section class="product reveal" id="cupid" style="--accent: var(--cupid)" data-accent>
+          <div>
+            <img class="mark" src="cupid.svg" alt="" width="52" height="52" />
             <h2>Cupid</h2>
-            <p class="desc">
-              A web management system for matchmaking &amp; dating agencies — a cloud-ready port
-              of the classic <em>“Cuore”</em> desktop app. Client records, partner preferences,
-              affinity matching, meetings, contracts and print-ready sheets, with email/Telegram
-              notifications, GDPR tools and encrypted cloud backups. Ships as a single Docker
-              container.
+            <p>
+              A web management system for matchmaking and dating agencies — a cloud-ready rewrite of
+              the classic <em>Cuore</em> desktop application. Client records, partner requests,
+              affinity matching, meetings, contracts and print-ready sheets.
             </p>
-            <div class="chips">
-              <span class="chip">Matchmaking agency CRM</span>
-              <span class="chip">Affinity matching</span>
-              <span class="chip">Self-hosted or hosted</span>
-              <span class="chip">Docker</span>
+            <p>
+              Email and Telegram notifications, GDPR tooling, an audit log and encrypted cloud
+              backups. Run it yourself, or let me host it for you.
+            </p>
+            <div class="actions">
+              <a class="action key" href="cupid.html">Read the details</a>
+              <button class="action" type="button" data-contact="Cupid">Ask me about it</button>
             </div>
-            <div class="cta-row">
-              <button class="btn primary" type="button" data-contact="Cupid">
-                Interested? Contact me
-              </button>
-              <a class="btn" href="cupid.html">Full details →</a>
-            </div>
-          </article>
-        </div>
-
-        <button class="nav next" type="button" aria-label="Next project">›</button>
-
-        <div class="dots" role="tablist" aria-label="Choose project">
-          <button class="dot" type="button" role="tab" aria-label="CloudBank" aria-current="true"></button>
-          <button class="dot" type="button" role="tab" aria-label="Planora"></button>
-          <button class="dot" type="button" role="tab" aria-label="Nutreek"></button>
-          <button class="dot" type="button" role="tab" aria-label="Cupid"></button>
-        </div>
-      </section>
+          </div>
+          <div class="instead pane">
+            <p>
+              <strong>No screenshots, by design.</strong> Cupid holds real client records for real
+              agencies, so nothing from a customer install is published here. Ask me for a demo and
+              I will walk you through a seeded instance instead.
+            </p>
+          </div>
+        </section>
+      </div>
     </main>
 
-    <!-- ===== Contact dialog: builds a mailto — no data is sent to any server ===== -->
-    <dialog id="contact">
-      <button class="close" type="button" aria-label="Close">✕</button>
-      <h3>Get in touch</h3>
-      <p class="sub">
-        Interested in buying, licensing or just curious? Send me a message — it opens in your
-        email app.
-      </p>
-      <form id="contact-form">
-        <div class="field">
-          <label for="cf-name">Your name</label>
+    <!-- ===== Contact: builds a mailto — no data is sent to any server ===== -->
+    <dialog id="contact" aria-labelledby="contact-title">
+      <form class="sheet" id="contact-form">
+        <h2 id="contact-title">Get in touch</h2>
+        <p>Interested in buying, licensing, or just curious? This opens in your email app.</p>
+        <label class="field">
+          <span>Your name</span>
           <input id="cf-name" name="name" type="text" autocomplete="name" required />
-        </div>
-        <div class="field">
-          <label for="cf-project">Project</label>
+        </label>
+        <label class="field">
+          <span>Project</span>
           <select id="cf-project" name="project">
+            <option>CloudBank</option>
+            <option>Planora</option>
             <option>Nutreek</option>
             <option>Cupid</option>
-            <option>Planora</option>
-            <option>CloudBank</option>
             <option>Other</option>
           </select>
-        </div>
-        <div class="field">
-          <label for="cf-message">Message</label>
-          <textarea
-            id="cf-message"
-            name="message"
-            required
-            placeholder="I'd like to know more about…"
-          ></textarea>
-        </div>
+        </label>
+        <label class="field">
+          <span>Message</span>
+          <textarea id="cf-message" name="message" required placeholder="I'd like to know more about…"></textarea>
+        </label>
         <div class="actions">
-          <button class="btn primary" type="submit">Send ✉</button>
-          <button class="btn" type="button" data-close>Cancel</button>
+          <button class="action key" type="submit">Write the email</button>
+          <button class="action" type="button" data-close>Cancel</button>
         </div>
+        <p class="direct">Or write to <a id="direct-mail" href="#">me</a> directly.</p>
       </form>
-      <p class="direct">
-        Prefer plain email? Write me at <a id="direct-mail" href="#">loading…</a>
-      </p>
     </dialog>
 
     <footer>
-      <a href="https://github.com/easly1989/cloudbank" rel="noopener">Source code</a>
-      <span class="sep">·</span>
-      <a href="https://easly1989.github.io/cloudbank/donate/">Donate</a>
-      <span class="sep">·</span>
+      <a href="about.html">About</a>
+      <a href="https://github.com/easly1989" rel="noopener">GitHub</a>
       <button class="linklike" type="button" data-contact="Other">Contact</button>
-      <span class="sep">·</span>
-      <a href="https://www.gethomebank.org/" rel="noopener">a web port of HomeBank</a>
+      <a href="donate.html">Donate</a>
     </footer>
 
     <script>
-      // ===== Carousel =====
-      (function () {
-        var track = document.getElementById("track");
-        var cards = track.querySelectorAll(".card");
-        var dots = document.querySelectorAll(".dot");
-        var prev = document.querySelector(".nav.prev");
-        var next = document.querySelector(".nav.next");
-        var carousel = document.querySelector(".carousel");
-        var root = document.documentElement;
-        var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        var count = cards.length;
-        var index = 0;
-        var timer = null;
-        var AUTO_MS = 5000;
-
-        // Per-project accent palettes: main, secondary, ink-on-accent.
-        var THEMES = [
-          { a: "#3b82f6", b: "#38bdf8", ink: "#04152e" }, // CloudBank — blue
-          { a: "#8b5cf6", b: "#a78bfa", ink: "#1c0a3e" }, // Planora — purple
-          { a: "#12b886", b: "#0ca678", ink: "#04231a" }, // Nutreek — green
-          { a: "#e5395a", b: "#ff7a94", ink: "#2e0512" }, // Cupid — red
-        ];
-        function applyTheme(i) {
-          var t = THEMES[i] || THEMES[0];
-          root.style.setProperty("--accent", t.a);
-          root.style.setProperty("--accent-2", t.b);
-          root.style.setProperty("--accent-ink", t.ink);
-          root.style.setProperty("--glow", t.a);
-        }
-
-        function slideWidth() {
-          return track.clientWidth;
-        }
-        function goTo(i, smooth) {
-          index = ((i % count) + count) % count;
-          track.scrollTo({
-            left: cards[index].offsetLeft,
-            behavior: smooth === false || reduceMotion ? "auto" : "smooth",
-          });
-        }
-        function sync() {
-          var i = Math.round(track.scrollLeft / slideWidth());
-          i = Math.max(0, Math.min(count - 1, i));
-          if (i !== index) index = i;
-          dots.forEach(function (d, k) {
-            if (k === index) d.setAttribute("aria-current", "true");
-            else d.removeAttribute("aria-current");
-          });
-          applyTheme(index);
-        }
-
-        var raf = null;
-        track.addEventListener("scroll", function () {
-          if (raf) return;
-          raf = requestAnimationFrame(function () {
-            raf = null;
-            sync();
-          });
-        });
-
-        // Manual navigation. Auto-rotation is governed by hover/focus/touch
-        // state (below), so these just move — no need to kill the timer.
-        prev.addEventListener("click", function () {
-          goTo(index - 1);
-        });
-        next.addEventListener("click", function () {
-          goTo(index + 1);
-        });
-        dots.forEach(function (d, k) {
-          d.addEventListener("click", function () {
-            goTo(k);
-          });
-        });
-        track.addEventListener("keydown", function (e) {
-          if (e.key === "ArrowLeft") {
-            goTo(index - 1);
-            e.preventDefault();
-          } else if (e.key === "ArrowRight") {
-            goTo(index + 1);
-            e.preventDefault();
-          }
-        });
-
-        // Auto-advance: loops continuously, pausing while the user interacts.
-        function startAuto() {
-          if (reduceMotion || timer) return;
-          timer = setInterval(function () {
-            goTo(index + 1);
-          }, AUTO_MS);
-        }
-        function stopAuto() {
-          if (timer) {
-            clearInterval(timer);
-            timer = null;
-          }
-        }
-
-        var hovering = false;
-        var pointerDown = false;
-        function maybeResume() {
-          if (hovering || pointerDown || reduceMotion) return;
-          startAuto();
-        }
-
-        carousel.addEventListener("mouseenter", function () {
-          hovering = true;
-          stopAuto();
-        });
-        carousel.addEventListener("mouseleave", function () {
-          hovering = false;
-          maybeResume();
-        });
-        carousel.addEventListener("focusin", stopAuto);
-        carousel.addEventListener("focusout", maybeResume);
-
-        track.addEventListener(
-          "pointerdown",
-          function () {
-            pointerDown = true;
-            stopAuto();
-          },
-          { passive: true },
-        );
-        window.addEventListener(
-          "pointerup",
-          function () {
-            if (!pointerDown) return;
-            pointerDown = false;
-            maybeResume();
-          },
-          { passive: true },
-        );
-        track.addEventListener("touchstart", stopAuto, { passive: true });
-        track.addEventListener("touchend", maybeResume, { passive: true });
-
-        // Trackpad/wheel has no "end" event: resume after it settles.
-        var wheelIdle = null;
-        track.addEventListener(
-          "wheel",
-          function () {
-            stopAuto();
-            if (wheelIdle) clearTimeout(wheelIdle);
-            wheelIdle = setTimeout(maybeResume, 2000);
-          },
-          { passive: true },
-        );
-
-        applyTheme(0);
-        startAuto();
-
-        window.addEventListener("resize", function () {
-          goTo(index, false);
-        });
-      })();
-
       // ===== Contact dialog (mailto — nothing leaves the browser) =====
       (function () {
         var email = window.CONTACT_EMAIL || "";
@@ -979,9 +559,7 @@
             dialog.showModal();
           });
         });
-        dialog.querySelector(".close").addEventListener("click", function () {
-          dialog.close();
-        });
+
         dialog.querySelector("[data-close]").addEventListener("click", function () {
           dialog.close();
         });
