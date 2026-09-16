@@ -11,6 +11,7 @@
       All of that is skipped entirely on touch, where there is no cursor to
       answer and the work would only cost battery.
    5. Turn each .reel of screenshots into a carousel.
+   6. Let any screenshot be opened full size.
 
    Everything here is an enhancement. The stylesheet only hides a .reveal while
    `html.js-motion` is set, and this file removes that class if the observer
@@ -291,6 +292,53 @@
       });
 
       el.insertAdjacentElement("afterend", btn);
+    });
+  }
+
+
+  // ---- Enlarging a screenshot ---------------------------------------------
+  // The screenshots are small where they sit, so each one becomes a button
+  // that opens it full size. Wrapping in a real <button> rather than putting a
+  // click handler on the image means Enter, Space and focus all work for free.
+  var shots = [].slice.call(document.querySelectorAll("figure img"));
+
+  if (shots.length && typeof HTMLDialogElement !== "undefined") {
+    var box = document.createElement("dialog");
+    box.className = "lightbox";
+    box.innerHTML =
+      '<button class="close" type="button" aria-label="Close">&times;</button>' +
+      '<img alt="" /><p class="caption"></p>';
+    var bigImg = box.querySelector("img");
+    var bigCap = box.querySelector(".caption");
+    document.body.appendChild(box);
+
+    box.querySelector(".close").addEventListener("click", function () {
+      box.close();
+    });
+
+    // A click that lands on the dialog itself is a click outside the picture.
+    box.addEventListener("click", function (e) {
+      if (e.target === box) box.close();
+    });
+
+    shots.forEach(function (img) {
+      var figure = img.closest("figure");
+      var caption = figure ? figure.querySelector("figcaption") : null;
+      var label = img.getAttribute("alt") || (caption ? caption.textContent : "");
+
+      var button = document.createElement("button");
+      button.type = "button";
+      button.className = "zoom";
+      button.setAttribute("aria-label", label ? "Enlarge: " + label : "Enlarge screenshot");
+      img.parentNode.insertBefore(button, img);
+      button.appendChild(img);
+
+      button.addEventListener("click", function () {
+        bigImg.src = img.currentSrc || img.src;
+        bigImg.alt = img.getAttribute("alt") || "";
+        bigCap.textContent = caption ? caption.textContent : "";
+        box.showModal();
+      });
     });
   }
 

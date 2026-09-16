@@ -57,7 +57,8 @@ so they had to be rebuilt by hand.
   condensing sticky header, the screenshot reels, the pointer effects, and
   (home only) the accent that follows the reader.
 - `logo.svg` (CloudBank + site favicon), `cupid.svg`, `nutreek.svg`, `planora.svg`
-  — project marks. `assets/` holds screenshots used by the home and detail pages.
+  — project marks. `assets/` holds the screenshots and `carlo.jpg`, the portrait
+  on the About page.
 
 ## Money and attribution
 
@@ -127,6 +128,20 @@ to stop anything that moves for more than five seconds, and the dwell is 5.2s.
 Under `prefers-reduced-motion` a reel never auto-advances at all; it starts
 paused and the controls still work.
 
+**Every screenshot can be opened full size.** `site.js` wraps each `figure img`
+in a `<button class="zoom">` and opens a shared `<dialog class="lightbox">` —
+a real button, so Enter, Space, focus and the screen-reader label come for
+free. Click rather than hover, because hover does not exist on a phone. The
+portrait on the About page is deliberately **not** in a `<figure>`, which is
+what keeps the zoom button and the tilt effect off a personal photo.
+
+**The reel frame is 3:2 and the image is drawn transparent**, with a
+`drop-shadow` rather than a `box-shadow`. The screenshots are all slightly
+different shapes, so whatever the frame's ratio some of them are letterboxed;
+with an opaque plate behind, that leftover space read as a pale panel with a
+small picture adrift inside it. A drop-shadow follows the picture's own edges,
+so there is no panel to be adrift in.
+
 Keep `loading="lazy"` on every shot. They all occupy the same box, so the
 browser fetches the whole set as the reel nears the viewport — no blank frames
 mid-rotation, and nothing downloaded for a product the reader never scrolls to.
@@ -186,6 +201,19 @@ turns that into a delay). `.reveal.shown` in the markup means "animate from
 visible" — used on mastheads so the top of a page never flashes empty.
 `.unfurl` animates a headline open along Archivo's width axis; its spans are
 each one line, and it uses `backwards` fill so the resting state is visible.
+
+## Voice
+
+Plain and first-person, and no broader than the facts. Carlo is a software
+developer with more than a decade of experience, currently a Full Stack
+Software Developer at TeamSystem; the projects here are his own time. Earlier
+drafts of this site opened with "Whole products, not demos" and a donate page
+arguing about the ethics of paywalls, and both were asked to be toned down.
+Describe what a thing is and let the reader decide whether it is impressive.
+
+Never invent biography. LinkedIn (HTTP 999) and Instagram (login wall) cannot
+be read programmatically, so anything personal on the About page came from
+Carlo directly and the next fact should too.
 
 ## The design system
 
