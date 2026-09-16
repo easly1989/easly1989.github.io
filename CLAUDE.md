@@ -63,22 +63,21 @@ so they had to be rebuilt by hand.
 ## Money and attribution
 
 `donate.html` is the site's own page, and donation links point at it rather than
-at CloudBank's donate page — sending people from this site to the product's
-donate page reads as though the site were asking on the product's behalf.
+at any product's own donate page — sending people from this site to a product's
+donate page reads as though the site were asking on that product's behalf.
 
-**The page is about the work being free, not about CloudBank.** The argument it
-makes is that every release starts at a fork — charge for it or give it away —
-and that donations are what keep the second answer affordable. CloudBank and
-Planora appear as evidence of that choice, not as the subject: CloudBank is
-AGPL-3.0 and ungated, Planora is free *and* hosted at Carlo's own cost. Nutreek
-and Cupid are named honestly as the licensed work that currently subsidises the
-free work, and the page tells anyone who actually wants those to get in touch
-rather than donate. Keep that framing if you edit the copy; a donate page that
-revolves around one product reintroduces the problem.
+**The page names no projects at all, on purpose.** It is about supporting the
+work in general: the time to finish and maintain things, releasing more of them
+openly, and hosting for the apps and demos. An earlier draft argued the case
+project by project — CloudBank is free, Planora is hosted at my expense, Nutreek
+and Cupid are licensed — and it read as a pitch aimed at specific software.
+Keep it general and keep it polite. In particular, do not describe the closed
+projects as permanently closed: opening more of them up later is something Carlo
+would like to do, and the page says so.
 
-It links out to GitHub Sponsors, PayPal and Liberapay, which are the services
-CloudBank already used; each hands the reader to that service. No payment details
-are ever collected here, and there is no backend that could receive them.
+It links out to GitHub Sponsors, PayPal and Liberapay; each hands the reader to
+that service. No payment details are ever collected here, and there is no backend
+that could receive them.
 
 Its accent is the ink, like `about.html`: pages about the person take the ink,
 saturated colour belongs to the product marks.
