@@ -78,8 +78,28 @@
       if (past === scrolled) return;
       scrolled = past;
       bar.classList.toggle("scrolled", past);
+      measureBar();
     };
+
+    // Publish the header's height so anything else that pins below it can sit
+    // exactly under its edge. It changes when the header condenses and when it
+    // wraps to two rows on a narrow screen, so it is measured, not assumed.
+    var measureBar = function () {
+      root.style.setProperty("--bar-h", bar.getBoundingClientRect().height + "px");
+    };
+
     window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", measureBar, { passive: true });
+    // The header condenses over 0.3s, so measuring straight after the class
+    // change would capture the height it is leaving, not the one it lands on.
+    bar.addEventListener("transitionend", measureBar);
+    // A window resize is not the only way the header changes height — it also
+    // rewraps. Watch the element itself.
+    if (typeof ResizeObserver !== "undefined") {
+      new ResizeObserver(measureBar).observe(bar);
+    }
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(measureBar);
+    measureBar();
     onScroll();
   }
 
