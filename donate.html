@@ -6,7 +6,7 @@
     <title>Donate — Carlo Ruggiero</title>
     <meta
       name="description"
-      content="Support for building and releasing more software openly. Entirely optional, through GitHub Sponsors, PayPal or Liberapay."
+      content="Support for building and releasing more software openly. Entirely optional, through Buy Me a Coffee, GitHub Sponsors, PayPal or Liberapay."
     />
     <meta name="theme-color" content="#bfc3bb" />
     <link rel="icon" type="image/svg+xml" href="logo.svg" />
@@ -27,7 +27,8 @@
     <style>
       /* This page is about the person's work, not any one product, so it takes
          the ink as its accent the way the About page does. Saturated colour on
-         this site belongs to the product marks. */
+         this site belongs to the product marks — and, here, to the donation
+         services, each of which keeps its own brand colour. */
       :root {
         --accent: #161a18;
       }
@@ -39,36 +40,143 @@
       .masthead .state::before {
         display: none;
       }
+      .masthead {
+        border-bottom: 0;
+        padding-bottom: 1.5rem;
+      }
 
-      /* Each route to the same place, given equal weight. */
-      .ways {
+      /* ---- The giving bar -------------------------------------------------
+         The whole page exists for this, so the buttons sit high and then stay
+         put: a child of .wrap, so it stays pinned under the header for the
+         length of the page rather than only while one section is on screen. */
+      .give {
+        position: sticky;
+        /* Tucked a few pixels under the header, so no strip of scrolling text
+           shows between the two. --bar-h is measured by site.js; the fallback
+           covers the moment before it runs. */
+        top: calc(var(--bar-h, 4.3rem) - 0.5rem);
+        z-index: 10;
+        margin: 0 0 2.5rem;
+        padding: 0.9rem;
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-        gap: 1rem;
-        margin-top: 2rem;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.6rem;
+        background: color-mix(in srgb, var(--ground) 86%, transparent);
+        backdrop-filter: blur(10px) saturate(1.25);
+        border-radius: 16px;
+        box-shadow:
+          inset 0 0 0 1px var(--glass-ring),
+          inset 0 1px 0 var(--glass-hi),
+          var(--lift);
       }
-      .way {
-        display: block;
-        padding: 1.4rem 1.5rem;
-        text-decoration: none;
+      /* On a phone the header is two rows tall, so pinning the buttons under
+         it would cost a third of the screen. They go to the bottom instead —
+         still always there, and out of the way of the reading. */
+      @media (max-width: 52rem) {
+        .give {
+          position: fixed;
+          top: auto;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          margin: 0;
+          padding: 0.6rem 0.7rem calc(0.6rem + env(safe-area-inset-bottom, 0px));
+          grid-template-columns: repeat(2, 1fr);
+          gap: 0.5rem;
+          border-radius: 16px 16px 0 0;
+        }
+        .give-btn {
+          padding: 0.65rem 0.6rem;
+        }
+        /* Room for it, so the footer is never trapped underneath. */
+        body {
+          padding-bottom: 8.5rem;
+        }
       }
-      .way h3 {
-        font-variation-settings: "wdth" 112;
-        font-size: var(--t-md);
+
+      /* Each service keeps its own colour, taken from the service itself:
+         Buy Me a Coffee #FFDD00, GitHub Sponsors #BF3989 (Primer's
+         --fgColor-sponsors, #DB61A2 in dark), PayPal #003087, Liberapay
+         #F6C915. The icons are drawn here rather than lifted from anyone's
+         site, and say what kind of giving each one is. */
+      .give-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+        padding: 0.85rem 0.9rem;
+        border-radius: 11px;
+        font-size: var(--t-sm);
         font-weight: 600;
-        line-height: 1.1;
-        margin: 0 0 0.4rem;
+        line-height: 1.15;
+        text-align: center;
+        text-decoration: none;
+        background: var(--brand);
+        color: var(--brand-ink);
+        box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.12);
+        transition:
+          transform 0.25s var(--ease),
+          filter 0.25s linear;
       }
-      .way p {
-        margin: 0;
+      .give-btn:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.06);
+      }
+      .give-btn:focus-visible {
+        outline: 2px solid var(--ink);
+        outline-offset: 3px;
+      }
+      .give-btn svg {
+        width: 19px;
+        height: 19px;
+        flex: none;
+        fill: currentColor;
+      }
+
+      .give-btn.coffee {
+        --brand: #ffdd00;
+        --brand-ink: #0d0c22;
+      }
+      .give-btn.sponsors {
+        --brand: #bf3989;
+        --brand-ink: #fff;
+      }
+      .give-btn.paypal {
+        --brand: #003087;
+        --brand-ink: #fff;
+      }
+      .give-btn.liberapay {
+        --brand: #f6c915;
+        --brand-ink: #1a171b;
+      }
+      @media (prefers-color-scheme: dark) {
+        .give-btn.sponsors {
+          --brand: #db61a2;
+          --brand-ink: #10120f;
+        }
+        .give-btn.paypal {
+          --brand: #0070e0;
+          --brand-ink: #fff;
+        }
+        .give-btn {
+          box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14);
+        }
+      }
+
+      /* What each one is, under the buttons rather than inside them. */
+      .give-notes {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+        gap: 0.6rem 1.6rem;
+        margin: 0 0 2.5rem;
+        padding: 0;
+        list-style: none;
         font-size: var(--t-sm);
         color: var(--ink-2);
       }
-      .pointer-fine .way:hover {
-        box-shadow:
-          inset 0 0 0 1px color-mix(in srgb, var(--accent) 50%, var(--glass-ring)),
-          inset 0 1px 0 var(--glass-hi),
-          var(--lift-hi);
+      .give-notes b {
+        color: var(--ink);
+        font-weight: 600;
       }
     </style>
     <script src="site.js" defer></script>
@@ -104,6 +212,49 @@
           </p>
         </section>
 
+        <nav class="give" aria-label="Ways to give">
+          <a class="give-btn coffee" href="https://buymeacoffee.com/easly1989" rel="noopener">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M4 8h12v7a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8zm13 1h1.5a3.5 3.5 0 0 1 0 7H17v-2h1.5a1.5 1.5 0 0 0 0-3H17V9zM6 2.6c.5.5.5 1 0 1.7-.6.7-.6 1.5 0 2.2H4.6c-.5-.8-.5-1.7 0-2.4.5-.6.5-1 0-1.5h1.4zm3.6 0c.5.5.5 1 0 1.7-.6.7-.6 1.5 0 2.2H8.2c-.5-.8-.5-1.7 0-2.4.5-.6.5-1 0-1.5h1.4zm3.6 0c.5.5.5 1 0 1.7-.6.7-.6 1.5 0 2.2h-1.4c-.5-.8-.5-1.7 0-2.4.5-.6.5-1 0-1.5h1.4z"
+              />
+            </svg>
+            Buy me a coffee
+          </a>
+          <a class="give-btn sponsors" href="https://github.com/sponsors/easly1989" rel="noopener">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M12 21s-7.5-4.7-9.6-9.2A5.4 5.4 0 0 1 12 6.2a5.4 5.4 0 0 1 9.6 5.6C19.5 16.3 12 21 12 21z"
+              />
+            </svg>
+            GitHub Sponsors
+          </a>
+          <a class="give-btn paypal" href="https://paypal.me/carloruggiero" rel="noopener">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M3 6.5A2.5 2.5 0 0 1 5.5 4h13A2.5 2.5 0 0 1 21 6.5V8H3V6.5zM3 10h18v7.5a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5V10zm3 4.5h5V16H6v-1.5z"
+              />
+            </svg>
+            PayPal
+          </a>
+          <a class="give-btn liberapay" href="https://liberapay.com/amon2126/donate" rel="noopener">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M12 5a7 7 0 0 1 6.3 4h-2.4a5 5 0 1 0-.3 5.5l1.7 1.4A7 7 0 1 1 12 5z"
+              />
+              <path d="M18.6 4.2v4.4a.3.3 0 0 1-.5.2l-3-2.2a.3.3 0 0 1 0-.4l3-2.2a.3.3 0 0 1 .5.2z" />
+            </svg>
+            Liberapay
+          </a>
+        </nav>
+
+        <ul class="give-notes">
+          <li><b>Buy me a coffee</b> — a small one-off, no account needed.</li>
+          <li><b>GitHub Sponsors</b> — monthly or one-off, right next to the code.</li>
+          <li><b>PayPal</b> — a one-off amount, if you already have an account.</li>
+          <li><b>Liberapay</b> — recurring, and run as a non-profit itself.</li>
+        </ul>
+
         <section class="section reveal">
           <h2>What it supports</h2>
           <p>
@@ -135,28 +286,9 @@
               </dd>
             </div>
           </dl>
-        </section>
-
-        <section class="section reveal">
-          <h2>Ways to give</h2>
-          <p>All three reach me directly — whichever is easiest for you.</p>
-          <div class="ways">
-            <a class="way pane" href="https://github.com/sponsors/easly1989" rel="noopener">
-              <h3>GitHub Sponsors</h3>
-              <p>Monthly or one-off, right next to the code.</p>
-            </a>
-            <a class="way pane" href="https://paypal.me/carloruggiero" rel="noopener">
-              <h3>PayPal</h3>
-              <p>A one-off amount, if you already have an account.</p>
-            </a>
-            <a class="way pane" href="https://liberapay.com/amon2126/donate" rel="noopener">
-              <h3>Liberapay</h3>
-              <p>Recurring, and run as a non-profit itself.</p>
-            </a>
-          </div>
           <div class="note">
             <p>
-              <strong>Nothing is taken on this site.</strong> Each link hands you to that service,
+              <strong>Nothing is taken on this site.</strong> Each button hands you to that service,
               which handles the payment. This page never asks for card details, and there is no
               backend here that could receive them.
             </p>

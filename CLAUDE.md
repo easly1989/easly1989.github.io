@@ -75,9 +75,29 @@ Keep it general and keep it polite. In particular, do not describe the closed
 projects as permanently closed: opening more of them up later is something Carlo
 would like to do, and the page says so.
 
-It links out to GitHub Sponsors, PayPal and Liberapay; each hands the reader to
-that service. No payment details are ever collected here, and there is no backend
-that could receive them.
+**The buttons come first and then stay put.** The page exists to be donated
+through, so the four services sit directly under the masthead in `.give`, which
+is a child of `.wrap` — that is what lets it stay pinned for the whole page
+rather than only while one section is on screen. It tucks a few pixels under the
+header using `--bar-h`, the header's height as measured by `site.js`; the header
+condenses over 0.3s and rewraps on narrow screens, so that value comes from a
+`transitionend` listener and a `ResizeObserver`, never from an assumption. On a
+phone the header is two rows tall and pinning below it would cost a third of the
+screen, so under 52rem the bar is fixed to the bottom instead, with
+`padding-bottom` on `body` so the footer is never trapped under it.
+
+Each button carries its service's own colour, taken from the service itself
+rather than from memory: Buy Me a Coffee `#FFDD00` on `#0D0C22`, GitHub Sponsors
+`#BF3989` light and `#DB61A2` dark (Primer's `--fgColor-sponsors`), PayPal
+`#003087` light and `#0070E0` dark, Liberapay `#F6C915`. All four clear 4.5:1 in
+both schemes. The icons are **drawn in this repo**, not lifted from anyone's
+site: each says what kind of giving it is — a cup, a heart, a card, a recurring
+arrow — so no third-party trademark artwork is redistributed here. If official
+brand buttons are ever wanted instead, they should be downloaded from each
+service's own brand page and committed to `assets/`.
+
+Each button hands the reader to that service. No payment details are ever
+collected here, and there is no backend that could receive them.
 
 Its accent is the ink, like `about.html`: pages about the person take the ink,
 saturated colour belongs to the product marks.
