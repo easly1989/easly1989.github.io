@@ -60,7 +60,12 @@
 
         <section class="masthead reveal shown">
           <img class="mark" src="logo.svg" alt="" width="64" height="64" />
-          <p class="state live">Shipping, v3.0. Open source under AGPL-3.0.</p>
+          <!-- One child: .state is a flex row, and a bare span would get the gap around it. -->
+          <p class="state live">
+            <span
+              >Shipping, <span data-cloudbank="stable">v3.2.0</span>. Open source under AGPL-3.0.</span
+            >
+          </p>
           <h1 class="display unfurl"><span>CloudBank</span></h1>
           <p class="lede">
             Your money, self-hosted. A free personal finance manager — a from-scratch web port of
@@ -78,15 +83,9 @@
         <section class="section reveal" id="demo">
           <h2>Try it without installing anything</h2>
           <p>
-            A live CloudBank with sample data in it. Sign in with these and have a look around —
-            there is nothing to install and no account to make.
+            A live CloudBank with a year of made-up money in it. One button gives you an account of
+            your own — no sign-up, no email, no password — so change anything you like.
           </p>
-          <dl class="creds pane">
-            <dt>Username</dt>
-            <dd><code data-copy="the demo username">demo</code></dd>
-            <dt>Password</dt>
-            <dd><code data-copy="the demo password">cloudbankdemo</code></dd>
-          </dl>
           <div class="actions">
             <a
               class="action key"
@@ -98,9 +97,12 @@
           </div>
           <div class="note">
             <p>
-              <strong>It is one shared instance.</strong> Everyone signs in as the same user, so
-              anything you type is visible to the next visitor and the data is reset from time to
-              time. Have a proper look, but don't put anything real in it — for that,
+              <strong>It forgets you on purpose.</strong> Your demo account is deleted after two
+              hours without use, every night, and whenever the demo is updated. Bank sync talks to
+              a pretend bank, and attachments, AI and notifications are off.
+              <a href="https://github.com/easly1989/cloudbank/blob/main/docs/demo.md" rel="noopener"
+                >What the demo is</a
+              >. Have a proper look, but don't put anything real in it — for that,
               <a href="#run">run your own</a>, which takes one container.
             </p>
           </div>
@@ -338,14 +340,31 @@ volumes:
   cloudbank-data:</pre>
           <pre class="code">docker compose up -d
 # open http://localhost:8080 and complete the first-run admin setup</pre>
+          <table class="spec">
+            <tr>
+              <th scope="row">Stable, <code>:main</code></th>
+              <td>
+                <span data-cloudbank="stable">v3.2.0</span>, published
+                <span data-cloudbank-date="stable">September 2026</span>
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">Nightly, <code>:latest</code></th>
+              <td>
+                <span data-cloudbank="nightly">built from main</span>, published
+                <span data-cloudbank-date="nightly">on every change</span>
+              </td>
+            </tr>
+          </table>
           <div class="note">
             <p>
               <strong>Note the tag scheme.</strong> It's intentionally unconventional:
               <code>:main</code> is the latest stable release, while <code>:latest</code> is the
               bleeding-edge nightly. Pin deliberately. Optional env vars let you harden and tune it:
               <code>CB_SECRET_KEY</code> encrypts secrets at rest, and
-              <code>CB_BANK_SYNC_INTERVAL</code> sets the background bank-sync cadence (default
-              12h). An interactive API reference is served at <code>/api/docs</code>.
+              <code>CB_BANK_SYNC_INTERVAL</code> sets how often background bank sync looks for
+              connections that are due (default 1h; each connection keeps its own schedule). An
+              interactive API reference is served at <code>/api/docs</code>.
             </p>
           </div>
         </section>

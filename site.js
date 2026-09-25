@@ -316,6 +316,41 @@
   }
 
 
+  // ---- CloudBank's published versions ------------------------------------
+  // CloudBank's release and nightly workflows rewrite versions.json on its
+  // site-data branch whenever they publish an image. An element marked
+  // data-cloudbank="stable" or "nightly" shows that channel's version, and
+  // data-cloudbank-date its publish date. The markup carries a written fallback,
+  // which simply stays when the fetch fails or the channel is missing.
+  var versioned = document.querySelectorAll("[data-cloudbank], [data-cloudbank-date]");
+  if (versioned.length && window.fetch) {
+    fetch("https://raw.githubusercontent.com/easly1989/cloudbank/site-data/versions.json", {
+      cache: "no-cache",
+    })
+      .then(function (r) {
+        return r.ok ? r.json() : null;
+      })
+      .then(function (v) {
+        if (!v) return;
+        [].slice.call(versioned).forEach(function (el) {
+          var version = el.dataset.cloudbank;
+          var date = el.dataset.cloudbankDate;
+          var ch = v[version || date];
+          if (!ch) return;
+          if (version && ch.version) el.textContent = ch.version;
+          if (date && ch.published) {
+            el.textContent = new Date(ch.published).toLocaleDateString("en-GB", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            });
+          }
+        });
+      })
+      .catch(function () {});
+  }
+
+
   // ---- Enlarging a screenshot ---------------------------------------------
   // The screenshots are small where they sit, so each one becomes a button
   // that opens it full size. Wrapping in a real <button> rather than putting a

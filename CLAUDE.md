@@ -108,18 +108,15 @@ where it read as a disclaimer about the whole site.
 
 ## The CloudBank demo
 
-`cloudbank.html#demo` publishes the demo instance's sign-in, and that is
-deliberate: it is one shared public account on a throwaway instance, not a
-secret. The page says so plainly — everyone signs in as the same user, anything
-typed is visible to the next visitor, and the data is reset — so nobody treats
-it as somewhere to put real finances. Keep that caveat next to the credentials
-if you move them.
+`cloudbank.html#demo` links the demo instance. Since CloudBank's `:demo`
+build, the demo has no shared sign-in: one button makes a throwaway account of
+the visitor's own, deleted after two hours without use, every night and on every
+update. The page says so next to the link, and points at CloudBank's
+`docs/demo.md` for the rest — keep the two saying the same thing. No credentials
+belong in this repo at all.
 
-This is the one place credentials belong in the repo. Anything that is actually
-a secret does not go in these files at all.
-
-The values are marked `data-copy="<description>"`, which `site.js` turns into a
-copy button, but only when `navigator.clipboard` exists. If the write is refused
+A value marked `data-copy="<description>"` gets a copy button from `site.js`,
+but only when `navigator.clipboard` exists. If the write is refused
 — no user activation, an insecure context, a permissions policy — the fallback
 selects the value and says to press Ctrl+C, so the advice is always actionable.
 The value stays selectable text (`user-select: all`) whether or not the button
@@ -275,9 +272,17 @@ line, status) and a fuller `.product` section below it. A release or a status
 change usually touches the row, the section, and the detail page.
 
 **`.masthead .state` is the status line.** One sentence, in the same words as the
-matching index row's `.state` — "Shipping, v3.0", "In internal testing",
-"Available to license". The index row also carries `.state.pending`, which draws
-the marker as an outline instead of a fill for things that aren't out yet, and
+matching index row's `.state` — "Shipping, v3.2", "In internal testing",
+"Available to license".
+
+**CloudBank's version is not written by hand.** Every mention is a
+`<span data-cloudbank="stable">` (or `"nightly"`, or `data-cloudbank-date`), and
+`site.js` fills it from `versions.json` on CloudBank's `site-data` branch, which
+CloudBank's release and nightly workflows rewrite when they publish. The text in
+the markup is only the fallback shown if that fetch fails; move it forward now
+and then, but a release no longer needs an edit here.
+
+The index row also carries `.state.pending`, which draws the marker as an outline instead of a fill for things that aren't out yet, and
 `.state.live`, which adds a slow ring to the one product that is actually out.
 
 **Contact is home-page-only and mailto-based.** The `<dialog id="contact">` and
