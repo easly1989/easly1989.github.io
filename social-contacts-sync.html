@@ -6,14 +6,14 @@
     <title>Social Contacts Sync — Profile photos for Google Contacts · Carlo Ruggiero</title>
     <meta
       name="description"
-      content="Social Contacts Sync is a free, open-source desktop app that fills Google Contacts with your contacts' profile photos from WhatsApp and Gravatar, and cleans up duplicates, shared numbers and missing country codes. For Windows, Linux and macOS."
+      content="Social Contacts Sync is a free, open-source desktop app that fills Google Contacts with your contacts' profile photos from WhatsApp, Telegram and Gravatar, and cleans up duplicates, shared numbers and missing country codes. For Windows, Linux and macOS."
     />
     <meta name="theme-color" content="#bfc3bb" />
     <link rel="icon" type="image/svg+xml" href="social-contacts-sync.svg" />
     <meta property="og:title" content="Social Contacts Sync — Profile photos for Google Contacts" />
     <meta
       property="og:description"
-      content="A free, open-source desktop app that gives every Google contact a face, with photos from WhatsApp and Gravatar, and tidies up duplicates on the way."
+      content="A free, open-source desktop app that gives every Google contact a face, with photos from WhatsApp, Telegram and Gravatar, and tidies up duplicates on the way."
     />
     <meta property="og:type" content="website" />
 
@@ -62,12 +62,13 @@
           <img class="mark" src="social-contacts-sync.svg" alt="" width="64" height="64" />
           <!-- One child: .state is a flex row, and a bare span would get the gap around it. -->
           <p class="state live">
-            <span>Public beta, v0.1.0-beta1. Open source.</span>
+            <span>Public beta, v0.1.0-beta2. Open source.</span>
           </p>
           <h1 class="display unfurl"><span>Social Contacts</span><span>Sync</span></h1>
           <p class="lede">
             Give every contact a face. A desktop app that fills Google Contacts with your contacts'
-            profile photos from WhatsApp and Gravatar, and tidies up duplicates on the way.
+            profile photos from WhatsApp, Telegram and Gravatar, and tidies up duplicates on the
+            way.
           </p>
           <div class="actions">
             <a
@@ -88,12 +89,13 @@
           <p>
             Most of the people in my phone have a WhatsApp photo, and in Google Contacts they are
             all coloured circles with a letter. Social Contacts Sync matches each Google contact to
-            its WhatsApp account by phone number, and to Gravatar by email address, and puts the
-            photo on the contact.
+            its WhatsApp and Telegram accounts by phone number, and to Gravatar by email address,
+            and puts the photo on the contact.
           </p>
           <p>
             It runs on your own computer: the app starts a small local server and opens it in its
-            window, so your contacts only travel between your computer, Google and WhatsApp.
+            window, so your contacts only travel between your computer, Google and the sources you
+            connect.
             Windows, Linux and macOS, in English and Italian, light or dark.
           </p>
           <p class="quiet">
@@ -120,8 +122,8 @@
             <div>
               <dt>Photos from your sources</dt>
               <dd>
-                WhatsApp, matched by phone number, and Gravatar, matched by email, in the order you
-                choose. Telegram is next.
+                WhatsApp and Telegram, matched by phone number, and Gravatar, matched by email, in
+                the order you choose. Telegram only reads the contacts you already have there.
               </dd>
             </div>
             <div>
@@ -241,9 +243,9 @@
           <p>
             There is no Social Contacts Sync service: nothing reaches me. Your Google sign-in is
             stored encrypted with your system's keychain, and the app connects only to Google,
-            WhatsApp Web, Gravatar (which receives a hash of each email address, not the address),
-            and GitHub to check for updates. It can also run as a self-hosted web app, from one
-            Docker container.
+            WhatsApp Web, Telegram, Gravatar (which receives a hash of each email address, not the
+            address), and GitHub to check for updates. It can also run as a self-hosted web app,
+            from one Docker container.
           </p>
         </section>
 
