@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Social Contacts Sync — Profile photos for Google Contacts · Carlo Ruggiero</title>
+    <meta
+      name="description"
+      content="Social Contacts Sync is a free, open-source desktop app that fills Google Contacts with your contacts' profile photos from WhatsApp and Gravatar, and cleans up duplicates, shared numbers and missing country codes. For Windows, Linux and macOS."
+    />
+    <meta name="theme-color" content="#bfc3bb" />
+    <link rel="icon" type="image/svg+xml" href="social-contacts-sync.svg" />
+    <meta property="og:title" content="Social Contacts Sync — Profile photos for Google Contacts" />
+    <meta
+      property="og:description"
+      content="A free, open-source desktop app that gives every Google contact a face, with photos from WhatsApp and Gravatar, and tidies up duplicates on the way."
+    />
+    <meta property="og:type" content="website" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      :root {
+        --accent: #5b4cf0;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --accent: #8a7dff;
+        }
+      }
+    </style>
+    <script src="site.js" defer></script>
+  </head>
+  <body>
+    <div class="depth" aria-hidden="true">
+      <span class="aura one"></span>
+      <span class="aura two"></span>
+      <span class="spot"></span>
+      <span class="grain"></span>
+    </div>
+
+    <header class="bar">
+      <a class="wordmark" href="index.html">Carlo Ruggiero</a>
+      <nav aria-label="Primary">
+        <a href="index.html">Projects</a>
+        <a href="about.html">About</a>
+        <a href="donate.html">Donate</a>
+        <a href="https://github.com/easly1989" rel="noopener">GitHub</a>
+      </nav>
+    </header>
+
+    <main>
+      <div class="wrap">
+        <p class="crumb"><a href="index.html">Projects</a> / Social Contacts Sync</p>
+
+        <section class="masthead reveal shown">
+          <img class="mark" src="social-contacts-sync.svg" alt="" width="64" height="64" />
+          <!-- One child: .state is a flex row, and a bare span would get the gap around it. -->
+          <p class="state live">
+            <span>Public beta, v0.1.0-beta.1. Open source.</span>
+          </p>
+          <h1 class="display unfurl"><span>Social Contacts</span><span>Sync</span></h1>
+          <p class="lede">
+            Give every contact a face. A desktop app that fills Google Contacts with your contacts'
+            profile photos from WhatsApp and Gravatar, and tidies up duplicates on the way.
+          </p>
+          <div class="actions">
+            <a
+              class="action key"
+              href="https://github.com/easly1989/social-contacts-sync/releases"
+              rel="noopener"
+              >Download</a
+            >
+            <a class="action" href="https://github.com/easly1989/social-contacts-sync" rel="noopener">
+              View on GitHub
+            </a>
+            <a class="action" href="donate.html">Donate</a>
+          </div>
+        </section>
+
+        <section class="section reveal">
+          <h2>What it is</h2>
+          <p>
+            Most of the people in my phone have a WhatsApp photo, and in Google Contacts they are
+            all coloured circles with a letter. Social Contacts Sync matches each Google contact to
+            its WhatsApp account by phone number, and to Gravatar by email address, and puts the
+            photo on the contact.
+          </p>
+          <p>
+            It runs on your own computer: the app starts a small local server and opens it in its
+            window, so your contacts only travel between your computer, Google and WhatsApp.
+            Windows, Linux and macOS, in English and Italian, light or dark.
+          </p>
+          <p class="quiet">
+            It grew out of
+            <a href="https://github.com/guyzyl/whatsapp-contact-sync" rel="noopener"
+              >WhatsApp Contact Sync</a
+            >
+            by Guy Zylberberg, which syncs WhatsApp photos from a web page. This fork adds the
+            desktop app, more sources and the clean-up tools, and keeps his licence.
+          </p>
+          <figure>
+            <img
+              src="assets/social-contacts-sync-dashboard.png"
+              alt="Social Contacts Sync dashboard with photo coverage of the address book, sources, recent activity and the latest photos added"
+              loading="lazy"
+            />
+            <figcaption>The dashboard — how many contacts have a face, and what changed lately.</figcaption>
+          </figure>
+        </section>
+
+        <section class="section reveal">
+          <h2>Features</h2>
+          <dl class="defs reveal stagger">
+            <div>
+              <dt>Photos from your sources</dt>
+              <dd>
+                WhatsApp, matched by phone number, and Gravatar, matched by email, in the order you
+                choose. Telegram is next.
+              </dd>
+            </div>
+            <div>
+              <dt>Three ways to sync</dt>
+              <dd>
+                Fill in only the missing photos, replace them all, or review each contact and pick
+                the photo with the keyboard.
+              </dd>
+            </div>
+            <div>
+              <dt>Reports and undo</dt>
+              <dd>
+                Every sync keeps a report of what changed, with the photo before and after. Undo
+                one contact or the whole run, and export it as CSV.
+              </dd>
+            </div>
+            <div>
+              <dt>Duplicates</dt>
+              <dd>
+                Finds contacts that share a number, an email or a name, and merges them field by
+                field. Google has no merge, so every contact is backed up first and the merge can be
+                undone.
+              </dd>
+            </div>
+            <div>
+              <dt>Shared numbers</dt>
+              <dd>
+                A number saved on two different people would put one person's photo on the other.
+                Keep it on the right one, merge them, or mark it as shared so syncs skip it.
+              </dd>
+            </div>
+            <div>
+              <dt>Country codes</dt>
+              <dd>
+                Numbers saved without <code>+39</code> or another prefix are listed with the fixed
+                version, and fixed in one go.
+              </dd>
+            </div>
+          </dl>
+          <div class="reel">
+            <figure>
+              <img
+                src="assets/social-contacts-sync-sync-setup.png"
+                alt="Sync setup with the sources in priority order, the choice of mode and a summary with the time estimate"
+                loading="lazy"
+              />
+              <figcaption>Choose the sources, their order, and what should change.</figcaption>
+            </figure>
+            <figure>
+              <img
+                src="assets/social-contacts-sync-sync-report.png"
+                alt="Sync report with counters per outcome and a table of contacts with their photo before and after"
+                loading="lazy"
+              />
+              <figcaption>The report — before and after, with undo per contact.</figcaption>
+            </figure>
+            <figure>
+              <img
+                src="assets/social-contacts-sync-cleanup.png"
+                alt="Clean up page with a list of duplicate contacts and a merge table to pick each field"
+                loading="lazy"
+              />
+              <figcaption>Merging duplicates — pick each value, the rest is combined.</figcaption>
+            </figure>
+            <figure>
+              <img
+                src="assets/social-contacts-sync-setup-google.png"
+                alt="Setup wizard step that guides through creating a Google Cloud project and its credentials"
+                loading="lazy"
+              />
+              <figcaption>The first-run wizard walks through your own Google project.</figcaption>
+            </figure>
+          </div>
+        </section>
+
+        <section class="section reveal" id="download">
+          <h2>Get it</h2>
+          <p>
+            Download it from the
+            <a href="https://github.com/easly1989/social-contacts-sync/releases" rel="noopener"
+              >releases page</a
+            >. The portable and AppImage builds need no installation and keep their settings next to
+            themselves.
+          </p>
+          <table class="spec">
+            <tr>
+              <th scope="row">Windows</th>
+              <td>Portable <code>.exe</code>, or installer with automatic updates</td>
+            </tr>
+            <tr>
+              <th scope="row">Linux</th>
+              <td><code>.AppImage</code> with automatic updates, or <code>.deb</code></td>
+            </tr>
+            <tr>
+              <th scope="row">macOS</th>
+              <td>Universal <code>.dmg</code></td>
+            </tr>
+          </table>
+          <div class="note">
+            <p>
+              <strong>You bring your own Google project.</strong> Google asks every app that edits
+              contacts for its own credentials. Creating yours is free and takes a few minutes; the
+              app links each page of the Google Cloud Console and checks the result. The builds are
+              not code-signed yet, so Windows and macOS warn on the first launch; the
+              <a
+                href="https://github.com/easly1989/social-contacts-sync#download"
+                rel="noopener"
+                >README</a
+              >
+              says how to get past it.
+            </p>
+          </div>
+        </section>
+
+        <section class="section reveal">
+          <h2>Private by design</h2>
+          <p>
+            There is no Social Contacts Sync service: nothing reaches me. Your Google sign-in is
+            stored encrypted with your system's keychain, and the app connects only to Google,
+            WhatsApp Web, Gravatar (which receives a hash of each email address, not the address),
+            and GitHub to check for updates. It can also run as a self-hosted web app, from one
+            Docker container.
+          </p>
+        </section>
+
+        <section class="section reveal">
+          <h2>Open and free — support it</h2>
+          <p>
+            Social Contacts Sync is free and open source, under the original project's licence
+            (Apache 2.0 with the Commons Clause). If it saved you an evening of copying photos, a
+            donation is much appreciated.
+          </p>
+          <div class="actions">
+            <a class="action key" href="donate.html">Donate</a>
+            <a class="action" href="https://github.com/sponsors/easly1989" rel="noopener">
+              GitHub Sponsors
+            </a>
+          </div>
+        </section>
+
+        <div class="actions">
+          <a class="action" href="index.html">All projects</a>
+          <a
+            class="action key"
+            href="https://github.com/easly1989/social-contacts-sync/releases"
+            rel="noopener"
+            >Download</a
+          >
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <a href="index.html">Projects</a>
+      <a href="about.html">About</a>
+      <a href="donate.html">Donate</a>
+      <a href="https://github.com/easly1989/social-contacts-sync" rel="noopener">Source code</a>
+      <a href="https://github.com/guyzyl/whatsapp-contact-sync" rel="noopener"
+        >Based on WhatsApp Contact Sync</a
+      >
+      <a href="https://www.linkedin.com/in/cruggiero89/" rel="noopener">LinkedIn</a>
+      <a href="https://www.instagram.com/easly1989/" rel="noopener">Instagram</a>
+    </footer>
+  </body>
+</html>

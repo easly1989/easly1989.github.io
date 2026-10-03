@@ -6,14 +6,14 @@
     <title>Carlo Ruggiero — Projects</title>
     <meta
       name="description"
-      content="Four projects by Carlo Ruggiero, a software developer: CloudBank, a free open-source self-hosted personal finance manager, plus Planora, Nutreek and Cupid."
+      content="Five projects by Carlo Ruggiero, a software developer: CloudBank, a free open-source self-hosted personal finance manager, Social Contacts Sync, plus Planora, Nutreek and Cupid."
     />
     <meta name="theme-color" content="#bfc3bb" />
     <link rel="icon" type="image/svg+xml" href="logo.svg" />
     <meta property="og:title" content="Carlo Ruggiero — Projects" />
     <meta
       property="og:description"
-      content="CloudBank, Planora, Nutreek and Cupid — four projects by Carlo Ruggiero."
+      content="CloudBank, Social Contacts Sync, Planora, Nutreek and Cupid — five projects by Carlo Ruggiero."
     />
     <meta property="og:type" content="website" />
 
@@ -36,6 +36,7 @@
          The index rows and the sections below both draw from these. */
       :root {
         --cloudbank: #2f6fd0;
+        --social-contacts-sync: #5b4cf0;
         --planora: #6d59ad;
         --nutreek: #2f7d32;
         --cupid: #c4356a;
@@ -43,6 +44,7 @@
       @media (prefers-color-scheme: dark) {
         :root {
           --cloudbank: #6fa6f2;
+          --social-contacts-sync: #8a7dff;
           --planora: #a692e8;
           --nutreek: #6fbf72;
           --cupid: #f58ab0;
@@ -295,7 +297,7 @@
           </h1>
           <p class="lede">
             I'm Carlo Ruggiero, a software developer with more than a decade of experience. These
-            are the four projects I keep going: one is open source, one is free and hosted, and two
+            are the five projects I keep going: two are open source, one is free and hosted, and two
             are licensed.
           </p>
         </section>
@@ -308,6 +310,16 @@
             <span class="state live">
               <span>Shipping, <span data-cloudbank="stable">v3.2.0</span></span>
             </span>
+          </a>
+          <a
+            class="entry"
+            href="social-contacts-sync.html"
+            style="--accent: var(--social-contacts-sync)"
+          >
+            <img src="social-contacts-sync.svg" alt="" width="40" height="40" />
+            <span class="name">Social Contacts Sync</span>
+            <span class="what">Profile photos for Google Contacts, open source</span>
+            <span class="state live"><span>Public beta, v0.1.0-beta.1</span></span>
           </a>
           <a class="entry" href="planora.html" style="--accent: var(--planora)">
             <img src="planora.svg" alt="" width="40" height="40" />
@@ -384,6 +396,66 @@
                 loading="lazy"
               />
               <figcaption>Drag, resize and add widgets from a palette.</figcaption>
+            </figure>
+          </div>
+        </section>
+
+        <section
+          class="product reveal"
+          id="social-contacts-sync"
+          style="--accent: var(--social-contacts-sync)"
+          data-accent
+        >
+          <div>
+            <img class="mark" src="social-contacts-sync.svg" alt="" width="52" height="52" />
+            <h2>Social Contacts Sync</h2>
+            <p>
+              A free desktop app that fills Google Contacts with your contacts' profile photos from
+              WhatsApp and Gravatar, with a report and undo for every sync. It also finds duplicate
+              contacts, numbers saved on different people and numbers without a country code, and
+              fixes them with a backup first.
+            </p>
+            <p>
+              Windows, Linux and macOS, running on your own computer. A fork of WhatsApp Contact Sync
+              by Guy Zylberberg, in public beta.
+            </p>
+            <div class="actions">
+              <a
+                class="action key"
+                href="https://github.com/easly1989/social-contacts-sync/releases"
+                rel="noopener"
+                >Download</a
+              >
+              <a class="action" href="https://github.com/easly1989/social-contacts-sync" rel="noopener">
+                View on GitHub
+              </a>
+              <a class="action" href="social-contacts-sync.html">Read the details</a>
+            </div>
+          </div>
+          <div class="reel">
+            <figure>
+              <img
+                src="assets/social-contacts-sync-dashboard.png"
+                alt="Social Contacts Sync dashboard with photo coverage of the address book, sources and recent activity"
+                loading="lazy"
+              />
+              <figcaption>The dashboard — how many contacts have a face.</figcaption>
+            </figure>
+            <figure>
+              <img
+                src="assets/social-contacts-sync-sync-report.png"
+                alt="Sync report with a table of contacts and their photo before and after"
+                loading="lazy"
+              />
+              <figcaption>Every sync has a report, and can be undone.</figcaption>
+            </figure>
+            <figure>
+              <img
+                src="assets/social-contacts-sync-cleanup.png"
+                alt="Clean up page with duplicate contacts and a table to merge them field by field"
+                loading="lazy"
+              />
+              <figcaption>Duplicates are merged field by field, with a backup first.</figcaption>
             </figure>
           </div>
         </section>
