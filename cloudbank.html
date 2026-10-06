@@ -63,7 +63,7 @@
           <!-- One child: .state is a flex row, and a bare span would get the gap around it. -->
           <p class="state live">
             <span
-              >Shipping, <span data-cloudbank="stable">v3.2.0</span>. Open source under AGPL-3.0.</span
+              >Shipping, <span data-cloudbank="stable">v3.7.0</span>. Open source under AGPL-3.0.</span
             >
           </p>
           <h1 class="display unfurl"><span>CloudBank</span></h1>
@@ -131,7 +131,7 @@
           <figure>
             <img
               src="assets/cloudbank-dashboard.png"
-              alt="CloudBank dashboard with today's balance, income and spending, a panel of things that need attention and an income versus expense chart"
+              alt="CloudBank dashboard with today's balance, what was earned, spent and kept, a panel of three things that want attention and an income versus expense chart"
               loading="lazy"
             />
             <figcaption>The dashboard — a fully customizable, free-form grid of widgets.</figcaption>
@@ -160,53 +160,73 @@
               <dt>Powerful register</dt>
               <dd>
                 Running balance, rich filtering with a future-transactions toggle, full-text search
-                across memo, payee and category, per-user columns, a live selection total,
-                reconciliation and double-click-to-edit.
+                across memo, payee and category, per-user columns, a live selection total and
+                reconciliation. New entries go in a sheet beside the ledger, so the rows stay in
+                view.
               </dd>
             </div>
             <div>
-              <dt>Scheduled transactions</dt>
+              <dt>Bills on a calendar</dt>
               <dd>
-                Automatic posting (optionally pre-registering up to three months ahead), per-period
-                income and expense summaries, templates, and assignment rules for
-                auto-categorization.
+                Scheduled transactions with automatic posting, shown on the day each one falls:
+                what is still to pay, what is overdue, and a column of what needs you, registered
+                or skipped in one click. Templates and assignment rules do the typing for you.
               </dd>
             </div>
             <div>
-              <dt>Budgets and reports</dt>
+              <dt>Budgets and reports that answer first</dt>
               <dd>
-                Budgets plus a full report suite — Statistics, Trend Time, Balance, Budget and
-                Vehicle cost — with interactive charts and CSV/PNG export.
+                A budget that puts what you planned next to what you spent. Reports for where the
+                money went, what came in and went out, what your accounts hold and will hold, and
+                what a car costs, for any month, quarter or year, with saved views and CSV/PNG
+                downloads.
               </dd>
             </div>
             <div>
-              <dt>Savings goals and bills</dt>
+              <dt>Savings goals</dt>
               <dd>
-                Piggy-bank savings goals with contribute and withdraw, a progress bar and a target
-                date; plus a "what's due" Bills view over your schedules (upcoming, due, overdue)
-                with one-click posting.
+                What you have set aside, what to put aside each month to meet every date, and what
+                is free to spend once it is. Close a goal, reached or given up on, into a history
+                you can reopen.
+              </dd>
+            </div>
+            <div>
+              <dt>Vehicles</dt>
+              <dd>
+                What each car, motorbike or van costs to run over the last year: fuel, kilometres,
+                cost per kilometre and consumption, from the fuel payments linked to it.
+              </dd>
+            </div>
+            <div>
+              <dt>The wallet's lists</dt>
+              <dd>
+                Categories, payees, tags, rules, templates and currencies each get a page of their
+                own, with what every entry did over the last 12 months and a panel beside the list
+                to edit it.
               </dd>
             </div>
             <div>
               <dt>Import and export</dt>
               <dd>
-                Import HomeBank <code>.xhb</code>, QIF, OFX/QFX and CSV with an assistant; export
-                back to HomeBank <code>.xhb</code>, QIF and CSV.
+                Import HomeBank <code>.xhb</code>, QIF, OFX/QFX, CSV and CAMT.053 with an
+                assistant; export back to HomeBank <code>.xhb</code>, QIF and CSV.
               </dd>
             </div>
             <div>
               <dt>Automatic bank sync</dt>
               <dd>
-                Pull new transactions straight from your bank — de-duplicated and run through your
-                rules — via SimpleFIN (worldwide) or Enable Banking (EU/EEA and UK, PSD2), refreshed
-                on a schedule in the background. Your bank credentials never touch the client.
+                Pull new transactions straight from your bank — merged with what you already
+                entered and run through your rules — via SimpleFIN (worldwide), Enable Banking
+                (EU/EEA and UK, PSD2) or, experimentally, Pluggy (Latin America), refreshed on a
+                schedule in the background. A review page settles anything that needs a category
+                or looks like a duplicate.
               </dd>
             </div>
             <div>
               <dt>Multi-currency, multi-user</dt>
               <dd>
-                Manual and online (ECB, frankfurter.app) exchange rates, admin-managed users, a
-                responsive UI, and English and Italian.
+                Manual and online (ECB, frankfurter.app) exchange rates, totals that say how many
+                accounts they add up, admin-managed users, a responsive UI, and English and Italian.
               </dd>
             </div>
           </dl>
@@ -223,7 +243,7 @@
           <p>
             Pick from light, dark or auto themes with an accent-colour picker that follows you
             across devices, a collapsible and reorderable sidebar, HomeBank-style smart amount
-            entry, and a first-login tutorial you can restart any time.
+            entry, and a short tour on each page that the ? in its header plays again.
           </p>
           <div class="reel">
             <figure>
@@ -247,20 +267,40 @@
             <figure>
               <img
                 src="assets/cloudbank-reports.png"
-                alt="CloudBank reports showing spending by category as a doughnut chart, with filters above it"
+                alt="CloudBank cash flow report for 2026 with what was kept so far, a bar per month of money in and out, and a table of the months"
                 loading="lazy"
               />
               <figcaption>
-                Reports — statistics, trends, balance and vehicle cost, exported as CSV or PNG.
+                Reports — spending, cash flow, balances and vehicle cost, as CSV or PNG.
               </figcaption>
             </figure>
             <figure>
               <img
-                src="assets/cloudbank-bills.png"
-                alt="CloudBank bills page listing one overdue and three due bills with the total to pay"
+                src="assets/cloudbank-schedules.png"
+                alt="CloudBank schedules calendar for October with the amount still to pay, one overdue bill and a column of what needs registering"
                 loading="lazy"
               />
-              <figcaption>Bills — what is overdue and what is next, marked paid in one click.</figcaption>
+              <figcaption>
+                Schedules — the month's bills on a calendar, registered in one click.
+              </figcaption>
+            </figure>
+            <figure>
+              <img
+                src="assets/cloudbank-budget.png"
+                alt="CloudBank budget for October with spent and left for the month, and planned against spent for each category"
+                loading="lazy"
+              />
+              <figcaption>Budget — what you planned, next to what you spent.</figcaption>
+            </figure>
+            <figure>
+              <img
+                src="assets/cloudbank-categories.png"
+                alt="CloudBank categories grouped with each one's share of spending, and Groceries open for editing in a panel beside the list"
+                loading="lazy"
+              />
+              <figcaption>
+                Categories — what each one did, edited in a panel beside the list.
+              </figcaption>
             </figure>
             <figure>
               <img
@@ -335,6 +375,14 @@
                 the push key in the database with AES-256-GCM.
               </dd>
             </div>
+            <div>
+              <dt>Told when to update</dt>
+              <dd>
+                An open page offers a new build instead of swapping it in under you, and admins
+                are told when a newer CloudBank is published, with the steps to update. One
+                setting turns the check off.
+              </dd>
+            </div>
           </dl>
         </section>
 
@@ -389,8 +437,8 @@ volumes:
             <tr>
               <th scope="row">Stable, <code>:main</code></th>
               <td>
-                <span data-cloudbank="stable">v3.2.0</span>, published
-                <span data-cloudbank-date="stable">September 2026</span>
+                <span data-cloudbank="stable">v3.7.0</span>, published
+                <span data-cloudbank-date="stable">October 2026</span>
               </td>
             </tr>
             <tr>
