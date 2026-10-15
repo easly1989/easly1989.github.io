@@ -6,14 +6,14 @@
     <title>Social Contacts Sync — Profile photos for Google Contacts · Carlo Ruggiero</title>
     <meta
       name="description"
-      content="Social Contacts Sync is a free, open-source desktop app that fills Google Contacts with your contacts' profile photos from WhatsApp, Telegram and Gravatar, and cleans up duplicates, shared numbers and missing country codes. For Windows, Linux and macOS."
+      content="Social Contacts Sync is a free, open-source desktop app that fills Google Contacts with your contacts' profile photos from WhatsApp, Telegram, Gravatar and their social profiles, finds those profiles for you, and cleans up duplicates, shared numbers and missing country codes. For Windows, Linux and macOS."
     />
     <meta name="theme-color" content="#bfc3bb" />
     <link rel="icon" type="image/svg+xml" href="social-contacts-sync.svg" />
     <meta property="og:title" content="Social Contacts Sync — Profile photos for Google Contacts" />
     <meta
       property="og:description"
-      content="A free, open-source desktop app that gives every Google contact a face, with photos from WhatsApp, Telegram and Gravatar, and tidies up duplicates on the way."
+      content="A free, open-source desktop app that gives every Google contact a face, with photos from WhatsApp, Telegram, Gravatar and their social profiles, and tidies up duplicates on the way."
     />
     <meta property="og:type" content="website" />
 
@@ -62,13 +62,13 @@
           <img class="mark" src="social-contacts-sync.svg" alt="" width="64" height="64" />
           <!-- One child: .state is a flex row, and a bare span would get the gap around it. -->
           <p class="state live">
-            <span>Shipping, v1.0.0. Open source.</span>
+            <span>Shipping, v1.3.2. Open source.</span>
           </p>
           <h1 class="display unfurl"><span>Social Contacts</span><span>Sync</span></h1>
           <p class="lede">
             Give every contact a face. A desktop app that fills Google Contacts with your contacts'
-            profile photos from WhatsApp, Telegram and Gravatar, and tidies up duplicates on the
-            way.
+            profile photos from WhatsApp, Telegram, Gravatar and their social profiles, and tidies
+            up duplicates on the way.
           </p>
           <div class="actions">
             <a
@@ -91,6 +91,11 @@
             all coloured circles with a letter. Social Contacts Sync matches each Google contact to
             its WhatsApp and Telegram accounts by phone number, and to Gravatar by email address,
             and puts the photo on the contact.
+          </p>
+          <p>
+            For the people who aren't on any of those, it can use the social profiles saved on a
+            contact, and it helps find them: it suggests Instagram, LinkedIn, Facebook, Bluesky,
+            Mastodon and GitHub profiles with the same name, and links the ones you confirm.
           </p>
           <p>
             It runs on your own computer: the app starts a small local server and opens it in its
@@ -122,8 +127,9 @@
             <div>
               <dt>Photos from your sources</dt>
               <dd>
-                WhatsApp and Telegram, matched by phone number, and Gravatar, matched by email, in
-                the order you choose. Telegram only reads the contacts you already have there.
+                WhatsApp and Telegram, matched by phone number, Gravatar, matched by email, and the
+                profile links saved on a contact, in the order you choose. Telegram only reads the
+                contacts you already have there.
               </dd>
             </div>
             <div>
@@ -138,6 +144,25 @@
               <dd>
                 Every sync keeps a report of what changed, with the photo before and after. Undo
                 one contact or the whole run, and export it as CSV.
+              </dd>
+            </div>
+            <div>
+              <dt>Find profiles</dt>
+              <dd>
+                Suggests each contact's social profiles from your own Instagram and LinkedIn data
+                exports and a public search on Bluesky, Mastodon and GitHub. Review them one by one
+                or as a list, and link several profiles to a contact at once. An experimental scan
+                of your own followers with your login is there too, off by default: it goes against
+                those sites' terms, and the app says so before it starts.
+              </dd>
+            </div>
+            <div>
+              <dt>Contacts</dt>
+              <dd>
+                Every Google contact in one list: edit every field, add, merge, label and delete
+                them, and upload photos by hand. A photo you upload is a placeholder until a sync
+                finds a real one, unless you keep it: a kept photo is never replaced, and the
+                contact can still be linked to its profiles.
               </dd>
             </div>
             <div>
@@ -182,6 +207,38 @@
             </figure>
             <figure>
               <img
+                src="assets/social-contacts-sync-find-profiles.png"
+                alt="Find profiles with a contact's suggested Instagram, LinkedIn and Bluesky profiles, each with a checkbox and a choice of whose photo to use"
+                loading="lazy"
+              />
+              <figcaption>Find profiles — tick the ones that are right, pick whose photo to use.</figcaption>
+            </figure>
+            <figure>
+              <img
+                src="assets/social-contacts-sync-find-profiles-sources.png"
+                alt="Find profiles sources: Instagram and LinkedIn data exports and a public search on Bluesky, Mastodon and GitHub, each with when it was last read"
+                loading="lazy"
+              />
+              <figcaption>Where the suggestions come from, and when each was last read.</figcaption>
+            </figure>
+            <figure>
+              <img
+                src="assets/social-contacts-sync-contacts.png"
+                alt="Contacts page with filters for contacts without a photo, with a placeholder or with a kept photo, and a list with bulk actions"
+                loading="lazy"
+              />
+              <figcaption>The Contacts page — the ones still without a photo come first.</figcaption>
+            </figure>
+            <figure>
+              <img
+                src="assets/social-contacts-sync-contact-edit.png"
+                alt="Contact editor with the photo, a Keep this photo switch, and every field of the contact"
+                loading="lazy"
+              />
+              <figcaption>Every field is editable, and a photo can be kept as it is.</figcaption>
+            </figure>
+            <figure>
+              <img
                 src="assets/social-contacts-sync-cleanup.png"
                 alt="Clean up page with a list of duplicate contacts and a merge table to pick each field"
                 loading="lazy"
@@ -222,6 +279,12 @@
               <td>Universal <code>.dmg</code></td>
             </tr>
           </table>
+          <p>
+            The installer and the AppImage download a new version by themselves and show how it's
+            going. When you close the app with one ready, it asks whether to install it now, and
+            can open the app again when it's done. Automatic downloads can be turned off in
+            Settings.
+          </p>
           <div class="note">
             <p>
               <strong>You bring your own Google project.</strong> Google asks every app that edits
@@ -244,8 +307,10 @@
             There is no Social Contacts Sync service: nothing reaches me. Your Google sign-in is
             stored encrypted with your system's keychain, and the app connects only to Google,
             WhatsApp Web, Telegram, Gravatar (which receives a hash of each email address, not the
-            address), and GitHub to check for updates. It can also run as a self-hosted web app,
-            from one Docker container.
+            address), the profile pages saved on your contacts, the public search of Bluesky,
+            Mastodon and GitHub when you run it, and GitHub to check for updates. What it finds
+            stays on your computer. It can also run as a self-hosted web app, from one Docker
+            container.
           </p>
         </section>
 
