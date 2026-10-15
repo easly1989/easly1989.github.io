@@ -63,7 +63,7 @@
           <!-- One child: .state is a flex row, and a bare span would get the gap around it. -->
           <p class="state live">
             <span
-              >Shipping, <span data-cloudbank="stable">v3.7.0</span>. Open source under AGPL-3.0.</span
+              >Shipping, <span data-cloudbank="stable">v3.8.0</span>. Open source under AGPL-3.0.</span
             >
           </p>
           <h1 class="display unfurl"><span>CloudBank</span></h1>
@@ -176,7 +176,8 @@
             <div>
               <dt>Budgets and reports that answer first</dt>
               <dd>
-                A budget that puts what you planned next to what you spent. Reports for where the
+                A budget that puts what you planned next to what you spent, with a tick for how far
+                through the month you are. Reports for where the
                 money went, what came in and went out, what your accounts hold and will hold, and
                 what a car costs, for any month, quarter or year, with saved views and CSV/PNG
                 downloads.
@@ -226,7 +227,23 @@
               <dt>Multi-currency, multi-user</dt>
               <dd>
                 Manual and online (ECB, frankfurter.app) exchange rates, totals that say how many
-                accounts they add up, admin-managed users, a responsive UI, and English and Italian.
+                accounts they add up, admin-managed users and a responsive UI.
+              </dd>
+            </div>
+            <div>
+              <dt>Six languages</dt>
+              <dd>
+                English and Italian, plus Spanish, French, German and Brazilian Portuguese in beta:
+                the whole interface, the reminders and the demo's data. The browser's language
+                picks one on a first visit, and native speakers can send corrections from the app.
+              </dd>
+            </div>
+            <div>
+              <dt>Privacy mode</dt>
+              <dd>
+                One eye beside the ? of every page, or Shift+H, blurs amounts, balances, memos and
+                payees across the app, charts included, so you can show CloudBank to someone
+                without showing your money.
               </dd>
             </div>
           </dl>
@@ -253,6 +270,14 @@
                 loading="lazy"
               />
               <figcaption>Drag, resize and add widgets from a palette.</figcaption>
+            </figure>
+            <figure>
+              <img
+                src="assets/cloudbank-privacy.png"
+                alt="CloudBank dashboard in privacy mode, with the eye button on and every balance, total and account figure blurred while the labels and the chart's bars stay readable"
+                loading="lazy"
+              />
+              <figcaption>Privacy mode — the figures blur, the page keeps its shape.</figcaption>
             </figure>
             <figure>
               <img
@@ -322,6 +347,14 @@
             </figure>
             <figure>
               <img
+                src="assets/cloudbank-languages.png"
+                alt="CloudBank general settings with a card for each of the six languages, the four new ones marked beta"
+                loading="lazy"
+              />
+              <figcaption>Languages — six of them, each by its own name.</figcaption>
+            </figure>
+            <figure>
+              <img
                 src="assets/cloudbank-export.png"
                 alt="CloudBank import and export settings with HomeBank file import, backup and restore"
                 loading="lazy"
@@ -345,6 +378,13 @@
               <dd>
                 Optional per-user TOTP with authenticator apps — QR enrolment, one-time recovery
                 codes and a two-step login.
+              </dd>
+            </div>
+            <div>
+              <dt>Single sign-on</dt>
+              <dd>
+                Sign in through Authelia, Authentik, Keycloak or Google, next to passwords or in
+                their place, with one-time recovery codes for the day the provider does not answer.
               </dd>
             </div>
             <div>
@@ -437,7 +477,7 @@ volumes:
             <tr>
               <th scope="row">Stable, <code>:main</code></th>
               <td>
-                <span data-cloudbank="stable">v3.7.0</span>, published
+                <span data-cloudbank="stable">v3.8.0</span>, published
                 <span data-cloudbank-date="stable">October 2026</span>
               </td>
             </tr>
