@@ -6,7 +6,7 @@
     <title>Nutreek — Self-hosted weekly nutrition planner · Carlo Ruggiero</title>
     <meta
       name="description"
-      content="Nutreek is a self-hosted weekly nutrition planner: meal plans, macros per meal, day and week, offline OpenFoodFacts search, adaptive TDEE, weight and hydration tracking, and a coach mode."
+      content="Nutreek is a self-hosted weekly nutrition planner: meal plans, macros per meal, day and week, offline OpenFoodFacts search, a barcode scanner, adaptive TDEE, weight and hydration tracking, and a coach mode. Installable on your phone."
     />
     <meta name="theme-color" content="#bfc3bb" />
     <link rel="icon" type="image/svg+xml" href="nutreek.svg" />
@@ -82,20 +82,23 @@
             protein, carbohydrates and fat — <strong>per meal, per day and per week</strong>, with
             adherence bars against your targets. Ingredient data comes from a local OpenFoodFacts
             index (full-text search in under 50&nbsp;ms, offline), so lookups stay fast and private.
+            On your phone, point the camera at a barcode and the product opens ready to add.
           </p>
           <p class="quiet">
             It runs either natively as a single Go binary, with no external dependencies, or as one
             Docker container — SQLite is embedded, so there is no separate database service to
-            operate.
+            operate. The interface is in Italian, in light and dark, and installs on a phone like
+            an app.
           </p>
           <figure>
             <img
-              src="assets/nutreek-dashboard.png"
-              alt="Nutreek weekly dashboard with meals, per-day and per-week macros, adherence bars and inline hydration"
+              src="assets/nutreek-week.png"
+              alt="Nutreek week view: day tabs with calories, the day's meals with macros, a calorie ring, water and a workout"
               loading="lazy"
             />
             <figcaption>
-              The weekly dashboard: meals, macros per day and week, and hydration at a glance.
+              One day at a time: the meals with their macros, and beside them the calorie ring,
+              water and workouts.
             </figcaption>
           </figure>
         </section>
@@ -106,15 +109,29 @@
             <div>
               <dt>Weekly plans</dt>
               <dd>
-                A weekly calendar with macros per meal, day and week, cheat meals, and one-click
-                copy from the previous week.
+                One day at a time, with a calorie ring and macros per meal, day and week, water and
+                workouts, cheat meals, and one-click copy from the previous week.
               </dd>
             </div>
             <div>
               <dt>Ingredients</dt>
               <dd>
-                Local full-text search over OpenFoodFacts (offline), barcode and URL import, and a
+                Local full-text search over OpenFoodFacts (offline) with product photos, and a
                 reconciliation job that keeps local entries in sync.
+              </dd>
+            </div>
+            <div>
+              <dt>Barcode scanner</dt>
+              <dd>
+                Scan a pack from any food picker: the product is looked up in your own ingredients
+                first, then in the local OpenFoodFacts copy, and opens ready to add.
+              </dd>
+            </div>
+            <div>
+              <dt>On your phone</dt>
+              <dd>
+                Installs as an app, with a bottom bar for the everyday sections. Light, dark or
+                follow the system, in four colours.
               </dd>
             </div>
             <div>
@@ -155,8 +172,8 @@
             <div>
               <dt>Shopping list and REST API</dt>
               <dd>
-                Generate a shopping list from the selected week, and drive everything from a
-                bearer-token REST API (v1).
+                A shopping list for the week grouped by aisle, with a cart and a two-column print,
+                and a bearer-token REST API (v1) to drive everything.
               </dd>
             </div>
           </dl>
@@ -167,24 +184,83 @@
           <div class="reel">
             <figure>
               <img
-                src="assets/nutreek-stats.png"
-                alt="Nutreek statistics screen with weekly summary and adaptive TDEE suggestion"
+                src="assets/nutreek-scanner.png"
+                alt="The barcode scanner open over the food picker, the camera framing a barcode"
                 loading="lazy"
               />
-              <figcaption>
-                Statistics and adaptive TDEE: a weekly summary and a suggested target update from
-                your trend.
-              </figcaption>
+              <figcaption>The barcode scanner, opened from the food picker.</figcaption>
+            </figure>
+            <figure>
+              <img
+                src="assets/nutreek-barcode.png"
+                alt="The scanned product opened in the picker, with protein, carbs, fat and the quantity to add"
+                loading="lazy"
+              />
+              <figcaption>The scanned product, ready to add: pick the grams and see the calories before saving.</figcaption>
+            </figure>
+            <figure>
+              <img
+                src="assets/nutreek-week-dark.png"
+                alt="The week view in dark mode"
+                loading="lazy"
+              />
+              <figcaption>The same week in dark mode.</figcaption>
+            </figure>
+            <figure>
+              <img
+                src="assets/nutreek-phone.png"
+                alt="Three phone screens: the week, the barcode scanner and the shopping list"
+                loading="lazy"
+              />
+              <figcaption>On the phone: the week, the scanner and the shopping list, with the bottom bar.</figcaption>
+            </figure>
+            <figure>
+              <img
+                src="assets/nutreek-recipes.png"
+                alt="Recipe list with calories and macros per serving, and filters"
+                loading="lazy"
+              />
+              <figcaption>Recipes with calories and macros per serving, searchable and filtered.</figcaption>
+            </figure>
+            <figure>
+              <img
+                src="assets/nutreek-plan.png"
+                alt="Nutrition plan with the variants of breakfast and lunch"
+                loading="lazy"
+              />
+              <figcaption>The nutrition plan: variants for each meal, which feed the picker and the week generator.</figcaption>
+            </figure>
+            <figure>
+              <img
+                src="assets/nutreek-shopping.png"
+                alt="Shopping list grouped by aisle, with items added by hand"
+                loading="lazy"
+              />
+              <figcaption>The shopping list, grouped by aisle.</figcaption>
+            </figure>
+            <figure>
+              <img
+                src="assets/nutreek-stats.png"
+                alt="Statistics in dark mode: summary cards, estimated energy needs, calories and macros, weight"
+                loading="lazy"
+              />
+              <figcaption>Statistics and adaptive TDEE: your real energy needs, estimated from weight and intake.</figcaption>
             </figure>
             <figure>
               <img
                 src="assets/nutreek-coach.png"
-                alt="Nutreek coach panel: client management, plan assignment and a reusable plan library"
+                alt="Coach panel with a client and the plan library"
                 loading="lazy"
               />
-              <figcaption>
-                Coach panel: manage clients, assign nutrition plans and reuse a plan library.
-              </figcaption>
+              <figcaption>Coach panel: manage clients, assign nutrition plans and reuse a plan library.</figcaption>
+            </figure>
+            <figure>
+              <img
+                src="assets/nutreek-admin.png"
+                alt="Administration: users, premium, features and the OpenFoodFacts sync"
+                loading="lazy"
+              />
+              <figcaption>Administration for the owner: users, feature switches and the OpenFoodFacts sync.</figcaption>
             </figure>
           </div>
         </section>
@@ -194,7 +270,7 @@
           <table class="spec">
             <tr>
               <th scope="row">Backend</th>
-              <td>Go 1.25+ (chi, scs, sqlc, goose, bcrypt, nosurf)</td>
+              <td>Go 1.27+ (chi, scs, goose, bcrypt, nosurf), hand-written SQL</td>
             </tr>
             <tr>
               <th scope="row">Database</th>
@@ -202,7 +278,7 @@
             </tr>
             <tr>
               <th scope="row">Frontend</th>
-              <td>Server-side rendering with html/template + HTMX + Tailwind CSS</td>
+              <td>Server-side rendering with html/template + HTMX + Tailwind CSS; installable as a PWA</td>
             </tr>
             <tr>
               <th scope="row">Deploy</th>
