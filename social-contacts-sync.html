@@ -8,7 +8,8 @@
       name="description"
       content="Social Contacts Sync is a free, open-source desktop app that fills Google Contacts with your contacts' profile photos from WhatsApp, Telegram, Gravatar and their social profiles, finds those profiles for you, and cleans up duplicates, shared numbers and missing country codes. For Windows, Linux and macOS."
     />
-    <meta name="theme-color" content="#bfc3bb" />
+    <meta name="theme-color" content="#22594b" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#12352d" media="(prefers-color-scheme: dark)" />
     <link rel="icon" type="image/svg+xml" href="social-contacts-sync.svg" />
     <meta property="og:title" content="Social Contacts Sync — Profile photos for Google Contacts" />
     <meta
@@ -20,337 +21,424 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
     <style>
-      :root {
-        --accent: #5b4cf0;
+      .syncbar {
+        position: relative;
+        z-index: 5;
+        width: min(46rem, calc(100% - 2rem));
+        margin: -1rem auto 2.5rem;
+        padding: 1rem 1.25rem;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.8rem 1.2rem;
+        background: #fff6c9;
+        color: var(--paper-ink);
+        box-shadow: var(--shadow);
+        transform: rotate(0.6deg);
       }
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --accent: #8a7dff;
-        }
+      .syncbar p {
+        margin: 0;
+        flex: 1 1 16rem;
+      }
+      .syncbar progress {
+        width: 100%;
+        height: 8px;
+        accent-color: var(--scs);
+      }
+      .card-grid {
+        position: relative;
+        z-index: 4;
+        width: min(70rem, calc(100% - 2rem));
+        margin: 0 auto 4rem;
+        columns: 3 20rem;
+        column-gap: 1.6rem;
+      }
+      .contact {
+        break-inside: avoid;
+        margin: 0 0 1.6rem;
+        padding: 1.2rem 1.25rem 1.3rem;
+        border-radius: 12px;
+        background: var(--paper);
+        color: var(--paper-ink);
+        box-shadow: var(--shadow);
+        transform: rotate(var(--r, 0deg));
+        font-size: 0.97rem;
+        line-height: 1.5;
+      }
+      .contact header {
+        display: grid;
+        grid-template-columns: 52px 1fr;
+        gap: 0.8rem;
+        align-items: center;
+        margin-bottom: 0.7rem;
+      }
+      .contact h2 {
+        margin: 0;
+        font: 800 1.2rem/1.15 "Bricolage Grotesque", sans-serif;
+      }
+      .contact header small {
+        display: block;
+        color: var(--paper-ink-2);
+        font-size: 0.82rem;
+      }
+      .contact p {
+        margin: 0 0 0.7rem;
+      }
+      .contact p:last-child {
+        margin-bottom: 0;
+      }
+      /* the avatar: a coloured letter until a sync gives it a face */
+      .avatar {
+        position: relative;
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: var(--letter, #7b8fa6);
+        color: #fff;
+        display: grid;
+        place-items: center;
+        font: 800 1.3rem "Bricolage Grotesque", sans-serif;
+        transition: background 0.4s ease;
+      }
+      .avatar::before,
+      .avatar::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        border-radius: 50%;
+        opacity: 0;
+        transform: translateX(-50%) translateY(26px);
+        transition:
+          transform 0.45s var(--ease-spring),
+          opacity 0.3s ease;
+      }
+      .avatar::before {
+        top: 6px;
+        width: 21px;
+        height: 18px;
+        background: var(--skin, #f1c9a5);
+        border-top: 7px solid var(--hair, #3b2a1e);
+        border-radius: 50% 50% 45% 45%;
+      }
+      .avatar::after {
+        top: 33px;
+        width: 42px;
+        height: 30px;
+        background: var(--shirt, #5b4cf0);
+      }
+      .avatar.face {
+        background: #dfe7f1;
+        color: transparent;
+      }
+      .avatar.face::before,
+      .avatar.face::after {
+        opacity: 1;
+        transform: translateX(-50%);
+      }
+      .contact .shot {
+        margin-top: 0.4rem;
+      }
+      .contact table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+      }
+      .contact th {
+        text-align: left;
+        padding: 0.4rem 0.6rem 0.4rem 0;
+        border-bottom: 1px solid var(--rule);
+        white-space: nowrap;
+        vertical-align: top;
+      }
+      .contact td {
+        padding: 0.4rem 0;
+        border-bottom: 1px solid var(--rule);
+        font: 500 0.8rem/1.45 "IBM Plex Mono", ui-monospace, monospace;
+      }
+      .contact code {
+        font: 500 0.88em "IBM Plex Mono", ui-monospace, monospace;
+      }
+      .contact .quiet {
+        color: var(--paper-ink-2);
+        font-size: 0.9rem;
+      }
+      /* what this page becomes from, on the bench */
+      .label-sheet {
+        view-transition-name: scs;
       }
     </style>
-    <script src="site.js" defer></script>
   </head>
-  <body>
-    <div class="depth" aria-hidden="true">
-      <span class="aura one"></span>
-      <span class="aura two"></span>
-      <span class="spot"></span>
-      <span class="grain"></span>
-    </div>
-
-    <header class="bar">
-      <a class="wordmark" href="index.html">Carlo Ruggiero</a>
-      <nav aria-label="Primary">
+  <body data-page="scs" data-cat-scale="0.85">
+    <div class="mat" data-cat-world>
+      <svg class="guides" aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 100 100">
+        <line x1="0" y1="100" x2="100" y2="0" vector-effect="non-scaling-stroke" />
+      </svg>
+      <header class="bar">
         <a href="index.html">Projects</a>
         <a href="about.html">About</a>
-        <a href="donate.html">Donate</a>
+        <a href="donate.html" data-cat="nav">Donate</a>
         <a href="https://github.com/easly1989" rel="noopener">GitHub</a>
-      </nav>
-    </header>
+      </header>
+      <a class="crumb" href="index.html">Back to the bench</a>
 
-    <main>
-      <div class="wrap">
-        <p class="crumb"><a href="index.html">Projects</a> / Social Contacts Sync</p>
-
-        <section class="masthead reveal shown">
-          <img class="mark" src="social-contacts-sync.svg" alt="" width="64" height="64" />
-          <!-- One child: .state is a flex row, and a bare span would get the gap around it. -->
-          <p class="state live">
-            <span>Shipping, v1.3.3. Open source.</span>
-          </p>
-          <h1 class="display unfurl"><span>Social Contacts</span><span>Sync</span></h1>
+      <main>
+        <section class="paper label-sheet" style="--c: var(--scs)" data-cat="sit">
+          <img class="mark" src="social-contacts-sync.svg" alt="" width="56" height="56" />
+          <p class="state">Shipping, v1.3.3. Open source.</p>
+          <h1>Social Contacts Sync</h1>
           <p class="lede">
             Give every contact a face. A desktop app that fills Google Contacts with your contacts'
             profile photos from WhatsApp, Telegram, Gravatar and their social profiles, and tidies
             up duplicates on the way.
           </p>
-          <div class="actions">
-            <a
-              class="action key"
-              href="https://github.com/easly1989/social-contacts-sync/releases"
-              rel="noopener"
-              >Download</a
-            >
-            <a class="action" href="https://github.com/easly1989/social-contacts-sync" rel="noopener">
-              View on GitHub
-            </a>
-            <a class="action" href="donate.html">Donate</a>
+          <div class="actions" style="--c: var(--scs)">
+            <a class="btn" href="https://github.com/easly1989/social-contacts-sync/releases" rel="noopener">Download</a>
+            <a class="btn quiet" href="https://github.com/easly1989/social-contacts-sync" rel="noopener">View on GitHub</a>
+            <a class="btn quiet" href="donate.html">Donate</a>
           </div>
         </section>
 
-        <section class="section reveal">
-          <h2>What it is</h2>
-          <p>
-            Most of the people in my phone have a WhatsApp photo, and in Google Contacts they are
-            all coloured circles with a letter. Social Contacts Sync matches each Google contact to
-            its WhatsApp and Telegram accounts by phone number, and to Gravatar by email address,
-            and puts the photo on the contact.
-          </p>
-          <p>
-            For the people who aren't on any of those, it can use the social profiles saved on a
-            contact, and it helps find them: it suggests Instagram, LinkedIn, Facebook, Bluesky,
-            Mastodon and GitHub profiles with the same name, and links the ones you confirm.
-          </p>
-          <p>
-            It runs on your own computer: the app starts a small local server and opens it in its
-            window, so your contacts only travel between your computer, Google and the sources you
-            connect.
-            Windows, Linux and macOS, in English and Italian, light or dark.
-          </p>
-          <p class="quiet">
-            It grew out of
-            <a href="https://github.com/guyzyl/whatsapp-contact-sync" rel="noopener"
-              >WhatsApp Contact Sync</a
-            >
-            by Guy Zylberberg, which syncs WhatsApp photos from a web page. This fork adds the
-            desktop app, more sources and the clean-up tools, and keeps his licence.
-          </p>
-          <figure>
-            <img
-              src="assets/social-contacts-sync-dashboard.png"
-              alt="Social Contacts Sync dashboard with photo coverage of the address book, sources, recent activity and the latest photos added"
-              loading="lazy"
-            />
-            <figcaption>The dashboard — how many contacts have a face, and what changed lately.</figcaption>
-          </figure>
-        </section>
+        <div class="syncbar" style="--c: var(--scs)">
+          <p id="sync-status" aria-live="polite">These cards are contacts too. Most of them are a letter in a circle.</p>
+          <button class="btn" type="button" id="sync">Sync photos</button>
+          <button class="btn quiet" type="button" id="undo" disabled>Undo</button>
+          <progress id="sync-progress" max="1" value="0" aria-label="Contacts with a photo"></progress>
+        </div>
 
-        <section class="section reveal">
-          <h2>Features</h2>
-          <dl class="defs reveal stagger">
-            <div>
-              <dt>Photos from your sources</dt>
-              <dd>
-                WhatsApp and Telegram, matched by phone number, Gravatar, matched by email, and the
-                profile links saved on a contact, in the order you choose. Telegram only reads the
-                contacts you already have there.
-              </dd>
-            </div>
-            <div>
-              <dt>Three ways to sync</dt>
-              <dd>
-                Fill in only the missing photos, replace them all, or review each contact and pick
-                the photo with the keyboard.
-              </dd>
-            </div>
-            <div>
-              <dt>Reports and undo</dt>
-              <dd>
-                Every sync keeps a report of what changed, with the photo before and after. Undo
-                one contact or the whole run, and export it as CSV.
-              </dd>
-            </div>
-            <div>
-              <dt>Find profiles</dt>
-              <dd>
-                Suggests each contact's social profiles from your own Instagram and LinkedIn data
-                exports and a public search on Bluesky, Mastodon and GitHub. Review them one by one
-                or as a list, and link several profiles to a contact at once. An experimental scan
-                of your own followers with your login is there too, off by default: it goes against
-                those sites' terms, and the app says so before it starts.
-              </dd>
-            </div>
-            <div>
-              <dt>Contacts</dt>
-              <dd>
-                Every Google contact in one list: edit every field, add, merge, label and delete
-                them, and upload photos by hand. A photo you upload is a placeholder until a sync
-                finds a real one, unless you keep it: a kept photo is never replaced, and the
-                contact can still be linked to its profiles.
-              </dd>
-            </div>
-            <div>
-              <dt>Duplicates</dt>
-              <dd>
-                Finds contacts that share a number, an email or a name, and merges them field by
-                field. Google has no merge, so every contact is backed up first and the merge can be
-                undone.
-              </dd>
-            </div>
-            <div>
-              <dt>Shared numbers</dt>
-              <dd>
-                A number saved on two different people would put one person's photo on the other.
-                Keep it on the right one, merge them, or mark it as shared so syncs skip it.
-              </dd>
-            </div>
-            <div>
-              <dt>Country codes</dt>
-              <dd>
-                Numbers saved without <code>+39</code> or another prefix are listed with the fixed
-                version, and fixed in one go.
-              </dd>
-            </div>
-          </dl>
-          <div class="reel">
-            <figure>
-              <img
-                src="assets/social-contacts-sync-sync-setup.png"
-                alt="Sync setup with the sources in priority order, the choice of mode and a summary with the time estimate"
-                loading="lazy"
-              />
+        <div class="card-grid">
+          <article class="contact" style="--r: -0.8deg">
+            <header><span class="avatar">W</span><div><h2>What it is</h2><small>The address book problem</small></div></header>
+            <p>
+              Most of the people in my phone have a WhatsApp photo, and in Google Contacts they are
+              all coloured circles with a letter. Social Contacts Sync matches each Google contact
+              to its WhatsApp and Telegram accounts by phone number, and to Gravatar by email
+              address, and puts the photo on the contact.
+            </p>
+            <p>
+              For the people who aren't on any of those, it can use the social profiles saved on a
+              contact, and it helps find them: it suggests Instagram, LinkedIn, Facebook, Bluesky,
+              Mastodon and GitHub profiles with the same name, and links the ones you confirm.
+            </p>
+          </article>
+
+          <article class="contact" style="--r: 0.7deg">
+            <header><span class="avatar">R</span><div><h2>Runs on your computer</h2><small>Windows, Linux, macOS</small></div></header>
+            <p>
+              The app starts a small local server and opens it in its window, so your contacts only
+              travel between your computer, Google and the sources you connect. In English and
+              Italian, light or dark.
+            </p>
+            <p class="quiet">
+              It grew out of
+              <a href="https://github.com/guyzyl/whatsapp-contact-sync" rel="noopener">WhatsApp Contact Sync</a>
+              by Guy Zylberberg. This fork adds the desktop app, more sources and the clean-up
+              tools, and keeps his licence.
+            </p>
+            <figure class="shot" style="--r: 1deg">
+              <img width="1280" height="800" src="assets/social-contacts-sync-dashboard.png" alt="Social Contacts Sync dashboard with photo coverage of the address book" loading="lazy" />
+              <figcaption>The dashboard — how many contacts have a face.</figcaption>
+            </figure>
+          </article>
+
+          <article class="contact" style="--r: -0.4deg">
+            <header><span class="avatar">P</span><div><h2>Photos from your sources</h2><small>Feature</small></div></header>
+            <p>
+              WhatsApp and Telegram, matched by phone number, Gravatar, matched by email, and the
+              profile links saved on a contact, in the order you choose. Telegram only reads the
+              contacts you already have there.
+            </p>
+          </article>
+
+          <article class="contact" style="--r: 0.9deg">
+            <header><span class="avatar">T</span><div><h2>Three ways to sync</h2><small>Feature</small></div></header>
+            <p>Fill in only the missing photos, replace them all, or review each contact and pick the photo with the keyboard.</p>
+            <figure class="shot" style="--r: -1.2deg">
+              <img width="1280" height="800" src="assets/social-contacts-sync-sync-setup.png" alt="Sync setup with the sources in priority order and the choice of mode" loading="lazy" />
               <figcaption>Choose the sources, their order, and what should change.</figcaption>
             </figure>
-            <figure>
-              <img
-                src="assets/social-contacts-sync-sync-report.png"
-                alt="Sync report with counters per outcome and a table of contacts with their photo before and after"
-                loading="lazy"
-              />
+          </article>
+
+          <article class="contact" style="--r: -1deg">
+            <header><span class="avatar">U</span><div><h2>Reports and undo</h2><small>Feature</small></div></header>
+            <p>Every sync keeps a report of what changed, with the photo before and after. Undo one contact or the whole run, and export it as CSV.</p>
+            <figure class="shot" style="--r: 1.4deg">
+              <img width="1280" height="800" src="assets/social-contacts-sync-sync-report.png" alt="Sync report with a table of contacts and their photo before and after" loading="lazy" />
               <figcaption>The report — before and after, with undo per contact.</figcaption>
             </figure>
-            <figure>
-              <img
-                src="assets/social-contacts-sync-find-profiles.png"
-                alt="Find profiles with a contact's suggested Instagram, LinkedIn and Bluesky profiles, each with a checkbox and a choice of whose photo to use"
-                loading="lazy"
-              />
-              <figcaption>Find profiles — tick the ones that are right, pick whose photo to use.</figcaption>
-            </figure>
-            <figure>
-              <img
-                src="assets/social-contacts-sync-find-profiles-sources.png"
-                alt="Find profiles sources: Instagram and LinkedIn data exports and a public search on Bluesky, Mastodon and GitHub, each with when it was last read"
-                loading="lazy"
-              />
-              <figcaption>Where the suggestions come from, and when each was last read.</figcaption>
-            </figure>
-            <figure>
-              <img
-                src="assets/social-contacts-sync-contacts.png"
-                alt="Contacts page with filters for contacts without a photo, with a placeholder or with a kept photo, and a list with bulk actions"
-                loading="lazy"
-              />
-              <figcaption>The Contacts page — the ones still without a photo come first.</figcaption>
-            </figure>
-            <figure>
-              <img
-                src="assets/social-contacts-sync-contact-edit.png"
-                alt="Contact editor with the photo, a Keep this photo switch, and every field of the contact"
-                loading="lazy"
-              />
-              <figcaption>Every field is editable, and a photo can be kept as it is.</figcaption>
-            </figure>
-            <figure>
-              <img
-                src="assets/social-contacts-sync-cleanup.png"
-                alt="Clean up page with a list of duplicate contacts and a merge table to pick each field"
-                loading="lazy"
-              />
-              <figcaption>Merging duplicates — pick each value, the rest is combined.</figcaption>
-            </figure>
-            <figure>
-              <img
-                src="assets/social-contacts-sync-setup-google.png"
-                alt="Setup wizard step that guides through creating a Google Cloud project and its credentials"
-                loading="lazy"
-              />
-              <figcaption>The first-run wizard walks through your own Google project.</figcaption>
-            </figure>
-          </div>
-        </section>
+          </article>
 
-        <section class="section reveal" id="download">
-          <h2>Get it</h2>
-          <p>
-            Download it from the
-            <a href="https://github.com/easly1989/social-contacts-sync/releases" rel="noopener"
-              >releases page</a
-            >. The portable and AppImage builds need no installation and keep their settings next to
-            themselves.
-          </p>
-          <table class="spec">
-            <tr>
-              <th scope="row">Windows</th>
-              <td>Portable <code>.exe</code>, or installer with automatic updates</td>
-            </tr>
-            <tr>
-              <th scope="row">Linux</th>
-              <td><code>.AppImage</code> with automatic updates, or <code>.deb</code></td>
-            </tr>
-            <tr>
-              <th scope="row">macOS</th>
-              <td>Universal <code>.dmg</code></td>
-            </tr>
-          </table>
-          <p>
-            The installer and the AppImage download a new version by themselves and show how it's
-            going. When you close the app with one ready, it asks whether to install it now, and
-            can open the app again when it's done. Automatic downloads can be turned off in
-            Settings.
-          </p>
-          <div class="note">
+          <article class="contact" style="--r: 0.5deg">
+            <header><span class="avatar">F</span><div><h2>Find profiles</h2><small>Feature</small></div></header>
             <p>
-              <strong>You bring your own Google project.</strong> Google asks every app that edits
-              contacts for its own credentials. Creating yours is free and takes a few minutes; the
-              app links each page of the Google Cloud Console and checks the result. The builds are
-              not code-signed yet, so Windows and macOS warn on the first launch; the
-              <a
-                href="https://github.com/easly1989/social-contacts-sync#download"
-                rel="noopener"
-                >README</a
-              >
+              Suggests each contact's social profiles from your own Instagram and LinkedIn data
+              exports and a public search on Bluesky, Mastodon and GitHub. Review them one by one or
+              as a list. An experimental scan of your own followers is there too, off by default: it
+              goes against those sites' terms, and the app says so before it starts.
+            </p>
+            <figure class="shot" style="--r: -1deg">
+              <img width="1280" height="800" src="assets/social-contacts-sync-find-profiles.png" alt="Find profiles with a contact's suggested Instagram, LinkedIn and Bluesky profiles" loading="lazy" />
+              <figcaption>Tick the ones that are right, pick whose photo to use.</figcaption>
+            </figure>
+          </article>
+
+          <article class="contact" style="--r: -0.6deg">
+            <header><span class="avatar">C</span><div><h2>Contacts</h2><small>Feature</small></div></header>
+            <p>
+              Every Google contact in one list: edit every field, add, merge, label and delete them,
+              and upload photos by hand. A kept photo is never replaced, and the contact can still
+              be linked to its profiles.
+            </p>
+            <figure class="shot" style="--r: 1deg">
+              <img width="1280" height="800" src="assets/social-contacts-sync-contacts.png" alt="Contacts page with filters for contacts without a photo" loading="lazy" />
+              <figcaption>The ones still without a photo come first.</figcaption>
+            </figure>
+          </article>
+
+          <article class="contact" style="--r: 0.8deg">
+            <header><span class="avatar">D</span><div><h2>Duplicates</h2><small>Feature</small></div></header>
+            <p>Finds contacts that share a number, an email or a name, and merges them field by field. Google has no merge, so every contact is backed up first and the merge can be undone.</p>
+            <figure class="shot" style="--r: -1.4deg">
+              <img width="1280" height="800" src="assets/social-contacts-sync-cleanup.png" alt="Clean up page with duplicate contacts and a merge table" loading="lazy" />
+              <figcaption>Pick each value, the rest is combined.</figcaption>
+            </figure>
+          </article>
+
+          <article class="contact" style="--r: -0.5deg">
+            <header><span class="avatar">S</span><div><h2>Shared numbers</h2><small>Feature</small></div></header>
+            <p>A number saved on two different people would put one person's photo on the other. Keep it on the right one, merge them, or mark it as shared so syncs skip it.</p>
+          </article>
+
+          <article class="contact" style="--r: 1deg">
+            <header><span class="avatar">+</span><div><h2>Country codes</h2><small>Feature</small></div></header>
+            <p>Numbers saved without <code>+39</code> or another prefix are listed with the fixed version, and fixed in one go.</p>
+          </article>
+
+          <article class="contact" id="download" style="--r: -0.9deg">
+            <header><span class="avatar">G</span><div><h2>Get it</h2><small>From the releases page</small></div></header>
+            <p>The portable and AppImage builds need no installation and keep their settings next to themselves.</p>
+            <table>
+              <tr><th scope="row">Windows</th><td>Portable .exe, or installer with automatic updates</td></tr>
+              <tr><th scope="row">Linux</th><td>.AppImage with automatic updates, or .deb</td></tr>
+              <tr><th scope="row">macOS</th><td>Universal .dmg</td></tr>
+            </table>
+            <p style="margin-top: 0.8rem">
+              The installer and the AppImage download a new version by themselves and ask before
+              installing it. Automatic downloads can be turned off in Settings.
+            </p>
+            <p class="actions" style="--c: var(--scs)">
+              <a class="btn" href="https://github.com/easly1989/social-contacts-sync/releases" rel="noopener">Download</a>
+            </p>
+          </article>
+
+          <article class="contact" style="--r: 0.6deg">
+            <header><span class="avatar">B</span><div><h2>Bring your own Google project</h2><small>Before the first sync</small></div></header>
+            <p>
+              Google asks every app that edits contacts for its own credentials. Creating yours is
+              free and takes a few minutes; the app links each page of the Google Cloud Console and
+              checks the result. The builds are not code-signed yet, so Windows and macOS warn on
+              the first launch; the
+              <a href="https://github.com/easly1989/social-contacts-sync#download" rel="noopener">README</a>
               says how to get past it.
             </p>
-          </div>
-        </section>
+            <figure class="shot" style="--r: -1deg">
+              <img width="1280" height="800" src="assets/social-contacts-sync-setup-google.png" alt="Setup wizard step for creating a Google Cloud project" loading="lazy" />
+              <figcaption>The first-run wizard walks through your own Google project.</figcaption>
+            </figure>
+          </article>
 
-        <section class="section reveal">
-          <h2>Private by design</h2>
-          <p>
-            There is no Social Contacts Sync service: nothing reaches me. Your Google sign-in is
-            stored encrypted with your system's keychain, and the app connects only to Google,
-            WhatsApp Web, Telegram, Gravatar (which receives a hash of each email address, not the
-            address), the profile pages saved on your contacts, the public search of Bluesky,
-            Mastodon and GitHub when you run it, and GitHub to check for updates. What it finds
-            stays on your computer. It can also run as a self-hosted web app, from one Docker
-            container.
-          </p>
-        </section>
+          <article class="contact" style="--r: -0.7deg">
+            <header><span class="avatar">P</span><div><h2>Private by design</h2><small>Nothing reaches me</small></div></header>
+            <p>
+              There is no Social Contacts Sync service. Your Google sign-in is stored encrypted with
+              your system's keychain, and the app connects only to Google, WhatsApp Web, Telegram,
+              Gravatar (which receives a hash of each email address, not the address), the profile
+              pages saved on your contacts, the public search of Bluesky, Mastodon and GitHub when
+              you run it, and GitHub to check for updates. It can also run as a self-hosted web app,
+              from one Docker container.
+            </p>
+          </article>
 
-        <section class="section reveal">
-          <h2>Open and free — support it</h2>
-          <p>
-            Social Contacts Sync is free and open source, under the original project's licence
-            (Apache 2.0 with the Commons Clause). If it saved you an evening of copying photos, a
-            donation is much appreciated.
-          </p>
-          <div class="actions">
-            <a class="action key" href="donate.html">Donate</a>
-            <a class="action" href="https://github.com/sponsors/easly1989" rel="noopener">
-              GitHub Sponsors
-            </a>
-          </div>
-        </section>
-
-        <div class="actions">
-          <a class="action" href="index.html">All projects</a>
-          <a
-            class="action key"
-            href="https://github.com/easly1989/social-contacts-sync/releases"
-            rel="noopener"
-            >Download</a
-          >
+          <article class="contact" style="--r: 0.9deg">
+            <header><span class="avatar">O</span><div><h2>Open and free — support it</h2><small>Apache 2.0 with the Commons Clause</small></div></header>
+            <p>Free and open source, under the original project's licence. If it saved you an evening of copying photos, a donation is much appreciated.</p>
+            <p class="actions" style="--c: var(--scs)">
+              <a class="btn" href="donate.html">Donate</a>
+              <a class="btn quiet" href="https://github.com/sponsors/easly1989" rel="noopener">GitHub Sponsors</a>
+            </p>
+          </article>
         </div>
-      </div>
-    </main>
+      </main>
 
-    <footer>
-      <a href="index.html">Projects</a>
-      <a href="about.html">About</a>
-      <a href="donate.html">Donate</a>
-      <a href="https://github.com/easly1989/social-contacts-sync" rel="noopener">Source code</a>
-      <a href="https://github.com/guyzyl/whatsapp-contact-sync" rel="noopener"
-        >Based on WhatsApp Contact Sync</a
-      >
-      <a href="https://www.linkedin.com/in/cruggiero89/" rel="noopener">LinkedIn</a>
-      <a href="https://www.instagram.com/easly1989/" rel="noopener">Instagram</a>
-    </footer>
+      <span class="loose pencil" data-cat="knock" style="left: 30px; top: 900px; --r: 84deg" aria-hidden="true"></span>
+      <span class="loose clip" data-cat="knock" style="right: 40px; top: 640px; --r: 12deg" aria-hidden="true"></span>
+    </div>
+
+    <script>
+      // The page does what the app does: every contact gets a face, one at a
+      // time, with a report and an undo.
+      (function () {
+        var reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var avatars = [].slice.call(document.querySelectorAll(".contact .avatar"));
+        var palette = ["#7b8fa6", "#a67b9b", "#7ba68c", "#a6957b", "#7b86a6", "#9ba67b"];
+        var skins = ["#f1c9a5", "#e0ac83", "#c68b5e", "#8d5a3b", "#f5d7bf"];
+        var hair = ["#3b2a1e", "#121212", "#a8643a", "#e3c27a", "#6b4a35", "#8b8b8b"];
+        var shirts = ["#5b4cf0", "#2f6fd0", "#2f7d32", "#c4356a", "#6d59ad", "#d98b2b"];
+        avatars.forEach(function (a, i) {
+          a.style.setProperty("--letter", palette[i % palette.length]);
+          a.style.setProperty("--skin", skins[(i * 3) % skins.length]);
+          a.style.setProperty("--hair", hair[(i * 5) % hair.length]);
+          a.style.setProperty("--shirt", shirts[(i * 7) % shirts.length]);
+        });
+        // a couple already have one, as in a real address book
+        avatars[2].classList.add("face");
+        avatars[7].classList.add("face");
+        var status = document.getElementById("sync-status");
+        var bar = document.getElementById("sync-progress");
+        var sync = document.getElementById("sync");
+        var undo = document.getElementById("undo");
+        var added = [];
+        function count() {
+          var n = avatars.filter(function (a) { return a.classList.contains("face"); }).length;
+          bar.max = avatars.length;
+          bar.value = n;
+          return n;
+        }
+        count();
+        sync.addEventListener("click", function () {
+          var todo = avatars.filter(function (a) { return !a.classList.contains("face"); });
+          if (!todo.length) return;
+          sync.disabled = true;
+          status.textContent = "Syncing " + todo.length + " contacts…";
+          added = [];
+          todo.forEach(function (a, i) {
+            setTimeout(function () {
+              a.classList.add("face");
+              added.push(a);
+              count();
+              if (added.length === todo.length) {
+                status.textContent = "Sync report: " + added.length + " photos added, none replaced. Every contact has a face now.";
+                undo.disabled = false;
+                sync.disabled = false;
+              }
+            }, reduced ? 0 : 160 * i);
+          });
+        });
+        undo.addEventListener("click", function () {
+          added.forEach(function (a) { a.classList.remove("face"); });
+          status.textContent = "Undone: " + added.length + " photos removed, back to the letters.";
+          added = [];
+          count();
+          undo.disabled = true;
+        });
+      })();
+    </script>
+    <script src="site.js" defer></script>
+    <script src="cat.js" defer></script>
   </body>
 </html>

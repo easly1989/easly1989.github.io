@@ -8,7 +8,8 @@
       name="description"
       content="Cupid is a web management system for matchmaking and dating agencies: client records, partner requests, affinity matching, meetings, contracts, printing, GDPR tooling and encrypted backups."
     />
-    <meta name="theme-color" content="#bfc3bb" />
+    <meta name="theme-color" content="#22594b" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#12352d" media="(prefers-color-scheme: dark)" />
     <link rel="icon" type="image/svg+xml" href="cupid.svg" />
     <meta property="og:title" content="Cupid — Management system for matchmaking agencies" />
     <meta
@@ -20,61 +21,312 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
     <style>
-      :root {
-        --accent: #c4356a;
+      .post {
+        position: relative;
+        z-index: 4;
+        width: min(46rem, calc(100% - 2rem));
+        margin: 0 auto 4rem;
+        padding-top: 7.5rem;
       }
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --accent: #f58ab0;
+      /* The envelope lies open at the top; the letter comes out from under it. */
+      .env {
+        position: relative;
+        /* above the letter, whose top is still tucked inside */
+        z-index: 3;
+        height: 12rem;
+        transform: rotate(0.8deg);
+      }
+      .env .pocket {
+        position: absolute;
+        inset: 0;
+        z-index: 3;
+        box-shadow: var(--shadow);
+        background:
+          linear-gradient(to top right, transparent calc(50% - 1px), rgba(120, 40, 70, 0.14) 50%, transparent calc(50% + 1px)) left / 50% 100% no-repeat,
+          linear-gradient(to top left, transparent calc(50% - 1px), rgba(120, 40, 70, 0.14) 50%, transparent calc(50% + 1px)) right / 50% 100% no-repeat,
+          linear-gradient(170deg, #f6e8eb, #ead3d9);
+      }
+      .env .flap {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        height: 7rem;
+        z-index: 1;
+        clip-path: polygon(0 100%, 50% 0, 100% 100%);
+        background: #e2c3cb;
+        transform-origin: 50% 100%;
+        transform: translateY(-100%);
+        transition:
+          transform 0.6s var(--ease-out),
+          z-index 0s linear 0.3s;
+      }
+      .shut .env .flap {
+        z-index: 4;
+        transform: translateY(-100%) rotateX(180deg);
+        transition-delay: 0.45s, 0.75s;
+      }
+      .env .stamp {
+        position: absolute;
+        z-index: 4;
+        right: 1.5rem;
+        bottom: 1.4rem;
+        width: 4.2rem;
+        height: 5rem;
+        padding: 0.35rem;
+        background: #fff;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+      .env .stamp img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background: #fbe8ee;
+      }
+      .env .to {
+        position: absolute;
+        z-index: 4;
+        left: 2rem;
+        bottom: 1.6rem;
+        margin: 0;
+        color: #6b3a4a;
+        line-height: 1.6;
+      }
+      /* The seal: split at the hinge while the letter is out, whole on the closed flap. */
+      .seal {
+        position: absolute;
+        left: 50%;
+        top: -1.8rem;
+        z-index: 5;
+        width: 3.6rem;
+        height: 3.6rem;
+        margin-left: -1.8rem;
+        padding: 0;
+        border: 0;
+        background: none;
+        cursor: pointer;
+        border-radius: 50%;
+        transition: top 0.6s var(--ease-out) 0.45s;
+      }
+      .shut .seal {
+        top: 5.2rem;
+      }
+      .seal i {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 40% 35%, #e35b8a, #a8234f 70%);
+        border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        transition: transform 0.35s var(--ease-spring);
+      }
+      .seal i:first-child {
+        clip-path: polygon(0 0, 55% 0, 42% 30%, 58% 55%, 44% 100%, 0 100%);
+        transform: translate(-11px, 5px) rotate(-18deg);
+      }
+      .seal i:last-child {
+        clip-path: polygon(55% 0, 100% 0, 100% 100%, 44% 100%, 58% 55%, 42% 30%);
+        transform: translate(11px, -3px) rotate(15deg);
+      }
+      .shut .seal i {
+        transform: none;
+        transition-delay: 1.05s;
+      }
+      .seal svg {
+        position: absolute;
+        inset: 0.9rem;
+        fill: rgba(255, 255, 255, 0.55);
+      }
+
+      .letter-sheet {
+        position: relative;
+        z-index: 2;
+        margin-top: -2.5rem;
+        padding: 4.6rem 2.4rem 3rem;
+        background: var(--paper);
+        color: var(--paper-ink);
+        box-shadow: var(--shadow-up);
+        transform: rotate(-0.4deg);
+        line-height: 1.6;
+      }
+      /* back in: the foot rises into the envelope, as if drawn up from the top */
+      .shut .letter-sheet {
+        clip-path: inset(0 0 100% 0);
+        transform: translateY(-3rem);
+        transition:
+          clip-path 0.6s var(--ease-out),
+          transform 0.6s var(--ease-out);
+      }
+      .reading .letter-sheet {
+        animation: rise 1.1s var(--ease-out) 0.3s both;
+      }
+      @keyframes rise {
+        from {
+          clip-path: inset(0 0 100% 0);
+          transform: translateY(-3rem);
+        }
+        to {
+          clip-path: inset(-4rem -4rem -4rem -4rem);
         }
       }
+      .letter-sheet h1 {
+        margin: 0;
+        font: 800 2.6rem/1 "Bricolage Grotesque", sans-serif;
+        font-variation-settings: "opsz" 96;
+        letter-spacing: -0.02em;
+      }
+      .letter-sheet .state {
+        margin: 0 0 0.3rem;
+        color: var(--paper-ink-2);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .letter-sheet .state::before {
+        content: "";
+        width: 9px;
+        height: 9px;
+        flex: none;
+        background: var(--cupid);
+      }
+      .letter-sheet .mark {
+        position: absolute;
+        right: 2rem;
+        top: 4.4rem;
+      }
+      .letter-sheet h2 {
+        margin: 2rem 0 0.5rem;
+        font: 800 1.4rem/1.15 "Bricolage Grotesque", sans-serif;
+      }
+      .letter-sheet p {
+        margin: 0 0 0.8rem;
+      }
+      .letter-sheet dl {
+        margin: 0;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+        gap: 0.9rem 1.6rem;
+      }
+      .letter-sheet dt {
+        font-weight: 700;
+      }
+      .letter-sheet dd {
+        margin: 0.1rem 0 0;
+      }
+      .letter-sheet table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .letter-sheet th {
+        text-align: left;
+        vertical-align: top;
+        padding: 0.45rem 1rem 0.45rem 0;
+        border-bottom: 1px solid var(--rule);
+        white-space: nowrap;
+      }
+      .letter-sheet td {
+        padding: 0.45rem 0;
+        border-bottom: 1px solid var(--rule);
+        font: 500 0.84rem/1.5 "IBM Plex Mono", ui-monospace, monospace;
+      }
+      /* "No screenshots": a rubber stamp in the margin, then the reason. */
+      .private {
+        position: relative;
+        margin: 1.2rem 0 0.6rem;
+        padding: 1rem 1.2rem 1rem 8.6rem;
+        background: #fbe8ee;
+      }
+      .private::before {
+        content: "No screenshots";
+        position: absolute;
+        left: 0.9rem;
+        top: 50%;
+        width: 6.6rem;
+        padding: 0.3rem 0.2rem;
+        margin-top: -1.6rem;
+        border: 3px double #a8234f;
+        color: #a8234f;
+        font: 800 0.95rem/1.1 "Bricolage Grotesque", sans-serif;
+        text-align: center;
+        transform: rotate(-9deg);
+      }
+      .private p {
+        margin: 0;
+      }
+      .sign {
+        margin-top: 2rem;
+      }
+      .reopen {
+        display: block;
+        margin: 1.4rem auto 0;
+      }
+      @media (max-width: 40rem) {
+        .letter-sheet {
+          padding: 4rem 1.25rem 2.2rem;
+        }
+        .letter-sheet .mark {
+          display: none;
+        }
+        .private {
+          padding: 3.4rem 1rem 1rem;
+        }
+        .private::before {
+          top: 0.8rem;
+          margin-top: 0;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .reading .letter-sheet {
+          animation: none;
+        }
+        .letter-sheet,
+        .env .flap,
+        .seal i {
+          transition: none;
+        }
+      }
+      /* what this page becomes from, on the bench */
+      .env {
+        view-transition-name: cupid;
+      }
     </style>
-    <script src="site.js" defer></script>
   </head>
-  <body>
-    <div class="depth" aria-hidden="true">
-      <span class="aura one"></span>
-      <span class="aura two"></span>
-      <span class="spot"></span>
-      <span class="grain"></span>
-    </div>
-
-    <header class="bar">
-      <a class="wordmark" href="index.html">Carlo Ruggiero</a>
-      <nav aria-label="Primary">
+  <body data-page="cupid">
+    <div class="mat" data-cat-world>
+      <svg class="guides" aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 100 100">
+        <line x1="0" y1="100" x2="100" y2="0" vector-effect="non-scaling-stroke" />
+      </svg>
+      <header class="bar">
         <a href="index.html">Projects</a>
         <a href="about.html">About</a>
-        <a href="donate.html">Donate</a>
+        <a href="donate.html" data-cat="nav">Donate</a>
         <a href="https://github.com/easly1989" rel="noopener">GitHub</a>
-      </nav>
-    </header>
+      </header>
+      <a class="crumb" href="index.html">Back to the bench</a>
 
-    <main>
-      <div class="wrap">
-        <p class="crumb"><a href="index.html">Projects</a> / Cupid</p>
-
-        <section class="masthead reveal shown">
-          <img class="mark" src="cupid.svg" alt="" width="64" height="64" />
+      <main class="post reading" id="post">
+        <div class="env" data-cat="sit hide">
+          <div class="flap" aria-hidden="true"></div>
+          <button class="seal" type="button" id="seal" aria-controls="letter" aria-expanded="true" aria-label="Put the letter back in the envelope">
+            <i></i><i></i>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.2 0 3.6 1.3 5.3 3.3 1.7-2 3.1-3.3 5.3-3.3 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z" /></svg>
+          </button>
+          <div class="pocket" aria-hidden="true"></div>
+          <p class="to" aria-hidden="true">To the agency,<br />with the whole workflow inside</p>
+          <div class="stamp" aria-hidden="true"><img src="cupid.svg" alt="" /></div>
+        </div>
+        <article class="letter-sheet" id="letter" aria-labelledby="cupid-h">
           <p class="state">Available to license. Closed source, self-hosted or hosted.</p>
-          <h1 class="display unfurl"><span>Cupid</span></h1>
-          <p class="lede">
+          <h1 id="cupid-h">Cupid</h1>
+          <p style="margin-top: 0.6rem">
             A web management system for matchmaking and dating agencies — a cloud-ready rewrite of
             the classic <em>Cuore</em> desktop application.
           </p>
-          <div class="actions">
-            <a class="action key" href="mailto:caesar.themaster@gmail.com?subject=Cupid">
-              Email me about Cupid
-            </a>
-            <a class="action" href="index.html">All projects</a>
-          </div>
-        </section>
 
-        <section class="section reveal">
           <h2>What it is</h2>
           <p>
             Cupid is a modern web rewrite of a long-standing management system for matchmaking and
@@ -83,149 +335,91 @@
             and printing — and moves it onto a modern web architecture, delivered as a
             <strong>single Docker container</strong> that an agency can run on its own.
           </p>
-          <div class="note">
+          <div class="private">
             <p>
-              <strong>A note on privacy.</strong> Cupid handles sensitive personal data, so no
-              customer screenshots are shown here. It ships with GDPR tooling — consents, data
-              export and anonymisation — an audit log, and encrypted backups. Ask for a demo and
-              I'll walk you through a seeded instance.
+              Cupid handles sensitive personal data, so no customer screenshots are shown here. It
+              ships with GDPR tooling — consents, data export and anonymisation — an audit log, and
+              encrypted backups. Ask for a demo and I'll walk you through a seeded instance.
             </p>
           </div>
-        </section>
 
-        <section class="section reveal">
           <h2>Features</h2>
-          <dl class="defs reveal stagger">
-            <div>
-              <dt>Client records</dt>
-              <dd>
-                Complete profiles with computed age and star sign, profile photo, document type,
-                multiple contacts and geographic selectors with ISTAT town autocompletion.
-              </dd>
-            </div>
-            <div>
-              <dt>Descriptions and requests</dt>
-              <dd>
-                Physical and social traits, character and hobbies, structured children info, plus
-                partner requests with Yes, No and Indifferent criteria and liked or disliked
-                qualities.
-              </dd>
-            </div>
-            <div>
-              <dt>Affinity matching</dt>
-              <dd>
-                A matching engine with an affinity score and a candidate summary sheet showing
-                photo, traits and which criteria are satisfied.
-              </dd>
-            </div>
-            <div>
-              <dt>Meetings and contracts</dt>
-              <dd>
-                The full mailing, judgement and meeting cycle with automatic client-status updates,
-                plus contracts and a deadline scheduler.
-              </dd>
-            </div>
-            <div>
-              <dt>Print and dashboard</dt>
-              <dd>
-                Print-friendly outputs and an operational dashboard with clickable counters and
-                trend charts.
-              </dd>
-            </div>
-            <div>
-              <dt>Notifications</dt>
-              <dd>
-                Automatic email and Telegram notifications for contract deadlines and new matches.
-              </dd>
-            </div>
-            <div>
-              <dt>Backups to the cloud</dt>
-              <dd>
-                Manual and scheduled backups to WebDAV, S3-compatible storage, OneDrive, Dropbox or
-                Google Drive, with retention and AES-256-GCM encryption at rest.
-              </dd>
-            </div>
-            <div>
-              <dt>Users, roles and GDPR</dt>
-              <dd>
-                A capability matrix with role presets, unified settings, light and dark theme, i18n,
-                and GDPR tools (consents, export, anonymisation) with an audit log.
-              </dd>
-            </div>
+          <dl>
+            <div><dt>Client records</dt><dd>Complete profiles with computed age and star sign, profile photo, document type, multiple contacts and geographic selectors with ISTAT town autocompletion.</dd></div>
+            <div><dt>Descriptions and requests</dt><dd>Physical and social traits, character and hobbies, structured children info, plus partner requests with Yes, No and Indifferent criteria and liked or disliked qualities.</dd></div>
+            <div><dt>Affinity matching</dt><dd>A matching engine with an affinity score and a candidate summary sheet showing photo, traits and which criteria are satisfied.</dd></div>
+            <div><dt>Meetings and contracts</dt><dd>The full mailing, judgement and meeting cycle with automatic client-status updates, plus contracts and a deadline scheduler.</dd></div>
+            <div><dt>Print and dashboard</dt><dd>Print-friendly outputs and an operational dashboard with clickable counters and trend charts.</dd></div>
+            <div><dt>Notifications</dt><dd>Automatic email and Telegram notifications for contract deadlines and new matches.</dd></div>
+            <div><dt>Backups to the cloud</dt><dd>Manual and scheduled backups to WebDAV, S3-compatible storage, OneDrive, Dropbox or Google Drive, with retention and AES-256-GCM encryption at rest.</dd></div>
+            <div><dt>Users, roles and GDPR</dt><dd>A capability matrix with role presets, unified settings, light and dark theme, i18n, and GDPR tools (consents, export, anonymisation) with an audit log.</dd></div>
           </dl>
-        </section>
 
-        <section class="section reveal">
           <h2>How you can run it</h2>
-          <dl class="defs reveal stagger">
-            <div>
-              <dt>Self-hosted</dt>
-              <dd>
-                The agency runs the container wherever it likes — a commercial licence with annual
-                renewal.
-              </dd>
-            </div>
-            <div>
-              <dt>Hosted</dt>
-              <dd>
-                A dedicated instance managed for you, one per company — monthly or annual
-                subscription.
-              </dd>
-            </div>
+          <dl>
+            <div><dt>Self-hosted</dt><dd>The agency runs the container wherever it likes — a commercial licence with annual renewal.</dd></div>
+            <div><dt>Hosted</dt><dd>A dedicated instance managed for you, one per company — monthly or annual subscription.</dd></div>
           </dl>
-        </section>
 
-        <section class="section reveal">
           <h2>Under the hood</h2>
-          <table class="spec">
-            <tr>
-              <th scope="row">Backend</th>
-              <td>Go 1.25 (chi router), SQLite (modernc.org/sqlite, pure-Go), goose migrations</td>
-            </tr>
-            <tr>
-              <th scope="row">Frontend</th>
-              <td>React 19 + Vite + TypeScript + Mantine, i18n (Italian by default)</td>
-            </tr>
-            <tr>
-              <th scope="row">API</th>
-              <td>OpenAPI 3 contract with generated server (Go) and client (TS) types</td>
-            </tr>
-            <tr>
-              <th scope="row">Security</th>
-              <td>
-                Ed25519-signed license keys (offline verification), CSP + HSTS, login rate limiting,
-                argon2id
-              </td>
-            </tr>
-            <tr>
-              <th scope="row">Delivery</th>
-              <td>A single distroless Docker image with the SPA embedded and a /data volume</td>
-            </tr>
+          <table>
+            <tr><th scope="row">Backend</th><td>Go 1.25 (chi router), SQLite (modernc.org/sqlite, pure-Go), goose migrations</td></tr>
+            <tr><th scope="row">Frontend</th><td>React 19 + Vite + TypeScript + Mantine, i18n (Italian by default)</td></tr>
+            <tr><th scope="row">API</th><td>OpenAPI 3 contract with generated server (Go) and client (TS) types</td></tr>
+            <tr><th scope="row">Security</th><td>Ed25519-signed license keys (offline verification), CSP + HSTS, login rate limiting, argon2id</td></tr>
+            <tr><th scope="row">Delivery</th><td>A single distroless Docker image with the SPA embedded and a /data volume</td></tr>
           </table>
-          <div class="note">
-            <p>
-              <strong>Closed source.</strong> Cupid is proprietary software licensed to agencies. To
-              see a demo or discuss a licence, get in touch.
-            </p>
-          </div>
-        </section>
 
-        <div class="actions">
-          <a class="action" href="index.html">All projects</a>
-          <a class="action key" href="mailto:caesar.themaster@gmail.com?subject=Cupid">
-            Email me about Cupid
-          </a>
-        </div>
-      </div>
-    </main>
+          <p class="sign">
+            <strong>Closed source.</strong> Cupid is proprietary software licensed to agencies. To see
+            a demo or discuss a licence, get in touch.
+          </p>
+          <p class="actions" style="--c: var(--cupid)">
+            <a class="btn" href="mailto:caesar.themaster@gmail.com?subject=Cupid">Email me about Cupid</a>
+            <a class="btn quiet" href="index.html">All projects</a>
+          </p>
+        </article>
 
-    <footer>
-      <a href="index.html">Projects</a>
-      <a href="about.html">About</a>
-      <a href="donate.html">Donate</a>
-      <a href="https://github.com/easly1989" rel="noopener">GitHub</a>
-      <a href="https://www.linkedin.com/in/cruggiero89/" rel="noopener">LinkedIn</a>
-      <a href="https://www.instagram.com/easly1989/" rel="noopener">Instagram</a>
-    </footer>
+        <button class="btn reopen" type="button" id="reopen" hidden style="--c: var(--cupid)">Take the letter out</button>
+      </main>
+
+      <span class="loose pencil" data-cat="knock" style="right: 40px; top: 420px; --r: -60deg" aria-hidden="true"></span>
+      <span class="loose clip" data-cat="knock" style="left: 50px; top: 980px; --r: 30deg" aria-hidden="true"></span>
+    </div>
+
+    <script>
+      // The seal closes the envelope over the letter, and opens it again.
+      (function () {
+        var post = document.getElementById("post");
+        var seal = document.getElementById("seal");
+        var reopen = document.getElementById("reopen");
+        var letter = document.getElementById("letter");
+        var reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var timer;
+        function set(open) {
+          clearTimeout(timer);
+          post.classList.remove("reading");
+          seal.setAttribute("aria-expanded", open ? "true" : "false");
+          seal.setAttribute("aria-label", open ? "Put the letter back in the envelope" : "Break the seal and take the letter out");
+          reopen.hidden = open;
+          if (open) {
+            letter.hidden = false;
+            post.classList.remove("shut");
+            void letter.offsetWidth; // restart the rise
+            post.classList.add("reading");
+            letter.focus({ preventScroll: true });
+          } else {
+            post.classList.add("shut");
+            // once it is inside, the page closes up around the envelope
+            timer = setTimeout(function () { letter.hidden = true; }, reduced ? 0 : 650);
+          }
+        }
+        letter.tabIndex = -1;
+        seal.addEventListener("click", function () { set(post.classList.contains("shut")); });
+        reopen.addEventListener("click", function () { set(true); });
+      })();
+    </script>
+    <script src="site.js" defer></script>
+    <script src="cat.js" defer></script>
   </body>
 </html>
