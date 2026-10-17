@@ -6,7 +6,7 @@
     <title>CloudBank — Self-hosted personal finance manager · Carlo Ruggiero</title>
     <meta
       name="description"
-      content="CloudBank is a free, open-source, self-hosted personal finance manager — a production-ready web port of HomeBank. Accounts, a powerful register, scheduled transactions, budgets, rich reports, automatic bank sync and a customizable dashboard."
+      content="CloudBank is a free, open-source, self-hosted personal finance manager — a production-ready web port of HomeBank. Accounts, a powerful register, scheduled transactions, budgets, rich reports, automatic bank sync, bank mails and a customizable dashboard."
     />
     <meta name="theme-color" content="#22594b" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#12352d" media="(prefers-color-scheme: dark)" />
@@ -95,6 +95,12 @@
       .tabs button:nth-child(even) {
         --tab: #f3e6c4;
       }
+      /* the bank-mail pictures, one under the other */
+      .page .shots.one {
+        grid-template-columns: 1fr;
+        width: 88%;
+        margin: 0.4rem auto 0;
+      }
       /* what this page becomes from, on the bench */
       #ledger {
         view-transition-name: cloudbank;
@@ -117,7 +123,7 @@
       <main>
         <section class="paper label-sheet" style="--c: var(--cloudbank)" data-cat="sit">
           <img class="mark" src="logo.svg" alt="" width="56" height="56" />
-          <p class="state">Shipping, <span data-cloudbank="stable">v3.8.1</span>. Open source under AGPL-3.0.</p>
+          <p class="state">Shipping, <span data-cloudbank="stable">v3.9.0</span>. Open source under AGPL-3.0.</p>
           <h1>CloudBank</h1>
           <p class="lede">
             Your money, self-hosted. A free personal finance manager — a from-scratch web port of
@@ -164,7 +170,7 @@
                 <div class="note">
                   <strong>It forgets you on purpose.</strong> Your demo account is deleted after two
                   hours without use, every night, and whenever the demo is updated. Bank sync talks
-                  to a pretend bank, and attachments, AI and notifications are off.
+                  to a pretend bank, and attachments, AI, bank mails and notifications are off.
                   <a href="https://github.com/easly1989/cloudbank/blob/main/docs/demo.md" rel="noopener">What the demo is</a>.
                   Have a proper look, but don't put anything real in it — for that, run your own,
                   which takes one container.
@@ -257,6 +263,35 @@
                 </div>
                 <span class="folio">7</span>
               </section>
+              <section class="page back" id="mail" data-label="Bank mails">
+                <h2>Bank mails</h2>
+                <p>
+                  CloudBank reads your bank's payment notifications from one folder of a mailbox and
+                  writes each one into the register as a cleared transaction. It only reads: nothing
+                  is marked read, moved or deleted.
+                </p>
+                <ul class="rows">
+                  <li><b>Any mailbox</b><span>Outlook.com, Hotmail or Live by signing in to Microsoft; Gmail, Libero, iCloud and the rest over IMAP with an app password.</span></li>
+                  <li><b>A pattern, or the AI</b><span>Highlight the amount and the merchant in a real mail once. The AI, if you set one up, reads what no pattern does, with card numbers and IBANs hidden first.</span></li>
+                  <li><b>No doubles, no forgeries</b><span>Bank sync merges its own row into the mail's, Review asks about the ones the bank never booked, and only senders the mail server authenticated count.</span></li>
+                </ul>
+                <p style="font-size: 0.9rem">
+                  Step by step, with an example:
+                  <a href="https://github.com/easly1989/cloudbank/blob/main/docs/bank-mails.md" rel="noopener">the bank mails guide</a>.
+                </p>
+                <span class="folio">8</span>
+              </section>
+            </div>
+
+            <div class="leaf">
+              <section class="page front" data-label="Bank mails">
+                <h2>From the mail</h2>
+                <div class="shots one">
+                  <figure class="shot" style="--r: -1.2deg"><img width="1980" height="1290" src="assets/cloudbank-mail-pattern.png" alt="CloudBank's pattern editor beside a bank mail, the amount and the merchant marked and a piece selected" loading="lazy" /><figcaption>A pattern: say what each piece of a real mail is.</figcaption></figure>
+                  <figure class="shot" style="--r: 1.4deg"><img width="1980" height="1290" src="assets/cloudbank-mail-mailbox.png" alt="A CloudBank mailbox with its pattern and the latest mails, two of them created as transactions" loading="lazy" /><figcaption>The mailbox: its pattern, and what became of each mail.</figcaption></figure>
+                </div>
+                <span class="folio">9</span>
+              </section>
               <section class="page back" data-label="Screens">
                 <h2>More taped in</h2>
                 <div class="shots">
@@ -265,7 +300,7 @@
                   <figure class="shot" style="--r: -2deg"><img width="1980" height="1290" src="assets/cloudbank-review.png" alt="CloudBank bank sync review with a possible duplicate pair" loading="lazy" /><figcaption>Bank sync review — settle possible duplicates.</figcaption></figure>
                   <figure class="shot" style="--r: 1deg"><img width="1980" height="1290" src="assets/cloudbank-settings.png" alt="CloudBank appearance settings" loading="lazy" /><figcaption>Appearance — theme, accent colour, the sidebar.</figcaption></figure>
                 </div>
-                <span class="folio">8</span>
+                <span class="folio">10</span>
               </section>
             </div>
 
@@ -278,10 +313,10 @@
                   <li><b>Installable PWA</b><span>Install CloudBank to your phone's home screen or your desktop, with an offline shell.</span></li>
                   <li><b>Web push reminders</b><span>Opt-in notifications for schedules and bills that are due.</span></li>
                   <li><b>Personal API tokens</b><span>Scoped, revocable bearer tokens; the secret is shown once.</span></li>
-                  <li><b>Encrypted secrets at rest</b><span>Set <code>CB_SECRET_KEY</code> to encrypt bank credentials, AI keys and 2FA secrets with AES-256-GCM.</span></li>
+                  <li><b>Encrypted secrets at rest</b><span>Set <code>CB_SECRET_KEY</code> to encrypt bank credentials, mailbox passwords, AI keys and 2FA secrets with AES-256-GCM.</span></li>
                   <li><b>Told when to update</b><span>A new build is offered, not swapped in under you; admins hear when a newer CloudBank is out.</span></li>
                 </ul>
-                <span class="folio">9</span>
+                <span class="folio">11</span>
               </section>
               <section class="page back" id="ai" data-label="AI">
                 <h2>Optional AI, with your own key</h2>
@@ -293,12 +328,13 @@
                 <ul class="rows">
                   <li><b>Category suggestions</b><span>A nudge from the description, not an autopilot.</span></li>
                   <li><b>Natural-language entry</b><span>Type "coffee 3.50 yesterday" and review a pre-filled transaction.</span></li>
+                  <li><b>Reading bank mails</b><span>The mails no pattern reads, with card numbers and IBANs hidden first.</span></li>
                 </ul>
                 <div class="shots" style="margin-top: 1rem">
                   <figure class="shot" style="--r: -1.5deg"><img width="1980" height="1290" src="assets/cloudbank-languages.png" alt="CloudBank settings with the six languages" loading="lazy" /><figcaption>Six languages, each by its own name.</figcaption></figure>
                   <figure class="shot" style="--r: 2deg"><img width="1980" height="1290" src="assets/cloudbank-export.png" alt="CloudBank import and export settings" loading="lazy" /><figcaption>Import, export and full backups.</figcaption></figure>
                 </div>
-                <span class="folio">10</span>
+                <span class="folio">12</span>
               </section>
             </div>
 
@@ -323,10 +359,10 @@ volumes:
                 <pre>docker compose up -d
 # open http://localhost:8080</pre>
                 <table>
-                  <tr><th scope="row">Stable, <code>:main</code></th><td><span data-cloudbank="stable">v3.8.1</span>, published <span data-cloudbank-date="stable">16 October 2026</span></td></tr>
+                  <tr><th scope="row">Stable, <code>:main</code></th><td><span data-cloudbank="stable">v3.9.0</span>, published <span data-cloudbank-date="stable">17 October 2026</span></td></tr>
                   <tr><th scope="row">Nightly, <code>:latest</code></th><td><span data-cloudbank="nightly">built from main</span>, published <span data-cloudbank-date="nightly">on every change</span></td></tr>
                 </table>
-                <span class="folio">11</span>
+                <span class="folio">13</span>
               </section>
               <section class="page back" id="support" data-label="Support">
                 <div class="note" style="margin-top: 0">
@@ -346,7 +382,7 @@ volumes:
                   <a class="btn" href="donate.html">Donate</a>
                   <a class="btn quiet" href="https://github.com/sponsors/easly1989" rel="noopener">GitHub Sponsors</a>
                 </p>
-                <span class="folio">12</span>
+                <span class="folio">14</span>
               </section>
             </div>
 
@@ -368,11 +404,12 @@ volumes:
               <button type="button" data-go="2">What it is</button>
               <button type="button" data-go="2">Features</button>
               <button type="button" data-go="4">Make it yours</button>
-              <button type="button" data-go="5">Screens</button>
-              <button type="button" data-go="5">Security</button>
-              <button type="button" data-go="6">AI</button>
-              <button type="button" data-go="6">Run it</button>
-              <button type="button" data-go="7">Support</button>
+              <button type="button" data-go="5">Bank mails</button>
+              <button type="button" data-go="6">Screens</button>
+              <button type="button" data-go="6">Security</button>
+              <button type="button" data-go="7">AI</button>
+              <button type="button" data-go="7">Run it</button>
+              <button type="button" data-go="8">Support</button>
             </nav>
           </div>
         </div>
