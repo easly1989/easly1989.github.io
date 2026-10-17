@@ -8,7 +8,8 @@
       name="description"
       content="Carlo Ruggiero is a software developer with more than a decade of experience, currently a Full Stack Software Developer at TeamSystem. He builds self-hosted web apps and cross-platform mobile apps, mostly in Go."
     />
-    <meta name="theme-color" content="#bfc3bb" />
+    <meta name="theme-color" content="#22594b" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#12352d" media="(prefers-color-scheme: dark)" />
     <link rel="icon" type="image/svg+xml" href="logo.svg" />
     <meta property="og:title" content="About — Carlo Ruggiero" />
     <meta
@@ -20,255 +21,429 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
     <style>
-      /* The products carry the colour on this site. The person's page doesn't
-         borrow one of theirs — its accent is the ink. */
-      :root {
-        --accent: #161a18;
-      }
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --accent: #eaebe6;
-        }
-      }
-      .masthead .state::before {
-        display: none;
+      .top {
+        position: relative;
+        z-index: 5;
+        width: min(66rem, calc(100% - 2rem));
+        margin: 1.5rem auto 3rem;
+        display: grid;
+        grid-template-columns: minmax(0, 25rem) minmax(0, 1fr);
+        gap: 3rem;
+        align-items: center;
       }
 
-      .intro {
+      /* The print, just out of the camera, developing on the mat. */
+      .instant {
+        view-transition-name: photo;
+        position: relative;
+        display: block;
+        width: 100%;
+        padding: 16px 16px 64px;
+        border: 0;
+        background: #fbfbf8;
+        box-shadow: var(--shadow-up);
+        transform: rotate(-3deg);
+        cursor: pointer;
+        text-align: left;
+        color: var(--paper-ink);
+      }
+      .instant .frame {
+        position: relative;
+        display: block;
+        aspect-ratio: 1;
+        overflow: hidden;
+        background: #24231f;
+      }
+      .instant img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        animation: develop 11s cubic-bezier(0.45, 0, 0.35, 1);
+      }
+      /* the emulsion: murky at first, then it thins away */
+      .instant .frame::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(160deg, #46453f, #2a2925);
+        opacity: 0;
+        animation: emulsion 11s cubic-bezier(0.3, 0, 0.3, 1);
+        pointer-events: none;
+      }
+      @keyframes develop {
+        0% {
+          filter: saturate(0) sepia(0.6) contrast(0.45) brightness(0.45) blur(1.5px);
+        }
+        45% {
+          filter: saturate(0.25) sepia(0.55) contrast(0.7) brightness(0.75) blur(0.6px);
+        }
+        75% {
+          filter: saturate(0.7) sepia(0.2) contrast(0.92) brightness(0.96);
+        }
+      }
+      @keyframes emulsion {
+        0% {
+          opacity: 1;
+        }
+        55% {
+          opacity: 0.25;
+        }
+        100% {
+          opacity: 0;
+        }
+      }
+      .instant .caption {
+        position: absolute;
+        left: 20px;
+        right: 20px;
+        bottom: 18px;
+        font: 700 1.2rem "Bricolage Grotesque", sans-serif;
+      }
+      .instant .hint {
+        position: absolute;
+        right: 18px;
+        bottom: 20px;
+        font-size: 0.85rem;
+        color: var(--paper-ink-2);
+        transition: opacity 0.4s ease;
+      }
+      .instant.done .hint {
+        opacity: 0;
+      }
+      .instant.shake {
+        animation: shake 0.5s ease;
+      }
+      @keyframes shake {
+        20% {
+          transform: rotate(2deg) translateX(6px);
+        }
+        45% {
+          transform: rotate(-7deg) translateX(-6px);
+        }
+        70% {
+          transform: rotate(0deg) translateX(3px);
+        }
+      }
+      .instant::before {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: -12px;
+        width: 96px;
+        height: 26px;
+        margin-left: -48px;
+        background: var(--tape);
+        opacity: 0.85;
+        transform: rotate(3deg);
+      }
+
+      .who {
+        padding: 1.6rem 1.8rem 1.7rem;
+        transform: rotate(0.8deg);
+      }
+      .who .state {
+        margin: 0 0 0.35rem;
+        color: var(--paper-ink-2);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .who .state::before {
+        content: "";
+        width: 9px;
+        height: 9px;
+        flex: none;
+        background: var(--paper-ink);
+      }
+      .who h1 {
+        margin: 0;
+        font: 800 2.8rem/1 "Bricolage Grotesque", sans-serif;
+        font-variation-settings: "opsz" 96;
+        letter-spacing: -0.02em;
+      }
+      .who .lede {
+        margin: 0.8rem 0 1.2rem;
+      }
+
+      .table {
+        position: relative;
+        z-index: 4;
+        width: min(66rem, calc(100% - 2rem));
+        margin: 0 auto 4rem;
         display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
         gap: 2.5rem;
         align-items: start;
       }
-      @media (max-width: 46rem) {
-        .intro {
-          grid-template-columns: 1fr;
-          gap: 2rem;
+      .table > .wide {
+        grid-column: 1 / -1;
+      }
+      .card {
+        padding: 1.3rem 1.5rem 1.4rem;
+        transform: rotate(var(--r, 0deg));
+      }
+      .card h2,
+      .wide > h2 {
+        margin: 0 0 0.5rem;
+        font: 800 1.45rem/1.15 "Bricolage Grotesque", sans-serif;
+      }
+      .wide > h2 {
+        color: var(--ruler);
+      }
+      .card p {
+        margin: 0 0 0.7rem;
+      }
+      .card p:last-child {
+        margin-bottom: 0;
+      }
+      .index-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+        gap: 1.2rem;
+        margin: 0;
+      }
+      .index-cards div {
+        padding: 0.9rem 1rem 1rem;
+        background:
+          linear-gradient(#e2a1a8, #e2a1a8) 0 2.3rem / 100% 1px no-repeat,
+          linear-gradient(transparent 23px, var(--rule) 24px) 0 2.3rem / 100% 24px,
+          var(--paper);
+        color: var(--paper-ink);
+        box-shadow: 0 5px 12px rgba(0, 0, 0, 0.22);
+        transform: rotate(var(--r, 0deg));
+        line-height: 24px;
+      }
+      .index-cards dt {
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+      }
+      .index-cards dd {
+        margin: 0;
+      }
+
+      /* What I've built: a luggage tag per project, each with its mark. */
+      .tags {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+        gap: 1.2rem;
+        list-style: none;
+        margin: 0.6rem 0 0;
+        padding: 0;
+      }
+      .tags a {
+        display: grid;
+        grid-template-columns: 44px 1fr;
+        gap: 0.9rem;
+        align-items: start;
+        height: 100%;
+        padding: 1rem 1.1rem 1.1rem 1.6rem;
+        background: var(--paper);
+        color: var(--paper-ink);
+        text-decoration: none;
+        box-shadow: 0 5px 12px rgba(0, 0, 0, 0.22);
+        clip-path: polygon(14px 0, 100% 0, 100% 100%, 14px 100%, 0 calc(100% - 14px), 0 14px);
+        transform: rotate(var(--r, 0deg));
+        transition: transform 0.25s var(--ease-spring);
+      }
+      .tags a:hover {
+        transform: rotate(0deg) translateY(-3px);
+      }
+      .tags a:hover b {
+        text-decoration: underline;
+      }
+      .tags img {
+        width: 44px;
+        height: 44px;
+      }
+      .tags b {
+        display: block;
+        font: 800 1.05rem "Bricolage Grotesque", sans-serif;
+      }
+      .tags span {
+        font-size: 0.95rem;
+        line-height: 1.45;
+      }
+      .elsewhere {
+        margin: 0;
+      }
+      .elsewhere dt {
+        font-weight: 700;
+      }
+      .elsewhere dd {
+        margin: 0 0 0.6rem;
+      }
+      @media (max-width: 52rem) {
+        .top,
+        .table {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .instant {
+          max-width: 22rem;
+          margin: 0 auto;
         }
       }
-      .portrait {
-        width: min(15rem, 52vw);
-      }
-      .portrait img {
-        display: block;
-        width: 100%;
-        height: auto;
-        border-radius: 16px;
-        box-shadow: var(--lift);
-        outline: 1px solid var(--glass-ring);
-        outline-offset: -1px;
-        transition:
-          transform 0.45s var(--ease),
-          box-shadow 0.45s var(--ease);
-      }
-      .pointer-fine .portrait img:hover {
-        transform: translateY(-4px);
-        box-shadow: var(--lift-hi);
+      @media (prefers-reduced-motion: reduce) {
+        .instant img,
+        .instant .frame::after,
+        .instant.shake {
+          animation: none;
+        }
+        .instant .hint {
+          display: none;
+        }
+        .tags a {
+          transition: none;
+        }
       }
     </style>
-    <script src="site.js" defer></script>
   </head>
-  <body>
-    <div class="depth" aria-hidden="true">
-      <span class="aura one"></span>
-      <span class="aura two"></span>
-      <span class="spot"></span>
-      <span class="grain"></span>
-    </div>
-
-    <header class="bar">
-      <a class="wordmark" href="index.html">Carlo Ruggiero</a>
-      <nav aria-label="Primary">
+  <body data-page="about">
+    <div class="mat" data-cat-world>
+      <svg class="guides" aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 100 100">
+        <line x1="0" y1="0" x2="100" y2="100" vector-effect="non-scaling-stroke" />
+      </svg>
+      <header class="bar">
         <a href="index.html">Projects</a>
         <a href="about.html" aria-current="page">About</a>
-        <a href="donate.html">Donate</a>
+        <a href="donate.html" data-cat="nav">Donate</a>
         <a href="https://github.com/easly1989" rel="noopener">GitHub</a>
-      </nav>
-    </header>
+      </header>
+      <a class="crumb" href="index.html">Back to the bench</a>
 
-    <main>
-      <div class="wrap">
-        <p class="crumb"><a href="index.html">Projects</a> / About</p>
-
-        <section class="masthead reveal shown">
-          <div class="intro">
-            <div>
-              <p class="state">Full Stack Software Developer at TeamSystem.</p>
-              <h1 class="display unfurl"><span>Carlo Ruggiero</span></h1>
-              <p class="lede">
-                I'm a passionate software developer with more than a decade of experience. I build
-                self-hosted web apps and cross-platform mobile apps, mostly in Go.
-              </p>
-              <div class="actions">
-                <a class="action key" href="mailto:caesar.themaster@gmail.com?subject=Hello">
-                  Email me
-                </a>
-                <a class="action" href="https://github.com/easly1989" rel="noopener">GitHub</a>
-              </div>
-            </div>
-            <div class="portrait">
+      <main>
+        <div class="top">
+          <button class="instant" type="button" id="print" data-cat="photo" aria-label="The photo is still developing. Shake it.">
+            <span class="frame">
               <img
                 src="assets/carlo.jpg"
-                alt="Carlo Ruggiero lying down, looking up at a black and white cat sitting beside him"
+                alt="Carlo Ruggiero lying down, looking up at a white cat with black patches sitting beside him"
                 width="640"
                 height="640"
               />
-            </div>
-          </div>
-        </section>
+            </span>
+            <span class="caption">That's us.</span>
+            <span class="hint" aria-hidden="true">Developing…</span>
+          </button>
 
-        <section class="section reveal">
-          <h2>What I do</h2>
-          <p>
-            By day I'm a Full Stack Software Developer at <strong>TeamSystem</strong>. Either way
-            the work is the same shape: the database, the API, and the interface on top of it, for
-            the web and for phones. I like finishing things — an app someone can actually run and
-            keep running, rather than a proof of concept.
-          </p>
-          <p>
-            The projects on this site are the ones I keep going on my own time. Some are open
-            source, some are licensed, and some I host.
-          </p>
-          <p class="quiet">
-            A finance manager, a group activity planner for phones and the web, a nutrition
-            planner, and a system for matchmaking agencies.
-          </p>
-        </section>
+          <section class="paper who" data-cat="sit">
+            <p class="state">Full Stack Software Developer at TeamSystem.</p>
+            <h1>Carlo Ruggiero</h1>
+            <p class="lede">
+              I'm a passionate software developer with more than a decade of experience. I build
+              self-hosted web apps and cross-platform mobile apps, mostly in Go.
+            </p>
+            <div class="actions">
+              <a class="btn" href="mailto:caesar.themaster@gmail.com?subject=Hello">Email me</a>
+              <a class="btn quiet" href="https://github.com/easly1989" rel="noopener">GitHub</a>
+            </div>
+          </section>
+        </div>
 
-        <section class="section reveal">
-          <h2>How I build</h2>
-          <dl class="defs reveal stagger">
-            <div>
-              <dt>Go backends</dt>
-              <dd>
-                Small, dependency-light services in Go, with a clear REST API and a layout that is
-                simple to operate.
-              </dd>
-            </div>
-            <div>
-              <dt>Embedded SQLite</dt>
-              <dd>
-                Pure-Go SQLite means no separate database server to run or back up — the data is a
-                single file you control.
-              </dd>
-            </div>
-            <div>
-              <dt>One-container deploys</dt>
-              <dd>
-                Each product ships as a single Docker container, often distroless, so it is cheap
-                to run and straightforward to self-host.
-              </dd>
-            </div>
-            <div>
-              <dt>The right front end</dt>
-              <dd>
-                Server-rendered HTMX, a React SPA, or Flutter for web, Android and iOS — whichever
-                fits the product best.
-              </dd>
-            </div>
-            <div>
-              <dt>Privacy by default</dt>
-              <dd>
-                Self-hostable, no unnecessary tracking, and GDPR tooling where personal data is
-                involved. Your data stays yours.
-              </dd>
-            </div>
-            <div>
-              <dt>Shipped and maintained</dt>
-              <dd>
-                CI, tagged releases, backups and health checks — the unglamorous parts that decide
-                whether something keeps working.
-              </dd>
-            </div>
-          </dl>
-        </section>
+        <div class="table">
+          <section class="paper card ruled" style="--r: -0.6deg" data-cat="sit">
+            <h2>What I do</h2>
+            <p>
+              By day I'm a Full Stack Software Developer at <strong>TeamSystem</strong>. Either way
+              the work is the same shape: the database, the API, and the interface on top of it, for
+              the web and for phones. I like finishing things — an app someone can actually run and
+              keep running, rather than a proof of concept.
+            </p>
+            <p>
+              The projects on this site are the ones I keep going on my own time. Some are open
+              source, some are licensed, and some I host.
+            </p>
+          </section>
 
-        <section class="section reveal">
-          <h2>What I've built</h2>
-          <dl class="defs reveal stagger">
-            <div>
-              <dt><a href="cloudbank.html">CloudBank</a></dt>
-              <dd>
-                A free, open-source, self-hosted personal finance manager — a web port of HomeBank.
-                Shipping at <span data-cloudbank="stable">v3.7.0</span>.
-              </dd>
-            </div>
-            <div>
-              <dt><a href="social-contacts-sync.html">Social Contacts Sync</a></dt>
-              <dd>
-                A free, open-source desktop app that fills Google Contacts with profile photos from
-                WhatsApp, Telegram and Gravatar and cleans up duplicates.
-              </dd>
-            </div>
-            <div>
-              <dt><a href="planora.html">Planora</a></dt>
-              <dd>
-                A shared activity planner for groups, for web, Android and iOS. Free, and in
-                internal testing.
-              </dd>
-            </div>
-            <div>
-              <dt><a href="nutreek.html">Nutreek</a></dt>
-              <dd>
-                A self-hosted weekly nutrition planner with macros, adaptive TDEE and a coach mode.
-              </dd>
-            </div>
-            <div>
-              <dt><a href="cupid.html">Cupid</a></dt>
-              <dd>A web management system for matchmaking and dating agencies.</dd>
-            </div>
-          </dl>
-        </section>
-
-        <section class="section reveal">
-          <h2>Elsewhere</h2>
-          <dl class="defs reveal stagger">
-            <div>
+          <section class="paper card" style="--r: 0.7deg">
+            <h2>Elsewhere</h2>
+            <dl class="elsewhere">
               <dt><a href="https://github.com/easly1989" rel="noopener">GitHub</a></dt>
               <dd>The code, the issues and the releases.</dd>
-            </div>
-            <div>
-              <dt>
-                <a href="https://www.linkedin.com/in/cruggiero89/" rel="noopener">LinkedIn</a>
-              </dt>
+              <dt><a href="https://www.linkedin.com/in/cruggiero89/" rel="noopener">LinkedIn</a></dt>
               <dd>Work history, and the place to reach me about professional things.</dd>
-            </div>
-            <div>
-              <dt>
-                <a href="https://www.instagram.com/easly1989/" rel="noopener">Instagram</a>
-              </dt>
+              <dt><a href="https://www.instagram.com/easly1989/" rel="noopener">Instagram</a></dt>
               <dd>Life outside the editor.</dd>
-            </div>
-          </dl>
-        </section>
+            </dl>
+          </section>
 
-        <section class="section reveal">
-          <h2>Get in touch</h2>
-          <p>
-            Interested in one of the projects, a licence, or just want to talk shop? Email is the
-            fastest way to reach me.
-          </p>
-          <div class="actions">
-            <a class="action key" href="mailto:caesar.themaster@gmail.com?subject=Hello">
-              Email me
-            </a>
-            <a class="action" href="https://github.com/easly1989" rel="noopener">See my GitHub</a>
-          </div>
-        </section>
-      </div>
-    </main>
+          <section class="wide" aria-labelledby="build-h">
+            <h2 id="build-h">How I build</h2>
+            <dl class="index-cards">
+              <div style="--r: -1deg" data-cat="push"><dt>Go backends</dt><dd>Small, dependency-light services in Go, with a clear REST API and a layout that is simple to operate.</dd></div>
+              <div style="--r: 0.8deg" data-cat="push"><dt>Embedded SQLite</dt><dd>Pure-Go SQLite means no separate database server to run or back up — the data is a single file you control.</dd></div>
+              <div style="--r: -0.5deg" data-cat="push"><dt>One-container deploys</dt><dd>Each product ships as a single Docker container, often distroless, so it is cheap to run and straightforward to self-host.</dd></div>
+              <div style="--r: 1.2deg" data-cat="push"><dt>The right front end</dt><dd>Server-rendered HTMX, a React SPA, or Flutter for web, Android and iOS — whichever fits the product best.</dd></div>
+              <div style="--r: -1.3deg" data-cat="push"><dt>Privacy by default</dt><dd>Self-hostable, no unnecessary tracking, and GDPR tooling where personal data is involved. Your data stays yours.</dd></div>
+              <div style="--r: 0.6deg" data-cat="push"><dt>Shipped and maintained</dt><dd>CI, tagged releases, backups and health checks — the unglamorous parts that decide whether something keeps working.</dd></div>
+            </dl>
+          </section>
 
-    <footer>
-      <a href="index.html">Projects</a>
-      <a href="donate.html">Donate</a>
-      <a href="https://github.com/easly1989" rel="noopener">GitHub</a>
-      <a href="https://www.linkedin.com/in/cruggiero89/" rel="noopener">LinkedIn</a>
-      <a href="https://www.instagram.com/easly1989/" rel="noopener">Instagram</a>
-    </footer>
+          <section class="wide" aria-labelledby="built-h">
+            <h2 id="built-h">What I've built</h2>
+            <ul class="tags">
+              <li><a href="cloudbank.html" style="--r: -0.8deg"><img src="logo.svg" alt="" /><span><b>CloudBank</b>A free, open-source, self-hosted personal finance manager — a web port of HomeBank. Shipping at <span data-cloudbank="stable">v3.8.1</span>.</span></a></li>
+              <li><a href="social-contacts-sync.html" style="--r: 0.6deg"><img src="social-contacts-sync.svg" alt="" /><span><b>Social Contacts Sync</b>A free, open-source desktop app that fills Google Contacts with profile photos from WhatsApp, Telegram and Gravatar and cleans up duplicates.</span></a></li>
+              <li><a href="planora.html" style="--r: -0.4deg"><img src="planora.svg" alt="" /><span><b>Planora</b>A shared activity planner for groups, for web, Android and iOS. Free, and in internal testing.</span></a></li>
+              <li><a href="nutreek.html" style="--r: 1deg"><img src="nutreek.svg" alt="" /><span><b>Nutreek</b>A self-hosted weekly nutrition planner with macros, adaptive TDEE and a coach mode.</span></a></li>
+              <li><a href="cupid.html" style="--r: -1deg"><img src="cupid.svg" alt="" /><span><b>Cupid</b>A web management system for matchmaking and dating agencies.</span></a></li>
+            </ul>
+          </section>
+
+          <section class="paper card wide" style="--r: -0.4deg; max-width: 40rem">
+            <h2>Get in touch</h2>
+            <p>
+              Interested in one of the projects, a licence, or just want to talk shop? Email is the
+              fastest way to reach me.
+            </p>
+            <p class="actions">
+              <a class="btn" href="mailto:caesar.themaster@gmail.com?subject=Hello">Email me</a>
+              <a class="btn quiet" href="https://github.com/easly1989" rel="noopener">See my GitHub</a>
+            </p>
+          </section>
+        </div>
+      </main>
+
+      <span class="loose pencil" data-cat="knock" style="right: 50px; top: 640px; --r: 70deg" aria-hidden="true"></span>
+      <span class="loose eraser" data-cat="knock" style="left: 40px; top: 1100px; --r: -10deg" aria-hidden="true"></span>
+    </div>
+
+    <script>
+      // Shaking an instant photo does nothing to the chemistry. Here it helps a little.
+      (function () {
+        var print = document.getElementById("print");
+        function developing() {
+          return print.getAnimations({ subtree: true }).filter(function (a) {
+            return a.animationName !== "shake";
+          });
+        }
+        function done() {
+          print.classList.add("done");
+          print.setAttribute("aria-label", "The photo, developed. Shake it anyway.");
+        }
+        var running = developing();
+        if (!running.length) done();
+        else Promise.all(running.map(function (a) { return a.finished; })).then(done, function () {});
+        print.addEventListener("click", function () {
+          print.classList.remove("shake");
+          void print.offsetWidth; // restart the shake
+          print.classList.add("shake");
+          developing().forEach(function (a) {
+            var end = a.effect.getComputedTiming().endTime;
+            a.currentTime = Math.min((a.currentTime || 0) + 1600, end);
+          });
+        });
+        print.addEventListener("animationend", function (e) {
+          if (e.animationName === "shake") print.classList.remove("shake");
+        });
+      })();
+    </script>
+    <script src="site.js" defer></script>
+    <script src="cat.js" defer></script>
   </body>
 </html>
