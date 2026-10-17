@@ -8,7 +8,8 @@
       name="description"
       content="CloudBank is a free, open-source, self-hosted personal finance manager — a production-ready web port of HomeBank. Accounts, a powerful register, scheduled transactions, budgets, rich reports, automatic bank sync and a customizable dashboard."
     />
-    <meta name="theme-color" content="#bfc3bb" />
+    <meta name="theme-color" content="#22594b" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#12352d" media="(prefers-color-scheme: dark)" />
     <link rel="icon" type="image/svg+xml" href="logo.svg" />
     <meta property="og:title" content="CloudBank — Self-hosted personal finance manager" />
     <meta
@@ -20,519 +21,373 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
     <style>
-      :root {
-        --accent: #2f6fd0;
+      .book {
+        --cover: var(--cloudbank);
       }
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --accent: #6fa6f2;
-        }
+      .ledger-cover {
+        display: grid;
+        align-content: space-between;
+        padding: 2.6rem 2.4rem 2.6rem 3rem !important;
+      }
+      .ledger-cover::before {
+        content: "";
+        position: absolute;
+        left: 16px;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: rgba(255, 255, 255, 0.25);
+      }
+      .ledger-cover img {
+        width: 90px;
+        height: 90px;
+        background: #fff;
+        border-radius: 18px;
+        padding: 10px;
+      }
+      .ledger-cover b {
+        display: block;
+        font: 800 3rem/1 "Bricolage Grotesque", sans-serif;
+        letter-spacing: -0.02em;
+      }
+      .ledger-cover span {
+        opacity: 0.85;
+      }
+      /* a ledger's pages: a red margin and ruled lines */
+      .leaf > .page:not(.ledger-cover) {
+        background:
+          linear-gradient(90deg, transparent 22px, rgba(196, 53, 106, 0.3) 22px 23px, transparent 23px),
+          var(--paper);
+      }
+      .endpaper {
+        background:
+          repeating-linear-gradient(45deg, rgba(47, 111, 208, 0.12) 0 8px, transparent 8px 16px),
+          var(--paper-2) !important;
+        display: grid;
+        place-content: center;
+        text-align: center;
+      }
+      .ex-libris {
+        border: 2px solid var(--cloudbank);
+        padding: 1.4rem 1.2rem;
+        background: var(--paper);
+        max-width: 18rem;
+        margin: 0 auto;
+        transform: rotate(-1.5deg);
+      }
+      .ex-libris small {
+        display: block;
+        color: var(--paper-ink-2);
+        font-size: 0.82rem;
+        margin-bottom: 0.3rem;
+      }
+      .ex-libris b {
+        font: 800 1.5rem "Bricolage Grotesque", sans-serif;
+      }
+      .tabs button:nth-child(odd) {
+        --tab: #dfe9f9;
+      }
+      .tabs button:nth-child(even) {
+        --tab: #f3e6c4;
+      }
+      /* what this page becomes from, on the bench */
+      #ledger {
+        view-transition-name: cloudbank;
       }
     </style>
-    <script src="site.js" defer></script>
   </head>
-  <body>
-    <div class="depth" aria-hidden="true">
-      <span class="aura one"></span>
-      <span class="aura two"></span>
-      <span class="spot"></span>
-      <span class="grain"></span>
-    </div>
-
-    <header class="bar">
-      <a class="wordmark" href="index.html">Carlo Ruggiero</a>
-      <nav aria-label="Primary">
+  <body data-page="cloudbank" data-cat-scale="0.85">
+    <div class="mat" data-cat-world>
+      <svg class="guides" aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 100 100">
+        <line x1="0" y1="100" x2="100" y2="0" vector-effect="non-scaling-stroke" />
+      </svg>
+      <header class="bar">
         <a href="index.html">Projects</a>
         <a href="about.html">About</a>
-        <a href="donate.html">Donate</a>
+        <a href="donate.html" data-cat="nav">Donate</a>
         <a href="https://github.com/easly1989" rel="noopener">GitHub</a>
-      </nav>
-    </header>
+      </header>
+      <a class="crumb" href="index.html">Back to the bench</a>
 
-    <main>
-      <div class="wrap">
-        <p class="crumb"><a href="index.html">Projects</a> / CloudBank</p>
-
-        <section class="masthead reveal shown">
-          <img class="mark" src="logo.svg" alt="" width="64" height="64" />
-          <!-- One child: .state is a flex row, and a bare span would get the gap around it. -->
-          <p class="state live">
-            <span
-              >Shipping, <span data-cloudbank="stable">v3.8.0</span>. Open source under AGPL-3.0.</span
-            >
-          </p>
-          <h1 class="display unfurl"><span>CloudBank</span></h1>
+      <main>
+        <section class="paper label-sheet" style="--c: var(--cloudbank)" data-cat="sit">
+          <img class="mark" src="logo.svg" alt="" width="56" height="56" />
+          <p class="state">Shipping, <span data-cloudbank="stable">v3.8.1</span>. Open source under AGPL-3.0.</p>
+          <h1>CloudBank</h1>
           <p class="lede">
             Your money, self-hosted. A free personal finance manager — a from-scratch web port of
             HomeBank, built for the browser and the cloud.
           </p>
-          <div class="actions">
-            <a class="action key" href="#demo">Try the demo</a>
-            <a class="action" href="https://github.com/easly1989/cloudbank" rel="noopener">
-              View on GitHub
-            </a>
-            <a
-              class="action"
-              href="https://github.com/easly1989/cloudbank/blob/main/docs/README.md"
-              rel="noopener"
-            >
-              Documentation
-            </a>
-            <a class="action" href="donate.html">Donate</a>
+          <div class="actions" style="--c: var(--cloudbank)">
+            <a class="btn" href="https://p01--cloudbank--7dcjw6mlmtky.code.run/" target="_blank" rel="noopener">Try the demo</a>
+            <a class="btn quiet" href="https://github.com/easly1989/cloudbank" rel="noopener">View on GitHub</a>
+            <a class="btn quiet" href="https://github.com/easly1989/cloudbank/blob/main/docs/README.md" rel="noopener">Documentation</a>
+            <a class="btn quiet" href="donate.html">Donate</a>
           </div>
         </section>
 
-        <section class="section reveal" id="demo">
-          <h2>Try it without installing anything</h2>
-          <p>
-            A live CloudBank with a year of made-up money in it. One button gives you an account of
-            your own — no sign-up, no email, no password — so change anything you like.
-          </p>
-          <div class="actions">
-            <a
-              class="action key"
-              href="https://p01--cloudbank--7dcjw6mlmtky.code.run/"
-              target="_blank"
-              rel="noopener"
-              >Open the demo</a
-            >
-          </div>
-          <div class="note">
-            <p>
-              <strong>It forgets you on purpose.</strong> Your demo account is deleted after two
-              hours without use, every night, and whenever the demo is updated. Bank sync talks to
-              a pretend bank, and attachments, AI and notifications are off.
-              <a href="https://github.com/easly1989/cloudbank/blob/main/docs/demo.md" rel="noopener"
-                >What the demo is</a
-              >. Have a proper look, but don't put anything real in it — for that,
-              <a href="#run">run your own</a>, which takes one container.
-            </p>
-          </div>
-        </section>
+        <div class="book-wrap">
+          <div class="book" id="ledger" data-cat="book scratch" aria-label="The CloudBank ledger">
+            <div class="base" aria-hidden="true"></div>
+            <div class="backing" aria-hidden="true"></div>
 
-        <section class="section reveal">
-          <h2>What it is</h2>
-          <p>
-            CloudBank brings the HomeBank workflow — accounts, a powerful transaction register,
-            scheduled transactions, budgets and rich reports — to a web UI you can reach from any
-            device, while your data stays in a SQLite database on a server
-            <strong>you</strong> control. It ships as a single Docker container, with no external
-            database to run.
-          </p>
-          <p class="quiet">
-            It's an independent, clean-room reimplementation — it doesn't copy or link any HomeBank
-            source code, and it tracks parity with current and future HomeBank releases.
-          </p>
-          <figure>
-            <img
-              src="assets/cloudbank-dashboard.png"
-              alt="CloudBank dashboard with today's balance, what was earned, spent and kept, a panel of three things that want attention and an income versus expense chart"
-              loading="lazy"
-            />
-            <figcaption>The dashboard — a fully customizable, free-form grid of widgets.</figcaption>
-          </figure>
-        </section>
+            <div class="leaf cover">
+              <div class="page front ledger-cover" data-label="Cover">
+                <img src="logo.svg" alt="" />
+                <div><b>CloudBank</b><span>The ledger. Open it, or press the right arrow.</span></div>
+              </div>
+              <div class="page back endpaper" data-label="Inside cover">
+                <div class="ex-libris">
+                  <small>This ledger belongs to</small>
+                  <b>whoever runs it</b>
+                  <p>Your data stays in a SQLite file on a server <strong>you</strong> control.</p>
+                </div>
+              </div>
+            </div>
 
-        <section class="section reveal">
-          <h2>Features</h2>
-          <dl class="defs reveal stagger">
-            <div>
-              <dt>Every account type</dt>
-              <dd>
-                Bank, cash, checking, savings, credit card, liability, asset and investment
-                accounts — each with its own currency, default payment mode, and both today's and a
-                projected future balance.
-              </dd>
+            <div class="leaf">
+              <section class="page front" id="demo" data-label="Demo">
+                <h2>Try it without installing anything</h2>
+                <p>
+                  A live CloudBank with a year of made-up money in it. One button gives you an
+                  account of your own — no sign-up, no email, no password — so change anything you
+                  like.
+                </p>
+                <p class="actions" style="--c: var(--cloudbank)">
+                  <a class="btn" href="https://p01--cloudbank--7dcjw6mlmtky.code.run/" target="_blank" rel="noopener">Open the demo</a>
+                </p>
+                <div class="note">
+                  <strong>It forgets you on purpose.</strong> Your demo account is deleted after two
+                  hours without use, every night, and whenever the demo is updated. Bank sync talks
+                  to a pretend bank, and attachments, AI and notifications are off.
+                  <a href="https://github.com/easly1989/cloudbank/blob/main/docs/demo.md" rel="noopener">What the demo is</a>.
+                  Have a proper look, but don't put anything real in it — for that, run your own,
+                  which takes one container.
+                </div>
+                <span class="folio">1</span>
+              </section>
+              <section class="page back" data-label="What it is">
+                <h2>What it is</h2>
+                <p>
+                  CloudBank brings the HomeBank workflow — accounts, a powerful transaction
+                  register, scheduled transactions, budgets and rich reports — to a web UI you can
+                  reach from any device. It ships as a single Docker container, with no external
+                  database to run.
+                </p>
+                <p style="color: var(--paper-ink-2); font-size: 0.9rem">
+                  An independent, clean-room reimplementation: it doesn't copy or link any HomeBank
+                  source code, and it tracks parity with current and future HomeBank releases.
+                </p>
+                <figure class="shot" style="--r: -1.5deg">
+                  <img width="1980" height="1290" src="assets/cloudbank-dashboard.png" alt="CloudBank dashboard with today's balance, what was earned, spent and kept, and an income versus expense chart" loading="lazy" />
+                  <figcaption>The dashboard — a fully customizable, free-form grid of widgets.</figcaption>
+                </figure>
+                <span class="folio">2</span>
+              </section>
             </div>
-            <div>
-              <dt>Transactions</dt>
-              <dd>
-                12 payment types, the cleared/reconciled lifecycle, category splits, free tags,
-                internal (and cross-currency) transfers, bulk edit and duplicate detection.
-              </dd>
-            </div>
-            <div>
-              <dt>Powerful register</dt>
-              <dd>
-                Running balance, rich filtering with a future-transactions toggle, full-text search
-                across memo, payee and category, per-user columns, a live selection total and
-                reconciliation. New entries go in a sheet beside the ledger, so the rows stay in
-                view.
-              </dd>
-            </div>
-            <div>
-              <dt>Bills on a calendar</dt>
-              <dd>
-                Scheduled transactions with automatic posting, shown on the day each one falls:
-                what is still to pay, what is overdue, and a column of what needs you, registered
-                or skipped in one click. Templates and assignment rules do the typing for you.
-              </dd>
-            </div>
-            <div>
-              <dt>Budgets and reports that answer first</dt>
-              <dd>
-                A budget that puts what you planned next to what you spent, with a tick for how far
-                through the month you are. Reports for where the
-                money went, what came in and went out, what your accounts hold and will hold, and
-                what a car costs, for any month, quarter or year, with saved views and CSV/PNG
-                downloads.
-              </dd>
-            </div>
-            <div>
-              <dt>Savings goals</dt>
-              <dd>
-                What you have set aside, what to put aside each month to meet every date, and what
-                is free to spend once it is. Close a goal, reached or given up on, into a history
-                you can reopen.
-              </dd>
-            </div>
-            <div>
-              <dt>Vehicles</dt>
-              <dd>
-                What each car, motorbike or van costs to run over the last year: fuel, kilometres,
-                cost per kilometre and consumption, from the fuel payments linked to it.
-              </dd>
-            </div>
-            <div>
-              <dt>The wallet's lists</dt>
-              <dd>
-                Categories, payees, tags, rules, templates and currencies each get a page of their
-                own, with what every entry did over the last 12 months and a panel beside the list
-                to edit it.
-              </dd>
-            </div>
-            <div>
-              <dt>Import and export</dt>
-              <dd>
-                Import HomeBank <code>.xhb</code>, QIF, OFX/QFX, CSV and CAMT.053 with an
-                assistant; export back to HomeBank <code>.xhb</code>, QIF and CSV.
-              </dd>
-            </div>
-            <div>
-              <dt>Automatic bank sync</dt>
-              <dd>
-                Pull new transactions straight from your bank — merged with what you already
-                entered and run through your rules — via SimpleFIN (worldwide), Enable Banking
-                (EU/EEA and UK, PSD2) or, experimentally, Pluggy (Latin America), refreshed on a
-                schedule in the background. A review page settles anything that needs a category
-                or looks like a duplicate.
-              </dd>
-            </div>
-            <div>
-              <dt>Multi-currency, multi-user</dt>
-              <dd>
-                Manual and online (ECB, frankfurter.app) exchange rates, totals that say how many
-                accounts they add up, admin-managed users and a responsive UI.
-              </dd>
-            </div>
-            <div>
-              <dt>Six languages</dt>
-              <dd>
-                English and Italian, plus Spanish, French, German and Brazilian Portuguese in beta:
-                the whole interface, the reminders and the demo's data. The browser's language
-                picks one on a first visit, and native speakers can send corrections from the app.
-              </dd>
-            </div>
-            <div>
-              <dt>Privacy mode</dt>
-              <dd>
-                One eye beside the ? of every page, or Shift+H, blurs amounts, balances, memos and
-                payees across the app, charts included, so you can show CloudBank to someone
-                without showing your money.
-              </dd>
-            </div>
-          </dl>
-        </section>
 
-        <section class="section reveal">
-          <h2>Make it yours</h2>
-          <p>
-            CloudBank is built to fit how <em>you</em> work. The dashboard is a free-form grid:
-            place and resize widgets anywhere, and add multiple instances of any widget — balances,
-            quick-add, spending donut, budget gauge, upcoming, account balance, recent transactions,
-            big-number key figures and free-text notes.
-          </p>
-          <p>
-            Pick from light, dark or auto themes with an accent-colour picker that follows you
-            across devices, a collapsible and reorderable sidebar, HomeBank-style smart amount
-            entry, and a short tour on each page that the ? in its header plays again.
-          </p>
-          <div class="reel">
-            <figure>
-              <img
-                src="assets/cloudbank-dashboard-customize.png"
-                alt="Customizing the CloudBank dashboard by placing and resizing widgets on a grid"
-                loading="lazy"
-              />
-              <figcaption>Drag, resize and add widgets from a palette.</figcaption>
-            </figure>
-            <figure>
-              <img
-                src="assets/cloudbank-privacy.png"
-                alt="CloudBank dashboard in privacy mode, with the eye button on and every balance, total and account figure blurred while the labels and the chart's bars stay readable"
-                loading="lazy"
-              />
-              <figcaption>Privacy mode — the figures blur, the page keeps its shape.</figcaption>
-            </figure>
-            <figure>
-              <img
-                src="assets/cloudbank-register.png"
-                alt="CloudBank register with four transactions selected, their total, and edit and delete actions for the selection"
-                loading="lazy"
-              />
-              <figcaption>
-                The register — running balance, filters, and one edit for a whole selection.
-              </figcaption>
-            </figure>
-            <figure>
-              <img
-                src="assets/cloudbank-reports.png"
-                alt="CloudBank cash flow report for 2026 with what was kept so far, a bar per month of money in and out, and a table of the months"
-                loading="lazy"
-              />
-              <figcaption>
-                Reports — spending, cash flow, balances and vehicle cost, as CSV or PNG.
-              </figcaption>
-            </figure>
-            <figure>
-              <img
-                src="assets/cloudbank-schedules.png"
-                alt="CloudBank schedules calendar for October with the amount still to pay, one overdue bill and a column of what needs registering"
-                loading="lazy"
-              />
-              <figcaption>
-                Schedules — the month's bills on a calendar, registered in one click.
-              </figcaption>
-            </figure>
-            <figure>
-              <img
-                src="assets/cloudbank-budget.png"
-                alt="CloudBank budget for October with spent and left for the month, and planned against spent for each category"
-                loading="lazy"
-              />
-              <figcaption>Budget — what you planned, next to what you spent.</figcaption>
-            </figure>
-            <figure>
-              <img
-                src="assets/cloudbank-categories.png"
-                alt="CloudBank categories grouped with each one's share of spending, and Groceries open for editing in a panel beside the list"
-                loading="lazy"
-              />
-              <figcaption>
-                Categories — what each one did, edited in a panel beside the list.
-              </figcaption>
-            </figure>
-            <figure>
-              <img
-                src="assets/cloudbank-review.png"
-                alt="CloudBank bank sync review showing a possible duplicate pair of transactions side by side"
-                loading="lazy"
-              />
-              <figcaption>
-                Bank sync review — categorise what came in and settle possible duplicates.
-              </figcaption>
-            </figure>
-            <figure>
-              <img
-                src="assets/cloudbank-settings.png"
-                alt="CloudBank appearance settings with theme, accent colour, sidebar balances and navigation"
-                loading="lazy"
-              />
-              <figcaption>Appearance — theme, accent colour, and what the sidebar shows.</figcaption>
-            </figure>
-            <figure>
-              <img
-                src="assets/cloudbank-languages.png"
-                alt="CloudBank general settings with a card for each of the six languages, the four new ones marked beta"
-                loading="lazy"
-              />
-              <figcaption>Languages — six of them, each by its own name.</figcaption>
-            </figure>
-            <figure>
-              <img
-                src="assets/cloudbank-export.png"
-                alt="CloudBank import and export settings with HomeBank file import, backup and restore"
-                loading="lazy"
-              />
-              <figcaption>
-                Import and export — HomeBank files, bank statements, CSV and full backups.
-              </figcaption>
-            </figure>
-          </div>
-        </section>
+            <div class="leaf">
+              <section class="page front" data-label="Features">
+                <h2>Features</h2>
+                <ul class="rows">
+                  <li><b>Every account type</b><span>Bank, cash, checking, savings, credit card, liability, asset and investment — each with its own currency, payment mode, and today's and a projected balance.</span></li>
+                  <li><b>Transactions</b><span>12 payment types, the cleared/reconciled lifecycle, category splits, free tags, internal and cross-currency transfers, bulk edit and duplicate detection.</span></li>
+                  <li><b>Powerful register</b><span>Running balance, rich filtering, full-text search, per-user columns, a live selection total and reconciliation. New entries go in a sheet beside the ledger.</span></li>
+                  <li><b>Bills on a calendar</b><span>Scheduled transactions with automatic posting, on the day each falls: still to pay, overdue, and what needs you, in one click.</span></li>
+                  <li><b>Budgets and reports that answer first</b><span>Planned next to spent, and reports for where the money went, cash flow, balances and what a car costs, with saved views and CSV/PNG downloads.</span></li>
+                </ul>
+                <span class="folio">3</span>
+              </section>
+              <section class="page back" data-label="Features">
+                <h2>More of it</h2>
+                <ul class="rows">
+                  <li><b>Savings goals</b><span>What you have set aside, what to put aside each month to meet every date, and what is free to spend once it is.</span></li>
+                  <li><b>Vehicles</b><span>What each car, motorbike or van costs to run over the last year: fuel, kilometres, cost per kilometre and consumption.</span></li>
+                  <li><b>The wallet's lists</b><span>Categories, payees, tags, rules, templates and currencies each get a page, with what every entry did over 12 months.</span></li>
+                  <li><b>Import and export</b><span>Import HomeBank <code>.xhb</code>, QIF, OFX/QFX, CSV and CAMT.053 with an assistant; export back to <code>.xhb</code>, QIF and CSV.</span></li>
+                </ul>
+                <span class="folio">4</span>
+              </section>
+            </div>
 
-        <section class="section reveal">
-          <h2>Secure, and on every device</h2>
-          <p>
-            CloudBank v3 grew up: it installs like a native app and takes account security
-            seriously.
-          </p>
-          <dl class="defs reveal stagger">
-            <div>
-              <dt>Two-factor auth</dt>
-              <dd>
-                Optional per-user TOTP with authenticator apps — QR enrolment, one-time recovery
-                codes and a two-step login.
-              </dd>
+            <div class="leaf">
+              <section class="page front" data-label="Features">
+                <h2>And the rest</h2>
+                <ul class="rows">
+                  <li><b>Automatic bank sync</b><span>New transactions straight from your bank, merged with what you entered and run through your rules — via SimpleFIN, Enable Banking or, experimentally, Pluggy. A review page settles the rest.</span></li>
+                  <li><b>Multi-currency, multi-user</b><span>Manual and online (ECB, frankfurter.app) exchange rates, admin-managed users and a responsive UI.</span></li>
+                  <li><b>Six languages</b><span>English and Italian, plus Spanish, French, German and Brazilian Portuguese in beta, picked from the browser on a first visit.</span></li>
+                  <li><b>Privacy mode</b><span>One eye beside the ? of every page, or Shift+H, blurs amounts, balances, memos and payees, charts included.</span></li>
+                </ul>
+                <span class="folio">5</span>
+              </section>
+              <section class="page back" id="yours" data-label="Make it yours">
+                <h2>Make it yours</h2>
+                <p>
+                  The dashboard is a free-form grid: place and resize widgets anywhere, and add any
+                  of them more than once — balances, quick-add, spending donut, budget gauge,
+                  upcoming, recent transactions, key figures and notes.
+                </p>
+                <p>
+                  Light, dark or auto themes with an accent colour that follows you across devices,
+                  a reorderable sidebar, HomeBank-style smart amount entry, and a short tour on each
+                  page.
+                </p>
+                <figure class="shot" style="--r: 1.2deg; --tr: -3deg">
+                  <img width="1980" height="1290" src="assets/cloudbank-dashboard-customize.png" alt="Customizing the CloudBank dashboard by placing and resizing widgets on a grid" loading="lazy" />
+                  <figcaption>Drag, resize and add widgets from a palette.</figcaption>
+                </figure>
+                <span class="folio">6</span>
+              </section>
             </div>
-            <div>
-              <dt>Single sign-on</dt>
-              <dd>
-                Sign in through Authelia, Authentik, Keycloak or Google, next to passwords or in
-                their place, with one-time recovery codes for the day the provider does not answer.
-              </dd>
-            </div>
-            <div>
-              <dt>Installable PWA</dt>
-              <dd>
-                A web-app manifest, icons and an offline app shell — install CloudBank to your
-                phone's home screen or your desktop.
-              </dd>
-            </div>
-            <div>
-              <dt>Web push reminders</dt>
-              <dd>
-                Opt-in browser push notifications for schedule and bill-due reminders, with VAPID
-                keys stored server-side.
-              </dd>
-            </div>
-            <div>
-              <dt>Personal API tokens</dt>
-              <dd>
-                Scoped, revocable bearer tokens for programmatic access — the token secret is shown
-                once, at creation.
-              </dd>
-            </div>
-            <div>
-              <dt>Encrypted secrets at rest</dt>
-              <dd>
-                Set <code>CB_SECRET_KEY</code> to encrypt bank credentials, AI keys, 2FA secrets and
-                the push key in the database with AES-256-GCM.
-              </dd>
-            </div>
-            <div>
-              <dt>Told when to update</dt>
-              <dd>
-                An open page offers a new build instead of swapping it in under you, and admins
-                are told when a newer CloudBank is published, with the steps to update. One
-                setting turns the check off.
-              </dd>
-            </div>
-          </dl>
-        </section>
 
-        <section class="section reveal">
-          <h2>Optional AI, with your own key</h2>
-          <p>
-            Entirely optional and provider-agnostic: you plug in your own API key, and it stays
-            server-side, write-only, and is never returned to the browser. Leave it off and
-            CloudBank makes no AI calls at all.
-          </p>
-          <dl class="defs reveal stagger">
-            <div>
-              <dt>Category suggestions</dt>
-              <dd>
-                Suggests a category for a transaction from its description — a nudge, not an
-                autopilot; you stay in control.
-              </dd>
+            <div class="leaf">
+              <section class="page front" data-label="Screens">
+                <h2>Taped in</h2>
+                <div class="shots">
+                  <figure class="shot" style="--r: -2deg"><img width="1980" height="1290" src="assets/cloudbank-privacy.png" alt="CloudBank dashboard in privacy mode, every figure blurred" loading="lazy" /><figcaption>Privacy mode — the figures blur, the page keeps its shape.</figcaption></figure>
+                  <figure class="shot" style="--r: 1.5deg"><img width="1980" height="1290" src="assets/cloudbank-register.png" alt="CloudBank register with four transactions selected and their total" loading="lazy" /><figcaption>The register, and one edit for a whole selection.</figcaption></figure>
+                  <figure class="shot" style="--r: 1deg"><img width="1980" height="1290" src="assets/cloudbank-reports.png" alt="CloudBank cash flow report for 2026" loading="lazy" /><figcaption>Reports — spending, cash flow, balances and vehicle cost.</figcaption></figure>
+                  <figure class="shot" style="--r: -1.5deg"><img width="1980" height="1290" src="assets/cloudbank-schedules.png" alt="CloudBank schedules calendar for October" loading="lazy" /><figcaption>The month's bills on a calendar.</figcaption></figure>
+                </div>
+                <span class="folio">7</span>
+              </section>
+              <section class="page back" data-label="Screens">
+                <h2>More taped in</h2>
+                <div class="shots">
+                  <figure class="shot" style="--r: 1.5deg"><img width="1980" height="1290" src="assets/cloudbank-budget.png" alt="CloudBank budget for October, planned against spent" loading="lazy" /><figcaption>Budget — what you planned, next to what you spent.</figcaption></figure>
+                  <figure class="shot" style="--r: -1deg"><img width="1980" height="1290" src="assets/cloudbank-categories.png" alt="CloudBank categories with each one's share of spending" loading="lazy" /><figcaption>Categories, edited in a panel beside the list.</figcaption></figure>
+                  <figure class="shot" style="--r: -2deg"><img width="1980" height="1290" src="assets/cloudbank-review.png" alt="CloudBank bank sync review with a possible duplicate pair" loading="lazy" /><figcaption>Bank sync review — settle possible duplicates.</figcaption></figure>
+                  <figure class="shot" style="--r: 1deg"><img width="1980" height="1290" src="assets/cloudbank-settings.png" alt="CloudBank appearance settings" loading="lazy" /><figcaption>Appearance — theme, accent colour, the sidebar.</figcaption></figure>
+                </div>
+                <span class="folio">8</span>
+              </section>
             </div>
-            <div>
-              <dt>Natural-language entry</dt>
-              <dd>
-                Type "coffee 3.50 yesterday" and get a pre-filled transaction to review before you
-                save it.
-              </dd>
-            </div>
-          </dl>
-        </section>
 
-        <section class="section reveal" id="run">
-          <h2>Run it yourself</h2>
-          <p>
-            You need Docker with the Compose plugin. One container, no external database — your data
-            lives in a volume you control:
-          </p>
-          <pre class="code">services:
+            <div class="leaf">
+              <section class="page front" id="secure" data-label="Security">
+                <h2>Secure, and on every device</h2>
+                <ul class="rows">
+                  <li><b>Two-factor auth</b><span>Optional per-user TOTP — QR enrolment, recovery codes and a two-step login.</span></li>
+                  <li><b>Single sign-on</b><span>Authelia, Authentik, Keycloak or Google, next to passwords or in their place.</span></li>
+                  <li><b>Installable PWA</b><span>Install CloudBank to your phone's home screen or your desktop, with an offline shell.</span></li>
+                  <li><b>Web push reminders</b><span>Opt-in notifications for schedules and bills that are due.</span></li>
+                  <li><b>Personal API tokens</b><span>Scoped, revocable bearer tokens; the secret is shown once.</span></li>
+                  <li><b>Encrypted secrets at rest</b><span>Set <code>CB_SECRET_KEY</code> to encrypt bank credentials, AI keys and 2FA secrets with AES-256-GCM.</span></li>
+                  <li><b>Told when to update</b><span>A new build is offered, not swapped in under you; admins hear when a newer CloudBank is out.</span></li>
+                </ul>
+                <span class="folio">9</span>
+              </section>
+              <section class="page back" id="ai" data-label="AI">
+                <h2>Optional AI, with your own key</h2>
+                <p>
+                  Entirely optional and provider-agnostic: your own API key stays server-side,
+                  write-only, never returned to the browser. Leave it off and CloudBank makes no AI
+                  calls at all.
+                </p>
+                <ul class="rows">
+                  <li><b>Category suggestions</b><span>A nudge from the description, not an autopilot.</span></li>
+                  <li><b>Natural-language entry</b><span>Type "coffee 3.50 yesterday" and review a pre-filled transaction.</span></li>
+                </ul>
+                <div class="shots" style="margin-top: 1rem">
+                  <figure class="shot" style="--r: -1.5deg"><img width="1980" height="1290" src="assets/cloudbank-languages.png" alt="CloudBank settings with the six languages" loading="lazy" /><figcaption>Six languages, each by its own name.</figcaption></figure>
+                  <figure class="shot" style="--r: 2deg"><img width="1980" height="1290" src="assets/cloudbank-export.png" alt="CloudBank import and export settings" loading="lazy" /><figcaption>Import, export and full backups.</figcaption></figure>
+                </div>
+                <span class="folio">10</span>
+              </section>
+            </div>
+
+            <div class="leaf">
+              <section class="page front" id="run" data-label="Run it">
+                <h2>Run it yourself</h2>
+                <p>Docker with the Compose plugin. One container, your data in a volume:</p>
+                <pre>services:
   cloudbank:
-    image: ghcr.io/easly1989/cloudbank:main   # latest stable release
+    image: ghcr.io/easly1989/cloudbank:main
     container_name: cloudbank
     restart: unless-stopped
     ports:
       - "8080:8080"
     environment:
-      CB_SECURE_COOKIES: "false"              # only for a plain-HTTP LAN install
+      CB_SECURE_COOKIES: "false" # plain-HTTP LAN only
     volumes:
       - cloudbank-data:/data
 
 volumes:
   cloudbank-data:</pre>
-          <pre class="code">docker compose up -d
-# open http://localhost:8080 and complete the first-run admin setup</pre>
-          <table class="spec">
-            <tr>
-              <th scope="row">Stable, <code>:main</code></th>
-              <td>
-                <span data-cloudbank="stable">v3.8.0</span>, published
-                <span data-cloudbank-date="stable">October 2026</span>
-              </td>
-            </tr>
-            <tr>
-              <th scope="row">Nightly, <code>:latest</code></th>
-              <td>
-                <span data-cloudbank="nightly">built from main</span>, published
-                <span data-cloudbank-date="nightly">on every change</span>
-              </td>
-            </tr>
-          </table>
-          <div class="note">
-            <p>
-              <strong>Note the tag scheme.</strong> It's intentionally unconventional:
-              <code>:main</code> is the latest stable release, while <code>:latest</code> is the
-              bleeding-edge nightly. Pin deliberately. Optional env vars let you harden and tune it:
-              <code>CB_SECRET_KEY</code> encrypts secrets at rest, and
-              <code>CB_BANK_SYNC_INTERVAL</code> sets how often background bank sync looks for
-              connections that are due (default 1h; each connection keeps its own schedule). An
-              interactive API reference is served at <code>/api/docs</code>.
-            </p>
-          </div>
-        </section>
+                <pre>docker compose up -d
+# open http://localhost:8080</pre>
+                <table>
+                  <tr><th scope="row">Stable, <code>:main</code></th><td><span data-cloudbank="stable">v3.8.1</span>, published <span data-cloudbank-date="stable">16 October 2026</span></td></tr>
+                  <tr><th scope="row">Nightly, <code>:latest</code></th><td><span data-cloudbank="nightly">built from main</span>, published <span data-cloudbank-date="nightly">on every change</span></td></tr>
+                </table>
+                <span class="folio">11</span>
+              </section>
+              <section class="page back" id="support" data-label="Support">
+                <div class="note" style="margin-top: 0">
+                  <strong>Note the tag scheme.</strong> <code>:main</code> is the latest stable
+                  release, while <code>:latest</code> is the bleeding-edge nightly. Pin
+                  deliberately. <code>CB_SECRET_KEY</code> encrypts secrets at rest, and
+                  <code>CB_BANK_SYNC_INTERVAL</code> sets how often background bank sync looks for
+                  connections that are due (default 1h). An API reference is served at
+                  <code>/api/docs</code>.
+                </div>
+                <h2 style="margin-top: 1.6rem">Open and free — support it</h2>
+                <p>
+                  CloudBank is an open-source labour of love, released under the AGPL-3.0. If it's
+                  useful to you, a donation genuinely helps and is much appreciated.
+                </p>
+                <p class="actions" style="--c: var(--cloudbank)">
+                  <a class="btn" href="donate.html">Donate</a>
+                  <a class="btn quiet" href="https://github.com/sponsors/easly1989" rel="noopener">GitHub Sponsors</a>
+                </p>
+                <span class="folio">12</span>
+              </section>
+            </div>
 
-        <section class="section reveal">
-          <h2>Open and free — support it</h2>
-          <p>
-            CloudBank is an open-source labour of love, released under the AGPL-3.0. If it's useful
-            to you, a donation genuinely helps and is much appreciated.
-          </p>
-          <div class="actions">
-            <a class="action key" href="donate.html">Donate</a>
-            <a class="action" href="https://github.com/sponsors/easly1989" rel="noopener">
-              GitHub Sponsors
-            </a>
-          </div>
-        </section>
+            <div class="leaf">
+              <div class="page front endpaper" data-label="The end">
+                <div class="ex-libris">
+                  <small>That's the ledger.</small>
+                  <b>Put it back?</b>
+                  <p class="actions" style="justify-content: center; margin-top: 0.8rem; --c: var(--cloudbank)">
+                    <a class="btn" href="index.html">Back to the bench</a>
+                  </p>
+                </div>
+              </div>
+              <div class="page back endpaper" data-label="Back cover"></div>
+            </div>
 
-        <div class="actions">
-          <a class="action" href="index.html">All projects</a>
-          <a class="action key" href="https://p01--cloudbank--7dcjw6mlmtky.code.run/" target="_blank" rel="noopener">
-            Try the demo
-          </a>
+            <nav class="tabs" aria-label="Sections of the ledger">
+              <button type="button" data-go="1">Demo</button>
+              <button type="button" data-go="2">What it is</button>
+              <button type="button" data-go="2">Features</button>
+              <button type="button" data-go="4">Make it yours</button>
+              <button type="button" data-go="5">Screens</button>
+              <button type="button" data-go="5">Security</button>
+              <button type="button" data-go="6">AI</button>
+              <button type="button" data-go="6">Run it</button>
+              <button type="button" data-go="7">Support</button>
+            </nav>
+          </div>
         </div>
-      </div>
-    </main>
+        <div class="book-nav">
+          <button type="button" data-prev>Previous page</button>
+          <output aria-live="polite"></output>
+          <button type="button" data-next>Next page</button>
+        </div>
+      </main>
 
-    <footer>
-      <a href="index.html">Projects</a>
-      <a href="about.html">About</a>
-      <a href="donate.html">Donate</a>
-      <a href="https://github.com/easly1989/cloudbank" rel="noopener">Source code</a>
-      <a href="https://www.gethomebank.org/" rel="noopener">A web port of HomeBank</a>
-      <a href="https://www.linkedin.com/in/cruggiero89/" rel="noopener">LinkedIn</a>
-      <a href="https://www.instagram.com/easly1989/" rel="noopener">Instagram</a>
-    </footer>
+      <span class="loose pencil" data-cat="knock" style="left: 40px; top: 620px; --r: 78deg" aria-hidden="true"></span>
+      <span class="loose coin" data-cat="knock" style="left: 70px; top: 380px" aria-hidden="true"></span>
+      <span class="loose clip" data-cat="knock" style="right: 60px; top: 300px; --r: -20deg" aria-hidden="true"></span>
+    </div>
+    <script src="site.js" defer></script>
+    <script src="cat.js" defer></script>
   </body>
 </html>
