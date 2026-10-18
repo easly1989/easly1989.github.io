@@ -412,6 +412,36 @@
         var letter = document.getElementById("letter");
         var reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
         var timer;
+        // Take the letter out of the envelope (the rise animation).
+        function rise() {
+          letter.hidden = false;
+          post.classList.remove("shut");
+          void letter.offsetWidth; // restart the rise
+          post.classList.add("reading");
+          letter.focus({ preventScroll: true });
+        }
+        // Glide gently up to the envelope, then run `done`. Sliding up and taking
+        // the letter out are sequenced, not simultaneous, so the rise is in view
+        // when it plays instead of racing past while the page is still scrolling.
+        function glideToTop(done) {
+          var start = window.scrollY;
+          if (reduced || start < 4) {
+            window.scrollTo(0, 0);
+            done();
+            return;
+          }
+          var dur = 650,
+            t0 = null;
+          function step(ts) {
+            if (t0 === null) t0 = ts;
+            var k = Math.min(1, (ts - t0) / dur);
+            var eased = 1 - Math.pow(1 - k, 3); // easeOutCubic
+            window.scrollTo(0, Math.round(start * (1 - eased)));
+            if (k < 1) requestAnimationFrame(step);
+            else done();
+          }
+          requestAnimationFrame(step);
+        }
         function set(open) {
           clearTimeout(timer);
           post.classList.remove("reading");
@@ -419,13 +449,8 @@
           seal.setAttribute("aria-label", open ? "Put the letter back in the envelope" : "Break the seal and take the letter out");
           reopen.hidden = open;
           if (open) {
-            letter.hidden = false;
-            post.classList.remove("shut");
-            // back to the top, so the letter's rise is in view when it plays
-            window.scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" });
-            void letter.offsetWidth; // restart the rise
-            post.classList.add("reading");
-            letter.focus({ preventScroll: true });
+            // first slide up to the envelope, then take the letter out
+            glideToTop(rise);
           } else {
             post.classList.add("shut");
             // once it is inside, the page closes up around the envelope
