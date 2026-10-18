@@ -421,6 +421,8 @@
           if (open) {
             letter.hidden = false;
             post.classList.remove("shut");
+            // back to the top, so the letter's rise is in view when it plays
+            window.scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" });
             void letter.offsetWidth; // restart the rise
             post.classList.add("reading");
             letter.focus({ preventScroll: true });
