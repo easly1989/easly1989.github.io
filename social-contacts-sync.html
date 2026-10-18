@@ -190,7 +190,7 @@
       <main>
         <section class="paper label-sheet" style="--c: var(--scs)" data-cat="sit">
           <img class="mark" src="social-contacts-sync.svg" alt="" width="56" height="56" />
-          <p class="state">Shipping, v1.3.3. Open source.</p>
+          <p class="state">Shipping, v1.4.0. Open source.</p>
           <h1>Social Contacts Sync</h1>
           <p class="lede">
             Give every contact a face. A desktop app that fills Google Contacts with your contacts'
@@ -241,8 +241,8 @@
               tools, and keeps his licence.
             </p>
             <figure class="shot" style="--r: 1deg">
-              <img width="1280" height="800" src="assets/social-contacts-sync-dashboard.png" alt="Social Contacts Sync dashboard with photo coverage of the address book" loading="lazy" />
-              <figcaption>The dashboard — how many contacts have a face.</figcaption>
+              <img width="1280" height="800" src="assets/social-contacts-sync-dashboard.png" alt="Social Contacts Sync dashboard with photo coverage in three parts and the next steps" loading="lazy" />
+              <figcaption>The dashboard — who has a face, who has one ready, and what to do next.</figcaption>
             </figure>
           </article>
 
@@ -253,20 +253,32 @@
               profile links saved on a contact, in the order you choose. Telegram only reads the
               contacts you already have there.
             </p>
+            <p>
+              A photo picked from a source keeps following it, so the next sync brings that
+              profile's new picture. A photo changed by hand in Google is never overwritten.
+            </p>
           </article>
 
           <article class="contact" style="--r: 0.9deg">
-            <header><span class="avatar">T</span><div><h2>Three ways to sync</h2><small>Feature</small></div></header>
-            <p>Fill in only the missing photos, replace them all, or review each contact and pick the photo with the keyboard.</p>
+            <header><span class="avatar">A</span><div><h2>A sync that asks</h2><small>Feature</small></div></header>
+            <p>
+              A sync fills in missing photos and updates the ones that follow a source. Anything it
+              is not sure about waits for you: a different photo for a contact that already has one,
+              or a photo changed outside the app. Or it applies nothing and you decide every contact.
+            </p>
             <figure class="shot" style="--r: -1.2deg">
-              <img width="1280" height="800" src="assets/social-contacts-sync-sync-setup.png" alt="Sync setup with the sources in priority order and the choice of mode" loading="lazy" />
-              <figcaption>Choose the sources, their order, and what should change.</figcaption>
+              <img width="1280" height="800" src="assets/social-contacts-sync-sync-run.png" alt="The Run tab with what the sync may change and a summary of the address book" loading="lazy" />
+              <figcaption>Choose what a sync may change on its own.</figcaption>
             </figure>
           </article>
 
           <article class="contact" style="--r: -1deg">
             <header><span class="avatar">U</span><div><h2>Reports and undo</h2><small>Feature</small></div></header>
-            <p>Every sync keeps a report of what changed, with the photo before and after. Undo one contact or the whole run, and export it as CSV.</p>
+            <p>
+              Every sync and every review session is kept in History, with a report of what changed
+              and the photo before and after. Undo one contact or the whole entry: the photo, the
+              profile links and the source the photo followed go back together.
+            </p>
             <figure class="shot" style="--r: 1.4deg">
               <img width="1280" height="800" src="assets/social-contacts-sync-sync-report.png" alt="Sync report with a table of contacts and their photo before and after" loading="lazy" />
               <figcaption>The report — before and after, with undo per contact.</figcaption>
@@ -274,15 +286,17 @@
           </article>
 
           <article class="contact" style="--r: 0.5deg">
-            <header><span class="avatar">F</span><div><h2>Find profiles</h2><small>Feature</small></div></header>
+            <header><span class="avatar">R</span><div><h2>To review</h2><small>Feature</small></div></header>
             <p>
-              Suggests each contact's social profiles from your own Instagram and LinkedIn data
-              exports and a public search on Bluesky, Mastodon and GitHub. Review them one by one or
-              as a list. An experimental scan of your own followers is there too, off by default: it
+              One card per contact, kept between sessions: the photos a sync found and the social
+              profiles that may be them. Tick the profiles that are right and pick one photo among
+              every source; one click links them and applies it. The suggestions come from your own
+              Instagram and LinkedIn data exports and a public search on Bluesky, Mastodon and
+              GitHub. An experimental scan of your own followers is there too, off by default: it
               goes against those sites' terms, and the app says so before it starts.
             </p>
             <figure class="shot" style="--r: -1deg">
-              <img width="1280" height="800" src="assets/social-contacts-sync-find-profiles.png" alt="Find profiles with a contact's suggested Instagram, LinkedIn and Bluesky profiles" loading="lazy" />
+              <img width="1280" height="800" src="assets/social-contacts-sync-sync-review.png" alt="To review with a contact's suggested Instagram, LinkedIn and Bluesky profiles and their photos" loading="lazy" />
               <figcaption>Tick the ones that are right, pick whose photo to use.</figcaption>
             </figure>
           </article>
