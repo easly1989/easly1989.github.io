@@ -266,6 +266,11 @@
         display: block;
         margin: 1.4rem auto 0;
       }
+      /* the hidden attribute (toggled by JS) must beat .btn's own display, so
+         this is specific enough (class + attribute) to win. */
+      .reopen[hidden] {
+        display: none;
+      }
       @media (max-width: 40rem) {
         .letter-sheet {
           padding: 4rem 1.25rem 2.2rem;
