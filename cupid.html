@@ -233,29 +233,22 @@
         border-bottom: 1px solid var(--rule);
         font: 500 0.84rem/1.5 "IBM Plex Mono", ui-monospace, monospace;
       }
-      /* "No screenshots": a rubber stamp in the margin, then the reason. */
-      .private {
-        position: relative;
-        margin: 1.2rem 0 0.6rem;
-        padding: 1rem 1.2rem 1rem 8.6rem;
-        background: #fbe8ee;
+      /* Screenshots enclosed with the letter: taped prints in a small grid. */
+      .letter-sheet .shots {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.3rem 1rem;
+        margin: 1rem 0 0.4rem;
       }
-      .private::before {
-        content: "No screenshots";
-        position: absolute;
-        left: 0.9rem;
-        top: 50%;
-        width: 6.6rem;
-        padding: 0.3rem 0.2rem;
-        margin-top: -1.6rem;
-        border: 3px double #a8234f;
-        color: #a8234f;
-        font: 800 0.95rem/1.1 "Bricolage Grotesque", sans-serif;
-        text-align: center;
-        transform: rotate(-9deg);
+      .letter-sheet .shots.one {
+        grid-template-columns: 1fr;
       }
-      .private p {
-        margin: 0;
+      .letter-sheet > figure.shot {
+        margin: 1.2rem 0 0.4rem;
+      }
+      .demo-note {
+        color: var(--paper-ink-2);
+        font-size: 0.9rem;
       }
       .sign {
         margin-top: 2rem;
@@ -271,12 +264,8 @@
         .letter-sheet .mark {
           display: none;
         }
-        .private {
-          padding: 3.4rem 1rem 1rem;
-        }
-        .private::before {
-          top: 0.8rem;
-          margin-top: 0;
+        .letter-sheet .shots {
+          grid-template-columns: 1fr;
         }
       }
       @media (prefers-reduced-motion: reduce) {
@@ -335,13 +324,16 @@
             and printing — and moves it onto a modern web architecture, delivered as a
             <strong>single Docker container</strong> that an agency can run on its own.
           </p>
-          <div class="private">
-            <p>
-              Cupid handles sensitive personal data, so no customer screenshots are shown here. It
-              ships with GDPR tooling — consents, data export and anonymisation — an audit log, and
-              encrypted backups. Ask for a demo and I'll walk you through a seeded instance.
-            </p>
-          </div>
+          <p class="demo-note">
+            The screenshots below come from a demo instance filled with made-up records. In a real
+            agency the data is its own and stays in the one container it runs in — Cupid ships GDPR
+            tooling (consents, data export and anonymisation), an audit log and encrypted backups.
+          </p>
+
+          <figure class="shot" style="--r: -1deg">
+            <img width="2560" height="1668" src="assets/cupid-dashboard.png" alt="Cupid dashboard with agency figures, operational counters and twelve-month trend charts" loading="lazy" />
+            <figcaption>The dashboard — agency figures, counters you can click through, and twelve-month trends.</figcaption>
+          </figure>
 
           <h2>Features</h2>
           <dl>
@@ -354,6 +346,30 @@
             <div><dt>Backups to the cloud</dt><dd>Manual and scheduled backups to WebDAV, S3-compatible storage, OneDrive, Dropbox or Google Drive, with retention and AES-256-GCM encryption at rest.</dd></div>
             <div><dt>Users, roles and GDPR</dt><dd>A capability matrix with role presets, unified settings, light and dark theme, i18n, and GDPR tools (consents, export, anonymisation) with an audit log.</dd></div>
           </dl>
+
+          <h2>The client, tab by tab</h2>
+          <p>
+            Every client is one record with the whole history on it — opened a tab at a time, from
+            the agency's own list.
+          </p>
+          <div class="shots">
+            <figure class="shot" style="--r: -1.5deg"><img width="2560" height="1668" src="assets/cupid-clients.png" alt="Cupid client list with instant search and a status filter" loading="lazy" /><figcaption>The client list, with instant search and a filter by status.</figcaption></figure>
+            <figure class="shot" style="--r: 1.2deg"><img width="2560" height="1668" src="assets/cupid-anagrafica.png" alt="A Cupid client record with status, age, contacts, documents and geography" loading="lazy" /><figcaption>A client's details — status, computed age and star sign, contacts and geography.</figcaption></figure>
+            <figure class="shot" style="--r: 1deg"><img width="2560" height="1668" src="assets/cupid-descrizione.png" alt="Cupid description tab with physical and social traits in collapsible groups" loading="lazy" /><figcaption>Description — traits in collapsible groups, character and hobbies as tags.</figcaption></figure>
+            <figure class="shot" style="--r: -1.2deg"><img width="2560" height="1668" src="assets/cupid-richieste.png" alt="A Cupid partner request with Yes, No and Indifferent criteria and liked qualities" loading="lazy" /><figcaption>A partner request — each criterion Yes, No or Indifferent, with liked and disliked qualities.</figcaption></figure>
+          </div>
+
+          <h2>Matching, meetings and deadlines</h2>
+          <div class="shots">
+            <figure class="shot" style="--r: -1.5deg"><img width="2560" height="1668" src="assets/cupid-abbinamenti.png" alt="Cupid matching with candidates ranked by affinity and the meeting cycle" loading="lazy" /><figcaption>Matching — candidates ranked by affinity, then the mailing, judgement and meeting cycle.</figcaption></figure>
+            <figure class="shot" style="--r: 1.3deg"><img width="2560" height="1668" src="assets/cupid-scadenzario.png" alt="Cupid deadline scheduler with contracts by due date, overdue in red" loading="lazy" /><figcaption>The deadline scheduler — contracts by due date, overdue in red, within 30 days in amber.</figcaption></figure>
+          </div>
+
+          <h2>Settings, notifications and backups</h2>
+          <div class="shots">
+            <figure class="shot" style="--r: -1deg"><img width="2560" height="1668" src="assets/cupid-notifiche.png" alt="Cupid notification settings for a daily email and Telegram digest" loading="lazy" /><figcaption>Notifications — a daily digest by email and Telegram for deadlines and new matches.</figcaption></figure>
+            <figure class="shot" style="--r: 1.4deg"><img width="2560" height="1668" src="assets/cupid-manutenzione.png" alt="Cupid maintenance with backup, restore and scheduled encrypted cloud backups" loading="lazy" /><figcaption>Backups — download a ZIP, restore from one, or schedule encrypted uploads to the cloud.</figcaption></figure>
+          </div>
 
           <h2>How you can run it</h2>
           <dl>
