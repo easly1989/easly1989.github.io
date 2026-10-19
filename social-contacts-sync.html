@@ -190,7 +190,7 @@
       <main>
         <section class="paper label-sheet" style="--c: var(--scs)" data-cat="sit">
           <img class="mark" src="social-contacts-sync.svg" alt="" width="56" height="56" />
-          <p class="state">Shipping, v1.4.0. Open source.</p>
+          <p class="state">Shipping, v1.4.3. Open source.</p>
           <h1>Social Contacts Sync</h1>
           <p class="lede">
             Give every contact a face. A desktop app that fills Google Contacts with your contacts'
@@ -250,8 +250,9 @@
             <header><span class="avatar">P</span><div><h2>Photos from your sources</h2><small>Feature</small></div></header>
             <p>
               WhatsApp and Telegram, matched by phone number, Gravatar, matched by email, and the
-              profile links saved on a contact, in the order you choose. Telegram only reads the
-              contacts you already have there.
+              profile links saved on a contact, each network a source of its own, all in one order
+              you choose. Each source says whether it is ready, and connecting or signing in happens
+              right there. Telegram only reads the contacts you already have there.
             </p>
             <p>
               A photo picked from a source keeps following it, so the next sync brings that
@@ -262,13 +263,19 @@
           <article class="contact" style="--r: 0.9deg">
             <header><span class="avatar">A</span><div><h2>A sync that asks</h2><small>Feature</small></div></header>
             <p>
-              A sync fills in missing photos and updates the ones that follow a source. Anything it
-              is not sure about waits for you: a different photo for a contact that already has one,
-              or a photo changed outside the app. Or it applies nothing and you decide every contact.
+              Sync goes step by step: sources, profiles, the sync itself, photos, the contacts with
+              nothing found, and a summary. A sync fills in missing photos and updates the ones that
+              follow a source. Anything it is not sure about waits for you: a different photo for a
+              contact that already has one, or a photo changed outside the app.
+            </p>
+            <p>
+              If a source stops working, the sync leaves it out and goes on. If a site signs you out,
+              you can sign in again right where it says so. The summary lists what didn't finish,
+              each with its fix.
             </p>
             <figure class="shot" style="--r: -1.2deg">
-              <img width="1280" height="800" src="assets/social-contacts-sync-sync-run.png" alt="The Run tab with what the sync may change and a summary of the address book" loading="lazy" />
-              <figcaption>Choose what a sync may change on its own.</figcaption>
+              <img width="1280" height="800" src="assets/social-contacts-sync-sync-run.png" alt="A sync in progress: profiles read with the login, then photos, with counters for what was applied and what waits" loading="lazy" />
+              <figcaption>A sync in progress, step 3 of 6.</figcaption>
             </figure>
           </article>
 
@@ -286,21 +293,21 @@
           </article>
 
           <article class="contact" style="--r: 0.5deg">
-            <header><span class="avatar">R</span><div><h2>To review</h2><small>Feature</small></div></header>
+            <header><span class="avatar">R</span><div><h2>Profiles and photos</h2><small>Feature</small></div></header>
             <p>
-              One card per contact, kept between sessions: every contact still without a photo, the
-              photos a sync found and the social profiles that may be them. Filter by what a card
-              needs, or search by name. Tick the profiles that are right and pick one photo among
-              every source; only photos sharp enough and different from the current one are
-              offered, and one click links them and applies it. The suggestions come from your own
+              One card per contact, kept between sessions. First tick the social profiles that are
+              really them; then pick one photo among every source and the profiles you just linked.
+              Only photos sharp enough and different from the current one are offered. The contacts
+              where nothing was found get a step of their own, to search a profile or upload a
+              photo. Filter by what a card needs, or search by name. The suggestions come from your own
               Instagram and LinkedIn data exports and a public search on Bluesky, Mastodon and
               GitHub. A search by name and a scan of your own followers with your Instagram,
               Facebook or LinkedIn login are there too, only when you start them: they go against
               those sites' terms, and the app says so first.
             </p>
             <figure class="shot" style="--r: -1deg">
-              <img width="1280" height="800" src="assets/social-contacts-sync-sync-review.png" alt="To review filtered to contacts without a photo, with a contact's suggested Instagram, LinkedIn and Bluesky profiles and their photos" loading="lazy" />
-              <figcaption>Tick the ones that are right, pick whose photo to use.</figcaption>
+              <img width="1280" height="800" src="assets/social-contacts-sync-sync-review.png" alt="The Photos step: a contact's photos from WhatsApp and from a Bluesky profile just linked" loading="lazy" />
+              <figcaption>Pick whose photo to use, including the profiles you just linked.</figcaption>
             </figure>
           </article>
 
