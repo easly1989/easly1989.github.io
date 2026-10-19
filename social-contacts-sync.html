@@ -288,15 +288,18 @@
           <article class="contact" style="--r: 0.5deg">
             <header><span class="avatar">R</span><div><h2>To review</h2><small>Feature</small></div></header>
             <p>
-              One card per contact, kept between sessions: the photos a sync found and the social
-              profiles that may be them. Tick the profiles that are right and pick one photo among
-              every source; one click links them and applies it. The suggestions come from your own
+              One card per contact, kept between sessions: every contact still without a photo, the
+              photos a sync found and the social profiles that may be them. Filter by what a card
+              needs, or search by name. Tick the profiles that are right and pick one photo among
+              every source; only photos sharp enough and different from the current one are
+              offered, and one click links them and applies it. The suggestions come from your own
               Instagram and LinkedIn data exports and a public search on Bluesky, Mastodon and
-              GitHub. An experimental scan of your own followers is there too, off by default: it
-              goes against those sites' terms, and the app says so before it starts.
+              GitHub. A search by name and a scan of your own followers with your Instagram,
+              Facebook or LinkedIn login are there too, only when you start them: they go against
+              those sites' terms, and the app says so first.
             </p>
             <figure class="shot" style="--r: -1deg">
-              <img width="1280" height="800" src="assets/social-contacts-sync-sync-review.png" alt="To review with a contact's suggested Instagram, LinkedIn and Bluesky profiles and their photos" loading="lazy" />
+              <img width="1280" height="800" src="assets/social-contacts-sync-sync-review.png" alt="To review filtered to contacts without a photo, with a contact's suggested Instagram, LinkedIn and Bluesky profiles and their photos" loading="lazy" />
               <figcaption>Tick the ones that are right, pick whose photo to use.</figcaption>
             </figure>
           </article>
@@ -373,7 +376,8 @@
               your system's keychain, and the app connects only to Google, WhatsApp Web, Telegram,
               Gravatar (which receives a hash of each email address, not the address), the profile
               pages saved on your contacts, the public search of Bluesky, Mastodon and GitHub when
-              you run it, and GitHub to check for updates. It can also run as a self-hosted web app,
+              you run it, Instagram, Facebook and LinkedIn when you search or scan with your login,
+              and GitHub to check for updates. It can also run as a self-hosted web app,
               from one Docker container.
             </p>
           </article>
