@@ -21,7 +21,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&family=VT323&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
@@ -48,7 +48,7 @@
       .home-tape {
         position: absolute;
         left: 70px;
-        top: 34px;
+        top: 150px;
         transform: rotate(-2deg);
         transform-origin: left bottom;
         transition: transform 0.4s var(--ease-spring);
@@ -59,7 +59,7 @@
       .intro {
         position: absolute;
         left: 70px;
-        top: 168px;
+        top: 284px;
         width: 360px;
         padding: 1.3rem 1.4rem;
         transform: rotate(-1.5deg);
@@ -1345,6 +1345,404 @@
         opacity: 0;
       }
 
+      /* The old computer, pushed into the corner: the one thing on the bench that
+         stands up off it. Only its power switch does anything until it has booted;
+         then the screen and the keyboard open the terminal. Only on the bench,
+         never in the phone column. */
+      .pc {
+        position: absolute;
+        left: 22px;
+        top: 6px;
+        width: 92px;
+        height: 112px;
+        transform-style: preserve-3d;
+        transform: perspective(700px) rotateX(46deg) rotateZ(-26deg);
+      }
+      .pc span,
+      .pc button {
+        position: absolute;
+        display: block;
+      }
+      .pc .floor {
+        left: -6px;
+        top: -4px;
+        width: 108px;
+        height: 122px;
+        border-radius: 12px;
+        background: rgba(0, 0, 0, 0.32);
+        box-shadow: 0 0 16px 8px rgba(0, 0, 0, 0.28);
+      }
+      /* the case: 92 wide, 70 deep, 80 tall */
+      .pc .top {
+        left: 0;
+        top: 0;
+        width: 92px;
+        height: 70px;
+        border-radius: 3px;
+        background: linear-gradient(135deg, #e7dfcb, #d3c9b0);
+        transform: translateZ(80px);
+      }
+      .pc .front {
+        left: 0;
+        top: -10px;
+        width: 92px;
+        height: 80px;
+        border-radius: 3px 3px 0 0;
+        background: linear-gradient(#d9cfb6, #c6bb9f);
+        transform-origin: 50% 100%;
+        transform: rotateX(-90deg);
+      }
+      .pc .side {
+        left: 0;
+        top: 0;
+        width: 80px;
+        height: 70px;
+        background: linear-gradient(90deg, #a99f86, #b9af95);
+        transform-origin: 0 50%;
+        transform: rotateY(-90deg);
+      }
+      /* vents along the side */
+      .pc .side::after {
+        content: "";
+        position: absolute;
+        left: 46px;
+        right: 10px;
+        top: 12px;
+        bottom: 12px;
+        background: repeating-linear-gradient(#8d846f 0 2px, transparent 2px 6px);
+      }
+      .pc .glass {
+        left: 6px;
+        top: 6px;
+        width: 62px;
+        height: 46px;
+        overflow: hidden;
+        border-radius: 8px / 7px;
+        background: radial-gradient(ellipse at 50% 45%, #2b3a31, #10170f 78%);
+        box-shadow:
+          0 0 0 3px #35332d,
+          inset 0 0 8px rgba(0, 0, 0, 0.85);
+        view-transition-name: crt;
+      }
+      .pc .glass::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        background:
+          radial-gradient(ellipse 60% 40% at 28% 18%, rgba(255, 255, 255, 0.16), transparent 70%),
+          repeating-linear-gradient(transparent 0 1px, rgba(0, 0, 0, 0.3) 1px 2px);
+        pointer-events: none;
+      }
+      /* drawn at twice the size and shrunk, so the boot text stays crisp */
+      .pc .lit {
+        left: 0;
+        top: 0;
+        width: 124px;
+        height: 92px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 6px 8px 7px;
+        box-sizing: border-box;
+        background: radial-gradient(ellipse at 50% 45%, #0e3b1b, #03130a 82%);
+        color: #74ff95;
+        font: 11px/1 "VT323", monospace;
+        text-shadow: 0 0 3px rgba(90, 255, 130, 0.85);
+        white-space: pre;
+        transform-origin: 0 0;
+        transform: scale(0.5);
+        opacity: 0;
+      }
+      .pc.on .lit {
+        opacity: 1;
+        animation: crt-on 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+      }
+      .pc.off-ing .lit {
+        animation: crt-off 0.45s ease-in both;
+      }
+      @keyframes crt-on {
+        0%,
+        35% {
+          transform: scale(0.5, 0.005);
+          filter: brightness(4);
+        }
+        100% {
+          transform: scale(0.5);
+          filter: none;
+        }
+      }
+      @keyframes crt-off {
+        0% {
+          transform: scale(0.5);
+        }
+        55% {
+          transform: scale(0.5, 0.005);
+          filter: brightness(3);
+        }
+        100% {
+          transform: scale(0, 0.005);
+          filter: brightness(5);
+        }
+      }
+      /* warming up: the tube shows green bars before it finds the picture */
+      .pc .stripes {
+        inset: 0;
+        background: repeating-linear-gradient(90deg, rgba(110, 255, 150, 0.55) 0 7px, transparent 7px 16px);
+        opacity: 0;
+      }
+      .pc.warm .stripes {
+        animation: stripes 1.5s linear both;
+      }
+      @keyframes stripes {
+        0% {
+          opacity: 0.95;
+          background-position: 0 0;
+        }
+        30% {
+          opacity: 0.7;
+          background-position: 23px 0;
+        }
+        55% {
+          opacity: 0.85;
+          background-position: 41px 0;
+        }
+        100% {
+          opacity: 0;
+          background-position: 96px 0;
+        }
+      }
+      .pc .boot,
+      .pc .boot span {
+        position: static;
+        min-height: 1em;
+      }
+      .pc .boot .cur::after {
+        content: "\2588";
+        animation: blink 1s steps(1) 12;
+      }
+      @keyframes blink {
+        50% {
+          opacity: 0;
+        }
+      }
+      .pc .drive {
+        left: 8px;
+        top: 60px;
+        width: 44px;
+        height: 12px;
+        border-radius: 2px;
+        background: linear-gradient(#cfc6ae, #bcb298);
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
+      }
+      .pc .drive::before {
+        content: "";
+        position: absolute;
+        left: 4px;
+        right: 4px;
+        top: 5px;
+        height: 3px;
+        border-radius: 2px;
+        background: #2b2823;
+      }
+      .pc .busy {
+        left: 56px;
+        top: 64px;
+        width: 5px;
+        height: 3px;
+        background: #6a4a35;
+      }
+      .pc.reading .busy {
+        animation: busy 0.22s steps(1) 12;
+      }
+      @keyframes busy {
+        50% {
+          background: #ff9a4d;
+          box-shadow: 0 0 4px #ff9a4d;
+        }
+      }
+      /* the switch: a 24px target around a small rocker and its light */
+      .pc .power {
+        right: 0;
+        bottom: 0;
+        width: 24px;
+        height: 24px;
+        padding: 0;
+        border: 0;
+        background: none;
+        cursor: pointer;
+      }
+      .pc .power::before {
+        content: "";
+        position: absolute;
+        left: 7px;
+        top: 7px;
+        width: 9px;
+        height: 9px;
+        border-radius: 2px;
+        background: linear-gradient(#6b6458, #47423a);
+        box-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
+      }
+      .pc .power::after {
+        content: "";
+        position: absolute;
+        left: 18px;
+        top: 3px;
+        width: 3px;
+        height: 3px;
+        border-radius: 50%;
+        background: #4d5a4f;
+      }
+      .pc.on .power::after {
+        background: #7dff9b;
+        box-shadow: 0 0 4px #7dff9b;
+      }
+      .pc.dead .power::after {
+        animation: dead 0.5s steps(1) 2;
+      }
+      @keyframes dead {
+        0% {
+          background: #ff5a4e;
+          box-shadow: 0 0 5px #ff5a4e;
+        }
+      }
+      /* the keyboard: 100 wide, 34 deep, 8 tall, in front of the case */
+      .pc .kb {
+        left: -4px;
+        top: 78px;
+        width: 100px;
+        height: 34px;
+        border-radius: 3px;
+        background: linear-gradient(#d5cbb2, #c3b99e);
+        transform: translateZ(8px);
+      }
+      .pc .kb::before {
+        content: "";
+        position: absolute;
+        left: 6px;
+        right: 6px;
+        top: 4px;
+        height: 20px;
+        background:
+          linear-gradient(90deg, transparent 4px, #c9bfa4 4px) 0 0 / 5.5px 5px,
+          linear-gradient(transparent 4px, #c9bfa4 4px) 0 0 / 5.5px 5px,
+          linear-gradient(#f5f0e4, #dad2bf);
+      }
+      .pc .kb::after {
+        content: "";
+        position: absolute;
+        left: 30%;
+        right: 30%;
+        bottom: 4px;
+        height: 4px;
+        border-radius: 1px;
+        background: #efe9dc;
+      }
+      .pc .kb-front {
+        left: -4px;
+        top: 104px;
+        width: 100px;
+        height: 8px;
+        background: #b3a98e;
+        transform-origin: 50% 100%;
+        transform: rotateX(-90deg);
+      }
+      .pc .kb-side {
+        left: -4px;
+        top: 78px;
+        width: 8px;
+        height: 34px;
+        background: #9c927a;
+        transform-origin: 0 50%;
+        transform: rotateY(-90deg);
+      }
+      /* once it waits at the prompt, the screen and the keyboard take you in */
+      .pc .use {
+        inset: 0;
+        padding: 0;
+        border: 0;
+        background: none;
+        cursor: pointer;
+      }
+      .pc .use:disabled {
+        cursor: default;
+      }
+      .pc.typing .kb::before {
+        transform: translateY(0.5px);
+      }
+      /* broken: someone reached the terminal without it. The glass is cracked, the
+         top is scorched, and it smokes a little, now and whenever it is switched */
+      .pc .crack {
+        position: absolute;
+        inset: 0;
+        z-index: 3;
+        width: 100%;
+        height: 100%;
+        fill: none;
+        stroke: rgba(235, 240, 235, 0.8);
+        stroke-width: 0.8;
+        display: none;
+      }
+      .pc .crack path {
+        vector-effect: non-scaling-stroke;
+      }
+      .pc .crack path + path {
+        fill: rgba(235, 240, 235, 0.25);
+      }
+      .pc.broken .crack {
+        display: block;
+      }
+      .pc.broken .glass {
+        background: radial-gradient(ellipse at 60% 40%, #1d231f, #0a0d0b 78%);
+      }
+      .pc.broken .top {
+        background:
+          radial-gradient(ellipse 34% 40% at 46% 42%, rgba(40, 30, 20, 0.55), transparent 70%),
+          linear-gradient(135deg, #ddd4bd, #c7bca1);
+      }
+      .fumes {
+        position: absolute;
+        left: 44px;
+        top: 12px;
+        width: 50px;
+        height: 30px;
+        pointer-events: none;
+      }
+      .fumes i {
+        position: absolute;
+        left: 10px;
+        top: 4px;
+        width: 26px;
+        height: 22px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(200, 200, 195, 0.75), rgba(170, 170, 165, 0) 70%);
+        opacity: 0;
+      }
+      .fumes.puff i {
+        animation: puff 2.6s ease-out 3 both;
+      }
+      .fumes.puff i:nth-child(2) {
+        left: 20px;
+        animation-delay: 0.7s;
+      }
+      .fumes.puff i:nth-child(3) {
+        left: 2px;
+        animation-delay: 1.4s;
+      }
+      @keyframes puff {
+        0% {
+          opacity: 0;
+          transform: translate(0, 0) scale(0.4);
+        }
+        20% {
+          opacity: 0.85;
+        }
+        100% {
+          opacity: 0;
+          transform: translate(52px, 16px) scale(2.4);
+        }
+      }
+
       /* Phones: the bench becomes a column you scroll down. */
       @media (max-width: 900px) {
         .fit {
@@ -1386,7 +1784,8 @@
         .mug {
           margin: 0 30px 3rem 0;
         }
-        .loose {
+        .loose,
+        .pc {
           display: none;
         }
       }
@@ -1424,7 +1823,7 @@
             data-open="camera"
             data-open-ms="1100"
             data-cat="push sit"
-            style="--x: 96px; --y: 486px; --w: 220px; --h: 172px; --r: -6deg"
+            style="--x: 96px; --y: 512px; --w: 220px; --h: 172px; --r: -6deg"
             aria-label="About me: take a photo"
           >
             <span class="film" aria-hidden="true"></span>
@@ -1562,6 +1961,26 @@
           <span class="loose eraser" data-cat="knock" style="left: 380px; top: 812px; --r: 12deg" aria-hidden="true"></span>
           <span class="loose clip" data-cat="knock" style="left: 784px; top: 290px; --r: 30deg" aria-hidden="true"></span>
           <span class="loose coin" data-cat="knock" style="left: 1060px; top: 560px" aria-hidden="true"></span>
+          <div class="pc" data-cat-avoid>
+            <span class="floor" aria-hidden="true"></span>
+            <span class="top" aria-hidden="true"></span>
+            <span class="side" aria-hidden="true"></span>
+            <span class="kb-side" aria-hidden="true"></span>
+            <span class="kb-front" aria-hidden="true"></span>
+            <span class="kb"><button class="use" type="button" disabled aria-label="Use the old computer"></button></span>
+            <span class="front">
+              <span class="glass" aria-hidden="true">
+                <span class="lit"><span class="stripes"></span><span class="boot"></span></span>
+                <svg class="crack" viewBox="0 0 100 75" preserveAspectRatio="none"><path d="M62 30 48 8M62 30 80 3M62 30 97 21M62 30 93 54M62 30 70 74M62 30 39 67M62 30 6 50M62 30 19 16M55 19 45 25M73 15 83 23M79 41 89 35M65 50 54 57M49 45 37 37M28 58 22 66M86 62 95 66" /><path d="M58 26 66 24 69 33 60 37Z" /></svg>
+                <button class="use" type="button" disabled tabindex="-1"></button>
+              </span>
+              <span class="drive" aria-hidden="true"></span>
+              <span class="busy" aria-hidden="true"></span>
+              <button class="power" type="button" aria-pressed="false" aria-label="Old computer's power switch"></button>
+            </span>
+            <span class="vh" aria-live="polite"></span>
+          </div>
+          <span class="fumes" aria-hidden="true"><i></i><i></i><i></i></span>
         </main>
       </div>
     </div>
@@ -1615,6 +2034,186 @@
           location.href = "mailto:" + email + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
           var d = f.closest("dialog");
           if (d) d.close();
+        });
+      })();
+    </script>
+    <script src="crt.js"></script>
+    <script>
+      // The old computer. Only its switch does anything until it has booted; then
+      // the screen and the keyboard open the terminal. It stays on for the visit,
+      // unless someone went to the terminal without it: then it never starts again.
+      (function () {
+        var pc = document.querySelector(".pc");
+        if (!pc) return;
+        var reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var power = pc.querySelector(".power");
+        var uses = pc.querySelectorAll(".use");
+        var boot = pc.querySelector(".boot");
+        var says = pc.querySelector("[aria-live]");
+        var fumes = document.querySelector(".fumes");
+        var timers = [];
+        var lines = [
+          [0, "BENCH BIOS 1.07"],
+          [200, "MEMORY TEST 640K OK"],
+          [560, "FLOPPY A: 360K OK"],
+          [1100, "BOOT FROM A:"],
+          [1300, "7C00 EA 05 7C 00 00"],
+          [1380, "7C05 31 C0 8E D8 8E"],
+          [1460, "7C0A D0 BC 00 7C FB"],
+          [1900, "BENCH/OS 1.07"],
+          [2500, ""],
+          [2600, "carlo@bench:~$ ", true],
+        ];
+        function store(area, key, value) {
+          try {
+            if (value) window[area].setItem(key, value);
+            else window[area].removeItem(key);
+          } catch (e) {}
+        }
+        function fried() {
+          try {
+            return !!localStorage.getItem("pc:fried");
+          } catch (e) {
+            return false;
+          }
+        }
+        // cracked, scorched, and a few puffs of smoke that stop by themselves
+        function broken() {
+          pc.classList.add("broken");
+          fumes.classList.remove("puff");
+          void fumes.offsetWidth;
+          fumes.classList.add("puff");
+        }
+        function later(fn, ms) {
+          timers.push(setTimeout(fn, ms));
+        }
+        function stop() {
+          timers.forEach(clearTimeout);
+          timers = [];
+        }
+        function usable(yes) {
+          [].forEach.call(uses, function (b) {
+            b.disabled = !yes;
+          });
+        }
+        function print(text, cursor) {
+          var l = document.createElement("span");
+          l.textContent = text;
+          if (cursor) l.className = "cur";
+          boot.appendChild(l);
+        }
+        function on(instant) {
+          stop();
+          boot.textContent = "";
+          pc.classList.remove("off-ing");
+          pc.classList.add("on");
+          power.setAttribute("aria-pressed", "true");
+          if (instant) {
+            lines.forEach(function (l) {
+              print(l[1], l[2]);
+            });
+            return ready();
+          }
+          pc.classList.add("warm", "reading");
+          // it boots from drive A:
+          later(function () {
+            CRT.floppy(1.1);
+          }, 2100);
+          says.textContent = "The old computer starts.";
+          later(function () {
+            pc.classList.remove("warm");
+          }, 1500);
+          lines.forEach(function (l) {
+            later(function () {
+              print(l[1], l[2]);
+            }, 1000 + l[0]);
+          });
+          later(ready, 3700);
+        }
+        function ready() {
+          pc.classList.remove("reading");
+          pc.classList.add("ready");
+          usable(true);
+          says.textContent = "The old computer waits at a prompt.";
+          store("sessionStorage", "pc:on", "1");
+        }
+        function off(instant) {
+          stop();
+          usable(false);
+          pc.classList.remove("ready", "reading", "warm", "typing");
+          if (pc.classList.contains("on") && !instant) {
+            pc.classList.add("off-ing");
+            later(function () {
+              pc.classList.remove("on", "off-ing");
+              boot.textContent = "";
+            }, reduced ? 0 : 450);
+          } else {
+            pc.classList.remove("on");
+            boot.textContent = "";
+          }
+          power.setAttribute("aria-pressed", "false");
+          store("sessionStorage", "pc:on", "");
+        }
+        power.addEventListener("click", function () {
+          if (fried()) {
+            // someone cheated once: the light blinks red, it smokes, and that is all
+            pc.classList.remove("dead");
+            void pc.offsetWidth;
+            pc.classList.add("dead");
+            broken();
+            CRT.fizz();
+            says.textContent = "Nothing happens. It smells of burnt dust.";
+            return;
+          }
+          if (pc.classList.contains("on")) {
+            off();
+            CRT.off();
+            says.textContent = "The old computer is off.";
+          } else {
+            CRT.on();
+            on(reduced);
+          }
+        });
+        function use() {
+          if (!pc.classList.contains("ready") || pc.classList.contains("typing")) return;
+          var go = function () {
+            location.href = "terminal.html";
+          };
+          if (reduced) return go();
+          // a few keys go down, then the screen takes the whole window
+          var prompt = boot.querySelector(".cur");
+          pc.classList.add("typing");
+          "tty".split("").forEach(function (c, i) {
+            later(function () {
+              prompt.textContent += c;
+              CRT.key();
+            }, 60 * i);
+          });
+          later(go, 300);
+        }
+        [].forEach.call(uses, function (b) {
+          b.addEventListener("click", use);
+        });
+        if (fried()) {
+          store("sessionStorage", "pc:on", "");
+          broken();
+        } else
+          try {
+            if (sessionStorage.getItem("pc:on")) {
+              on(true);
+              CRT.hum(true);
+            }
+          } catch (e) {}
+        // back from the terminal, out of the back/forward cache
+        addEventListener("pageshow", function (e) {
+          if (!e.persisted) return;
+          if (fried()) {
+            off(true);
+            return broken();
+          }
+          if (!pc.classList.contains("typing")) return;
+          pc.classList.remove("typing");
+          boot.querySelector(".cur").textContent = "carlo@bench:~$ ";
         });
       })();
     </script>
