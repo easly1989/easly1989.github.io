@@ -6,7 +6,7 @@
     <title>CloudBank — Self-hosted personal finance manager · Carlo Ruggiero</title>
     <meta
       name="description"
-      content="CloudBank is a free, open-source, self-hosted personal finance manager — a production-ready web port of HomeBank. Accounts, a powerful register, scheduled transactions, budgets, rich reports, automatic bank sync, bank mails and a customizable dashboard."
+      content="CloudBank is a free, open-source, self-hosted personal finance manager — a production-ready web port of HomeBank. Accounts, a powerful register, scheduled transactions, budgets, rich reports, automatic bank sync, bank mails, notifications and a customizable dashboard."
     />
     <meta name="theme-color" content="#22594b" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#12352d" media="(prefers-color-scheme: dark)" />
@@ -101,6 +101,37 @@
         width: 88%;
         margin: 0.4rem auto 0;
       }
+      /* the inside cover: what the ledger holds, and on which page */
+      .contents h2 {
+        margin-bottom: 0.5rem;
+      }
+      .contents h3 {
+        margin: 0.5rem 0 0.15rem;
+        font-size: 0.86rem;
+        color: var(--paper-ink-2);
+      }
+      .contents .owner {
+        position: absolute;
+        bottom: 1.1rem;
+        margin: 0;
+        font-size: 0.8rem;
+        font-style: italic;
+        color: var(--paper-ink-2);
+      }
+      @media (max-width: 900px) {
+        .leaf.cover {
+          display: block;
+          width: auto;
+          height: auto;
+        }
+        .leaf.cover > .front {
+          display: none;
+        }
+        .contents .owner {
+          position: static;
+          margin-top: 1rem;
+        }
+      }
       /* what this page becomes from, on the bench */
       #ledger {
         view-transition-name: cloudbank;
@@ -123,7 +154,7 @@
       <main>
         <section class="paper label-sheet" style="--c: var(--cloudbank)" data-cat="sit">
           <img class="mark" src="logo.svg" alt="" width="56" height="56" />
-          <p class="state">Shipping, <span data-cloudbank="stable">v3.9.0</span>. Open source under AGPL-3.0.</p>
+          <p class="state">Shipping, <span data-cloudbank="stable">v3.10.0</span>. Open source under AGPL-3.0.</p>
           <h1>CloudBank</h1>
           <p class="lede">
             Your money, self-hosted. A free personal finance manager — a from-scratch web port of
@@ -147,13 +178,37 @@
                 <img src="logo.svg" alt="" />
                 <div><b>CloudBank</b><span>The ledger. Open it, or press the right arrow.</span></div>
               </div>
-              <div class="page back endpaper" data-label="Inside cover">
-                <div class="ex-libris">
-                  <small>This ledger belongs to</small>
-                  <b>whoever runs it</b>
-                  <p>Your data stays in a SQLite file on a server <strong>you</strong> control.</p>
-                </div>
-              </div>
+              <section class="page back contents" data-label="Contents">
+                <h2>Contents</h2>
+                <h3>What it does</h3>
+                <ol class="toc">
+                  <li><a href="#every-account-type"><span>Accounts</span><em>3</em></a></li>
+                  <li><a href="#transactions"><span>Transactions</span><em>3</em></a></li>
+                  <li><a href="#powerful-register"><span>The register</span><em>3</em></a></li>
+                  <li><a href="#bills-on-a-calendar"><span>Bills on a calendar</span><em>3</em></a></li>
+                  <li><a href="#budgets-and-reports-that-answer-first"><span>Budgets and reports</span><em>3</em></a></li>
+                  <li><a href="#savings-goals"><span>Savings goals</span><em>4</em></a></li>
+                  <li><a href="#vehicles"><span>Vehicles</span><em>4</em></a></li>
+                  <li><a href="#the-wallet-s-lists"><span>The wallet's lists</span><em>4</em></a></li>
+                  <li><a href="#import-and-export"><span>Import and export</span><em>4</em></a></li>
+                  <li><a href="#automatic-bank-sync"><span>Automatic bank sync</span><em>5</em></a></li>
+                  <li><a href="#multi-currency-multi-user"><span>Currencies and users</span><em>5</em></a></li>
+                  <li><a href="#six-languages"><span>Six languages</span><em>5</em></a></li>
+                  <li><a href="#privacy-mode"><span>Privacy mode</span><em>5</em></a></li>
+                  <li><a href="#yours"><span>A dashboard of your own</span><em>6</em></a></li>
+                  <li><a href="#mail"><span>Bank mails</span><em>8</em></a></li>
+                  <li><a href="#notify"><span>Notifications</span><em>11</em></a></li>
+                  <li><a href="#secure"><span>Security and sign-in</span><em>13</em></a></li>
+                  <li><a href="#ai"><span>Optional AI</span><em>14</em></a></li>
+                </ol>
+                <h3>Getting it</h3>
+                <ol class="toc">
+                  <li><a href="#demo"><span>Try the demo</span><em>1</em></a></li>
+                  <li><a href="#run"><span>Run it yourself</span><em>15</em></a></li>
+                  <li><a href="#support"><span>Support it</span><em>16</em></a></li>
+                </ol>
+                <p class="owner">This ledger belongs to whoever runs it.</p>
+              </section>
             </div>
 
             <div class="leaf">
@@ -201,21 +256,21 @@
               <section class="page front" data-label="Features">
                 <h2>Features</h2>
                 <ul class="rows">
-                  <li><b>Every account type</b><span>Bank, cash, checking, savings, credit card, liability, asset and investment — each with its own currency, payment mode, and today's and a projected balance.</span></li>
-                  <li><b>Transactions</b><span>12 payment types, the cleared/reconciled lifecycle, category splits, free tags, internal and cross-currency transfers, bulk edit and duplicate detection.</span></li>
-                  <li><b>Powerful register</b><span>Running balance, rich filtering, full-text search, per-user columns, a live selection total and reconciliation. New entries go in a sheet beside the ledger.</span></li>
-                  <li><b>Bills on a calendar</b><span>Scheduled transactions with automatic posting, on the day each falls: still to pay, overdue, and what needs you, in one click.</span></li>
-                  <li><b>Budgets and reports that answer first</b><span>Planned next to spent, and reports for where the money went, cash flow, balances and what a car costs, with saved views and CSV/PNG downloads.</span></li>
+                  <li id="every-account-type"><b>Every account type</b><span>Bank, cash, checking, savings, credit card, liability, asset and investment — each with its own currency, payment mode, and today's and a projected balance.</span></li>
+                  <li id="transactions"><b>Transactions</b><span>12 payment types, the cleared/reconciled lifecycle, category splits, free tags, internal and cross-currency transfers, bulk edit and duplicate detection.</span></li>
+                  <li id="powerful-register"><b>Powerful register</b><span>Running balance, rich filtering, full-text search, per-user columns, a live selection total and reconciliation. New entries go in a sheet beside the ledger.</span></li>
+                  <li id="bills-on-a-calendar"><b>Bills on a calendar</b><span>Scheduled transactions with automatic posting, on the day each falls: still to pay, overdue, and what needs you. It also finds payments that repeat on their own, shows what each costs in a year, and puts them in your phone's calendar.</span></li>
+                  <li id="budgets-and-reports-that-answer-first"><b>Budgets and reports that answer first</b><span>Planned next to spent, and reports for where the money went, cash flow, balances and what a car costs, with saved views and CSV/PNG downloads.</span></li>
                 </ul>
                 <span class="folio">3</span>
               </section>
               <section class="page back" data-label="Features">
                 <h2>More of it</h2>
                 <ul class="rows">
-                  <li><b>Savings goals</b><span>What you have set aside, what to put aside each month to meet every date, and what is free to spend once it is.</span></li>
-                  <li><b>Vehicles</b><span>What each car, motorbike or van costs to run over the last year: fuel, kilometres, cost per kilometre and consumption.</span></li>
-                  <li><b>The wallet's lists</b><span>Categories, payees, tags, rules, templates and currencies each get a page, with what every entry did over 12 months.</span></li>
-                  <li><b>Import and export</b><span>Import HomeBank <code>.xhb</code>, QIF, OFX/QFX, CSV and CAMT.053 with an assistant; export back to <code>.xhb</code>, QIF and CSV.</span></li>
+                  <li id="savings-goals"><b>Savings goals</b><span>What you have set aside, what to put aside each month to meet every date, and what is free to spend once it is.</span></li>
+                  <li id="vehicles"><b>Vehicles</b><span>What each car, motorbike or van costs to run over the last year: fuel, kilometres, cost per kilometre and consumption.</span></li>
+                  <li id="the-wallet-s-lists"><b>The wallet's lists</b><span>Categories, payees, tags, rules, templates and currencies each get a page, with what every entry did over 12 months.</span></li>
+                  <li id="import-and-export"><b>Import and export</b><span>Import HomeBank <code>.xhb</code>, QIF, OFX/QFX, CSV and CAMT.053 with an assistant; export back to <code>.xhb</code>, QIF and CSV.</span></li>
                 </ul>
                 <span class="folio">4</span>
               </section>
@@ -225,10 +280,10 @@
               <section class="page front" data-label="Features">
                 <h2>And the rest</h2>
                 <ul class="rows">
-                  <li><b>Automatic bank sync</b><span>New transactions straight from your bank, merged with what you entered and run through your rules — via SimpleFIN, Enable Banking or, experimentally, Pluggy. A review page settles the rest.</span></li>
-                  <li><b>Multi-currency, multi-user</b><span>Manual and online (ECB, frankfurter.app) exchange rates, admin-managed users and a responsive UI.</span></li>
-                  <li><b>Six languages</b><span>English and Italian, plus Spanish, French, German and Brazilian Portuguese in beta, picked from the browser on a first visit.</span></li>
-                  <li><b>Privacy mode</b><span>One eye beside the ? of every page, or Shift+H, blurs amounts, balances, memos and payees, charts included.</span></li>
+                  <li id="automatic-bank-sync"><b>Automatic bank sync</b><span>New transactions straight from your bank, merged with what you entered and run through your rules — via SimpleFIN, Enable Banking or, experimentally, Pluggy. A review page settles the rest.</span></li>
+                  <li id="multi-currency-multi-user"><b>Multi-currency, multi-user</b><span>Manual and online (ECB, frankfurter.app) exchange rates, admin-managed users and a responsive UI.</span></li>
+                  <li id="six-languages"><b>Six languages</b><span>English and Italian, plus Spanish, French, German and Brazilian Portuguese in beta, picked from the browser on a first visit.</span></li>
+                  <li id="privacy-mode"><b>Privacy mode</b><span>One eye beside the ? of every page, or Shift+H, blurs amounts, balances, memos and payees, charts included.</span></li>
                 </ul>
                 <span class="folio">5</span>
               </section>
@@ -305,18 +360,46 @@
             </div>
 
             <div class="leaf">
+              <section class="page front" id="notify" data-label="Notifications">
+                <h2>Notifications</h2>
+                <p>
+                  A bell on every page keeps what happened: a bill that is due, a sign-in from a new
+                  device, a mailbox that stopped reading, a large expense. The same news can reach
+                  you outside CloudBank too.
+                </p>
+                <ul class="rows">
+                  <li><b>Where you will see it</b><span>Push, email, Matrix, Telegram, Discord, Slack, ntfy, Gotify or a webhook for Home Assistant, each checked with a test message.</span></li>
+                  <li><b>What goes where</b><span>Bills, security, problems, money and summaries: each event goes to the channels you pick for it.</span></li>
+                  <li><b>And when</b><span>One daily digest instead of a message each time, a weekly or monthly summary, and quiet hours at night.</span></li>
+                </ul>
+                <p style="font-size: 0.9rem">
+                  Every channel, step by step:
+                  <a href="https://github.com/easly1989/cloudbank/blob/main/docs/notifications.md" rel="noopener">the notifications guide</a>.
+                </p>
+                <span class="folio">11</span>
+              </section>
+              <section class="page back" data-label="Notifications">
+                <h2>The bell, and where it rings</h2>
+                <div class="shots one">
+                  <figure class="shot" style="--r: 1.2deg"><img width="1980" height="1290" src="assets/cloudbank-bell.png" alt="The CloudBank dashboard with the bell open: a large expense, a budget at 80% and bills due" loading="lazy" /><figcaption>The bell: what happened, newest first.</figcaption></figure>
+                  <figure class="shot" style="--r: -1.4deg"><img width="1980" height="1290" src="assets/cloudbank-notifications.png" alt="CloudBank's notification settings with the channels and the events" loading="lazy" /><figcaption>Settings: the channels, and which events reach each one.</figcaption></figure>
+                </div>
+                <span class="folio">12</span>
+              </section>
+            </div>
+
+            <div class="leaf">
               <section class="page front" id="secure" data-label="Security">
                 <h2>Secure, and on every device</h2>
                 <ul class="rows">
                   <li><b>Two-factor auth</b><span>Optional per-user TOTP — QR enrolment, recovery codes and a two-step login.</span></li>
                   <li><b>Single sign-on</b><span>Authelia, Authentik, Keycloak or Google, next to passwords or in their place.</span></li>
                   <li><b>Installable PWA</b><span>Install CloudBank to your phone's home screen or your desktop, with an offline shell.</span></li>
-                  <li><b>Web push reminders</b><span>Opt-in notifications for schedules and bills that are due.</span></li>
                   <li><b>Personal API tokens</b><span>Scoped, revocable bearer tokens; the secret is shown once.</span></li>
                   <li><b>Encrypted secrets at rest</b><span>Set <code>CB_SECRET_KEY</code> to encrypt bank credentials, mailbox passwords, AI keys and 2FA secrets with AES-256-GCM.</span></li>
                   <li><b>Told when to update</b><span>A new build is offered, not swapped in under you; admins hear when a newer CloudBank is out.</span></li>
                 </ul>
-                <span class="folio">11</span>
+                <span class="folio">13</span>
               </section>
               <section class="page back" id="ai" data-label="AI">
                 <h2>Optional AI, with your own key</h2>
@@ -334,7 +417,7 @@
                   <figure class="shot" style="--r: -1.5deg"><img width="1980" height="1290" src="assets/cloudbank-languages.png" alt="CloudBank settings with the six languages" loading="lazy" /><figcaption>Six languages, each by its own name.</figcaption></figure>
                   <figure class="shot" style="--r: 2deg"><img width="1980" height="1290" src="assets/cloudbank-export.png" alt="CloudBank import and export settings" loading="lazy" /><figcaption>Import, export and full backups.</figcaption></figure>
                 </div>
-                <span class="folio">12</span>
+                <span class="folio">14</span>
               </section>
             </div>
 
@@ -359,10 +442,10 @@ volumes:
                 <pre>docker compose up -d
 # open http://localhost:8080</pre>
                 <table>
-                  <tr><th scope="row">Stable, <code>:main</code></th><td><span data-cloudbank="stable">v3.9.0</span>, published <span data-cloudbank-date="stable">17 October 2026</span></td></tr>
+                  <tr><th scope="row">Stable, <code>:main</code></th><td><span data-cloudbank="stable">v3.10.0</span>, published <span data-cloudbank-date="stable">20 October 2026</span></td></tr>
                   <tr><th scope="row">Nightly, <code>:latest</code></th><td><span data-cloudbank="nightly">built from main</span>, published <span data-cloudbank-date="nightly">on every change</span></td></tr>
                 </table>
-                <span class="folio">13</span>
+                <span class="folio">15</span>
               </section>
               <section class="page back" id="support" data-label="Support">
                 <div class="note" style="margin-top: 0">
@@ -382,7 +465,7 @@ volumes:
                   <a class="btn" href="donate.html">Donate</a>
                   <a class="btn quiet" href="https://github.com/sponsors/easly1989" rel="noopener">GitHub Sponsors</a>
                 </p>
-                <span class="folio">14</span>
+                <span class="folio">16</span>
               </section>
             </div>
 
@@ -406,10 +489,11 @@ volumes:
               <button type="button" data-go="4">Make it yours</button>
               <button type="button" data-go="5">Bank mails</button>
               <button type="button" data-go="6">Screens</button>
-              <button type="button" data-go="6">Security</button>
-              <button type="button" data-go="7">AI</button>
-              <button type="button" data-go="7">Run it</button>
-              <button type="button" data-go="8">Support</button>
+              <button type="button" data-go="6">Notifications</button>
+              <button type="button" data-go="7">Security</button>
+              <button type="button" data-go="8">AI</button>
+              <button type="button" data-go="8">Run it</button>
+              <button type="button" data-go="9">Support</button>
             </nav>
           </div>
         </div>

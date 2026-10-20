@@ -182,6 +182,25 @@
     tabs.forEach(function (tb) {
       tb.addEventListener("click", function () { go(+tb.dataset.go); });
     });
+    // A contents page: each link turns to the page it names and marks the row.
+    [].forEach.call(book.querySelectorAll(".toc a[href^='#']"), function (a) {
+      var target = document.getElementById(a.getAttribute("href").slice(1));
+      if (!target) return;
+      var folio = target.closest(".page").querySelector(".folio");
+      var num = a.querySelector("em");
+      if (folio && num) num.textContent = folio.textContent; // so the number never drifts
+      a.addEventListener("click", function (e) {
+        var mark = function () {
+          target.classList.remove("marked");
+          void target.offsetWidth;
+          target.classList.add("marked");
+        };
+        if (narrow.matches) return mark(); // a column of pages: the anchor scrolls there
+        e.preventDefault();
+        go(book.pageOf(target));
+        setTimeout(mark, reduced ? 0 : 900);
+      });
+    });
     addEventListener("keydown", function (e) {
       if (e.target.closest && e.target.closest("input, textarea, dialog")) return;
       if (e.key === "ArrowRight") go(turned + 1);
