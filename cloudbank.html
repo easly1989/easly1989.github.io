@@ -6,7 +6,7 @@
     <title>CloudBank — Self-hosted personal finance manager · Carlo Ruggiero</title>
     <meta
       name="description"
-      content="CloudBank is a free, open-source, self-hosted personal finance manager — a production-ready web port of HomeBank. Accounts, a powerful register, scheduled transactions, budgets, rich reports, automatic bank sync, bank mails, notifications and a customizable dashboard."
+      content="CloudBank is a free, open-source, self-hosted personal finance manager — a production-ready web port of HomeBank. Accounts, a powerful register, scheduled transactions, budgets, rich reports, automatic bank sync, bank mails, notifications, an optional AI with your own key and a customizable dashboard."
     />
     <meta name="theme-color" content="#22594b" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#12352d" media="(prefers-color-scheme: dark)" />
@@ -200,12 +200,13 @@
                   <li><a href="#notify"><span>Notifications</span><em>11</em></a></li>
                   <li><a href="#secure"><span>Security and sign-in</span><em>13</em></a></li>
                   <li><a href="#ai"><span>Optional AI</span><em>14</em></a></li>
+                  <li><a href="#phone"><span>Phone and Home Assistant</span><em>16</em></a></li>
                 </ol>
                 <h3>Getting it</h3>
                 <ol class="toc">
                   <li><a href="#demo"><span>Try the demo</span><em>1</em></a></li>
-                  <li><a href="#run"><span>Run it yourself</span><em>15</em></a></li>
-                  <li><a href="#support"><span>Support it</span><em>16</em></a></li>
+                  <li><a href="#run"><span>Run it yourself</span><em>17</em></a></li>
+                  <li><a href="#support"><span>Support it</span><em>18</em></a></li>
                 </ol>
                 <p class="owner">This ledger belongs to whoever runs it.</p>
               </section>
@@ -394,8 +395,8 @@
                 <ul class="rows">
                   <li><b>Two-factor auth</b><span>Optional per-user TOTP — QR enrolment, recovery codes and a two-step login.</span></li>
                   <li><b>Single sign-on</b><span>Authelia, Authentik, Keycloak or Google, next to passwords or in their place.</span></li>
-                  <li><b>Installable PWA</b><span>Install CloudBank to your phone's home screen or your desktop, with an offline shell.</span></li>
-                  <li><b>Personal API tokens</b><span>Scoped, revocable bearer tokens; the secret is shown once.</span></li>
+                  <li><b>Installable PWA</b><span>Install CloudBank to your phone's home screen or your desktop, with an offline shell and shortcuts for a new expense or income.</span></li>
+                  <li><b>Personal API tokens</b><span>Scoped, revocable bearer tokens; the secret is shown once. Home Assistant reads a wallet summary with one.</span></li>
                   <li><b>Encrypted secrets at rest</b><span>Set <code>CB_SECRET_KEY</code> to encrypt bank credentials, mailbox passwords, AI keys and 2FA secrets with AES-256-GCM.</span></li>
                   <li><b>Told when to update</b><span>A new build is offered, not swapped in under you; admins hear when a newer CloudBank is out.</span></li>
                 </ul>
@@ -404,20 +405,51 @@
               <section class="page back" id="ai" data-label="AI">
                 <h2>Optional AI, with your own key</h2>
                 <p>
-                  Entirely optional and provider-agnostic: your own API key stays server-side,
-                  write-only, never returned to the browser. Leave it off and CloudBank makes no AI
-                  calls at all.
+                  Off until you set it up, with any OpenAI-compatible service or a model on your own
+                  network. CloudBank works out every number; the model only writes the words, and
+                  nothing it proposes is saved until you save it.
                 </p>
                 <ul class="rows">
-                  <li><b>Category suggestions</b><span>A nudge from the description, not an autopilot.</span></li>
-                  <li><b>Natural-language entry</b><span>Type "coffee 3.50 yesterday" and review a pre-filled transaction.</span></li>
-                  <li><b>Reading bank mails</b><span>The mails no pattern reads, with card numbers and IBANs hidden first.</span></li>
+                  <li><b>Reports</b><span>A report on each month, and on each week and year if you like, with <em>Why?</em> to see the numbers it was given.</span></li>
+                  <li><b>Proposals</b><span>Budgets from what you really spend, subscriptions that cost more, categories grown lately, goals falling behind.</span></li>
+                  <li><b>Unusual transactions</b><span>A payee far over its usual amount, a large new payee, a charge taken twice.</span></li>
+                  <li><b>Quick entry</b><span>Type "coffee 3.50 yesterday", or share a notification, and review it.</span></li>
+                  <li><b>Bank mails</b><span>Mails no pattern reads, card numbers and IBANs hidden first.</span></li>
+                  <li><b>What it sends</b><span>Each job says it before you switch it on, and the last 90 days are kept word for word. Your key never leaves the server.</span></li>
                 </ul>
+                <p style="font-size: 0.9rem">
+                  Setting it up, and what each job sees:
+                  <a href="https://github.com/easly1989/cloudbank/blob/main/docs/ai.md" rel="noopener">the AI guide</a>.
+                </p>
+                <span class="folio">14</span>
+              </section>
+            </div>
+
+            <div class="leaf">
+              <section class="page front" data-label="AI">
+                <h2>What the AI writes</h2>
+                <div class="shots one">
+                  <figure class="shot" style="--r: -1.2deg"><img width="1980" height="1290" src="assets/cloudbank-ai-insights.png" alt="CloudBank's AI insights: August's report and five budgets to review, each with Apply" loading="lazy" /><figcaption>A month in short, and budgets from what you spend.</figcaption></figure>
+                  <figure class="shot" style="--r: 1.4deg"><img width="1980" height="1290" src="assets/cloudbank-ai-unusual.png" alt="CloudBank's Review page with five unusual transactions, each with Open in the register and It's fine" loading="lazy" /><figcaption>What looks unusual, on Review.</figcaption></figure>
+                </div>
+                <span class="folio">15</span>
+              </section>
+              <section class="page back" id="phone" data-label="Phone">
+                <h2>From your phone, and Home Assistant</h2>
+                <ul class="rows">
+                  <li><b>Two taps to add</b><span>A long press on the installed app's icon offers New expense and New income, in your language.</span></li>
+                  <li><b>Share a notification</b><span>On Android, share the bank's notification with CloudBank: the entry sheet opens with its text, read by the AI if you use it.</span></li>
+                  <li><b>Home Assistant sensors</b><span>Bills due, this month's budget and what waits on Review, read with an API token; balances only if you ask.</span></li>
+                </ul>
+                <p style="font-size: 0.9rem">
+                  The sensors' YAML:
+                  <a href="https://github.com/easly1989/cloudbank/blob/main/docs/home-assistant.md" rel="noopener">the Home Assistant guide</a>.
+                </p>
                 <div class="shots" style="margin-top: 1rem">
                   <figure class="shot" style="--r: -1.5deg"><img width="1980" height="1290" src="assets/cloudbank-languages.png" alt="CloudBank settings with the six languages" loading="lazy" /><figcaption>Six languages, each by its own name.</figcaption></figure>
                   <figure class="shot" style="--r: 2deg"><img width="1980" height="1290" src="assets/cloudbank-export.png" alt="CloudBank import and export settings" loading="lazy" /><figcaption>Import, export and full backups.</figcaption></figure>
                 </div>
-                <span class="folio">14</span>
+                <span class="folio">16</span>
               </section>
             </div>
 
@@ -442,10 +474,10 @@ volumes:
                 <pre>docker compose up -d
 # open http://localhost:8080</pre>
                 <table>
-                  <tr><th scope="row">Stable, <code>:main</code></th><td><span data-cloudbank="stable">v3.10.0</span>, published <span data-cloudbank-date="stable">20 October 2026</span></td></tr>
+                  <tr><th scope="row">Stable, <code>:main</code></th><td><span data-cloudbank="stable">v3.11.0</span>, published <span data-cloudbank-date="stable">21 October 2026</span></td></tr>
                   <tr><th scope="row">Nightly, <code>:latest</code></th><td><span data-cloudbank="nightly">built from main</span>, published <span data-cloudbank-date="nightly">on every change</span></td></tr>
                 </table>
-                <span class="folio">15</span>
+                <span class="folio">17</span>
               </section>
               <section class="page back" id="support" data-label="Support">
                 <div class="note" style="margin-top: 0">
@@ -465,7 +497,7 @@ volumes:
                   <a class="btn" href="donate.html">Donate</a>
                   <a class="btn quiet" href="https://github.com/sponsors/easly1989" rel="noopener">GitHub Sponsors</a>
                 </p>
-                <span class="folio">16</span>
+                <span class="folio">18</span>
               </section>
             </div>
 
@@ -492,8 +524,9 @@ volumes:
               <button type="button" data-go="6">Notifications</button>
               <button type="button" data-go="7">Security</button>
               <button type="button" data-go="8">AI</button>
-              <button type="button" data-go="8">Run it</button>
-              <button type="button" data-go="9">Support</button>
+              <button type="button" data-go="9">Phone</button>
+              <button type="button" data-go="9">Run it</button>
+              <button type="button" data-go="10">Support</button>
             </nav>
           </div>
         </div>
