@@ -71,6 +71,8 @@ committed, so they had to be rebuilt by hand.
   the lightbox, the Write to me sheet, books you can leaf through, the home
   objects' opening moves, and CloudBank's version from `versions.json`.
 - `cat.js` — the cat, loaded `defer` after `site.js` on every page.
+- `terminal.html` and `crt.js` — the console behind the old computer on the
+  bench, and the sounds both make. See The computer.
 - `logo.svg` (CloudBank, and the favicon of the pages about the person),
   `cupid.svg`, `nutreek.svg`, `planora.svg`, `social-contacts-sync.svg` — the
   project marks. `assets/` holds the screenshots and `carlo.jpg`.
@@ -143,6 +145,7 @@ The pairs are made by `view-transition-name`, one per page and unique on it:
 | `.thing.envelope` | `cupid.html` `.env` | `cupid` |
 | `.mug .cup`, `.mug .puddle` | `donate.html` `.spill .cup`, `.spill .puddle` | `mug`, `puddle` |
 | `.camera .film` | `about.html` `.instant` | `photo` |
+| `.pc .glass` | `terminal.html` `.crt` | `crt` |
 
 `header.bar` is named `bar` and `.cat` is named `cat` on every page. A duplicate
 name cancels the transition silently, so a new name needs a check on both pages.
@@ -195,6 +198,36 @@ so it stays put while the page changes under it.
 
 Under reduced motion it sleeps where it starts, in a clear spot, and still
 answers; any move it makes is instant.
+
+## The computer
+
+An easter egg, not a project: an old all-in-one computer drawn in CSS 3D in the
+top-left corner of the bench, hidden under 900px. Its markup, style and script
+are inline in `index.html` (`.pc`). Only its power button does anything until it
+has booted; then the screen or the keyboard opens `terminal.html`, a green CRT
+console with a fake filesystem, floppy disks, tab completion and a few hidden
+commands.
+
+**The hidden commands are sealed, and that is the point.** Each one is the key
+(PBKDF2, then AES-GCM) to its own entry in the `VAULT` in `terminal.html`, so the
+page holds no command and no hash of one. The commands, the programs they open
+and the kit that seals them live outside the repo, in
+`~/.claude-env/bench-terminal/` (its `kit/build_term.py` rewrites
+`terminal.html`). Edit the console there, never in the built page, and never
+write a command, or the name of what it opens, into this repo — not in a
+comment, a commit message or a PR. The hints in the console are riddles on
+purpose.
+
+State, all in this browser: `sessionStorage pc:on` says the computer was
+switched on; opening `terminal.html` without it shows a red FATAL screen and
+sets `localStorage pc:fried`, after which the bench computer stays broken
+(cracked, scorched) until site data is cleared. `localStorage pc:mute` is the
+speaker button. Ten wrong commands, or three wrong passwords, play
+`assets/tty0.mp4` in a loop until its window is closed.
+
+`crt.js` makes every sound with Web Audio, nothing downloaded; it loads, not
+deferred, before `site.js` on the home page. `terminal.html` stands alone: it
+loads `crt.js` and its own script, and not `styles.css`, `site.js` or the cat.
 
 ## Motion
 
