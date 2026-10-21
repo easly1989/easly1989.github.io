@@ -31,6 +31,41 @@
     <script>
       window.CONTACT_EMAIL = "caesar.themaster@gmail.com";
     </script>
+    <script>
+      // The room, while it is being built, shows only with ?room in the address, which is
+      // remembered for the session. It needs a wide window it fits at a scale of 0.7 or more:
+      // room.js measures the box it needs and keeps it, so this decides before anything is
+      // drawn. Otherwise the home is the bench. The room holds the first frame until it is
+      // built (#room-ready, at the end of the body).
+      (function () {
+        var on = false,
+          box = null;
+        try {
+          if (/[?&]room\b/.test(location.search)) sessionStorage.setItem("room", "1");
+          on = sessionStorage.getItem("room") === "1";
+          box = JSON.parse(localStorage.getItem("room-box"));
+        } catch (e) {}
+        if (!on) return;
+        // a box that is not four sizes is ignored: the room measures it again
+        if (!box || !["w", "h", "dw", "dh"].every(function (k) { return box[k] > 0 || box[k] === 0; })) box = null;
+        function fits() {
+          if (!matchMedia("(min-width: 901px)").matches) return false;
+          return !box || Math.min((innerWidth - box.dw - 32) / box.w, (innerHeight - box.dh - 32) / box.h) >= 0.7;
+        }
+        if (!fits()) {
+          addEventListener("resize", function () {
+            if (fits()) location.reload();
+          });
+          return;
+        }
+        document.documentElement.classList.add("iso");
+        document.write(
+          '<link rel="expect" href="#room-ready" blocking="render" />' +
+            '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tilt+Neon&display=swap" />' +
+            '<link rel="stylesheet" href="room.css" />',
+        );
+      })();
+    </script>
     <style>
       .fit {
         position: relative;
@@ -1692,6 +1727,14 @@
       })();
     </script>
     <script src="site.js" defer></script>
-    <script src="cat.js" defer></script>
+    <script>
+      // the room is built here, before the first frame; the cat lives on the bench only
+      document.write(
+        document.documentElement.classList.contains("iso")
+          ? '<script src="room.js"><\/script>'
+          : '<script src="cat.js" defer><\/script>',
+      );
+    </script>
+    <span id="room-ready" hidden></span>
   </body>
 </html>
