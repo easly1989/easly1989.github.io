@@ -448,6 +448,8 @@
   // flickers when it strikes; under reduced motion the colour just changes.
   var NEON = ["#ff4fa0", "#3fd2ff", "#7dff6a", "#ffb43f", "#b77dff", "#ff5a4e"];
   var hue = 0;
+  var struck = 0;
+  var DARK = [[0.08, 0.14], [0.22, 0.46], [0.52, 0.62], [0.7, 0.78]]; // the parts of the strike the tube is out
   var still = matchMedia("(prefers-reduced-motion: reduce)");
   // over the whole name: the sign it hangs on has no size of its own
   var tube = el("button", "neon-switch", tape);
@@ -462,7 +464,13 @@
     }
     if (still.matches) return next();
     sign.classList.add("striking");
+    struck = performance.now();
     glow();
+    // the light it throws goes out and back with the tube (the strike's keyframes, room.css)
+    DARK.forEach(function (p) {
+      setTimeout(glow, p[0] * 1100);
+      setTimeout(glow, p[1] * 1100);
+    });
     setTimeout(next, 420);
     setTimeout(function () {
       sign.classList.remove("striking");
@@ -632,7 +640,14 @@
     }
     var n = sign.querySelector("h1").getBoundingClientRect();
     var tint = getComputedStyle(sign).getPropertyValue("--neon").trim() || NEON[0];
-    var dim = sign.classList.contains("striking") ? 0.35 : 1;
+    var t = (performance.now() - struck) / 1100;
+    var dim =
+      sign.classList.contains("striking") &&
+      DARK.some(function (p) {
+        return t >= p[0] && t < p[1];
+      })
+        ? 0.15
+        : 1;
     var w = win.getBoundingClientRect(),
       m = beam.getBoundingClientRect(),
       k = sw.getBoundingClientRect(),
