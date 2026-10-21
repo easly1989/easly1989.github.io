@@ -48,6 +48,21 @@ FIRST = f"""addEventListener('DOMContentLoaded', () => {{
   window.__first = Object.assign({LAYOUT}, {{ fonts: document.fonts.status }});
 }})"""
 
+# a loose thing whose middle is seen behind the computer, the jar or the mug, as if in it
+HIDDEN = """(() => {
+  const box = (e) => { const r = { l: 1e9, t: 1e9, r: -1e9, b: -1e9 };
+    [e, ...e.querySelectorAll('*')].forEach((n) => [...n.getClientRects()].forEach((c) => {
+      r.l = Math.min(r.l, c.left); r.t = Math.min(r.t, c.top); r.r = Math.max(r.r, c.right); r.b = Math.max(r.b, c.bottom); }));
+    return r; };
+  const tall = [...document.querySelectorAll('.pc, .thing.jar, .thing.mug')].map((e) => [e.className.split(' ').pop(), box(e)]);
+  const out = [];
+  document.querySelectorAll('.loose').forEach((e) => {
+    const b = box(e), x = (b.l + b.r) / 2, y = (b.t + b.b) / 2;
+    tall.forEach(([n, t]) => { if (x > t.l && x < t.r && y > t.t && y < t.b) out.push(e.className.replace('loose ', '') + ' behind ' + n); });
+  });
+  return out;
+})()"""
+
 failures = []
 
 
@@ -75,6 +90,13 @@ try:
         check(not cut, f"{w} x {h}: nothing usable or to read out of the frame" + (f" ({', '.join(cut)})" if cut else ""))
         bare = b.js(CORNERS)
         check(not bare, f"{w} x {h}: the room fills the corners" + (f" (bare at {'; '.join(bare)})" if bare else ""))
+    # the loose things land somewhere new on every load
+    b.size(1440, 900)
+    hidden = []
+    for _ in range(10):
+        b.nav(base + "/index.html?room", 1.5)
+        hidden += b.js(HIDDEN)
+    check(not hidden, "in 10 loads, nothing loose is hidden behind something tall" + (f" ({', '.join(hidden)})" if hidden else ""))
     b.size(*SMALL)
     b.nav(base + "/index.html?room", 4)
     check(not b.js("document.documentElement.classList.contains('iso')"), f"{SMALL[0]} x {SMALL[1]}: too small for the room, so the bench shows")
