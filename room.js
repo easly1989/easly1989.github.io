@@ -408,12 +408,14 @@
     });
     return r;
   }
-  function spread() {
+  // again: only what the words, once their fonts are in, now run into moves; the rest stays put
+  function spread(again) {
     var fixed = obstacles().map(function (e) {
       return { el: e, b: bounds(e), name: named(e) };
     });
     var pc = screenBox(document.querySelector(".pc"));
     [].forEach.call(stage.querySelectorAll(".loose"), function (e) {
+      if (again && !faults(e, fixed, false).length) return fixed.push({ el: e, b: bounds(e), name: named(e) });
       for (var tries = 0; tries < 200; tries++) {
         var x = DESK_TOP.x0 + 40 + Math.random() * (DESK_TOP.x1 - DESK_TOP.x0 - 80) - e.offsetWidth / 2;
         var y = DESK_TOP.y0 + 40 + Math.random() * (DESK_TOP.y1 - DESK_TOP.y0 - 80) - e.offsetHeight / 2;
@@ -594,9 +596,9 @@
   // to the window's width"). Below 0.7 its words no longer read, so the home shows the bench
   // instead. The box the room needs is kept, so that the head can make that call before the
   // next load draws anything.
-  var MARGIN = 16,
+  var MARGIN = ROOM_FIT.margin, // shared with the head, which decides on the next load
     MAX = 1.15,
-    MIN = 0.7,
+    MIN = ROOM_FIT.min,
     BASE = { x: 179, y: 73 }; // the stage's own offsets (room.css)
   function usable() {
     return [].filter.call(fit.querySelectorAll("a[href], button, [tabindex]:not([tabindex='-1'])"), function (e) {
@@ -670,10 +672,11 @@
     cancelAnimationFrame(pending);
     pending = requestAnimationFrame(frame);
   });
+  spread();
   frame();
-  // the loose things and the frame once the fonts are in, since words change the sizes
+  // again once the fonts are in, since words change the sizes: a small correction, not a new layout
   (document.fonts ? document.fonts.ready : Promise.resolve()).then(function () {
-    spread();
+    spread(true);
     frame();
   });
 })();

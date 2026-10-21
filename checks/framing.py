@@ -37,6 +37,17 @@ CORNERS = """(() => {
   return bare.map(([x, y]) => x + ',' + y);
 })()"""
 
+# where the loose things are and the scale, now; and the same at the first frame, before the
+# fonts can have arrived
+LAYOUT = """(() => ({
+  s: document.querySelector('.stage').style.getPropertyValue('--s'),
+  loose: Object.fromEntries([...document.querySelectorAll('.loose')].map((e, i) => [i + ' ' + e.className, e.style.left + ' ' + e.style.top])),
+}))()"""
+FIRST = f"""addEventListener('DOMContentLoaded', () => {{
+  if (!document.querySelector('.stage')) return;
+  window.__first = Object.assign({LAYOUT}, {{ fonts: document.fonts.status }});
+}})"""
+
 failures = []
 
 
@@ -86,6 +97,25 @@ try:
     b.size(1440, 900)
     time.sleep(3)
     check(b.js("document.documentElement.classList.contains('iso')"), "widened to 1440 again, the room comes back")
+    # ?room=0 turns it off for the session
+    b.nav(base + "/index.html?room=0", 3)
+    off = not b.js("document.documentElement.classList.contains('iso')")
+    b.nav(base + "/index.html", 3)
+    check(off and not b.js("document.documentElement.classList.contains('iso')"), "?room=0 turns the room off for the session")
+    # the first frame is the layout: when the fonts come in, nothing moves to a new place
+    b.call("Network.enable")
+    b.call("Network.setCacheDisabled", cacheDisabled=True)
+    b.call("Page.addScriptToEvaluateOnNewDocument", source=FIRST)
+    b.nav(base + "/index.html?room", 5)
+    first, now = b.js("window.__first"), b.js(LAYOUT)
+    b.call("Network.setCacheDisabled", cacheDisabled=False)
+    moved = [k for k in first["loose"] if first["loose"][k] != now["loose"].get(k)]
+    drift = abs(float(now["s"]) / float(first["s"]) - 1)
+    check(
+        first["fonts"] != "loaded" and not moved and drift < 0.01,
+        f"the fonts arrive after the first frame ({first['fonts']}) and nothing jumps"
+        + (f" (moved: {', '.join(moved)})" if moved else "") + f" (scale {drift:.2%})",
+    )
 finally:
     b.close()
 sys.exit(1 if failures else 0)
