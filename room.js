@@ -390,7 +390,8 @@
   }
 
   // ---- where the loose things go, on every visit ------------------------------------
-  // Anywhere on the desk where they go into nothing and are not hidden behind the computer.
+  // Anywhere on the desk where they go into nothing and are not hidden behind the computer,
+  // or seen through the jar as if they were in it, or behind the mug.
   function setAt(e, p) {
     e.style.left = p.x + "px";
     e.style.top = p.y + "px";
@@ -413,7 +414,7 @@
     var fixed = obstacles().map(function (e) {
       return { el: e, b: bounds(e), name: named(e) };
     });
-    var pc = screenBox(document.querySelector(".pc"));
+    var tall = [].map.call(stage.querySelectorAll(".pc, .thing.jar, .thing.mug"), screenBox);
     [].forEach.call(stage.querySelectorAll(".loose"), function (e) {
       if (again && !faults(e, fixed, false).length) return fixed.push({ el: e, b: bounds(e), name: named(e) });
       for (var tries = 0; tries < 200; tries++) {
@@ -424,7 +425,10 @@
         var sb = screenBox(e);
         var cx = (sb.l + sb.r) / 2,
           cy = (sb.t + sb.b) / 2;
-        if (!(cx > pc.l && cx < pc.r && cy > pc.t && cy < pc.b)) break; // not out of sight behind the computer
+        var behind = tall.some(function (t) {
+          return cx > t.l && cx < t.r && cy > t.t && cy < t.b;
+        });
+        if (!behind) break;
       }
       if (tries === 200) console.warn("[room] no free place for " + named(e) + ": " + faults(e, fixed, false).join("; "));
       fixed.push({ el: e, b: bounds(e), name: named(e) });
