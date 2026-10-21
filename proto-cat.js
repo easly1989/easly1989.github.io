@@ -142,24 +142,30 @@ if (!q.has("gloss")) for (const mesh of skinned) mesh.material = new THREE.MeshL
 
 // Fur: a few shells over the body, each a hair further out, with fewer and fewer
 // strands kept the further out it is. The coat's own colour carries through. (?nofur)
-const FUR = q.get("fur") ? +q.get("fur") : 0.11; // model units, about 6 px
-const SHELLS = 9;
+const FUR = q.get("fur") ? +q.get("fur") : 0.15; // model units, about 8 px
+const SHELLS = q.get("shells") ? +q.get("shells") : 14;
+const SREP = q.get("srep") ? +q.get("srep") : 26; // strands across the coat: fewer is coarser
+const COMB = q.get("comb") ? +q.get("comb") : 0.9; // how far the tips lean back and down
 if (!q.has("nofur")) {
   const n = 128, data = new Uint8Array(n * n);
   for (let i = 0; i < data.length; i++) data[i] = Math.random() * 255;
   const strands = new THREE.DataTexture(data, n, n, THREE.RedFormat);
   strands.wrapS = strands.wrapT = THREE.RepeatWrapping;
+  strands.magFilter = strands.minFilter = THREE.NearestFilter; // one texel, one strand
   strands.needsUpdate = true;
   for (let i = 1; i <= SHELLS; i++) {
-    const h = (FUR * i) / SHELLS, keep = 0.25 + (0.7 * i) / SHELLS, shade = 0.82 + (0.18 * i) / SHELLS;
+    const t = i / SHELLS;
+    const h = FUR * t, keep = 0.3 + 0.65 * t * t, shade = 0.8 + 0.2 * t, tip = 0.07 * t;
+    // combed: the further out, the more a strand leans towards the tail and down
+    const lean = COMB * h * t;
     for (const mesh of skinned) {
       const m = new THREE.MeshLambertMaterial({ map: mesh.material.map });
       m.onBeforeCompile = (sh) => {
         sh.uniforms.strands = { value: strands };
-        sh.vertexShader = sh.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\n  transformed += normal * " + h.toFixed(4) + ";");
+        sh.vertexShader = sh.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\n  transformed += normal * " + h.toFixed(4) + " + vec3(-0.75, -0.65, 0.0) * " + lean.toFixed(4) + ";");
         sh.fragmentShader =
           "uniform sampler2D strands;\n" +
-          sh.fragmentShader.replace("#include <map_fragment>", "#include <map_fragment>\n  if (texture2D(strands, vMapUv * 90.0).r < " + keep.toFixed(3) + ") discard;\n  diffuseColor.rgb *= " + shade.toFixed(3) + " * (0.88 + 0.24 * texture2D(strands, vMapUv * 37.0).r);");
+          sh.fragmentShader.replace("#include <map_fragment>", "#include <map_fragment>\n  float s = texture2D(strands, vMapUv * " + SREP.toFixed(1) + ").r;\n  if (s < " + keep.toFixed(3) + ") discard;\n  diffuseColor.rgb = diffuseColor.rgb * " + shade.toFixed(3) + " * (0.9 + 0.2 * s) + " + tip.toFixed(3) + ";");
       };
       const shell = new THREE.SkinnedMesh(mesh.geometry, m);
       shell.frustumCulled = false;
@@ -175,7 +181,8 @@ if (!q.has("nofur")) {
 }
 
 // a thin dark outline: the body again, a hair larger, drawn from the inside
-const OUTLINE = q.has("nofur") ? 0.022 : FUR * 0.4;
+// with fur it sits inside the coat, so the strands fray the edge beyond it
+const OUTLINE = q.has("nofur") ? 0.022 : FUR * (q.get("oline") ? +q.get("oline") : 0.22);
 for (const mesh of skinned) {
   const g = mesh.geometry.clone();
   for (const k of Object.keys(g.attributes)) if (!["position", "skinIndex", "skinWeight"].includes(k)) g.deleteAttribute(k);
