@@ -36,7 +36,8 @@ python checks/moves.py
   elsewhere mid-move: the first click's page opens within about 1.6 s and at 60 fps or more,
   the pair's name is on both pages and no name is used twice, and back on the room the object
   is put down and the page answers. Ctrl-click and reduced motion play no move. A visible
-  window, like `fps.py`.
+  window, like `fps.py`, drawing without vsync, so the frame rate it reports is what the frames
+  cost and not the display's own: on a 90 Hz display a 12 ms frame would read as 45 fps.
 
 `cdp.py` is the driver (Chrome comes from `CHROME`, or the usual Windows path), and
 `serve.py` the server: no caching, byte ranges, nothing logged. `python checks/serve.py`

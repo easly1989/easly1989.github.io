@@ -86,11 +86,15 @@
     up *= kp / (Math.hypot(M.m31, M.m32, M.m33) || 1);
     return Math.round(up) + "px";
   }
+  // says whether it moved: a lift that changes nothing ends no transition to wait for
   function raise(e, on) {
     // on the desk a thing lifts by --lift; pinned on a wall, lying on the computer or inside
     // another thing, it moves by its own translate, which --lift does not drive there
-    if (e.classList.contains("thing") && !e.closest(".on-wall, .pc")) e.style.setProperty("--lift", on ? clear(e) : "");
+    var desk = e.classList.contains("thing") && !e.closest(".on-wall, .pc"),
+      was = desk ? e.style.getPropertyValue("--lift") : e.style.translate;
+    if (desk) e.style.setProperty("--lift", on ? clear(e) : "");
     else e.style.translate = on ? "0 0 " + clear(e) : "";
+    return (desk ? e.style.getPropertyValue("--lift") : e.style.translate) !== was;
   }
   function turn(e) {
     e.style.transform = facing(e).toString() + " translateZ(60px)";
@@ -98,26 +102,29 @@
   }
   function pose(e, instant, done) {
     e.style.transition = instant ? "none" : "transform" + EASE + ", translate" + EASE;
-    raise(e, true);
+    var moved = raise(e, true);
     if (instant) {
       turn(e);
       e.getBoundingClientRect();
       return;
     }
-    after(e, "translate", function () {
+    function then() {
       turn(e);
       after(e, "transform", done);
-    });
+    }
+    if (moved) after(e, "translate", then);
+    else then();
   }
   function unpose(e) {
     e.style.transition = "transform" + EASE + ", translate" + EASE;
     e.style.transform = "";
     e.classList.remove("unfolded");
     after(e, "transform", function () {
-      raise(e, false);
-      after(e, "translate", function () {
-        e.style.transition = "";
-      });
+      if (raise(e, false))
+        after(e, "translate", function () {
+          e.style.transition = "";
+        });
+      else e.style.transition = "";
     });
   }
   // the next step starts when this one has ended, so slowed animations stay in order
