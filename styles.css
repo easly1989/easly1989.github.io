@@ -1377,6 +1377,13 @@ header.bar {
 ::view-transition-new(root) {
   animation: 0.45s ease 0.12s both vt-in;
 }
+/* The camera's photo waits inside the camera. Named, it is lifted on top of
+   everything, so on a way that is not About's it sits the morph out. */
+::view-transition-old(photo):only-child,
+::view-transition-new(photo):only-child {
+  animation: none;
+  opacity: 0;
+}
 @keyframes vt-out {
   to {
     opacity: 0;
