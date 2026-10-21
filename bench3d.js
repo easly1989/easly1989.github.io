@@ -108,6 +108,8 @@
   box(chair, { x: cx - 10, y: 292, w: 20, d: 14, z: seatZ + 70 + BACK_H, h: 40, color: "#9aa2a8" });
   box(chair, { x: cx - 105, y: 280, w: 210, d: 34, z: seatZ + 110 + BACK_H, h: 90, color: "var(--chair)", r: 22 });
 
+  var jar = stage.querySelector(".thing.jar");
+  if (jar) jar.style.setProperty("--x", "930px");
   var mug = stage.querySelector(".thing.mug");
   if (mug) {
     mug.style.setProperty("--x", "900px");
@@ -239,6 +241,16 @@
     var spec = TOY[kind];
     if (!spec || toy.querySelector(".lid")) return;
     var h = spec[0];
+    if (spec[1] === "box") {
+      // behind the computer, on the floor left of the desk, or on the floor by the chair
+      var SPOTS = [[-540, 110, 0], [-330, -140, FLOOR], [950, 1060, FLOOR]];
+      var pick = parseInt(new URLSearchParams(location.search).get("box"), 10);
+      var at = SPOTS[pick >= 0 && pick < SPOTS.length ? pick : Math.floor(Math.random() * SPOTS.length)];
+      toy.style.left = at[0] + "px";
+      toy.style.top = at[1] + "px";
+      toy.style.translate = "0 0 " + at[2] + "px";
+      toy.style.scale = "1.7 1.7 1.7";
+    }
     var lid = el("span", "lid", toy);
     while (toy.firstChild !== lid) lid.appendChild(toy.firstChild);
     lid.style.transform = "translateZ(" + (spec[1] === "ball" ? h / 2 : h) + "px)";
@@ -356,17 +368,23 @@
   }
 
   // ---- the shelf on the right wall, with the plant (and room for the radio) ---------
-  var SHELF = { y: 540, d: 260, z: 170 };
-  box(room, { x: RIGHT - 84, y: SHELF.y, w: 84, d: SHELF.d, z: SHELF.z - 18, h: 18, color: "var(--sill)" });
-  [SHELF.y + 30, SHELF.y + SHELF.d - 44].forEach(function (y) {
+  var SHELF = { y: 520, d: 700, z: 170, w: 112 }; // runs on past the edge of the frame
+  box(room, { x: RIGHT - SHELF.w, y: SHELF.y, w: SHELF.w, d: SHELF.d, z: SHELF.z - 18, h: 18, color: "var(--sill)" });
+  [SHELF.y + 40, SHELF.y + 330, SHELF.y + SHELF.d - 60].forEach(function (y) {
     box(room, { x: RIGHT - 60, y: y, w: 60, d: 14, z: SHELF.z - 78, h: 60, color: "var(--skirting)" });
   });
-  var pot = el("span", "rbox plant", room, "left:" + (RIGHT - 70) + "px;top:" + (SHELF.y + SHELF.d - 84) + "px;width:56px;height:56px;transform:translateZ(" + SHELF.z + "px)");
+  var pot = el("span", "rbox plant", room, "left:" + (RIGHT - 80) + "px;top:" + (SHELF.y + 24) + "px;width:56px;height:56px;transform:translateZ(" + SHELF.z + "px)");
   box(pot, { x: 0, y: 0, w: 56, d: 56, z: 0, h: 58, color: "var(--pot)", r: 8 });
   [45, -45].forEach(function (deg) {
     var leaves = el("span", "leaves", pot, "transform:translateZ(58px) rotateZ(" + deg + "deg) rotateX(-90deg)");
     leaves.innerHTML = '<svg viewBox="0 0 140 130"><path d="M70 130C66 90 40 70 8 66c18 22 34 40 62 64zM70 130C74 84 98 58 132 52c-14 28-32 52-62 78zM70 130C60 80 62 36 74 2c14 34 12 82-4 128zM70 130C52 98 30 92 14 100c20 10 36 18 56 30zM70 130c18-34 40-44 58-40-16 16-34 28-58 40z" /></svg>';
   });
+
+  // the radio at the shelf's far end, partly out of the frame, with room between it and
+  // the plant for the cat (a stand-in until the radio is designed)
+  var radio = box(room, { x: RIGHT - 96, y: SHELF.y + SHELF.d - 250, w: 84, d: 210, z: SHELF.z, h: 120, color: "var(--radio)", west: "var(--radio)", r: 12 });
+  radio.querySelector("i.w").innerHTML = '<span class="radio-face"><span class="grille"></span><span class="dial"></span><span class="knob"></span><span class="knob"></span></span>';
+  radio.setAttribute("aria-hidden", "true");
 
   // ---- the site's navigation: neon tubes in a plexiglass frame, top of the right wall
   var nav = document.createElement("nav");
