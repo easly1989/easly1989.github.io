@@ -14,6 +14,7 @@ python checks/framing.py
 python checks/fps.py
 python checks/contrast.py
 python checks/moves.py
+python checks/photos.py
 ```
 
 `contrast.py` also needs `pip install pillow numpy`.
@@ -37,7 +38,15 @@ python checks/moves.py
   the pair's name is on both pages and no name is used twice, and back on the room the object
   is put down and the page answers. Ctrl-click and reduced motion play no move. A visible
   window, like `fps.py`, drawing without vsync, so the frame rate it reports is what the frames
-  cost and not the display's own: on a 90 Hz display a 12 ms frame would read as 45 fps.
+  cost and not the display's own: on a 90 Hz display a 12 ms frame would read as 45 fps. It
+  also comes back by a link, not the cache, where the room is shown while it still loads.
+- `photos.py` — the camera takes a photo, never the same twice running, and About shows it
+  developing; back in the room it lands in its place with the morph, by the cache and by a
+  link; picked up it opens About on itself, developed, and lands in the same place; taken
+  again it leaves its place; under reduced motion it still goes there; About reached another
+  way shows the visit's last photo; a pinned photo is a labelled link with a focus ring; and
+  with all seven out, each is inside the window and clear of the name, the poster's words and
+  the window at every size. A visible window, like `moves.py`.
 
 `cdp.py` is the driver (Chrome comes from `CHROME`, or the usual Windows path), and
 `serve.py` the server: no caching, byte ranges, nothing logged. `python checks/serve.py`
