@@ -1282,7 +1282,7 @@ html:not(.b3) .strip {
   pointer-events: none;
   opacity: 0;
   background: linear-gradient(rgba(178, 198, 255, 0.26), rgba(178, 198, 255, 0.1) 70%, transparent);
-  clip-path: polygon(9% 0, 91% 0, 100% 100%, 0 100%);
+  clip-path: polygon(4% 0, 96% 0, 100% 100%, 0 100%);
   -webkit-mask:
     linear-gradient(90deg, #000 48.6%, transparent 48.6% 51.4%, #000 51.4%),
     linear-gradient(#000 42%, transparent 42% 46%, #000 46%);

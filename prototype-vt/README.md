@@ -32,3 +32,23 @@ Also on this branch, built while the morphs were worked out:
   opens About on itself, and comes back to the same place.
 - `radio.js`: the radio on the shelf, which every page but the console loads, so the
   music carries on from page to page and waits while the console is open.
+
+## Measuring
+
+Answers [Measure what the room can draw at 60 fps](https://github.com/easly1989/easly1989.github.io/issues/53).
+`measure.html` is the room with the three.js cat walking (`measure-cat.js`, from the
+real-time cat prototype; it needs `cat.glb` next to it, which Carlo keeps outside the repo).
+
+Its switches:
+
+- `?nocat`: the cat is not drawn.
+- `?nofur`: the cat without its fur.
+- `?lights=N`: the cat lit by N point lights.
+- `?shadow=gl|map|css`: a blob in the cat's canvas, a shadow map, or a blob on the desk.
+- `?lite=<selectors>`: hides part of the room.
+- `?strip=k`, `?ring=k`: the round things' label strips and rings, k times sparser.
+
+The scripts in `measure/` drive a visible Chrome through the DevTools protocol (Python,
+`websocket-client`) against a server on port 8126, and record `requestAnimationFrame`
+intervals. Run them in a window that is actually painting: a hidden window measures
+nothing.
