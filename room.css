@@ -661,52 +661,44 @@ html:not(.iso) .strip {
   font: 400 104px/1 "Tilt Neon", "Bricolage Grotesque", sans-serif;
   white-space: nowrap;
   /* the tube: a pale core inside its own coloured glass, glowing round it */
-  color: color-mix(in srgb, var(--neon) 30%, white);
-  -webkit-text-stroke: 1px color-mix(in srgb, var(--neon) 70%, white);
-  text-shadow:
+  --tube: color-mix(in srgb, var(--neon) 30%, white);
+  --tube-glass: color-mix(in srgb, var(--neon) 70%, white);
+  --tube-glow:
     0 0 2px color-mix(in srgb, var(--neon) 40%, white),
     0 0 7px var(--neon),
     0 0 16px var(--neon),
     0 0 34px var(--neon),
     0 0 60px color-mix(in srgb, var(--neon) 60%, transparent);
+  color: var(--tube);
+  -webkit-text-stroke: 1px var(--tube-glass);
+  text-shadow: var(--tube-glow);
   transition:
     color 0.3s ease,
     text-shadow 0.3s ease;
 }
-/* striking: it flickers out and back, and comes back in its new colour */
+/* striking: the tube flickers out and back, and comes back in its new colour; the board it
+   is mounted on stays */
 .iso .on-wall.neon.striking h1 {
   animation: strike 1.1s steps(1) both;
 }
 @keyframes strike {
-  0% {
-    opacity: 1;
-  }
-  8% {
-    opacity: 0.25;
-  }
-  14% {
-    opacity: 0.9;
-  }
-  22%,
-  38% {
-    opacity: 0.12;
-    text-shadow: none;
-  }
-  46% {
-    opacity: 0.7;
-  }
-  52% {
-    opacity: 0.15;
-  }
-  62% {
-    opacity: 1;
-  }
-  70% {
-    opacity: 0.5;
-  }
+  0%,
+  14%,
+  46%,
+  62%,
   78%,
   100% {
-    opacity: 1;
+    color: var(--tube);
+    -webkit-text-stroke-color: var(--tube-glass);
+    text-shadow: var(--tube-glow);
+  }
+  8%,
+  22%,
+  52%,
+  70% {
+    color: rgba(255, 255, 255, 0.16);
+    -webkit-text-stroke-color: rgba(255, 255, 255, 0.22);
+    text-shadow: none;
   }
 }
 /* the whole sign is the button that changes it, once the lights are off */
@@ -1012,6 +1004,21 @@ html:not(.iso) .strip {
       radial-gradient(circle at 76% 18%, #f6f1d0 0 18px, transparent 19px),
       linear-gradient(var(--sky-top), var(--sky-low));
   }
+}
+/* with the room's light off it is night outside too, in either scheme */
+.iso.lights-off .window {
+  --sky-top: #0b1433;
+  --sky-low: #2a3863;
+  --roofs: #10172b;
+}
+.iso.lights-off .window .sky {
+  background:
+    radial-gradient(circle at 18% 22%, #fff 0 1.5px, transparent 2px),
+    radial-gradient(circle at 63% 14%, #fff 0 1px, transparent 1.6px),
+    radial-gradient(circle at 82% 34%, #fff 0 1.2px, transparent 1.8px),
+    radial-gradient(circle at 40% 40%, #fff 0 1px, transparent 1.5px),
+    radial-gradient(circle at 76% 18%, #f6f1d0 0 18px, transparent 19px),
+    linear-gradient(var(--sky-top), var(--sky-low));
 }
 .iso .window .skyline {
   width: 100%;
