@@ -1735,7 +1735,7 @@
       // the room is built here, before the first frame; the cat lives on the bench only
       document.write(
         document.documentElement.classList.contains("iso")
-          ? '<script src="room.js"><\/script>'
+          ? '<script src="room.js"><\/script><script src="morph.js" defer><\/script>'
           : '<script src="cat.js" defer><\/script>',
       );
     </script>
