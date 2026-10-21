@@ -15,7 +15,7 @@ CHROME = os.environ.get("CHROME", r"C:\Program Files\Google\Chrome\Application\c
 
 
 class Browser:
-    def __init__(self, width=1300, height=900, headless=True):
+    def __init__(self, width=1300, height=900, headless=True, flags=()):
         self.profile = tempfile.mkdtemp(prefix="cdp-")
         args = [CHROME, "--remote-debugging-port=0", f"--user-data-dir={self.profile}",
                 "--no-first-run", "--no-default-browser-check", f"--window-size={width},{height}",
@@ -24,7 +24,7 @@ class Browser:
                 "--disable-background-timer-throttling"]
         if headless:
             args.append("--headless=new")
-        self.proc = subprocess.Popen(args + ["about:blank"])
+        self.proc = subprocess.Popen(args + list(flags) + ["about:blank"])
         port_file = pathlib.Path(self.profile) / "DevToolsActivePort"
         for _ in range(100):
             try:
