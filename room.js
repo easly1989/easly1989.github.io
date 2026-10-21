@@ -619,6 +619,10 @@
   var pc = document.querySelector(".pc");
   // the screen lights the room only while the computer is on
   new MutationObserver(glow).observe(pc, { attributes: true, attributeFilter: ["class"] });
+  addEventListener("focusin", glow);
+  addEventListener("focusout", function () {
+    setTimeout(glow);
+  });
   var navTubes = [].slice.call(nav.querySelectorAll("a"));
   // drawn again when something it follows changes: the light, the frame, the neon, the screen
   function glow() {
@@ -646,6 +650,12 @@
       // the box round a word on a slanted wall is tall: the glow keeps to the word
       holes.push(at(r, r.width * 0.62, r.height * 0.62) + "color-mix(in srgb, " + c + " 55%, white), color-mix(in srgb, " + c + " 35%, transparent) 55%, transparent 85%)");
     });
+    // what has the keyboard's focus is lit, so its ring shows in the dark
+    var f = document.activeElement;
+    if (f && f !== document.body && fit.contains(f) && f.matches(":focus-visible")) {
+      var fr = f.getBoundingClientRect();
+      holes.push(at(fr, fr.width * 0.75 + 40, fr.height * 0.75 + 40) + "rgba(255,255,255,1) 60%, transparent 100%)");
+    }
     // a faint green on the keyboard, the desk's edge and the wall, round the screen itself
     if (pc.classList.contains("on")) holes.push(at(g, g.width * 1.6, g.height * 1.9, 0.6) + "rgba(200,255,210,1), rgba(80,140,100,0.6) 40%, transparent 75%)");
     night.style.background = holes.join(", ") + ", rgb(40, 46, 80)";
@@ -775,8 +785,8 @@
     pending = requestAnimationFrame(frame);
   });
   spread();
-  setLight(lightWas !== "off");
   frame();
+  setLight(lightWas !== "off");
   // again once the fonts are in, since words change the sizes: a small correction, not a new layout
   (document.fonts ? document.fonts.ready : Promise.resolve()).then(function () {
     spread(true);
