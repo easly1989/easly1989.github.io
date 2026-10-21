@@ -35,7 +35,8 @@ python checks/moves.py
 - `moves.py` — each project object is clicked with the mouse, and a second click lands
   elsewhere mid-move: the first click's page opens within about 1.6 s and at 60 fps or more,
   the pair's name is on both pages and no name is used twice, and back on the room the object
-  is put down and the page answers. A visible window, like `fps.py`.
+  is put down and the page answers. Ctrl-click and reduced motion play no move. A visible
+  window, like `fps.py`.
 
 `cdp.py` is the driver (Chrome comes from `CHROME`, or the usual Windows path), and
 `serve.py` the server: no caching, byte ranges, nothing logged. `python checks/serve.py`
