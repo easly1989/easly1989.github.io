@@ -41,9 +41,11 @@ document.body.appendChild(hud);
 const cv = document.createElement("canvas");
 cv.className = "cat3d";
 cv.style.cssText = "position:absolute;left:0;top:0;width:" + W + "px;height:" + H + "px;pointer-events:none";
-(q.has("outside") ? document.body : room).appendChild(cv); // ?outside: not in the 3D scene
+(q.has("outside") || q.has("closeup") ? document.body : room).appendChild(cv);
+if (q.has("closeup")) cv.style.cssText = "position:fixed;right:20px;top:70px;width:640px;height:640px;z-index:98;background:#2d5a4e;border-radius:8px"; // ?outside: not in the 3D scene
 
 function place(x, y, z) {
+  if (q.has("closeup")) return;
   // a plane facing the screen: the room's own rotation undone, about the canvas centre
   const b = BIAS / Math.sqrt(3);
   const px = x - b,
@@ -60,7 +62,8 @@ try {
   hud.textContent = "no WebGL 2: the cat is left out\n" + e.message;
   throw e;
 }
-const cssScale = () => (parseFloat(getComputedStyle(stage).getPropertyValue("--s")) || 1) * (parseFloat(getComputedStyle(stage).getPropertyValue("--zoom")) || 0.72);
+// the canvas is drawn at the size the stage's scale shows it at (the close-up: at 640 px)
+const cssScale = () => (q.has("closeup") ? 640 / W : (parseFloat(getComputedStyle(stage).getPropertyValue("--s")) || 1) * (parseFloat(getComputedStyle(stage).getPropertyValue("--zoom")) || 0.72));
 function resize() {
   renderer.setPixelRatio(devicePixelRatio * cssScale());
   renderer.setSize(W, H, false);
@@ -76,6 +79,10 @@ cam.up.set(0.408, 0.408, 0.816).normalize();
 const target = new THREE.Vector3(0, 0, ANCHOR_Z);
 cam.position.copy(target).addScaledVector(new THREE.Vector3(-1, -1, 1).normalize(), 3000);
 cam.lookAt(target);
+if (q.has("closeup")) {
+  cam.zoom = 2.8;
+  cam.updateProjectionMatrix();
+}
 
 const sky = new THREE.HemisphereLight(0xffffff, 0x5a6470, 1.7);
 sky.position.set(0, 0, 1);
@@ -88,7 +95,9 @@ const gltf = await new GLTFLoader().loadAsync("cat.glb");
 const holder = new THREE.Group();
 const model = gltf.scene;
 model.rotation.x = Math.PI / 2; // glTF is y-up; the room is z-up
-model.scale.setScalar(CAT_SCALE);
+// a little chonky: wider and a touch deeper in the body (?nochonk for the model as it is)
+if (q.has("nochonk")) model.scale.setScalar(CAT_SCALE);
+else model.scale.set(CAT_SCALE, CAT_SCALE * 1.04, CAT_SCALE * 1.16); // glTF z is the cat's width
 holder.add(model);
 scene.add(holder);
 
@@ -99,7 +108,74 @@ model.traverse((o) => {
   if (o.isMesh) o.frustumCulled = false;
   if (o.isSkinnedMesh) skinned.push(o);
 });
+// Smooth normals, shared across the body's pieces, so it reads as a soft animal and
+// not as faceted plastic. The pieces split along their seams; this joins them by position.
+const key = (a, i) => Math.round(a.getX(i) * 1e4) + "," + Math.round(a.getY(i) * 1e4) + "," + Math.round(a.getZ(i) * 1e4);
+if (!q.has("flat")) {
+  const acc = new Map();
+  const va = new THREE.Vector3(), vb = new THREE.Vector3(), vc = new THREE.Vector3();
+  for (const mesh of skinned) {
+    const g = mesh.geometry, p = g.attributes.position, idx = g.index;
+    const n = idx ? idx.count : p.count;
+    for (let t = 0; t < n; t += 3) {
+      const ia = idx ? idx.getX(t) : t, ib = idx ? idx.getX(t + 1) : t + 1, ic = idx ? idx.getX(t + 2) : t + 2;
+      va.fromBufferAttribute(p, ia); vb.fromBufferAttribute(p, ib); vc.fromBufferAttribute(p, ic);
+      const f = vc.clone().sub(vb).cross(va.clone().sub(vb)); // area-weighted
+      for (const i of [ia, ib, ic]) {
+        const k = key(p, i);
+        const s = acc.get(k);
+        if (s) s.add(f); else acc.set(k, f.clone());
+      }
+    }
+  }
+  for (const mesh of skinned) {
+    const g = mesh.geometry, p = g.attributes.position, nr = g.attributes.normal;
+    for (let i = 0; i < p.count; i++) {
+      const v = acc.get(key(p, i)).clone().normalize();
+      nr.setXYZ(i, v.x, v.y, v.z);
+    }
+    nr.needsUpdate = true;
+  }
+}
+// matte, so the coat does not shine like plastic (?gloss for the exported material)
+if (!q.has("gloss")) for (const mesh of skinned) mesh.material = new THREE.MeshLambertMaterial({ map: mesh.material.map });
+
+// Fur: a few shells over the body, each a hair further out, with fewer and fewer
+// strands kept the further out it is. The coat's own colour carries through. (?nofur)
+const FUR = q.get("fur") ? +q.get("fur") : 0.11; // model units, about 6 px
+const SHELLS = 9;
+if (!q.has("nofur")) {
+  const n = 128, data = new Uint8Array(n * n);
+  for (let i = 0; i < data.length; i++) data[i] = Math.random() * 255;
+  const strands = new THREE.DataTexture(data, n, n, THREE.RedFormat);
+  strands.wrapS = strands.wrapT = THREE.RepeatWrapping;
+  strands.needsUpdate = true;
+  for (let i = 1; i <= SHELLS; i++) {
+    const h = (FUR * i) / SHELLS, keep = 0.25 + (0.7 * i) / SHELLS, shade = 0.82 + (0.18 * i) / SHELLS;
+    for (const mesh of skinned) {
+      const m = new THREE.MeshLambertMaterial({ map: mesh.material.map });
+      m.onBeforeCompile = (sh) => {
+        sh.uniforms.strands = { value: strands };
+        sh.vertexShader = sh.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\n  transformed += normal * " + h.toFixed(4) + ";");
+        sh.fragmentShader =
+          "uniform sampler2D strands;\n" +
+          sh.fragmentShader.replace("#include <map_fragment>", "#include <map_fragment>\n  if (texture2D(strands, vMapUv * 90.0).r < " + keep.toFixed(3) + ") discard;\n  diffuseColor.rgb *= " + shade.toFixed(3) + " * (0.88 + 0.24 * texture2D(strands, vMapUv * 37.0).r);");
+      };
+      const shell = new THREE.SkinnedMesh(mesh.geometry, m);
+      shell.frustumCulled = false;
+      shell.position.copy(mesh.position);
+      shell.quaternion.copy(mesh.quaternion);
+      shell.scale.copy(mesh.scale);
+      mesh.parent.add(shell);
+      shell.bind(mesh.skeleton, mesh.bindMatrix);
+    }
+  }
+  // the body under the fur is a little darker, as the roots are
+  for (const mesh of skinned) mesh.material.color.setScalar(0.82);
+}
+
 // a thin dark outline: the body again, a hair larger, drawn from the inside
+const OUTLINE = q.has("nofur") ? 0.022 : FUR * 0.4;
 for (const mesh of skinned) {
   const g = mesh.geometry.clone();
   for (const k of Object.keys(g.attributes)) if (!["position", "skinIndex", "skinWeight"].includes(k)) g.deleteAttribute(k);
@@ -107,7 +183,7 @@ for (const mesh of skinned) {
   merged.computeVertexNormals();
   const mat = new THREE.MeshBasicMaterial({ color: 0x262626, side: THREE.BackSide });
   mat.onBeforeCompile = (s) => {
-    s.vertexShader = s.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\n  transformed += normal * 0.022;");
+    s.vertexShader = s.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\n  transformed += normal * " + OUTLINE.toFixed(4) + ";");
   };
   const hull = new THREE.SkinnedMesh(merged, mat);
   hull.frustumCulled = false;

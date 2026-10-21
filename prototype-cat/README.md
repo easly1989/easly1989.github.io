@@ -38,5 +38,11 @@ Open it in a real, visible browser window. The cat and the frame counter run onc
 | `?outside` | the canvas goes outside the 3D scene |
 | `?nonight` | the lights-off overlay is removed |
 | `?lite=<selectors>` | those parts of the room are hidden |
+| `?nofur` | no fur shells |
+| `?fur=<units>` | how far the fur reaches, in model units (default 0.11) |
+| `?nochonk` | the model's own proportions, not widened |
+| `?flat` | the exported faceted normals |
+| `?gloss` | the exported, glossy material |
+| `?closeup` | the cat alone, large, in the top right corner, to check the face |
 
 From the console, `__hold(x, y, z, headingDeg, walking)` holds the cat at one place.
