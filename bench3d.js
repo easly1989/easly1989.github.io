@@ -235,15 +235,16 @@
   // ---- the cat's toys get a body too ---------------------------------------------
   // Copies of the toy stacked up: straight for a bag, shrinking towards the top and
   // the bottom for a ball, and for the box, plain cardboard walls under its flaps.
-  var TOY = { yarn: [36, "ball"], crinkle: [24, "ball"], catnip: [16, "ball"], box: [64, "box"], treats: [26, "flat"], bag: [34, "flat"], laser: [10, "flat"], feather: [4, "flat"] };
+  var TOY = { yarn: [36, "ball"], crinkle: [24, "ball"], catnip: [16, "ball"], box: [110, "box"], treats: [26, "flat"], bag: [34, "flat"], laser: [10, "flat"], feather: [4, "flat"] };
   function body(toy) {
     var kind = toy.getAttribute("data-toy");
     var spec = TOY[kind];
     if (!spec || toy.querySelector(".lid")) return;
     var h = spec[0];
     if (spec[1] === "box") {
-      // behind the computer, on the floor left of the desk, or on the floor by the chair
-      var SPOTS = [[-540, 110, 0], [-330, -140, FLOOR], [950, 1060, FLOOR]];
+      // behind the computer, partly hidden by it: never out on the desk, nor on the floor,
+      // which the camera barely frames
+      var SPOTS = [[-110, -135, 0]]; // clear of the light switch on the wall behind
       var pick = parseInt(new URLSearchParams(location.search).get("box"), 10);
       var at = SPOTS[pick >= 0 && pick < SPOTS.length ? pick : Math.floor(Math.random() * SPOTS.length)];
       toy.style.left = at[0] + "px";
