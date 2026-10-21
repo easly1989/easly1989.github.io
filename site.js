@@ -225,6 +225,9 @@
       if (reduced || e.metaKey || e.ctrlKey || e.shiftKey) return;
       e.preventDefault();
       if (el.classList.contains("opening") || el.classList.contains("lift")) return;
+      // the page is leaving: nothing else answers until it has, or a click mid-move would
+      // start another move, or open another page under this one's
+      document.body.inert = true;
       var href = el.getAttribute("href");
       var lift = morphs && el.dataset.vtMs;
       var ms = +(lift ? el.dataset.vtMs : el.dataset.openMs || 900);
@@ -238,6 +241,7 @@
   // Back from a page, out of the back/forward cache: everything is put down again.
   addEventListener("pageshow", function (e) {
     if (!e.persisted) return;
+    document.body.inert = false;
     [].forEach.call(document.querySelectorAll(".opening, .lift"), function (el) {
       el.classList.remove("opening", "lift");
     });
