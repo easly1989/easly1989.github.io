@@ -442,7 +442,33 @@
   // the name: a neon sign (its typeface, Tilt Neon, comes with room.css), with the line
   // about the work painted under it
   var tape = stage.querySelector(".home-tape");
-  onWall("back", -430, 660, "neon").appendChild(tape);
+  var sign = onWall("back", -430, 660, "neon");
+  sign.appendChild(tape);
+  // Pressing the sign switches it off and on again in another colour, the way a tube
+  // flickers when it strikes; under reduced motion the colour just changes.
+  var NEON = ["#ff4fa0", "#3fd2ff", "#7dff6a", "#ffb43f", "#b77dff", "#ff5a4e"];
+  var hue = 0;
+  var still = matchMedia("(prefers-reduced-motion: reduce)");
+  // over the whole name: the sign it hangs on has no size of its own
+  var tube = el("button", "neon-switch", tape);
+  tube.type = "button";
+  tube.setAttribute("aria-label", "Change the neon's colour");
+  tube.addEventListener("click", function () {
+    if (sign.classList.contains("striking")) return;
+    function next() {
+      hue = (hue + 1) % NEON.length;
+      sign.style.setProperty("--neon", NEON[hue]);
+      glow();
+    }
+    if (still.matches) return next();
+    sign.classList.add("striking");
+    glow();
+    setTimeout(next, 420);
+    setTimeout(function () {
+      sign.classList.remove("striking");
+      glow();
+    }, 1100);
+  });
   var intro = stage.querySelector(".intro");
   var words = intro.querySelector("p").textContent.replace(/\s+/g, " ").trim();
   var first = words.indexOf(". ") + 1;
@@ -468,6 +494,14 @@
   win.style.cssText = "width:" + WIN.w + "px;height:" + WIN.h + "px";
   win.innerHTML = '<span class="sky"></span>' + skyline(WIN.w, WIN.h) + '<span class="pane"></span><span class="mullion v"></span><span class="mullion h"></span>';
   box(room, { x: WIN.along - 30, y: BACK, w: WIN.w + 60, d: 78, z: WIN.top - WIN.h - 20, h: 20, color: "var(--sill)" });
+  // its light on the desk, crossed by the mullions: the sun by day, the moon by night, from
+  // high up (about 50 degrees), so the patch starts well out from the wall, where the ray
+  // through the window's bottom edge lands, and runs out to the ray through its top
+  var HIGH = 1.2; // tan of the sun's and the moon's height above the horizon
+  var near = BACK + (WIN.top - WIN.h) / HIGH,
+    far = BACK + WIN.top / HIGH;
+  var beam = el("span", "window-light", room, "left:" + (WIN.along - 30) + "px;top:" + near + "px;width:" + (WIN.w + 60) + "px;height:" + (far - near) + "px;transform:translateZ(0.8px)");
+  beam.setAttribute("aria-hidden", "true");
   // the cat's perch: a board hung on two chains from the top of the frame, deep enough to
   // sleep on, with a fleece on it
   var PERCH = { x: WIN.along + 120, w: 360, d: 190, z: WIN.top - WIN.h + 24 };
@@ -557,6 +591,79 @@
     sticky.removeAttribute("data-cat");
     el("span", "pc-note", side).appendChild(sticky);
   }
+
+  // ---- the room's light, and the night ------------------------------------------------
+  // A switch on the back wall, remembered for the visit; the room starts with it on. With
+  // it off, a multiply layer darkens the room, with holes where its own sources shine.
+  var sw = el("button", "light-switch", onWall("back", -470, 300, "switch"));
+  sw.type = "button";
+  sw.setAttribute("aria-label", "Room light");
+  sw.innerHTML = '<span class="rocker" aria-hidden="true"></span>';
+  // a plate with some thickness, and a rocker that stands proud of it
+  for (var ps = 1; ps <= 6; ps++) el("span", "plate-slice", sw, "transform:translateZ(" + -ps * 1.5 + "px);background:" + shade("#f1ece2", 0.92 - ps * 0.03));
+  var rock = sw.querySelector(".rocker");
+  for (var rs = 1; rs <= 4; rs++) el("span", "rocker-slice", rock, "transform:translateZ(" + -rs * 1.5 + "px);background:" + shade("#e8e2d6", 0.9 - rs * 0.04));
+  var night = el("div", "night", document.querySelector(".mat"));
+  night.setAttribute("aria-hidden", "true");
+  function setLight(on) {
+    sw.setAttribute("aria-pressed", String(on));
+    document.documentElement.classList.toggle("lights-off", !on);
+    try {
+      sessionStorage.setItem("room-light", on ? "on" : "off");
+    } catch (e) {}
+    glow();
+  }
+  sw.addEventListener("click", function () {
+    setLight(sw.getAttribute("aria-pressed") !== "true");
+  });
+  var pc = document.querySelector(".pc");
+  // the screen lights the room only while the computer is on
+  new MutationObserver(glow).observe(pc, { attributes: true, attributeFilter: ["class"] });
+  addEventListener("focusin", glow);
+  addEventListener("focusout", function () {
+    setTimeout(glow);
+  });
+  var navTubes = [].slice.call(nav.querySelectorAll("a"));
+  // drawn again when something it follows changes: the light, the frame, the neon, the screen
+  function glow() {
+    if (!document.documentElement.classList.contains("lights-off")) return;
+    function at(r, w, h, dy) {
+      return "radial-gradient(ellipse " + w + "px " + h + "px at " + (r.left + r.width / 2) + "px " + (r.top + r.height * (dy || 0.5)) + "px, ";
+    }
+    var n = sign.querySelector("h1").getBoundingClientRect();
+    var tint = getComputedStyle(sign).getPropertyValue("--neon").trim() || NEON[0];
+    var dim = sign.classList.contains("striking") ? 0.35 : 1;
+    var w = win.getBoundingClientRect(),
+      m = beam.getBoundingClientRect(),
+      k = sw.getBoundingClientRect(),
+      g = pc.querySelector(".glass").getBoundingClientRect();
+    var holes = [
+      at(n, n.width * 0.75, n.height * 1.7) + "color-mix(in srgb, " + tint + " " + 45 * dim + "%, white), color-mix(in srgb, " + tint + " " + 50 * dim + "%, transparent) 55%, transparent 80%)",
+      at(w, w.width * 0.7, w.height * 0.75) + "rgba(150,170,235,1), transparent 80%)",
+      at(m, m.width * 0.5, m.height * 0.55, 0.45) + "rgba(185,200,250,1), rgba(120,140,210,0.8) 45%, transparent 85%)",
+      "radial-gradient(circle at " + (k.left + k.width / 2) + "px " + (k.top + k.height / 2) + "px, rgba(255,255,255,1) 0 14px, transparent 36px)",
+    ];
+    navTubes.forEach(function (a) {
+      var r = a.getBoundingClientRect();
+      if (!r.width) return;
+      var c = getComputedStyle(a).color;
+      // the box round a word on a slanted wall is tall: the glow keeps to the word
+      holes.push(at(r, r.width * 0.62, r.height * 0.62) + "color-mix(in srgb, " + c + " 55%, white), color-mix(in srgb, " + c + " 35%, transparent) 55%, transparent 85%)");
+    });
+    // what has the keyboard's focus is lit, so its ring shows in the dark
+    var f = document.activeElement;
+    if (f && f !== document.body && fit.contains(f) && f.matches(":focus-visible")) {
+      var fr = f.getBoundingClientRect();
+      holes.push(at(fr, fr.width * 0.75 + 40, fr.height * 0.75 + 40) + "rgba(255,255,255,1) 60%, transparent 100%)");
+    }
+    // a faint green on the keyboard, the desk's edge and the wall, round the screen itself
+    if (pc.classList.contains("on")) holes.push(at(g, g.width * 1.6, g.height * 1.9, 0.6) + "rgba(200,255,210,1), rgba(80,140,100,0.6) 40%, transparent 75%)");
+    night.style.background = holes.join(", ") + ", rgb(40, 46, 80)";
+  }
+  var lightWas = null;
+  try {
+    lightWas = sessionStorage.getItem("room-light");
+  } catch (e) {}
 
   var layer = el("div", "tags", fit);
   var tags = [];
@@ -653,6 +760,7 @@
     setFrame(s, (A.l + A.r) / 2 - (O.x + s * (c.x - O.x)), (A.t + A.b) / 2 - (O.y + s * (c.y - O.y)));
     void stage.offsetWidth;
     stage.style.removeProperty("transition");
+    glow();
   }
   // the head shows the bench at this size from now on; it reloads once, never in a loop
   function tooSmall() {
@@ -678,6 +786,7 @@
   });
   spread();
   frame();
+  setLight(lightWas !== "off");
   // again once the fonts are in, since words change the sizes: a small correction, not a new layout
   (document.fonts ? document.fonts.ready : Promise.resolve()).then(function () {
     spread(true);
