@@ -12,17 +12,24 @@ Run them before merging a change to the room (`room.js`, `room.css`, or the home
 pip install websocket-client
 python checks/framing.py
 python checks/fps.py
+python checks/contrast.py
 ```
+
+`contrast.py` also needs `pip install pillow numpy`.
 
 - `framing.py` — with `?room`, every link, button and word in the room is inside the window at
   1280×720, 1366×768, 1440×900, 1920×1080 and 2560×1080, and the walls and floor fill it to the
   corners; a window too small for the room, a phone, and the home without `?room` get the bench
   as before; `?room` is remembered for the session and `?room=0` turns it off; nothing on the
   desk moves when the fonts arrive after the first frame. Headless.
-- `fps.py` — the room keeps pace with a 60 Hz display in both schemes. It opens a visible
-  window, since a hidden one throttles its frames: leave it in front until it closes. The white
-  square crossing the desk in that window is the check's own, there so every frame is drawn
-  again; the site has no such thing.
+- `fps.py` — the room keeps pace with a 60 Hz display in both schemes, with its light on and
+  off. It opens a visible window, since a hidden one throttles its frames: leave it in front
+  until it closes. The white square crossing the desk in that window is the check's own, there
+  so every frame is drawn again; the site has no such thing.
+- `contrast.py` — with the room's light on, every text the reader can see clears 4.5:1 against
+  what is really behind it, in both schemes; with the light off, the night is a view the reader
+  chose and only the neon navigation has to. It measures pixels, drawing each text with and
+  without its ink at four times the density. Headless; about three minutes.
 
 `cdp.py` is the driver (Chrome comes from `CHROME`, or the usual Windows path), and
 `serve.py` the server: no caching, byte ranges, nothing logged. `python checks/serve.py`

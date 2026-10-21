@@ -208,6 +208,10 @@ html:not(.iso) .strip {
 }
 .iso .thing .label small {
   font-size: 1.05rem;
+  opacity: 1;
+}
+.iso .agenda .cover .year {
+  opacity: 1;
 }
 
 /* books: the cover on top, the pages below it, the back cover on the mat, and
@@ -645,14 +649,15 @@ html:not(.iso) .strip {
   margin: 0;
   padding: 10px 40px 22px;
   border-radius: 18px;
-  /* the clear backing board the tubes are mounted on, with its four screws */
+  /* the smoked backing board the tubes are mounted on, with its four screws, as the
+     navigation's: a pale tube does not read on a pale wall by day */
   background:
-    radial-gradient(circle at 14px 14px, rgba(255, 255, 255, 0.55) 0 3px, transparent 4px),
-    radial-gradient(circle at calc(100% - 14px) 14px, rgba(255, 255, 255, 0.55) 0 3px, transparent 4px),
-    radial-gradient(circle at 14px calc(100% - 14px), rgba(255, 255, 255, 0.55) 0 3px, transparent 4px),
-    radial-gradient(circle at calc(100% - 14px) calc(100% - 14px), rgba(255, 255, 255, 0.55) 0 3px, transparent 4px),
-    rgba(255, 255, 255, 0.07);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+    radial-gradient(circle at 14px 14px, rgba(255, 255, 255, 0.6) 0 3px, transparent 4px),
+    radial-gradient(circle at calc(100% - 14px) 14px, rgba(255, 255, 255, 0.6) 0 3px, transparent 4px),
+    radial-gradient(circle at 14px calc(100% - 14px), rgba(255, 255, 255, 0.6) 0 3px, transparent 4px),
+    radial-gradient(circle at calc(100% - 14px) calc(100% - 14px), rgba(255, 255, 255, 0.6) 0 3px, transparent 4px),
+    rgba(24, 30, 38, 0.82);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.45), inset 0 0 0 8px rgba(255, 255, 255, 0.08);
   font: 400 104px/1 "Tilt Neon", "Bricolage Grotesque", sans-serif;
   white-space: nowrap;
   /* the tube: a pale core inside its own coloured glass, glowing round it */
@@ -904,7 +909,7 @@ html:not(.iso) .strip {
 .iso .env-to {
   left: 2rem;
   bottom: 1.6rem;
-  color: #6b3a4a;
+  color: #4a2230;
 }
 .iso .env-stamp {
   right: 1.5rem;

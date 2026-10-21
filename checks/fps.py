@@ -1,5 +1,6 @@
 """The room's frame rate: the still room, with one thing moving across it so that every frame is
-drawn again, keeps pace with a 60 Hz display, in both schemes. Needs a window that is actually
+drawn again, keeps pace with a 60 Hz display, in both schemes, with the room's light on and
+off. Needs a window that is actually
 painting, so it opens one: a headless or hidden Chrome throttles its frames and measures
 nothing."""
 import sys
@@ -34,12 +35,14 @@ base = serve()
 b = Browser(1940, 1100, headless=False)
 try:
     for w, h in SIZES:
-        for scheme in ("light", "dark"):
+        for scheme, light in (("light", "on"), ("dark", "on"), ("dark", "off")):
             b.size(w, h)
             b.media(prefers_color_scheme=scheme)
-            b.nav(base + "/index.html?room", SETTLE)
+            b.nav(base + "/index.html?room", 1)
+            b.js(f"sessionStorage.setItem('room-light', '{light}')")
+            b.nav(base + "/index.html", SETTLE)
             if not b.js("document.documentElement.classList.contains('iso')"):
-                failures.append(f"{w} x {h} {scheme}: the room shows")
+                failures.append(f"{w} x {h} {scheme}, light {light}: the room shows")
                 print("FAIL  " + failures[-1])
                 continue
             b.js(MOVER)
@@ -48,7 +51,7 @@ try:
             time.sleep(SAMPLE)
             s = b.js(STATS)
             ok = s["p50"] <= FRAME_MS and s["slow"] < 5
-            what = f"{w} x {h} {scheme}: {1000 / s['p50']:.0f} fps, {s['slow']}% of {s['frames']} frames over 25 ms"
+            what = f"{w} x {h} {scheme}, light {light}: {1000 / s['p50']:.0f} fps, {s['slow']}% of {s['frames']} frames over 25 ms"
             print(("ok    " if ok else "FAIL  ") + what)
             if not ok:
                 failures.append(what)
