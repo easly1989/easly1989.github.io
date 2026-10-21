@@ -31,6 +31,45 @@
     <script>
       window.CONTACT_EMAIL = "caesar.themaster@gmail.com";
     </script>
+    <script>
+      // The room, while it is being built, shows only with ?room in the address, which is
+      // remembered for the session (?room=0 turns it off). It needs a wide window it fits at a
+      // scale of ROOM_FIT.min or more, within ROOM_FIT.margin of the edges, as room.js frames it:
+      // room.js measures the box it needs and keeps it, so this decides before anything is
+      // drawn. Otherwise the home is the bench. The room holds the first frame until it is
+      // built (#room-ready, at the end of the body).
+      window.ROOM_FIT = { min: 0.7, margin: 16 };
+      (function () {
+        var on = false,
+          box = null;
+        try {
+          var q = new URLSearchParams(location.search).get("room");
+          if (q !== null) sessionStorage.setItem("room", q === "0" ? "0" : "1");
+          on = sessionStorage.getItem("room") === "1";
+          box = JSON.parse(localStorage.getItem("room-box"));
+        } catch (e) {}
+        if (!on) return;
+        // a box that is not four sizes is ignored: the room measures it again
+        if (!box || !["w", "h", "dw", "dh"].every(function (k) { return box[k] > 0 || box[k] === 0; })) box = null;
+        function fits() {
+          if (!matchMedia("(min-width: 901px)").matches) return false;
+          var m = 2 * ROOM_FIT.margin;
+          return !box || Math.min((innerWidth - box.dw - m) / box.w, (innerHeight - box.dh - m) / box.h) >= ROOM_FIT.min;
+        }
+        if (!fits()) {
+          addEventListener("resize", function () {
+            if (fits()) location.reload();
+          });
+          return;
+        }
+        document.documentElement.classList.add("iso");
+        document.write(
+          '<link rel="expect" href="#room-ready" blocking="render" />' +
+            '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tilt+Neon&display=swap" />' +
+            '<link rel="stylesheet" href="room.css" />',
+        );
+      })();
+    </script>
     <style>
       .fit {
         position: relative;
@@ -1692,6 +1731,14 @@
       })();
     </script>
     <script src="site.js" defer></script>
-    <script src="cat.js" defer></script>
+    <script>
+      // the room is built here, before the first frame; the cat lives on the bench only
+      document.write(
+        document.documentElement.classList.contains("iso")
+          ? '<script src="room.js"><\/script>'
+          : '<script src="cat.js" defer><\/script>',
+      );
+    </script>
+    <span id="room-ready" hidden></span>
   </body>
 </html>
