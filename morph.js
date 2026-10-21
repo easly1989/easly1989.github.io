@@ -1,9 +1,12 @@
-/* The room's opening moves (home only, with room.js).
+/* The room's opening moves (home only, right after room.js, not deferred: a page loaded
+   fresh is revealed while it is still loading, and the morph back must be named by then).
    Picking up a project object plays its move: it rises straight up, clear of the desk and of
    what stands beside it, turns to face the reader, and morphs into its page's counterpart
    through a cross-document view transition. Coming back is the reverse. The mug falls and
    its coffee floods the view instead; the camera flashes and ejects its print first; the
-   sticky note peels off into the Write to me sheet. The objects are named only for the trip,
+   sticky note peels off into the Write to me sheet. The camera takes one of the photos
+   (photos.js) each time; back from About the photo lands in its place in the room, from where
+   it can be picked up again. The objects are named only for the trip,
    and from the click that starts a move the page is inert until it has gone. It has no
    interface: it listens to clicks and to pageswap, pagereveal and pageshow. */
 (function () {
@@ -185,8 +188,13 @@
   }
 
   // ---- the camera: the flash and the shutter, then the print slides out ---------------
-  function shoot(camera, then) {
+  // A photo taken again leaves its place under the flash
+  function unpin(shot) {
+    if (shot && ROOM.snaps) ROOM.snaps.show(shot.id, false);
+  }
+  function shoot(camera, shot, then) {
     camera.classList.add("opening");
+    unpin(shot);
     var html = document.documentElement;
     html.classList.add("flashing");
     setTimeout(function () {
@@ -225,9 +233,13 @@
       if (!a || ev.button || ev.metaKey || ev.ctrlKey || ev.shiftKey) return;
       var page = file(a.getAttribute("href"));
       if (!POSE[page] && page !== "donate.html") return;
+      var shot = a.classList.contains("camera") && window.PHOTOS ? PHOTOS.shoot() : null;
       // under reduced motion, or with no morphs to land in, the link just opens its page,
       // without the flat bench's moves (site.js)
-      if (still.matches || !morphs) return ev.stopImmediatePropagation();
+      if (still.matches || !morphs) {
+        unpin(shot);
+        return ev.stopImmediatePropagation();
+      }
       ev.preventDefault();
       ev.stopImmediatePropagation();
       trip = page;
@@ -249,8 +261,23 @@
           pose(e, false, go);
         });
       }
-      if (a.classList.contains("camera")) shoot(a, lift);
+      if (shot) shoot(a, shot, lift);
       else lift();
+    },
+    true
+  );
+  // A pinned photo picked up opens About on itself, developed; it is what morphs into About's
+  // photo, and back in the room it lands in the same place
+  var picked = null;
+  document.addEventListener(
+    "click",
+    function (ev) {
+      var s = ev.target.closest && ev.target.closest(".snap.out");
+      if (!s || !window.PHOTOS || ev.button || ev.metaKey || ev.ctrlKey || ev.shiftKey) return;
+      PHOTOS.choose(s.dataset.photo);
+      picked = s;
+      trip = "about.html";
+      document.body.inert = true;
     },
     true
   );
@@ -259,6 +286,10 @@
     if (!e.viewTransition || !e.activation) return;
     var page = file(e.activation.entry.url);
     if (PAIRS[page] && page !== "terminal.html" && page !== trip) return;
+    if (page === "about.html" && picked) {
+      picked.style.viewTransitionName = "photo";
+      return;
+    }
     if (page === "donate.html") {
       // the coffee over the view becomes the spill on the Donate page; nothing else rides
       // over it, not even the neon navigation
@@ -279,8 +310,18 @@
     if (!from) return;
     var page = file(from.url);
     if (page === "donate.html") return refill();
-    // the print never goes back into the camera: it comes back inside, unmorphed
-    if (page === "about.html") return stow();
+    // the print never goes back into the camera: it comes back inside, unmorphed, and
+    // About's photo morphs into its place in the room instead (room.js has put it out)
+    if (page === "about.html") {
+      stow();
+      var snap = ROOM.snaps && ROOM.snaps.landed();
+      if (!snap) return;
+      snap.style.viewTransitionName = "photo";
+      e.viewTransition.finished.finally(function () {
+        snap.style.viewTransitionName = "";
+      });
+      return;
+    }
     var named = [];
     each(page, function (el, name) {
       if (POSE[page]) pose(el, true);
@@ -300,6 +341,8 @@
     if (!e.persisted) return;
     document.body.inert = false;
     trip = "";
+    if (picked) picked.style.viewTransitionName = "";
+    picked = null;
     refill();
     stow();
     [].forEach.call(document.querySelectorAll(".unbanded"), function (t) {
@@ -350,9 +393,11 @@
       },
       true
     );
-  // However it is closed (its button, outside it, sending the form, Esc), it goes back
-  var dialog = document.querySelector(".sheet-dialog");
-  if (dialog && note) {
+  // However it is closed (its button, outside it, sending the form, Esc), it goes back.
+  // The sheet is site.js's, which is deferred: it is there once the page is parsed
+  document.addEventListener("DOMContentLoaded", function () {
+    var dialog = document.querySelector(".sheet-dialog");
+    if (!dialog || !note) return;
     var shut = dialog.close.bind(dialog);
     dialog.close = function () {
       if (!dialog.open) return shut();
@@ -366,5 +411,5 @@
       ev.preventDefault();
       dialog.close();
     });
-  }
+  });
 })();

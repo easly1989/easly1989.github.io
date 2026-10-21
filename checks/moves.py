@@ -35,8 +35,9 @@ addEventListener('load', () => {
     sessionStorage.__swap = JSON.stringify({ ms: Math.round(performance.now() - (window.__t0 || 0)), vt: !!e.viewTransition, names: names(), p50: d.length ? d[d.length >> 1] : null });
   });
 });
+// read once every listener of the page has run
 addEventListener('pagereveal', (e) => {
-  queueMicrotask(() => { sessionStorage.__reveal = JSON.stringify({ page: location.pathname, vt: !!e.viewTransition, names: [...document.querySelectorAll('*')].map((n) => getComputedStyle(n).viewTransitionName).filter((v) => v && v !== 'none' && v !== 'auto') }); });
+  setTimeout(() => { sessionStorage.__reveal = JSON.stringify({ page: location.pathname, vt: !!e.viewTransition, names: [...document.querySelectorAll('*')].map((n) => getComputedStyle(n).viewTransitionName).filter((v) => v && v !== 'none' && v !== 'auto') }); }, 0);
 });
 addEventListener('error', (e) => { const l = JSON.parse(localStorage.__errs || '[]'); l.push(location.pathname + ': ' + e.message); localStorage.__errs = JSON.stringify(l); });
 """
@@ -120,6 +121,14 @@ try:
             state["page"].endswith("index.html") and not state["inert"] and not state["lifted"] and not state["turned"] and not state["named"] and landed,
             f"{page}: back on the room, it lands and is put down, and the page answers ({state}, {back and back['names']})",
         )
+    # back by a link, not the cache: the room loads fresh and is shown while it is still
+    # loading, and the pair must be named by then
+    b.nav(base + "/cloudbank.html", 2)
+    b.js("sessionStorage.removeItem('__reveal')")
+    b.js("document.querySelector('a.crumb').click()")
+    time.sleep(2.5)
+    fresh = json.loads(b.js("sessionStorage.__reveal || 'null'") or "null")
+    check(bool(fresh) and fresh["vt"] and "cloudbank" in fresh["names"], f"back to the room by a link, the ledger is named for the morph ({fresh})")
     # skipping the move: Ctrl-click is the browser's own (a new tab), and leaves the room as it is
     b.nav(base + "/index.html", 3)
     pt = b.js(POINT + "('.thing.ledger')")
