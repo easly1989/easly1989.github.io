@@ -509,7 +509,11 @@ html:not(.iso) .strip {
 .iso .mug.fallen .shade {
   transition: none;
 }
-/* the coffee over the whole view, between the bench and Donate */
+/* the coffee over the whole view, between the bench and Donate; in the dark it is as dark
+   as the room */
+.lights-off .coffee-cover {
+  filter: brightness(0.4);
+}
 .coffee-cover {
   position: fixed;
   inset: 0;

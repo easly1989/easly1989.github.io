@@ -57,9 +57,9 @@ def check(ok, what):
         failures.append(what)
 
 
-def click(b, x, y):
+def click(b, x, y, modifiers=0):
     for t in ("mouseMoved", "mousePressed", "mouseReleased"):
-        b.call("Input.dispatchMouseEvent", type=t, x=x, y=y, button="left", clickCount=1)
+        b.call("Input.dispatchMouseEvent", type=t, x=x, y=y, button="left", clickCount=1, modifiers=modifiers)
 
 
 def dupes(names):
@@ -118,6 +118,24 @@ try:
             state["page"].endswith("index.html") and not state["inert"] and not state["lifted"] and not state["turned"] and not state["named"] and landed,
             f"{page}: back on the room, it lands and is put down, and the page answers ({state}, {back and back['names']})",
         )
+    # skipping the move: Ctrl-click is the browser's own (a new tab), and leaves the room as it is
+    b.nav(base + "/index.html", 3)
+    pt = b.js(POINT + "('.thing.ledger')")
+    click(b, *pt, modifiers=2)
+    time.sleep(1.2)
+    st = b.js("[location.pathname, document.body.inert, document.querySelector('.thing.ledger').style.getPropertyValue('--lift'), document.querySelector('.thing.ledger').className]")
+    check(st[0].endswith("index.html") and not st[1] and not st[2] and "unbanded" not in st[3], f"Ctrl-click opens elsewhere and plays no move ({st})")
+    # and under reduced motion the page just opens, at once
+    b.media(prefers_reduced_motion="reduce")
+    b.nav(base + "/index.html", 3)
+    b.js("sessionStorage.removeItem('__swap')")
+    b.js(REC)
+    click(b, *pt)
+    time.sleep(2)
+    swap = json.loads(b.js("sessionStorage.__swap || 'null'") or "null")
+    there = b.js("location.pathname").split("/")[-1]
+    check(there == "cloudbank.html" and swap and swap["ms"] < 400, f"under reduced motion the page opens with no move ({there}, {swap and swap['ms']} ms)")
+    b.media(prefers_reduced_motion="no-preference")
     errs = json.loads(b.js("localStorage.__errs") or "[]")
     check(not errs, "no script errors" + (f" ({errs})" if errs else ""))
 finally:

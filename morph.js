@@ -207,6 +207,9 @@
   }
 
   // ---- leaving ---------------------------------------------------------------------------
+  // the page an object's move is leading to: only that trip names the object; reached
+  // another way (the navigation's Donate or About), the page just comes in
+  var trip = "";
   document.addEventListener(
     "click",
     function (ev) {
@@ -220,6 +223,7 @@
       if (still.matches || !morphs) return ev.stopImmediatePropagation();
       ev.preventDefault();
       ev.stopImmediatePropagation();
+      trip = page;
       // from here the page is leaving: nothing else answers, or a second click mid-move
       // would start a second move, or open another page under this one's
       document.body.inert = true;
@@ -247,6 +251,7 @@
   addEventListener("pageswap", function (e) {
     if (!e.viewTransition || !e.activation) return;
     var page = file(e.activation.entry.url);
+    if (PAIRS[page] && page !== "terminal.html" && page !== trip) return;
     if (page === "donate.html") {
       // the coffee over the view becomes the spill on the Donate page; nothing else rides
       // over it, not even the neon navigation
@@ -287,6 +292,7 @@
   addEventListener("pageshow", function (e) {
     if (!e.persisted) return;
     document.body.inert = false;
+    trip = "";
     refill();
     stow();
     [].forEach.call(document.querySelectorAll(".unbanded"), function (t) {
@@ -337,26 +343,21 @@
       },
       true
     );
+  // However it is closed (its button, outside it, sending the form, Esc), it goes back
   var dialog = document.querySelector(".sheet-dialog");
-  function putBack(ev) {
-    if (!dialog.open || !note) return;
-    ev.preventDefault();
-    ev.stopImmediatePropagation();
-    swap(paper(), function () {
-      return note;
-    }, function () {
+  if (dialog && note) {
+    var shut = dialog.close.bind(dialog);
+    dialog.close = function () {
+      if (!dialog.open) return shut();
+      swap(paper(), function () {
+        return note;
+      }, shut);
+    };
+    // Esc closes it natively; where that cannot be held back, it closes without the move
+    dialog.addEventListener("cancel", function (ev) {
+      if (!ev.cancelable) return;
+      ev.preventDefault();
       dialog.close();
     });
-  }
-  if (dialog) {
-    dialog.querySelector(".close").addEventListener("click", putBack, true);
-    dialog.addEventListener(
-      "click",
-      function (ev) {
-        if (ev.target === dialog) putBack(ev);
-      },
-      true
-    );
-    dialog.addEventListener("cancel", putBack);
   }
 })();
