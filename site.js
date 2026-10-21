@@ -275,7 +275,9 @@
           if (!ch) return;
           if (version && ch.version) el.textContent = ch.version;
           if (date && ch.published) {
+            // In Rome's time, like CloudBank's changelog and the fallback.
             el.textContent = new Date(ch.published).toLocaleDateString("en-GB", {
+              timeZone: "Europe/Rome",
               day: "numeric",
               month: "long",
               year: "numeric",
