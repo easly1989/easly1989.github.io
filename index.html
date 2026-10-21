@@ -33,15 +33,18 @@
     </script>
     <script>
       // The room, while it is being built, shows only with ?room in the address, which is
-      // remembered for the session. It needs a wide window it fits at a scale of 0.7 or more:
+      // remembered for the session (?room=0 turns it off). It needs a wide window it fits at a
+      // scale of ROOM_FIT.min or more, within ROOM_FIT.margin of the edges, as room.js frames it:
       // room.js measures the box it needs and keeps it, so this decides before anything is
       // drawn. Otherwise the home is the bench. The room holds the first frame until it is
       // built (#room-ready, at the end of the body).
+      window.ROOM_FIT = { min: 0.7, margin: 16 };
       (function () {
         var on = false,
           box = null;
         try {
-          if (/[?&]room\b/.test(location.search)) sessionStorage.setItem("room", "1");
+          var q = new URLSearchParams(location.search).get("room");
+          if (q !== null) sessionStorage.setItem("room", q === "0" ? "0" : "1");
           on = sessionStorage.getItem("room") === "1";
           box = JSON.parse(localStorage.getItem("room-box"));
         } catch (e) {}
@@ -50,7 +53,8 @@
         if (!box || !["w", "h", "dw", "dh"].every(function (k) { return box[k] > 0 || box[k] === 0; })) box = null;
         function fits() {
           if (!matchMedia("(min-width: 901px)").matches) return false;
-          return !box || Math.min((innerWidth - box.dw - 32) / box.w, (innerHeight - box.dh - 32) / box.h) >= 0.7;
+          var m = 2 * ROOM_FIT.margin;
+          return !box || Math.min((innerWidth - box.dw - m) / box.w, (innerHeight - box.dh - m) / box.h) >= ROOM_FIT.min;
         }
         if (!fits()) {
           addEventListener("resize", function () {
