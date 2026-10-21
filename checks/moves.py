@@ -67,7 +67,9 @@ def dupes(names):
 
 
 base = serve()
-b = Browser(1460, 960, headless=False)
+# Frames are drawn as fast as they can be, not to the display's beat, so a frame's interval
+# is what it costs: on a 90 Hz display a 12 ms frame misses a beat and reads as 45 fps
+b = Browser(1460, 960, headless=False, flags=["--disable-gpu-vsync", "--disable-frame-rate-limit"])
 try:
     b.call("Page.enable")
     b.call("Page.addScriptToEvaluateOnNewDocument", source=PROBE)
