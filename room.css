@@ -223,6 +223,11 @@ html:not(.iso) .strip {
 .iso .agenda .riff {
   translate: 0 0 -0.6px;
 }
+/* the ledger's band slips off as it rises (morph.js) */
+.iso .ledger.unbanded .band {
+  transform: translateX(70px) rotate(10deg);
+  opacity: 0;
+}
 /* the bookmark comes out from between the pages, not from the top of the cover, and falls
    from their edge towards the mat */
 .iso .agenda .ribbon {
@@ -363,8 +368,8 @@ html:not(.iso) .strip {
   clip-path: inset(126px 0 0 0);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
   transition:
-    top 1s cubic-bezier(0.35, 0.1, 0.25, 1) 0.4s,
-    clip-path 1s cubic-bezier(0.35, 0.1, 0.25, 1) 0.4s;
+    top 0.5s cubic-bezier(0.35, 0.1, 0.25, 1) 0.2s,
+    clip-path 0.5s cubic-bezier(0.35, 0.1, 0.25, 1) 0.2s;
 }
 .iso .camera.opening .film,
 .iso .camera.ejected .film {
@@ -383,6 +388,30 @@ html:not(.iso) .strip {
   width: 400px;
   height: 330px;
   background: radial-gradient(closest-side, #fff 0 18%, rgba(255, 255, 255, 0.85) 38%, transparent);
+}
+
+/* the camera's flash, over the whole view */
+.iso .fit::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+}
+.iso.flashing .fit::after {
+  animation: room-flash 0.5s ease-out;
+}
+@keyframes room-flash {
+  10% {
+    opacity: 0.7;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .iso.flashing .fit::after {
+    animation: none;
+  }
 }
 
 /* the envelope: letter inside, flap and wax seal on top */
@@ -420,6 +449,13 @@ html:not(.iso) .strip {
   border-radius: 50%;
   border: 12px solid #f4f1ea;
 }
+.iso .mug .mug-wall {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform-origin: 50% 0;
+  pointer-events: none;
+}
 .iso .mug .handle {
   right: -30px;
   top: 50%;
@@ -433,6 +469,127 @@ html:not(.iso) .strip {
 .iso .steam {
   transform-origin: 50% 100%;
   transform: translate(-50%, -20%) translateZ(2px) rotateX(-90deg);
+}
+/* The way to Donate: the mug falls over backwards, onto the open mat towards the window
+   (towards the chair it would be hidden behind it), hinged on the back edge of its base,
+   and the coffee spreads on the desk from its mouth (morph.js) */
+.iso .mug .cup {
+  transform-origin: 50% 0 calc(-1 * var(--h3));
+  transition: transform 0.55s cubic-bezier(0.55, 0, 1, 0.45);
+}
+.iso .mug.falling .cup {
+  transform: rotateX(90deg);
+}
+.iso .mug.falling .cup::before {
+  transform: translateZ(-12px) scale(0.35);
+}
+.iso .mug.falling .steam {
+  opacity: 0;
+}
+.iso .mug .puddle {
+  left: -65px;
+  top: -274px;
+  transform-origin: 50% 96%;
+  transition: transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) 0.45s;
+}
+.iso .mug.falling .puddle {
+  transform: scale(1.15);
+}
+/* lying down, it no longer throws the standing mug's shadow */
+.iso .mug .shade {
+  transition: opacity 0.3s ease;
+}
+.iso .mug.falling .shade {
+  opacity: 0;
+}
+/* coming back it simply stands full again, at once */
+.iso .mug.fallen .cup,
+.iso .mug.fallen .cup::before,
+.iso .mug.fallen .puddle,
+.iso .mug.fallen .shade {
+  transition: none;
+}
+/* the coffee over the whole view, between the bench and Donate; in the dark it is as dark
+   as the room */
+.lights-off .coffee-cover {
+  filter: brightness(0.4);
+}
+.coffee-cover {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  pointer-events: none;
+  background: radial-gradient(circle at 40% 35%, #6b3f22, #3b2212 70%);
+  clip-path: circle(0 at 50% 50%);
+}
+
+/* Planora's idea: a slip folded in half, lying among the others at the bottom of the
+   jar, its blank back up. On the way to Planora it rises straight out of the jar, then
+   opens out as it turns to face the reader (morph.js) */
+.iso .jar .jar-idea-at {
+  position: absolute;
+  left: 44%;
+  top: 56%;
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+  translate: 0 0 calc(-1 * var(--h3) + 15px);
+  rotate: -16deg;
+  pointer-events: none;
+}
+.iso .jar-idea {
+  position: absolute;
+  left: -48px;
+  top: -32px;
+  width: 96px;
+  height: 64px;
+  transform-style: preserve-3d;
+  color: #2b2722;
+}
+.iso .jar-idea .fold {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  box-sizing: border-box;
+}
+.iso .jar-idea .fold.a {
+  top: 0;
+  padding: 7px 8px 0;
+  border-radius: 2px 2px 0 0;
+  background: linear-gradient(transparent 78%, rgba(0, 0, 0, 0.12)), #fbf6e8;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+}
+.iso .jar-idea .fold.a b {
+  font: 800 17px/1 "Bricolage Grotesque", sans-serif;
+}
+/* the lower half, hinged on the crease: folded over the upper one, or open below it */
+.iso .jar-idea .fold.b {
+  top: 50%;
+  transform-origin: 50% 0;
+  transform: rotateX(178deg);
+  transform-style: preserve-3d;
+  transition: transform 0.45s cubic-bezier(0.3, 0.7, 0.3, 1);
+}
+.iso .jar-idea.unfolded .fold.b {
+  transform: rotateX(0deg);
+}
+.iso .jar-idea .front,
+.iso .jar-idea .back {
+  position: absolute;
+  inset: 0;
+  border-radius: 0 0 2px 2px;
+  backface-visibility: hidden;
+}
+.iso .jar-idea .front {
+  padding: 4px 8px;
+  box-sizing: border-box;
+  background: linear-gradient(rgba(0, 0, 0, 0.1), transparent 22%), #fbf6e8;
+  font: 400 10px/1.2 "Atkinson Hyperlegible", sans-serif;
+}
+.iso .jar-idea .back {
+  background: linear-gradient(rgba(0, 0, 0, 0.14), transparent 30%), #f1e9d4;
+  transform: rotateX(180deg);
 }
 
 /* a print on a curve: narrow strips, each showing its slice of the whole */
@@ -1070,7 +1227,9 @@ html:not(.iso) .strip {
   visibility: hidden;
   view-transition-name: none;
 }
+/* the neon navigation is every page's bar, for good */
 .iso .plexi {
+  view-transition-name: bar;
   position: absolute;
   width: 700px;
   height: 96px;
