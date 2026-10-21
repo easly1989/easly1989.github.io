@@ -39,7 +39,8 @@ Open it in a real, visible browser window. The cat and the frame counter run onc
 | `?nonight` | the lights-off overlay is removed |
 | `?lite=<selectors>` | those parts of the room are hidden |
 | `?nofur` | no fur shells |
-| `?fur=<units>` | how far the fur reaches, in model units (default 0.11) |
+| `?fur=<units>` | how far the fur reaches, in model units (default 0.15) |
+| `?shells=<n>`, `?srep=<n>`, `?comb=<k>`, `?oline=<k>` | fur layers (14), strand coarseness (26, fewer is coarser), how far the tips lean (0.9), where the outline sits inside the fur (0.22) |
 | `?nochonk` | the model's own proportions, not widened |
 | `?flat` | the exported faceted normals |
 | `?gloss` | the exported, glossy material |
