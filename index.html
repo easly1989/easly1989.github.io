@@ -25,6 +25,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
+    <link rel="expect" href="#room-ready" blocking="render" />
 
     <!-- ===== Site config =====================================================
          CONTACT_EMAIL: where the "Write to me" sheet sends people (mailto). -->
@@ -1264,6 +1265,7 @@
         }
       }
     </style>
+    <link rel="stylesheet" href="bench3d.css" />
   </head>
   <body data-page="home">
     <div class="mat">
@@ -1691,6 +1693,9 @@
         });
       })();
     </script>
+    <script src="bench3d.js"></script>
+    <script src="vt-proto.js"></script>
+    <span id="room-ready" hidden></span>
     <script src="site.js" defer></script>
     <script src="cat.js" defer></script>
   </body>
