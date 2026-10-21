@@ -725,6 +725,80 @@ html:not(.iso) .strip {
   transform: scale(1.5) rotate(-3deg);
 }
 
+/* ---- the photos the camera took: on the wall, or stuck on the computer ---------------- */
+.iso .snap {
+  position: absolute;
+  display: block;
+  left: 0;
+  top: 0;
+  width: 84px;
+  height: 102px;
+  background: #fbfbf8;
+  border-radius: 1px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
+/* in the camera, or on About: not in its place */
+.iso .snap:not(.out) {
+  visibility: hidden;
+}
+/* one that is out can be picked up: it opens About on that photo */
+.iso .snap.out {
+  pointer-events: auto;
+  cursor: pointer;
+}
+.iso .snap:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+/* the picture inside the print's white border, wider at the bottom */
+.iso .snap-img {
+  position: absolute;
+  display: block;
+  inset: 6px 6px 22px;
+  background-color: #2a2925;
+  background-position: 50% 50%;
+  background-size: cover;
+}
+/* what is written on its bottom edge, in pen */
+.iso .snap-pen {
+  position: absolute;
+  display: block;
+  left: 7px;
+  right: 7px;
+  bottom: 2px;
+  height: 18px;
+  font: 500 12px/18px "Caveat", cursive;
+  white-space: nowrap;
+}
+/* the words and their letters run along the line, also on the computer, which places
+   every span it holds */
+.iso .snap-pen span {
+  position: relative;
+}
+.iso .snap-pen .pen-heart {
+  display: block;
+  width: 15px;
+  height: 13px;
+  margin-top: 3px;
+  fill: none;
+  stroke: #d0313f;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+/* on the wall a strip of tape holds it at the top */
+.iso .snap.on-wall-print::after {
+  content: "";
+  position: absolute;
+  left: 26px;
+  top: -8px;
+  width: 32px;
+  height: 14px;
+  background: rgba(240, 231, 204, 0.85);
+  rotate: -3deg;
+}
+
 /* ---- tags: an object's name at reading size, while it is pointed at --------------- */
 .iso .anchor {
   position: absolute;

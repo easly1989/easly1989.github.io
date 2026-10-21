@@ -639,6 +639,84 @@
     el("span", "pc-note", side).appendChild(sticky);
   }
 
+  // ---- the photos the camera took ---------------------------------------------------
+  // One place per photo (photos.js), in its order: on the back wall round the name and the
+  // poster, never over their words nor in the window, or stuck on the computer's side round
+  // the note. On the wall: along it and the height of the photo's top; on the computer: in
+  // the note's own frame, which reads the right way up. Each is a link to About on itself,
+  // shown only while it is out.
+  var SNAP_SPOTS = [
+    { along: -150, z: 860, r: -4 },
+    { pc: [-92, 30], r: -6 },
+    { along: 320, z: 452, r: 5 },
+    { pc: [96, 168], r: 7 },
+    { along: 380, z: 200, r: -6 },
+    { along: 170, z: 90, r: 8 },
+    { pc: [-58, 176], r: -4 },
+  ];
+  var snaps = {};
+  if (window.PHOTOS)
+    PHOTOS.all.forEach(function (p, i) {
+      var at = SNAP_SPOTS[i];
+      if (!at || (at.pc && !side)) return;
+      var s;
+      if (at.pc) {
+        // laid out in the note's frame (see .pc-note), a hair off the case
+        s = el("a", "snap on-pc", el("span", "pc-note snap-pc", side), "left:" + at.pc[0] + "px;top:" + at.pc[1] + "px;transform:translateZ(0.4px) rotate(" + at.r + "deg)");
+      } else {
+        // a hair in front of the wall, and of the poster it may overlap
+        var w = onWall("back", at.along, at.z, "snap-wall");
+        w.style.top = BACK + 5 + "px";
+        s = el("a", "snap on-wall-print", w, "transform:rotate(" + at.r + "deg)");
+      }
+      s.href = "about.html";
+      s.setAttribute("aria-label", "About me, with this photo: " + p.alt);
+      s.dataset.photo = p.id;
+      el("span", "snap-img", s, "background-image:url(" + p.thumb + ")");
+      el("span", "snap-pen", s).innerHTML = PHOTOS.pen(p);
+      snaps[p.id] = s;
+    });
+  function snapShow(id, on) {
+    if (!snaps[id]) return;
+    snaps[id].classList.toggle("out", on);
+    var out = PHOTOS.out().filter(function (o) {
+      return o !== id;
+    });
+    PHOTOS.setOut(on ? out.concat(id) : out);
+  }
+  // the photo About showed goes to its place, however the reader came back: with the morph,
+  // which names it (morph.js), or without one
+  var landed = null;
+  function land() {
+    var shown = window.PHOTOS && PHOTOS.shown();
+    if (!shown) return;
+    PHOTOS.setShown("");
+    if (!snaps[shown.id]) return;
+    snapShow(shown.id, true);
+    landed = snaps[shown.id];
+  }
+  if (window.PHOTOS) {
+    PHOTOS.out().forEach(function (id) {
+      if (snaps[id]) snaps[id].classList.add("out");
+    });
+    land();
+    // the back/forward cache brings the room back as it was left
+    addEventListener("pageshow", function (e) {
+      if (e.persisted) land();
+    });
+  }
+  // a long caption is written smaller, so it stays on the print's edge
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(function () {
+    Object.keys(snaps).forEach(function (id) {
+      var pen = snaps[id].querySelector(".snap-pen");
+      var line = pen && pen.firstElementChild;
+      if (!line) return;
+      var space = pen.clientWidth,
+        used = line.offsetWidth;
+      if (used > space) line.style.fontSize = (parseFloat(line.style.fontSize) || 1) * (space / used) * 0.96 + "em";
+    });
+  });
+
   // ---- the room's light, and the night ------------------------------------------------
   // A switch on the back wall, remembered for the visit; the room starts with it on. With
   // it off, a multiply layer darkens the room, with holes where its own sources shine.
@@ -846,6 +924,22 @@
     spread(true);
     frame();
   });
-  // what the room's other modules use of it: morph.js turns things to face the reader
-  window.ROOM = { stage: stage, localMatrix: localMatrix };
+  // what the room's other modules use of it: morph.js turns things to face the reader, and
+  // takes a photo out of its place or names the one that has just landed in it
+  window.ROOM = {
+    stage: stage,
+    localMatrix: localMatrix,
+    snaps: {
+      el: function (id) {
+        return snaps[id];
+      },
+      show: snapShow,
+      // the photo that has just come back from About, once
+      landed: function () {
+        var l = landed;
+        landed = null;
+        return l;
+      },
+    },
+  };
 })();
