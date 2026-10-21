@@ -1,0 +1,1063 @@
+/* The home as an isometric room, drawn by room.js. Everything here is scoped to html.iso,
+   which the home sets only when the room is shown; the phone's column, and the bench without
+   ?room, stay as they are. */
+/* one screen, no scrolling: the camera frames the desk */
+.iso .mat {
+  height: 100vh;
+  min-height: 0;
+  background: radial-gradient(ellipse 80% 70% at 50% 55%, #3a3430, #1d1a18 80%);
+}
+.iso .fit {
+  height: calc(100vh - 64px);
+}
+.iso .stage {
+  transform-style: preserve-3d;
+  transform: translateX(calc(-50% + var(--iso-x, 179px))) translateY(var(--iso-y, 73px)) scale(var(--s, 1)) scale(var(--zoom, 0.72)) rotateX(54.7356deg) rotateZ(-45deg);
+  transform-origin: 50% 50%;
+}
+.iso .guides,
+.iso .ruler {
+  display: none;
+}
+
+/* ---- the room's colours ------------------------------------------------------- */
+:root {
+  --desk: #a9774b;
+  --desk-leg: #8d6340;
+  --wall: #d9d2c4;
+  --skirting: #b9ad98;
+  --chair: #3f4a52;
+  --chair-leg: #2c3338;
+  --chair-mesh: #353e45;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --desk: #6e4c31;
+    --desk-leg: #573b26;
+    --wall: #4a4640;
+    --skirting: #3a3631;
+    --chair: #2c353b;
+    --chair-leg: #1e2428;
+    --chair-mesh: #262d32;
+  }
+  .iso .floor-plane {
+    filter: brightness(0.55);
+  }
+}
+
+/* ---- the room: boxes drawn by room.js ------------------------------------ */
+.iso .rbox,
+.iso .rbox > i {
+  position: absolute;
+  display: block;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+.iso .rbox > i.t {
+  inset: 0;
+}
+.iso .rbox > i.s {
+  left: 0;
+  width: 100%;
+  transform-origin: 50% 0;
+}
+.iso .rbox > i.n {
+  left: 0;
+  width: 100%;
+  transform-origin: 50% 100%;
+}
+.iso .rbox > i.e {
+  top: 0;
+  height: 100%;
+  transform-origin: 0 50%;
+}
+.iso .rbox > i.w {
+  top: 0;
+  height: 100%;
+  transform-origin: 100% 50%;
+}
+.iso .rbox.round > i.t {
+  border-radius: 50%;
+}
+.iso .floor-plane {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.18) 0 2px, transparent 2px 120px),
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.1) 0 2px, transparent 2px 600px),
+    linear-gradient(90deg, #8a6a4c, #7d5f43 30%, #8f6f50 60%, #7a5c41);
+}
+.iso .mat-top {
+  background:
+    linear-gradient(var(--line-2) 1px, transparent 1px) 40px 40px / 200px 200px,
+    linear-gradient(90deg, var(--line-2) 1px, transparent 1px) 40px 40px / 200px 200px,
+    linear-gradient(var(--line) 1px, transparent 1px) 40px 40px / 40px 40px,
+    linear-gradient(90deg, var(--line) 1px, transparent 1px) 40px 40px / 40px 40px,
+    var(--mat);
+  border-radius: 6px;
+}
+.iso .caster {
+  position: absolute;
+  display: block;
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #555c61, #1b1f22 70%);
+  pointer-events: none;
+}
+
+/* ---- objects: the face sits at its height, the body hangs below it ---------- */
+.iso .thing {
+  --lift: 0px;
+  transform-style: preserve-3d;
+  translate: 0 0 calc(var(--h3, 0px) + var(--lift));
+  filter: none;
+  transition:
+    transform 0.4s var(--ease-spring),
+    translate 0.35s var(--ease-out),
+    scale 0.25s var(--ease-out);
+}
+.iso .thing:hover,
+.iso .thing:focus-visible {
+  --lift: 18px;
+  transform: translate(var(--nx, 0px), var(--ny, 0px)) rotate(calc(var(--r, 0deg) + var(--nr, 0deg)));
+  filter: none;
+}
+.iso .thing.lift {
+  --lift: 46px;
+  filter: none;
+}
+.iso .ledger,
+.iso .agenda {
+  perspective: none;
+}
+.iso .ledger .cover,
+.iso .agenda .cover,
+.iso .mug .cup,
+.iso .jar .glass,
+.iso .camera .lens,
+.iso .envelope .seal {
+  transform-style: preserve-3d;
+}
+/* a named element is captured flat for page transitions, and flattens its 3D */
+.iso #ledger,
+.iso #agenda,
+.iso .thing.cards,
+.iso .thing.jar,
+.iso .thing.envelope,
+.iso .mug .cup,
+.iso .mug .puddle,
+.iso .camera .film,
+.iso .pc .glass {
+  view-transition-name: none;
+}
+/* what rests on the mat beside an object, not on top of it */
+.iso .thing .ground {
+  translate: 0 0 calc(-1 * var(--h3) - var(--lift) + 1px);
+  transition: translate 0.35s var(--ease-out);
+}
+.iso .slice,
+.iso .shade,
+.iso .spine,
+.iso .handle,
+.iso .strip,
+.iso .strip-in {
+  position: absolute;
+  pointer-events: none;
+}
+.iso .thing .strip {
+  pointer-events: auto;
+}
+.iso .thing .hit-plane {
+  position: absolute;
+  transform-origin: 50% 0;
+  pointer-events: auto;
+}
+.iso .shade {
+  inset: 0;
+  border-radius: var(--fr, 8px);
+  background: rgba(0, 0, 0, 0.5);
+  filter: blur(calc(8px + var(--lift) * 0.4));
+  transform: translateZ(calc(-1 * var(--h3) - var(--lift) + 0.5px))
+    translate(calc(var(--h3) * 0.18 + var(--lift) * 0.5), calc(var(--h3) * 0.3 + var(--lift) * 0.8));
+  transition:
+    transform 0.35s var(--ease-out),
+    filter 0.35s var(--ease-out);
+}
+html:not(.iso) .slice,
+html:not(.iso) .shade,
+html:not(.iso) .spine,
+html:not(.iso) .handle,
+html:not(.iso) .strip {
+  display: none;
+}
+/* the words printed on the objects, a size that reads from this distance */
+.iso .ledger .label {
+  font-size: 2rem;
+}
+.iso .agenda .label {
+  font-size: 1.8rem;
+}
+.iso .envelope .label {
+  font-size: 1.25rem;
+}
+.iso .camera .label {
+  display: none;
+}
+.iso .thing .label small {
+  font-size: 1.05rem;
+}
+
+/* books: the cover on top, the pages below it, the back cover on the mat, and
+   the spine down the left edge */
+.iso .ledger .inside,
+.iso .agenda .inside {
+  transform: translateZ(-1px);
+}
+.iso .agenda .riff {
+  translate: 0 0 -0.6px;
+}
+.iso .spine {
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: var(--h3);
+  border-radius: 3px;
+  transform-origin: 0 50%;
+  transform: rotateY(90deg);
+}
+
+/* the instant camera (room.js builds its boxes): the old parts of the flat one go,
+   the anchor stays as the thing you click, drawing nothing itself */
+.iso .thing.camera {
+  border-radius: 8px;
+  background: none;
+}
+.iso .camera > .body,
+.iso .camera > .finder,
+.iso .camera > .flashgun {
+  display: none;
+}
+.iso .pl-slope,
+.iso .pl-cheek {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+}
+.iso .pl-slope {
+  transform-origin: 50% 0;
+  background: linear-gradient(#2b2b2b, #343434);
+}
+.iso .pl-cheek {
+  transform-origin: 0 0;
+  background: #1d1d1d;
+  clip-path: polygon(0 100%, 100% 0, 100% 100%);
+}
+/* the base's front: what the camera opens, in white, and the slot under it */
+.iso .pl-base > i.s {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.iso .pl-name {
+  font: 700 13px/1 "Bricolage Grotesque", sans-serif;
+  letter-spacing: 0.04em;
+  color: #f2efe8;
+}
+.iso .pl-slot {
+  width: 86%;
+  height: 4px;
+  border-radius: 2px;
+  background: #0c0c0c;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.8), 0 1px 0 #3a3a3a;
+}
+/* the front plate: the lens left of centre and standing out, the finder window and the
+   light meter on the right, the red shutter button low on the left, and a stripe in the
+   site's own colours running down from the lens */
+.iso .pl-front .lens {
+  left: 46px;
+  top: 10px;
+  width: 58px;
+  height: 58px;
+  margin: 0;
+  translate: 0 0 14px;
+  box-shadow: 0 0 0 4px #1d1d1d;
+}
+.iso .pl-finder,
+.iso .pl-meter,
+.iso .pl-stripe,
+.iso .pl-shutter {
+  position: absolute;
+  pointer-events: none;
+}
+.iso .pl-finder {
+  right: 10px;
+  top: 10px;
+  width: 30px;
+  height: 22px;
+  border-radius: 3px;
+  background: radial-gradient(circle at 35% 35%, #7b8b9a, #1b2229 70%);
+  box-shadow: 0 0 0 3px #d8d5cc;
+}
+.iso .pl-meter {
+  right: 17px;
+  top: 44px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #555, #111 70%);
+}
+.iso .pl-stripe {
+  left: 67px;
+  top: 68px;
+  width: 16px;
+  bottom: 0;
+  background: linear-gradient(90deg, var(--cloudbank) 0 20%, var(--scs) 0 40%, var(--nutreek) 0 60%, var(--planora) 0 80%, var(--cupid) 0);
+}
+.iso .pl-shutter {
+  left: 14px;
+  top: 46px;
+  width: 20px;
+  height: 20px;
+  transform-style: preserve-3d;
+}
+/* the print: flat, just above the desk, held inside the camera until it is ejected.
+   It slides out by its own length while a clip keeps the part still inside hidden;
+   the two move together, so the print seems to come out of the slot */
+.iso .cam-out {
+  position: absolute;
+  left: 28px;
+  top: 150px;
+  width: 104px;
+  height: 126px;
+  transform: translateZ(-110px);
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+.iso .camera .film {
+  left: 0;
+  right: auto;
+  top: -126px;
+  width: 104px;
+  height: 126px;
+  box-sizing: border-box;
+  padding: 8px 8px 28px;
+  border-radius: 2px;
+  transform: none;
+  clip-path: inset(126px 0 0 0);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
+  transition:
+    top 1s cubic-bezier(0.35, 0.1, 0.25, 1) 0.4s,
+    clip-path 1s cubic-bezier(0.35, 0.1, 0.25, 1) 0.4s;
+}
+.iso .camera.opening .film,
+.iso .camera.ejected .film {
+  top: 0;
+  transform: none;
+  clip-path: inset(0 0 0 0);
+}
+.iso .camera.ejected .film {
+  transition: none;
+}
+/* the flash: a burst on the flash window */
+.iso .camera .burst {
+  translate: 0 0 40px;
+  right: -150px;
+  top: -150px;
+  width: 400px;
+  height: 330px;
+  background: radial-gradient(closest-side, #fff 0 18%, rgba(255, 255, 255, 0.85) 38%, transparent);
+}
+
+/* the envelope: letter inside, flap and wax seal on top */
+.iso .envelope .letter {
+  translate: 0 0 -1.5px;
+}
+.iso .envelope .flap {
+  translate: 0 0 0.6px;
+}
+.iso .envelope .seal {
+  translate: 0 0 4px;
+}
+.iso .envelope .label {
+  translate: 0 0 0.8px;
+}
+
+/* the mug: a rim you look down into, coffee a little below it, a handle, and what
+   it is printed round its side */
+.iso .mug .cup {
+  background: none;
+  box-shadow: inset 0 0 0 12px #f4f1ea;
+}
+.iso .mug .cup::before {
+  transform: translateZ(-12px);
+}
+.iso .mug.opening .cup::before {
+  transform: translateZ(-12px) scale(0.35);
+}
+.iso .mug .cup::after,
+.iso .mug .label {
+  display: none;
+}
+.iso .mug .slice {
+  inset: 0;
+  border-radius: 50%;
+  border: 12px solid #f4f1ea;
+}
+.iso .mug .handle {
+  right: -30px;
+  top: 50%;
+  width: 44px;
+  height: 30px;
+  margin-top: -15px;
+  border: 9px solid #f4f1ea;
+  border-left: 0;
+  border-radius: 0 20px 20px 0;
+}
+.iso .steam {
+  transform-origin: 50% 100%;
+  transform: translate(-50%, -20%) translateZ(2px) rotateX(-90deg);
+}
+
+/* a print on a curve: narrow strips, each showing its slice of the whole */
+.iso .strip {
+  left: 50%;
+  top: 50%;
+  overflow: hidden;
+  transform-origin: 50% 0;
+}
+.iso .strip-in {
+  top: 0;
+}
+.iso .mug-print {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font: 800 30px/0.95 "Bricolage Grotesque", sans-serif;
+  color: #3b2a1e;
+  text-align: center;
+}
+
+/* the jar: glass you see through, slips lying on its bottom, a label round it */
+.iso .jar .slip {
+  translate: 0 0 calc(-1 * var(--h3) + var(--sz, 4px));
+}
+.iso .jar .glass {
+  background: none;
+  box-shadow:
+    inset 0 0 0 6px rgba(255, 255, 255, 0.45),
+    inset 0 0 0 9px rgba(0, 0, 0, 0.06);
+}
+.iso .jar .slice {
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.025);
+}
+.iso .jar .slice.base {
+  background: rgba(255, 255, 255, 0.12);
+}
+.iso .jar .unfold {
+  translate: 0 0 20px;
+}
+.iso .jar .jar-tag.moved {
+  visibility: hidden;
+}
+.iso .jar-label {
+  display: block;
+  height: 100%;
+  padding: 10px 16px;
+  background: var(--paper);
+  color: var(--paper-ink);
+  font: 800 1.5rem/1.05 "Bricolage Grotesque", sans-serif;
+  text-align: center;
+}
+.iso .jar-label small {
+  display: block;
+  margin-top: 4px;
+  font: 400 0.82rem/1.2 "Atkinson Hyperlegible", sans-serif;
+  color: var(--paper-ink-2);
+}
+
+/* ---- the old computer, at the size of a real one, near the desk's front edge and
+   turned to face the chair --------------------------------------------------------- */
+.iso .pc {
+  left: -296px;
+  top: 390px;
+  transform: rotateZ(-12deg);
+  scale: 4 4 4;
+}
+.iso .pc .floor {
+  filter: blur(6px);
+}
+.iso .fumes {
+  left: -260px;
+  top: 330px;
+  scale: 3 3 3;
+  translate: 0 0 380px;
+}
+/* the yellow note, stuck on its side. The side's own axes run up and along, so
+   the note is turned to stand upright, and drawn at its usual size */
+.iso .pc .pc-note {
+  z-index: 1;
+  left: 72px;
+  top: 24px;
+  width: 180px;
+  height: 150px;
+  transform-origin: 0 0;
+  transform: rotate(90deg) scale(0.25);
+}
+.iso .pc .pc-note > .sticky {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 180px;
+  height: 150px;
+  translate: none;
+  transform: rotate(-3deg);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
+}
+.iso .pc .pc-note > .sticky:hover,
+.iso .pc .pc-note > .sticky:focus-visible {
+  transform: rotate(-3deg) scale(1.05);
+}
+
+/* ---- on the walls ---------------------------------------------------------------- */
+.iso .on-wall {
+  position: absolute;
+  width: 0;
+  height: 0;
+  transform-origin: 0 0;
+  transform-style: preserve-3d;
+}
+.iso .on-wall > * {
+  position: relative;
+  left: auto;
+  top: auto;
+  transform-origin: 0 0;
+  pointer-events: auto;
+}
+/* Social Contacts Sync's cards, pinned large on the other wall */
+.iso .on-wall.pinned > .thing {
+  position: absolute;
+  width: 260px;
+  height: 120px;
+  translate: 0 0 2px;
+  transform: scale(1.5) rotate(-3deg);
+}
+.iso .on-wall.pinned > .thing:hover,
+.iso .on-wall.pinned > .thing:focus-visible {
+  translate: 0 0 14px;
+  transform: scale(1.5) rotate(-3deg);
+}
+
+/* ---- tags: an object's name at reading size, while it is pointed at --------------- */
+.iso .anchor {
+  position: absolute;
+  left: 50%;
+  top: 30%;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+.iso .tags {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  pointer-events: none;
+}
+.iso .tag {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: block;
+  padding: 0.45rem 0.75rem 0.5rem;
+  border-radius: 3px 3px 3px 12px;
+  background: var(--paper);
+  color: var(--paper-ink);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+  font: 700 1.05rem/1.2 "Bricolage Grotesque", sans-serif;
+  white-space: nowrap;
+  rotate: -2deg;
+  opacity: 0;
+  translate: 0 6px;
+  transition:
+    opacity 0.2s ease,
+    translate 0.25s var(--ease-out);
+}
+.iso .tag.on {
+  opacity: 1;
+  translate: 0 0;
+}
+.iso .tag small {
+  display: block;
+  margin-top: 0.15rem;
+  font: 400 0.9rem/1.3 "Atkinson Hyperlegible", sans-serif;
+  color: var(--paper-ink-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .iso .thing,
+  .iso .shade,
+  .iso .tag,
+  .iso .thing .ground {
+    transition: none;
+  }
+}
+
+/* ---- the name as a neon sign, and the line about the work painted under it -------- */
+:root {
+  --wall-ink: #3a3631;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --wall-ink: #e3dccf;
+  }
+}
+.iso .on-wall.neon > .home-tape {
+  width: max-content;
+  clip-path: none;
+  transform: none;
+}
+.iso .on-wall.neon > .home-tape {
+  padding: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--wall-ink);
+}
+.iso .on-wall.neon {
+  --neon: #ff4fa0;
+}
+.iso .on-wall.neon h1 {
+  margin: 0;
+  padding: 10px 40px 22px;
+  border-radius: 18px;
+  /* the clear backing board the tubes are mounted on, with its four screws */
+  background:
+    radial-gradient(circle at 14px 14px, rgba(255, 255, 255, 0.55) 0 3px, transparent 4px),
+    radial-gradient(circle at calc(100% - 14px) 14px, rgba(255, 255, 255, 0.55) 0 3px, transparent 4px),
+    radial-gradient(circle at 14px calc(100% - 14px), rgba(255, 255, 255, 0.55) 0 3px, transparent 4px),
+    radial-gradient(circle at calc(100% - 14px) calc(100% - 14px), rgba(255, 255, 255, 0.55) 0 3px, transparent 4px),
+    rgba(255, 255, 255, 0.07);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+  font: 400 104px/1 "Tilt Neon", "Bricolage Grotesque", sans-serif;
+  white-space: nowrap;
+  /* the tube: a pale core inside its own coloured glass, glowing round it */
+  color: color-mix(in srgb, var(--neon) 30%, white);
+  -webkit-text-stroke: 1px color-mix(in srgb, var(--neon) 70%, white);
+  text-shadow:
+    0 0 2px color-mix(in srgb, var(--neon) 40%, white),
+    0 0 7px var(--neon),
+    0 0 16px var(--neon),
+    0 0 34px var(--neon),
+    0 0 60px color-mix(in srgb, var(--neon) 60%, transparent);
+  transition:
+    color 0.3s ease,
+    text-shadow 0.3s ease;
+}
+.iso .on-wall.neon p {
+  margin: 22px 0 0 34px;
+  font: 700 30px/1.2 "Bricolage Grotesque", sans-serif;
+  color: var(--wall-ink);
+}
+
+/* ---- the note, as a poster: one column of large type --------------------------------- */
+.iso .on-wall.poster > .intro {
+  width: 480px;
+  padding: 26px 30px 36px;
+  background: var(--paper);
+  color: var(--paper-ink);
+  transform: scale(1.6) rotate(1deg);
+  box-shadow: 0 12px 18px rgba(0, 0, 0, 0.3);
+}
+.iso .pst-text {
+  margin: 0;
+  font: 400 23px/1.38 "Atkinson Hyperlegible", sans-serif;
+}
+.iso .pst-text b {
+  font: 800 1.15em/1.2 "Bricolage Grotesque", sans-serif;
+}
+.iso .pst-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 10px;
+  background: linear-gradient(90deg, var(--cloudbank) 0 20%, var(--scs) 0 40%, var(--nutreek) 0 60%, var(--planora) 0 80%, var(--cupid) 0);
+}
+/* tape at its top corners */
+.iso .on-wall.poster > .intro::before,
+.iso .on-wall.poster > .intro::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  top: -6px;
+  width: 76px;
+  height: 24px;
+  background: rgba(240, 231, 204, 0.85);
+}
+.iso .on-wall.poster > .intro::before {
+  left: -18px;
+  rotate: -30deg;
+}
+.iso .on-wall.poster > .intro::after {
+  right: -18px;
+  rotate: 30deg;
+}
+
+/* ---- tape holding Social Contacts Sync's cards to the wall ------------------------- */
+.iso .tape-strip {
+  position: absolute;
+  width: 120px;
+  height: 36px;
+  background: rgba(240, 231, 204, 0.85);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  transform: translateZ(8px);
+  pointer-events: none;
+}
+.iso .tape-strip.one {
+  left: -30px;
+  top: 10px;
+  rotate: -38deg;
+}
+.iso .tape-strip.two {
+  left: 410px;
+  top: -30px;
+  rotate: 32deg;
+}
+
+/* ---- the post on top of the computer -------------------------------------------- */
+.iso .pc .post {
+  left: 4px;
+  top: 4px;
+  width: 336px;
+  height: 248px;
+  transform-origin: 0 0;
+  /* a hair above the top, so the two do not fight */
+  transform: translateZ(0.5px) scale(0.25);
+}
+/* kept 3D down to the envelope: flat, they would squash it into the computer's top as it
+   turns to face the reader */
+.iso .pc .top,
+.iso .pc .post {
+  transform-style: preserve-3d;
+}
+.iso .pc .post-card,
+.iso .pc .post-env {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+.iso .pc .post-card {
+  left: 40px;
+  top: 30px;
+  width: 230px;
+  height: 150px;
+  rotate: 14deg;
+  background:
+    linear-gradient(90deg, transparent 58%, rgba(0, 0, 0, 0.15) 58% calc(58% + 1px), transparent 0),
+    repeating-linear-gradient(transparent 0 22px, rgba(0, 0, 0, 0.1) 22px 23px) 0 40px / 55% 100% no-repeat,
+    #f5eedc;
+}
+.iso .pc .post-env {
+  left: 70px;
+  top: 80px;
+  width: 240px;
+  height: 120px;
+  rotate: -9deg;
+  background:
+    linear-gradient(160deg, transparent 49.5%, rgba(0, 0, 0, 0.08) 50%, transparent 51%),
+    linear-gradient(20deg, transparent 49.5%, rgba(0, 0, 0, 0.08) 50%, transparent 51%),
+    #e7dcc4;
+}
+/* Cupid's envelope, closed, the same as on its page at its real size (736 by 192) and
+   scaled down evenly to lie on the computer. The pile is shrunk flat and the computer
+   scaled up whole, so its depth comes out ten times its plane: 0.1 in depth keeps it a
+   letter's thickness, the same as when it turns to face the reader */
+.iso .pc .post > .envelope {
+  left: 18px;
+  top: 92px;
+  translate: none;
+  transform-origin: 0 0;
+  transform: rotate(-4deg) scale3d(0.4, 0.4, 0.1);
+  border-radius: 2px;
+  background: none;
+}
+.iso .pc .post > .envelope:hover,
+.iso .pc .post > .envelope:focus-visible {
+  transform: rotate(-4deg) scale3d(0.415, 0.415, 0.1);
+}
+/* the flat bench's letter, flap and label give way to the page's envelope; the label
+   still names it for the tag that comes out on pointing */
+.iso .pc .post > .envelope > :not(.slice):not(.shade):not(.env-face):not(.anchor) {
+  display: none;
+}
+.iso .env-face,
+.iso .env-face > span {
+  position: absolute;
+}
+.iso .env-face {
+  inset: 0;
+  font: 400 1rem/1.6 "Atkinson Hyperlegible", sans-serif;
+}
+.iso .env-pocket {
+  inset: 0;
+  background:
+    linear-gradient(to top right, transparent calc(50% - 1px), rgba(120, 40, 70, 0.14) 50%, transparent calc(50% + 1px)) left / 50% 100% no-repeat,
+    linear-gradient(to top left, transparent calc(50% - 1px), rgba(120, 40, 70, 0.14) 50%, transparent calc(50% + 1px)) right / 50% 100% no-repeat,
+    linear-gradient(170deg, #f6e8eb, #ead3d9);
+}
+/* the flap folded down over the pocket, the seal on its point */
+.iso .env-flap {
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 7rem;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  background: #e2c3cb;
+}
+.iso .env-seal {
+  left: 50%;
+  top: 5.2rem;
+  width: 3.6rem;
+  height: 3.6rem;
+  margin-left: -1.8rem;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #e35b8a, #a8234f 70%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+.iso .env-seal svg {
+  position: absolute;
+  inset: 0.9rem;
+  fill: rgba(255, 255, 255, 0.55);
+}
+.iso .env-to {
+  left: 2rem;
+  bottom: 1.6rem;
+  color: #6b3a4a;
+}
+.iso .env-stamp {
+  right: 1.5rem;
+  bottom: 1.4rem;
+  width: 4.2rem;
+  height: 5rem;
+  box-sizing: border-box;
+  padding: 0.35rem;
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+.iso .env-stamp img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #fbe8ee;
+}
+.iso .pc .post .shade {
+  display: none;
+}
+
+/* ---- the power cable and its socket ------------------------------------------------ */
+.iso .cable {
+  position: absolute;
+  overflow: visible;
+  pointer-events: none;
+}
+.iso .cable path {
+  fill: none;
+  stroke: #2b2b2b;
+  stroke-width: 9;
+  stroke-linecap: round;
+}
+.iso .cable-drop {
+  position: absolute;
+  width: 9px;
+  background: #2b2b2b;
+  transform-origin: 50% 0;
+  transform: rotateX(-90deg);
+  pointer-events: none;
+}
+.iso .socket {
+  position: absolute;
+  width: 70px;
+  height: 70px;
+  border-radius: 8px;
+  background: radial-gradient(circle at 35% 50%, #333 0 5px, transparent 6px), radial-gradient(circle at 65% 50%, #333 0 5px, transparent 6px), #efeae0;
+  transform-origin: 50% 0;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+}
+
+.iso .on-wall.poster.low > .intro {
+  transform: scale(1.35) rotate(1deg);
+}
+
+/* ---- the window, its sill and the cushion on it -------------------------------------- */
+:root {
+  --sill: #e6dfd2;
+  --cushion: #b9584a;
+  --pot: #3c78a8;
+  --soil: #4a3426;
+  --sky-top: #8fc8ec;
+  --sky-low: #e4f3fb;
+  --roofs: #7f97a8;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --sill: #57524a;
+    --cushion: #7d3b33;
+    --pot: #2e5f86;
+    --soil: #33251b;
+    --sky-top: #0b1433;
+    --sky-low: #2a3863;
+    --roofs: #10172b;
+  }
+}
+.iso .on-wall.window > .window {
+  overflow: hidden;
+  border: 22px solid var(--sill);
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 4px rgba(0, 0, 0, 0.12), 0 10px 18px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+}
+.iso .window > * {
+  position: absolute;
+  inset: 0;
+}
+.iso .window .sky {
+  background: linear-gradient(var(--sky-top), var(--sky-low));
+}
+@media (prefers-color-scheme: dark) {
+  .iso .window .sky {
+    background:
+      radial-gradient(circle at 18% 22%, #fff 0 1.5px, transparent 2px),
+      radial-gradient(circle at 63% 14%, #fff 0 1px, transparent 1.6px),
+      radial-gradient(circle at 82% 34%, #fff 0 1.2px, transparent 1.8px),
+      radial-gradient(circle at 40% 40%, #fff 0 1px, transparent 1.5px),
+      radial-gradient(circle at 76% 18%, #f6f1d0 0 18px, transparent 19px),
+      linear-gradient(var(--sky-top), var(--sky-low));
+  }
+}
+.iso .window .skyline {
+  width: 100%;
+  height: 100%;
+  fill: var(--roofs);
+}
+.iso .window .pane {
+  background: linear-gradient(125deg, rgba(255, 255, 255, 0.28), transparent 38%, transparent 62%, rgba(255, 255, 255, 0.12));
+}
+.iso .window .mullion {
+  background: var(--sill);
+}
+.iso .window .mullion.v {
+  left: calc(50% - 7px);
+  right: auto;
+  width: 14px;
+}
+.iso .window .mullion.h {
+  top: calc(45% - 7px);
+  bottom: auto;
+  height: 14px;
+}
+
+/* ---- the plant on the shelf ------------------------------------------------------------ */
+/* a glazed pot, so it does not read as a block of soil: the soil shows only inside its rim */
+.iso .plant .pot-top {
+  background:
+    linear-gradient(var(--soil), var(--soil)) 50% 50% / 76% 76% no-repeat,
+    var(--pot);
+}
+.iso .plant .leaves {
+  position: absolute;
+  left: -42px;
+  top: 28px;
+  width: 140px;
+  height: 130px;
+  transform-origin: 50% 0;
+  pointer-events: none;
+}
+.iso .plant .leaves svg {
+  width: 100%;
+  height: 100%;
+  fill: #4f8a3c;
+  transform: translateY(-100%);
+}
+
+/* ---- the site's navigation as neon in a plexiglass frame ------------------------------ */
+.iso header.bar {
+  visibility: hidden;
+  view-transition-name: none;
+}
+.iso .plexi {
+  position: absolute;
+  width: 700px;
+  height: 96px;
+  padding: 0 34px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* smoked acrylic, so the tubes read on either wall, held by four screws like the name */
+  background:
+    radial-gradient(circle at 14px 14px, rgba(255, 255, 255, 0.6) 0 3px, transparent 4px),
+    radial-gradient(circle at calc(100% - 14px) 14px, rgba(255, 255, 255, 0.6) 0 3px, transparent 4px),
+    radial-gradient(circle at 14px calc(100% - 14px), rgba(255, 255, 255, 0.6) 0 3px, transparent 4px),
+    radial-gradient(circle at calc(100% - 14px) calc(100% - 14px), rgba(255, 255, 255, 0.6) 0 3px, transparent 4px),
+    rgba(24, 30, 38, 0.82);
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  border-radius: 14px;
+  box-shadow: inset 0 0 0 6px rgba(255, 255, 255, 0.08);
+  pointer-events: auto;
+}
+.iso .plexi a {
+  font: 400 38px "Tilt Neon", sans-serif;
+  text-decoration: none;
+  color: color-mix(in srgb, #3fd2ff 30%, white);
+  text-shadow: 0 0 3px #3fd2ff, 0 0 9px #3fd2ff, 0 0 20px #3fd2ff;
+}
+.iso .plexi a[aria-current] {
+  color: color-mix(in srgb, #ff4fa0 30%, white);
+  text-shadow: 0 0 3px #ff4fa0, 0 0 9px #ff4fa0, 0 0 20px #ff4fa0;
+}
+.iso .plexi a:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+/* ---- the coin, a size that reads from the camera ---------------------------------- */
+.iso .loose.coin {
+  scale: 1.5 1.5 1.5;
+}
+
+/* ---- the cat's perch at the window: a board on two chains, with a fleece --------------- */
+:root {
+  --perch: #9a6a3e;
+  --fleece: #f4f0ea;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --perch: #6b4a2c;
+    --fleece: #b9b4ad;
+  }
+}
+.iso .perch-fleece > i.fleece {
+  background:
+    radial-gradient(circle at 30% 40%, rgba(255, 255, 255, 0.35) 0 2px, transparent 3.5px),
+    radial-gradient(circle at 70% 70%, rgba(0, 0, 0, 0.05) 0 2.5px, transparent 4px),
+    radial-gradient(ellipse at 50% 40%, rgba(255, 255, 255, 0.25), transparent 70%),
+    var(--fleece);
+  background-size: 9px 8px, 11px 10px, 100% 100%, auto;
+  box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.12), 0 0 0 3px var(--fleece);
+}
+.iso .chain {
+  position: absolute;
+  width: 4px;
+  transform-origin: 50% 0;
+  background: repeating-linear-gradient(#c9a24a 0 5px, #8a6a24 5px 7px);
+  pointer-events: none;
+}
