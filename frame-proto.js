@@ -2,13 +2,13 @@
    the frame? Answers "Frame the room to the window's width".
    ?frame=today  what the mockup does now: shrinks only below 1304 px wide, crops the sides
    ?frame=fit    scales and centres the room so everything usable fits, never above its size
-   ?frame=grow   the same, and grows on big screens, up to 1.35
+   ?frame=grow   the same, and grows on big screens, up to 1.15 (the one chosen)
    ?frame=width  fits the width only; the height may crop
    The bar at the bottom right switches; the panel says what the frame holds. */
 (function () {
   var MODES = ["today", "fit", "grow", "width"];
   var q = new URLSearchParams(location.search).get("frame");
-  var mode = MODES.indexOf(q) >= 0 ? q : sessionStorage.getItem("frame") || "fit";
+  var mode = MODES.indexOf(q) >= 0 ? q : sessionStorage.getItem("frame") || "grow";
   sessionStorage.setItem("frame", mode);
   var stage = document.querySelector(".stage"),
     fit = document.querySelector(".fit");
@@ -85,7 +85,7 @@
       var w = U1.r - U1.l, h = U1.b - U1.t;
       var kw = (A.r - A.l - 2 * M) / w, kh = (A.b - A.t - 2 * M) / h;
       s = mode === "width" ? kw : Math.min(kw, kh);
-      s = Math.min(s, mode === "grow" ? 1.35 : 1);
+      s = Math.min(s, mode === "grow" ? 1.15 : 1);
       // centre the usable box in the window
       var c = { x: (U1.l + U1.r) / 2, y: (U1.t + U1.b) / 2 };
       dx = (A.l + A.r) / 2 - (O.x + s * (c.x - O.x));

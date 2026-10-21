@@ -821,10 +821,13 @@
   var face = radio.querySelector(".radio-face");
   var power = face.querySelector(".power");
   var dial = face.querySelector(".dial");
-  // its halogen lamp, warm on the shelf and the wall round it while it plays
-  var lamp = el("span", "radio-lamp", room, "left:" + (RIGHT - 2) + "px;top:" + (SHELF.y + SHELF.d - 330) + "px;transform:translateZ(" + (SHELF.z + 260) + "px) rotateZ(90deg) rotateX(-90deg)");
+  // its halogen lamp, while it plays: the dial shines forward, never on the wall behind it.
+  // A halo standing just in front of its face, turned to the camera, and a pool where the
+  // light lands, on the desk in front of and below the shelf.
+  var RAD = { y: SHELF.y + SHELF.d - 250, d: 210, x: RIGHT - 96, z: SHELF.z, h: 120 };
+  var lamp = el("span", "radio-lamp", room, "left:" + (RAD.x - 40 - 150) + "px;top:" + (RAD.y + RAD.d / 2) + "px;width:300px;height:240px;transform:translateZ(" + (RAD.z + RAD.h / 2 + 120) + "px) rotateZ(45deg) rotateX(-90deg)");
   lamp.setAttribute("aria-hidden", "true");
-  var pool = el("span", "radio-pool", room, "left:" + (RIGHT - SHELF.w) + "px;top:" + (SHELF.y + SHELF.d - 330) + "px;width:" + SHELF.w + "px;transform:translateZ(" + (SHELF.z + 0.5) + "px)");
+  var pool = el("span", "radio-pool", room, "left:" + (RAD.x - 300) + "px;top:" + (RAD.y - 90) + "px;width:" + (DESK.x + DESK.w - (RAD.x - 300)) + "px;height:" + (RAD.d + 180) + "px;transform:translateZ(0.6px)");
   pool.setAttribute("aria-hidden", "true");
   function showRadio(st) {
     power.setAttribute("aria-pressed", String(!!st.on));
@@ -919,9 +922,12 @@
     var light =
       "radial-gradient(ellipse " + w.width * 0.7 + "px " + w.height * 0.75 + "px at " + (w.left + w.width / 2) + "px " + (w.top + w.height / 2) + "px, rgba(150,170,235,1), transparent 80%), " +
       "radial-gradient(ellipse " + m.width * 0.5 + "px " + m.height * 0.55 + "px at " + (m.left + m.width / 2) + "px " + (m.top + m.height * 0.45) + "px, rgba(185,200,250,1), rgba(120,140,210,0.8) 45%, transparent 85%), " +
-      (lamp.classList.contains("lit") ? "radial-gradient(ellipse " + lp.width * 0.55 + "px " + lp.height * 0.5 + "px at " + (lp.left + lp.width / 2) + "px " + (lp.top + lp.height * 0.6) + "px, rgba(255,205,150,1), rgba(200,150,100,0.6) 45%, transparent 80%), " : "");
+      (lamp.classList.contains("lit") ? "radial-gradient(ellipse " + lp.width * 0.55 + "px " + lp.height * 0.5 + "px at " + (lp.left + lp.width / 2) + "px " + (lp.top + lp.height * 0.5) + "px, rgba(255,205,150,1), rgba(200,150,100,0.6) 45%, transparent 80%), " : "");
     // the lit dial itself keeps its brightness, like the switch's little light
     if (lamp.classList.contains("lit")) {
+      // and where its light lands on the desk, nearer the radio than the pool's middle
+      var pl = native.call(pool), px = pl.left + pl.width * 0.5 + (lp.left + lp.width / 2 - pl.left - pl.width * 0.5) * 0.4, py = pl.top + pl.height * 0.5 + (lp.top + lp.height / 2 - pl.top - pl.height * 0.5) * 0.4;
+      light = "radial-gradient(ellipse " + pl.width * 0.32 + "px " + pl.height * 0.3 + "px at " + px + "px " + py + "px, rgba(230,180,130,0.9), rgba(170,130,90,0.4) 50%, transparent 85%), " + light;
       var dl = native.call(dial);
       light = "radial-gradient(ellipse " + (dl.width * 0.9 + 20) + "px " + (dl.height * 0.9 + 20) + "px at " + (dl.left + dl.width / 2) + "px " + (dl.top + dl.height / 2) + "px, rgba(255,240,210,1) 30%, transparent 100%), " + light;
     }

@@ -1514,13 +1514,12 @@ html:not(.b3) .strip {
   transition: opacity 0.5s ease;
 }
 .b3 .radio-lamp {
-  width: 380px;
-  height: 300px;
-  background: radial-gradient(ellipse 50% 46% at 50% 62%, rgba(255, 196, 120, 0.34), rgba(255, 170, 90, 0.12) 55%, transparent 78%);
+  transform-origin: 50% 0;
+  background: radial-gradient(ellipse 46% 42% at 50% 50%, rgba(255, 200, 130, 0.22), rgba(255, 170, 90, 0.08) 55%, transparent 75%);
 }
+/* where the dial's light lands: the desk in front of the radio, brightest under the shelf */
 .b3 .radio-pool {
-  height: 380px;
-  background: radial-gradient(ellipse 60% 48% at 50% 50%, rgba(255, 200, 130, 0.34), transparent 72%);
+  background: radial-gradient(ellipse 70% 55% at 100% 50%, rgba(255, 200, 130, 0.3), rgba(255, 180, 110, 0.1) 55%, transparent 80%);
 }
 .b3 .radio-lamp.lit,
 .b3 .radio-pool.lit {
