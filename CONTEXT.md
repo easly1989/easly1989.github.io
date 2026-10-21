@@ -29,7 +29,8 @@ The short animation a project object plays in the room after it is picked up, be
 ## The cat
 
 **Cat**:
-The black-and-white cat that lives in the room and does what it likes. It appears on the home page only.
+Willy, the black-and-white cat that lives in the room and does what he likes. He appears on the home page only.
+_Avoid_: it (for Willy)
 
 **Prop**:
 Anything in the room the cat can do something with: sit on it, hide behind it, scratch it, play with it.
