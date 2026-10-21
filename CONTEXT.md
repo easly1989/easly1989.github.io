@@ -40,3 +40,7 @@ _Avoid_: loose item (when the cat is meant)
 
 **Toy**:
 A small prop placed at random on each visit for the cat to play with, which reacts when the reader touches it.
+
+**Held toy**:
+A toy the reader picks up, which then follows the mouse until the reader lets it go: the laser pointer and the feather wand.
+_Avoid_: cursor toy, pointer
