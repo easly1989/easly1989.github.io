@@ -206,6 +206,8 @@
     var host = sp.kind === "mug" ? t.querySelector(".cup") : t;
     var n = Math.floor(sp.h / sp.step);
     for (var i = 1; i <= n; i++) {
+      // the mug's side is a wall of its own (below): of its rings only the base is left
+      if (sp.kind === "mug" && i < n) continue;
       var k = 0.95 - 0.25 * (i / n); // darker towards the mat
       var s = el("span", "slice", null, "transform:translateZ(" + -i * sp.step + "px);border-radius:" + sp.r);
       if (sp.kind === "book") {
@@ -224,6 +226,17 @@
     }
     if (sp.kind === "book") el("span", "wall spine", t, "background:" + sp.cover + ";filter:brightness(0.85)");
     if (sp.kind === "mug") {
+      // Its side is upright strips all the way round, not a stack of rings: rings show
+      // their gaps, in stripes, as soon as the mug is turned, and it falls over.
+      var WALL = 22,
+        wr = host.offsetWidth / 2 - 2.5, // well inside the print round it, which is sorted in front
+        ww = 2 * wr * Math.sin(Math.PI / WALL) + 0.8,
+        wh = n * sp.step;
+      for (var w = 0; w < WALL; w++) {
+        var a = (w * 360) / WALL;
+        var lit = 0.82 + 0.13 * Math.cos(((a - 135) * Math.PI) / 180);
+        el("span", "mug-wall", host, "width:" + ww.toFixed(1) + "px;height:" + wh + "px;margin-left:" + (-ww / 2).toFixed(1) + "px;transform:rotateZ(" + a + "deg) translateY(" + wr + "px) rotateX(-90deg);background:linear-gradient(" + shade("#f4f1ea", lit) + ", " + shade("#f4f1ea", lit - 0.2) + ")");
+      }
       for (var j = 8; j <= 34; j += 2) el("span", "handle", host, "transform:translateZ(" + -j * 3 + "px);border-color:" + shade("#f4f1ea", 0.9 - j / 90));
       // the mug says what it is, round its side
       wrap(host, '<span class="mug-print">Buy me<br />a coffee</span>', { r: 65.6, w: 170, h: 80, z: -18, at: 45, strip: 15 });
@@ -240,6 +253,13 @@
       hitPlane(t, t, 152, sp.h);
       // tipping it over was the flat bench's trick: a jar of rings cannot lie down
       t.removeAttribute("data-cat");
+      // one idea folded in half among the slips at the bottom: on the way to Planora it
+      // comes up out of the jar and unfolds (morph.js)
+      var at = el("span", "jar-idea-at", t);
+      at.setAttribute("aria-hidden", "true");
+      at.innerHTML =
+        '<span class="jar-idea"><span class="fold a"><b>Planora</b></span>' +
+        '<span class="fold b"><span class="front">An idea for the group</span><span class="back"></span></span></span>';
     }
   });
   // the camera's lens stands proud of its face
@@ -807,4 +827,6 @@
     spread(true);
     frame();
   });
+  // what the room's other modules use of it: morph.js turns things to face the reader
+  window.ROOM = { stage: stage, localMatrix: localMatrix };
 })();
