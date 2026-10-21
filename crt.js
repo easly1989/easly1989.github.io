@@ -150,6 +150,25 @@
       hiss(t, 0.05, 0.4, 700, 1.5);
       hiss(t + 0.07, 0.07, 0.3, 260, 0.8, "lowpass");
     },
+    // an instant camera: the flash's pop and the shutter's clack
+    shutter: function () {
+      if (!audio()) return;
+      var t = ctx.currentTime;
+      tone("sine", 5200, 2400, t, 0.06, 0.03, 0.002);
+      hiss(t, 0.03, 0.5, 3200, 1.4);
+      hiss(t + 0.06, 0.06, 0.4, 1100, 1.2);
+      hiss(t + 0.07, 0.08, 0.3, 240, 0.8, "lowpass");
+    },
+    // its motor pushing the print out through the rollers, for secs
+    eject: function (secs) {
+      if (!audio()) return;
+      var t = ctx.currentTime;
+      secs = secs || 1;
+      tone("sawtooth", 150, 120, t, secs, 0.035, 0.06);
+      tone("square", 300, 260, t, secs, 0.008, 0.06);
+      for (var s = 0; s < secs - 0.05; s += 0.04) hiss(t + s, 0.03, 0.06, 2400 + Math.random() * 1200, 2);
+      hiss(t + secs, 0.05, 0.25, 600, 1);
+    },
     key: function () {
       if (!audio()) return;
       hiss(ctx.currentTime, 0.02, 0.08, 2600 + Math.random() * 1400, 2.5);

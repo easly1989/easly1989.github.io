@@ -1377,6 +1377,20 @@ header.bar {
 ::view-transition-new(root) {
   animation: 0.45s ease 0.12s both vt-in;
 }
+/* An object whose counterpart has another shape (the letter and its envelope, the idea
+   and Planora's label, the cards and their sheet): both pictures fill the moving box,
+   cropped rather than spilling out of it, and the one swaps for the other at the start */
+::view-transition-old(cupid),
+::view-transition-new(cupid),
+::view-transition-old(planora),
+::view-transition-new(planora),
+::view-transition-old(scs),
+::view-transition-new(scs) {
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 0;
+  animation-duration: 0.2s;
+}
 /* The camera's photo waits inside the camera. Named, it is lifted on top of
    everything, so on a way that is not About's it sits the morph out. */
 ::view-transition-old(photo):only-child,

@@ -731,9 +731,28 @@
     return { x: parseFloat(el.style.left), y: parseFloat(el.style.top) };
   }
   function moveToy(el, x, y) {
+    if (el.dataset.toy === "box") return; // mockup: the box is the cat's place, and stays put
     var b = bounds();
-    el.style.left = Math.max(40, Math.min(b.w - 40, x)) + "px";
-    el.style.top = Math.max(60, Math.min(b.h - 40, y)) + "px";
+    var nx = Math.max(40, Math.min(b.w - 40, x)) + "px", ny = Math.max(60, Math.min(b.h - 40, y)) + "px";
+    // mockup: in the 3D room a toy is never pushed into anything; it stays where it is
+    var R = window.__room;
+    if (R) {
+      var ox = el.style.left, oy = el.style.top;
+      el.style.transition = "none";
+      el.style.left = nx;
+      el.style.top = ny;
+      var others = R.obstacles().concat([].slice.call(document.querySelectorAll(".stage .loose, .stage .cat-toy")))
+        .filter(function (o) { return o !== el; })
+        .map(function (o) { return { el: o, b: R.bounds(o), name: R.named(o) }; });
+      var bad = R.faults(el, others, false).length;
+      el.style.left = ox;
+      el.style.top = oy;
+      void el.offsetWidth;
+      el.style.transition = "";
+      if (bad) return;
+    }
+    el.style.left = nx;
+    el.style.top = ny;
   }
   function thread(from, to) {
     var svg = world.querySelector(".yarn-trail");
