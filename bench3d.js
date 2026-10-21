@@ -70,7 +70,7 @@
   box(room, { x: RIGHT - 8, y: BACK, w: 8, d: 2700, z: FLOOR, h: 40, color: "var(--skirting)" });
   box(room, { x: DESK.x, y: DESK.y, w: DESK.w, d: DESK.d, z: -MAT - DESK.t, h: DESK.t, color: "var(--desk)" });
   [[30, 30], [DESK.w - 100, 30], [30, DESK.d - 100], [DESK.w - 100, DESK.d - 100]].forEach(function (p) {
-    box(room, { x: DESK.x + p[0], y: DESK.y + p[1], w: 70, d: 70, z: FLOOR, h: -MAT - DESK.t - FLOOR, color: "var(--desk-leg)" });
+    box(room, { x: DESK.x + p[0], y: DESK.y + p[1], w: 70, d: 70, z: FLOOR, h: -MAT - DESK.t - FLOOR, color: "var(--desk-leg)", cls: "desk-leg" });
   });
   box(room, { x: -40, y: -40, w: 1360, d: 960, z: -MAT, h: MAT, color: "var(--mat)", topCls: "mat-top", side: "var(--mat-edge)" });
 
@@ -126,36 +126,67 @@
   el("span", "cable-drop", room, "left:-404px;top:-152px;height:" + (-FLOOR - 70) + "px");
   el("span", "socket", room, "left:-440px;top:" + (BACK + 1) + "px;transform:translateZ(" + (FLOOR + 130) + "px) rotateX(-90deg)");
 
-  // ---- the camera stands up, smaller, its lens towards the chair ---------------
+  // ---- the camera: an old instant camera, its lens towards the chair --------------
+  // Seen from the side it is a wedge: a black base the whole depth, with the slot the
+  // print comes out of at its front; a tall white front plate carrying the lens, the
+  // shutter button, the finder window and the light meter; behind the plate a black body
+  // whose top slopes down to the back, with the eyepiece standing out of it. No maker's
+  // name or marks: the base says what it opens.
   var camera = stage.querySelector(".thing.camera");
   if (camera) {
-    camera.style.setProperty("--w", "170px");
-    camera.style.setProperty("--h", "96px");
+    camera.style.setProperty("--w", "160px");
+    camera.style.setProperty("--h", "150px");
     camera.style.setProperty("--x", "160px");
-    camera.style.setProperty("--y", "570px");
-    camera.style.setProperty("--r", "-18deg");
-    el("span", "cam-band", camera);
-    var print = el("span", "cam-print", camera);
-    print.textContent = "About me";
-    print.setAttribute("aria-hidden", "true");
-    var shutter = el("span", "cam-shutter", camera);
-    for (var sh = 0; sh < 5; sh++) el("span", "slice", shutter, "inset:0;border-radius:50%;background:" + shade("#e0533f", 0.7 + sh / 20) + ";transform:translateZ(" + sh * 2 + "px)");
-    var face = el("span", "camface", camera);
-    [".film", ".body", ".finder", ".flashgun", ".lens", ".burst"].forEach(function (q) {
+    camera.style.setProperty("--y", "560px");
+    camera.style.setProperty("--r", "12deg"); // its front nearly square to the reader, so "About me" reads
+    var INK = "#262626";
+    var base = box(camera, { x: 0, y: 0, w: 160, d: 150, z: -120, h: 34, color: INK, side: "#1f1f1f", cls: "pl-base" });
+    base.querySelector("i.s").innerHTML = '<span class="pl-name">About me</span><span class="pl-slot"></span>';
+    box(camera, { x: 6, y: 0, w: 148, d: 118, z: -86, h: 36, color: INK });
+    // the sloping top, from the back of the body up to the front plate, and its two
+    // triangular cheeks
+    var rise = 44, run = 118;
+    el("span", "pl-slope", camera, "left:6px;top:0;width:148px;height:" + Math.hypot(run, rise).toFixed(1) + "px;transform:translateZ(-50px) rotateX(" + ((Math.atan2(rise, run) * 180) / Math.PI).toFixed(2) + "deg)");
+    [6, 154].forEach(function (x) {
+      el("span", "pl-cheek", camera, "width:" + run + "px;height:" + rise + "px;transform:matrix3d(0,1,0,0,0,0,-1,0,-1,0,0,0," + x + ",0,-6,1)");
+    });
+    box(camera, { x: 58, y: -26, w: 44, d: 26, z: -70, h: 30, color: "#1b1b1b" });
+    var front = box(camera, { x: 0, y: 118, w: 160, d: 32, z: -86, h: 86, color: "#efede6", side: "#f4f2ec", cls: "pl-front" });
+    var face = front.querySelector("i.s");
+    face.innerHTML = '<span class="pl-finder"></span><span class="pl-meter"></span><span class="pl-stripe"></span>';
+    [".lens", ".burst"].forEach(function (q) {
       var e = camera.querySelector(q);
       if (e) face.appendChild(e);
     });
+    var shutter = el("span", "pl-shutter", face);
+    for (var sh = 0; sh < 5; sh++) el("span", "slice", shutter, "inset:0;border-radius:50%;background:" + shade("#e0533f", 0.7 + sh / 20) + ";transform:translateZ(" + sh * 2 + "px)");
+    // built of boxes with gaps between them: one plane through its middle, facing the
+    // camera, is the whole of it for the pointer (see hitPlane)
+    el("span", "hit-plane", camera, "left:-20px;top:75px;width:200px;height:120px;transform:rotateZ(45deg) rotateX(-90deg)");
+    // the print waits flat inside the base and comes out of its slot, towards the chair
+    var out = el("span", "cam-out", camera);
+    var film = camera.querySelector(".film");
+    if (film) out.appendChild(film);
   }
 
   // ---- objects: a face at its height, a body below it, a shadow on the mat -------
   var SPEC = {
     ledger: { h: 30, step: 2, kind: "book", page: "#efe7d3", cover: "var(--cloudbank)", r: "6px 12px 12px 6px" },
     agenda: { h: 24, step: 2, kind: "book", page: "#f3ecda", cover: "var(--nutreek)", r: "5px 12px 12px 5px" },
-    camera: { h: 120, step: 3, kind: "solid", color: "#e2ddd2", r: "14px", ground: ".label" },
-    envelope: { h: 4, step: 1, kind: "solid", color: "#ddd5c6", r: "4px" },
+    camera: { h: 120, step: 120, kind: "built", r: "8px", ground: ".label" }, // its boxes are drawn above
+    envelope: { h: 4, step: 1, kind: "solid", color: "#ead3d9", r: "2px" },
     mug: { h: 124, step: 3, kind: "mug", r: "50%", ground: ".label, .puddle" },
     jar: { h: 200, step: 8, kind: "jar", r: "50%" },
   };
+  // A round thing is rings of glass or china with a label wrapped round them, and the
+  // pointer falls through the gaps between them: on and off it, the thing lifts and drops
+  // and flickers. One upright plane through its middle, facing the camera as its label
+  // does, is the whole of it for the pointer.
+  function hitPlane(t, host, d, h) {
+    var x = host === t ? 0 : host.offsetLeft, y = host === t ? 0 : host.offsetTop;
+    var cx = x + host.offsetWidth / 2, cy = y + host.offsetHeight / 2;
+    el("span", "hit-plane", t, "left:" + (cx - d / 2) + "px;top:" + cy + "px;width:" + d + "px;height:" + h + "px;transform:rotateZ(45deg) rotateX(-90deg)");
+  }
   [].forEach.call(stage.querySelectorAll(".thing"), function (t) {
     var name = Object.keys(SPEC).filter(function (k) {
       return t.classList.contains(k);
@@ -193,6 +224,7 @@
       for (var j = 8; j <= 34; j++) el("span", "handle", host, "transform:translateZ(" + -j * 3 + "px);border-color:" + shade("#f4f1ea", 0.9 - j / 90));
       // the mug says what it is, round its side
       wrap(host, '<span class="mug-print">Buy me<br />a coffee</span>', { r: 65.6, w: 170, h: 80, z: -18, at: 45, strip: 5 });
+      hitPlane(t, host, 132, sp.h);
     }
     if (sp.kind === "jar") {
       [].forEach.call(t.querySelectorAll(".slip"), function (p, idx) {
@@ -202,6 +234,16 @@
       var tag = t.querySelector(".jar-tag");
       tag.classList.add("moved");
       wrap(t, '<span class="jar-label"><b>Planora</b><small>Ideas for the group.<br />In testing.</small></span>', { r: 75.6, w: 176, h: 76, z: -64, at: 45, strip: 4 });
+      hitPlane(t, t, 152, sp.h);
+      // tipping it over was the flat bench's trick: a jar of rings cannot lie down
+      t.removeAttribute("data-cat");
+      // one idea folded in half among the slips at the bottom: on the way to Planora it
+      // comes up out of the jar and unfolds
+      var at = el("span", "jar-idea-at", t);
+      at.setAttribute("aria-hidden", "true");
+      at.innerHTML =
+        '<span class="jar-idea"><span class="fold a"><b>Planora</b></span>' +
+        '<span class="fold b"><span class="front">An idea for the group</span><span class="back"></span></span></span>';
     }
   });
   // the camera's lens stands proud of its face
@@ -235,39 +277,64 @@
   // ---- the cat's toys get a body too ---------------------------------------------
   // Copies of the toy stacked up: straight for a bag, shrinking towards the top and
   // the bottom for a ball, and for the box, plain cardboard walls under its flaps.
-  var TOY = { yarn: [36, "ball"], crinkle: [24, "ball"], catnip: [16, "ball"], box: [110, "box"], treats: [26, "flat"], bag: [34, "flat"], laser: [10, "flat"], feather: [4, "flat"] };
+  var TOY = { yarn: [36, "ball"], crinkle: [24, "ball"], catnip: [22, "ball"], box: [110, "box"], treats: [26, "flat"], bag: [34, "flat"], laser: [10, "flat"], feather: [4, "flat"] };
   function body(toy) {
     var kind = toy.getAttribute("data-toy");
     var spec = TOY[kind];
     if (!spec || toy.querySelector(".lid")) return;
     var h = spec[0];
-    if (spec[1] === "box") {
-      // behind the computer, partly hidden by it: never out on the desk, nor on the floor,
-      // which the camera barely frames
-      var SPOTS = [[-110, -135, 0]]; // clear of the light switch on the wall behind
-      var pick = parseInt(new URLSearchParams(location.search).get("box"), 10);
-      var at = SPOTS[pick >= 0 && pick < SPOTS.length ? pick : Math.floor(Math.random() * SPOTS.length)];
-      toy.style.left = at[0] + "px";
-      toy.style.top = at[1] + "px";
-      toy.style.translate = "0 0 " + at[2] + "px";
-      toy.style.scale = "1.7 1.7 1.7";
-    }
+    if (spec[1] === "box") toy.style.scale = "1.7 1.7 1.7"; // big enough for the cat to get in
+    // a toy drawn by its own background (a ball, the mouse) lends it to every slice
+    var look = getComputedStyle(toy);
+    var paint = ["background", "borderRadius"].map(function (k) {
+      return [k, look[k]];
+    });
+    var painted = look.backgroundImage !== "none" || look.backgroundColor !== "rgba(0, 0, 0, 0)";
     var lid = el("span", "lid", toy);
     while (toy.firstChild !== lid) lid.appendChild(toy.firstChild);
+    if (painted) {
+      paint.forEach(function (f) {
+        lid.style[f[0]] = f[1];
+      });
+      // the slices carry it now; left on the toy it lies flat under the ball like a skirt
+      toy.style.background = "none";
+    }
+    if (kind === "catnip") lid.insertAdjacentHTML("beforeend", '<i class="ear l"></i><i class="ear r"></i>');
     lid.style.transform = "translateZ(" + (spec[1] === "ball" ? h / 2 : h) + "px)";
-    var step = spec[1] === "box" ? 4 : 2;
-    for (var z = 0; z < h; z += step) {
+    if (spec[1] === "box") {
+      // four solid walls round a dark floor: cardboard outside, and inside, which is all
+      // the camera sees of the far two, dark and darker towards the bottom
+      var inner = toy.querySelector(".inner");
+      var shell = box(toy, { x: inner.offsetLeft, y: inner.offsetTop, w: inner.offsetWidth, d: inner.offsetHeight, z: 0, h: h, color: "#c99a62", side: "#b8894f", west: "#c4955c", cls: "box-shell" });
+      var bottom = shell.querySelector("i.t");
+      bottom.className = "box-floor";
+      bottom.style.transform = "translateZ(1px)";
+      ["n", "e"].forEach(function (f) {
+        shell.querySelector("i." + f).classList.add("box-inside");
+      });
+      shell.setAttribute("aria-hidden", "true");
+      toy.insertBefore(shell, lid);
+      return;
+    }
+    // a ball casts a soft shadow on the mat, away from the light like the objects'
+    if (spec[1] === "ball") {
+      var cast = el("span", "toy-shade", null, "--h:" + h + "px");
+      cast.setAttribute("aria-hidden", "true");
+      toy.insertBefore(cast, toy.firstChild);
+    }
+    for (var z = 0; z < h; z += 2) {
       var s = el("span", "slice", null, "transform:translateZ(" + z + "px)");
-      if (spec[1] === "box") {
-        var inner = toy.querySelector(".inner");
-        s.style.cssText += ";left:" + inner.offsetLeft + "px;top:" + inner.offsetTop + "px;width:" + inner.offsetWidth + "px;height:" + inner.offsetHeight + "px;background:" + shade("#c99a62", 0.72 + (0.2 * z) / h);
-      } else {
-        s.style.inset = "0";
-        s.innerHTML = lid.innerHTML;
-        var f = spec[1] === "ball" ? Math.sqrt(Math.max(0.05, 1 - Math.pow((z - h / 2) / (h / 2), 2))) : 1;
-        s.style.scale = f;
-        s.style.filter = "brightness(" + (0.72 + (0.25 * z) / h) + ")";
-      }
+      s.style.inset = "0";
+      // a painted toy's sides are its paint; one drawn by its children (the laser) copies them
+      if (painted)
+        paint.forEach(function (f) {
+          s.style[f[0]] = f[1];
+        });
+      else s.innerHTML = lid.innerHTML;
+      var f = spec[1] === "ball" ? Math.sqrt(Math.max(0.05, 1 - Math.pow((z - h / 2) / (h / 2), 2))) : 1;
+      s.style.scale = f;
+      if (kind === "yarn") s.style.rotate = z * 11 + "deg";
+      s.style.filter = "brightness(" + (0.72 + (0.25 * z) / h) + ")";
       s.setAttribute("aria-hidden", "true");
       toy.insertBefore(s, lid);
     }
@@ -277,10 +344,263 @@
       [].forEach.call(m.addedNodes, function (n) {
         if (n.nodeType === 1 && n.classList.contains("cat-toy")) requestAnimationFrame(function () {
           body(n);
+          spreadSoon(50);
         });
       });
     });
   }).observe(stage, { childList: true });
+
+  // ---- measuring the room: a thing's corners carried through every transform -------
+  // shortcut: rotations other than about z are read only from `transform`, which is all
+  // the room uses; boxes are axis-aligned bounds, so a turned thing is judged a little big
+  function triple(v, n) {
+    return !v || v === "none" ? null : v.split(" ").map(parseFloat).concat([n, n, n]).slice(0, 3);
+  }
+  function localMatrix(n) {
+    var cs = getComputedStyle(n);
+    var o = cs.transformOrigin.split(" ").map(parseFloat);
+    var m = new DOMMatrix().translate(n.offsetLeft, n.offsetTop).translate(o[0], o[1], o[2] || 0);
+    var t = triple(cs.translate, 0);
+    if (t) m = m.translate(t[0], t[1], t[2]);
+    if (cs.rotate && cs.rotate !== "none") m = m.rotate(0, 0, parseFloat(cs.rotate.split(" ").pop()));
+    var sc = triple(cs.scale, 1);
+    if (sc) m = m.scale(sc[0], sc[1], sc[2]);
+    if (cs.transform !== "none") m = m.multiply(new DOMMatrix(cs.transform));
+    return m.translate(-o[0], -o[1], -(o[2] || 0));
+  }
+  function toStage(e) {
+    var chain = [];
+    for (var n = e; n && n !== stage; n = n.offsetParent) chain.unshift(n);
+    var m = new DOMMatrix();
+    chain.forEach(function (n) {
+      m = m.multiply(localMatrix(n));
+    });
+    return m;
+  }
+  // the room-space box round an element and everything in it (z up from the mat)
+  function bounds(root) {
+    var b = { x0: 1e9, y0: 1e9, z0: 1e9, x1: -1e9, y1: -1e9, z1: -1e9, parts: [] };
+    [root].concat([].slice.call(root.querySelectorAll("*"), 0, 600)).forEach(function (e) {
+      // the blurred shadow on the mat is light, not body, and so is the flash's burst; the
+      // camera's print waits inside it
+      if (!(e instanceof HTMLElement) || !e.offsetWidth || /\b(shade|anchor|burst|cam-out|film)\b/.test(e.className)) return;
+      if (getComputedStyle(e).visibility === "hidden") return;
+      var m = toStage(e);
+      // each part keeps its own box and footprint, so a shape with a notch (a box with
+      // its flaps open) is not judged as if the notch were filled
+      var part = { x0: 1e9, y0: 1e9, z0: 1e9, x1: -1e9, y1: -1e9, z1: -1e9, q: [] };
+      [[0, 0], [e.offsetWidth, 0], [e.offsetWidth, e.offsetHeight], [0, e.offsetHeight]].forEach(function (c) {
+        var p = m.transformPoint(new DOMPoint(c[0], c[1], 0));
+        part.q.push([p.x, p.y]);
+        [b, part].forEach(function (o) {
+          o.x0 = Math.min(o.x0, p.x);
+          o.x1 = Math.max(o.x1, p.x);
+          o.y0 = Math.min(o.y0, p.y);
+          o.y1 = Math.max(o.y1, p.y);
+          o.z0 = Math.min(o.z0, p.z);
+          o.z1 = Math.max(o.z1, p.z);
+        });
+      });
+      b.parts.push(part);
+    });
+    return b;
+  }
+  function plansMeet(a, b, g) {
+    return a.x0 < b.x1 - g && a.x1 > b.x0 + g && a.y0 < b.y1 - g && a.y1 > b.y0 + g;
+  }
+  function overlap(a, b) {
+    var g = 1; // touching is fine
+    if (!plansMeet(a, b, g) || !(a.z0 < b.z1 - g && a.z1 > b.z0 + g)) return false;
+    // the boxes meet; ask part by part whether the footprints do, since a turned or
+    // notched thing's box is bigger than it. Heights stay the whole thing's: a book or a
+    // pencil is a stack of flat parts, and two flat parts never share a height
+    return a.parts.some(function (p) {
+      return plansMeet(p, b, g) && b.parts.some(function (q) {
+        return plansMeet(p, q, g) && !apart(p.q, q.q, g);
+      });
+    });
+  }
+  // two convex footprints are apart when some edge of either separates them by more than g
+  function apart(P, Q, g) {
+    return [P, Q].some(function (poly) {
+      return poly.some(function (u, i) {
+        var v = poly[(i + 1) % poly.length];
+        var nx = v[1] - u[1], ny = u[0] - v[0], len = Math.hypot(nx, ny);
+        if (len < 1e-6) return false; // a face seen edge-on has a zero-length side
+        var proj = function (s) {
+          var lo = 1e9, hi = -1e9;
+          s.forEach(function (q) {
+            var d = (q[0] * nx + q[1] * ny) / len;
+            lo = Math.min(lo, d);
+            hi = Math.max(hi, d);
+          });
+          return [lo, hi];
+        };
+        var a = proj(P), b = proj(Q);
+        return a[1] < b[0] + g || b[1] < a[0] + g;
+      });
+    });
+  }
+  // what nothing may go into: the computer, the project objects on the desk, the desk's
+  // legs and the chair
+  function obstacles() {
+    return [].filter.call(stage.querySelectorAll(".pc, .desk-leg, .chair, .thing"), function (e) {
+      return !(e.classList.contains("thing") && e.closest(".on-wall, .pc"));
+    });
+  }
+  var DESK_TOP = { x0: DESK.x, y0: DESK.y, x1: DESK.x + DESK.w, y1: DESK.y + DESK.d };
+  // what is wrong with a thing where it stands, against the boxes of everything else
+  function faults(e, others, onFloor) {
+    var b = bounds(e);
+    var out = [];
+    if (b.y0 < BACK) out.push("goes " + Math.round(BACK - b.y0) + " into the back wall");
+    if (b.x1 > RIGHT) out.push("goes " + Math.round(b.x1 - RIGHT) + " into the right wall");
+    if (!onFloor && (b.x0 < DESK_TOP.x0 || b.x1 > DESK_TOP.x1 || b.y0 < DESK_TOP.y0 || b.y1 > DESK_TOP.y1)) out.push("hangs off the desk");
+    others.forEach(function (o) {
+      if (o.el !== e && !o.el.contains(e) && overlap(b, o.b)) out.push("is inside " + o.name);
+    });
+    return out;
+  }
+  function named(e) {
+    if (e.classList.contains("pc")) return "the computer";
+    if (e.classList.contains("desk-leg")) return "a leg of the desk";
+    if (e.classList.contains("chair")) return "the chair";
+    var l = e.querySelector(".label");
+    return (l && l.firstChild ? l.firstChild.textContent.trim() : e.getAttribute("aria-label") || e.className).replace(/\s+/g, " ");
+  }
+
+  // ---- where the box and the loose things go, on every visit ------------------------
+  // The box has three places, picked at random: behind the computer, or on the floor
+  // under the desk. A flap that would go into the computer is cut away. The loose things
+  // and the other toys go anywhere on the desk where they go into nothing and are not
+  // hidden behind the computer.
+  var BOX_SPOTS = [
+    { x: -381, y: 141, r: -18, z: 0 },
+    { x: 430, y: 740, r: 8, z: FLOOR },
+    { x: -245, y: 145, r: -12, z: FLOOR },
+  ];
+  function setAt(e, p) {
+    // the toys glide when the cat moves them; placing them must be instant, or every
+    // measurement right after would read where they were
+    e.style.transition = "none";
+    clearTimeout(e._glide);
+    e._glide = setTimeout(function () {
+      e.style.transition = "";
+    }, 50);
+    e.style.left = p.x + "px";
+    e.style.top = p.y + "px";
+    e.style.setProperty("--r", p.r + "deg");
+    if (p.z !== undefined) e.style.translate = "0 0 " + p.z + "px";
+  }
+  function screenBox(e) {
+    var r = { l: 1e9, t: 1e9, r: -1e9, b: -1e9 };
+    [e].concat([].slice.call(e.querySelectorAll("*"), 0, 600)).forEach(function (n) {
+      [].forEach.call(n.getClientRects(), function (c) {
+        r.l = Math.min(r.l, c.left);
+        r.t = Math.min(r.t, c.top);
+        r.r = Math.max(r.r, c.right);
+        r.b = Math.max(r.b, c.bottom);
+      });
+    });
+    return r;
+  }
+  // is a point inside the computer's case? Tested in the case's own frame, from its top
+  // face down to the desk, so a turned computer is not judged by a box round it
+  function caseTest() {
+    var top = document.querySelector(".pc .top");
+    var floor = document.querySelector(".pc .floor");
+    if (!top || !floor) return function () {
+      return false;
+    };
+    var inv = toStage(top).inverse();
+    var deep = bounds(top).z1 - bounds(floor).z0;
+    return function (p) {
+      var q = inv.transformPoint(p);
+      return q.x >= 0 && q.x <= top.offsetWidth && q.y >= 0 && q.y <= top.offsetHeight && q.z <= 1 && q.z >= -deep;
+    };
+  }
+  function placeBox(box, i) {
+    setAt(box, BOX_SPOTS[i]);
+    box.dataset.spot = i;
+    var inCase = caseTest();
+    [].forEach.call(box.querySelectorAll(".flap"), function (f) {
+      f.classList.remove("cut");
+      // the flap's corners, edge middles and centre
+      var m = toStage(f),
+        w = f.offsetWidth,
+        h = f.offsetHeight,
+        hit = false;
+      [0, 0.5, 1].forEach(function (u) {
+        [0, 0.5, 1].forEach(function (v) {
+          var p = m.transformPoint(new DOMPoint(u * w, v * h, 0));
+          if (p.y < BACK || p.x > RIGHT || inCase(p)) hit = true;
+        });
+      });
+      if (hit) f.classList.add("cut");
+    });
+  }
+  // Places whatever has not been placed yet, round what has: the toys can arrive after the
+  // loose things, when the page was slow to paint. A toy is placed once it has its body.
+  function spread() {
+    var ready = function (e) {
+      return !e.dataset.placed && (!e.classList.contains("cat-toy") || e.querySelector(".lid"));
+    };
+    var fixed = obstacles()
+      .concat([].slice.call(stage.querySelectorAll(".loose[data-placed], .cat-toy[data-placed]")))
+      .map(function (e) {
+        return { el: e, b: bounds(e), name: named(e) };
+      });
+    var box = stage.querySelector('.cat-toy[data-toy="box"]');
+    if (box && ready(box)) {
+      box.dataset.placed = "1";
+      var pick = parseInt(new URLSearchParams(location.search).get("box"), 10);
+      var i = pick >= 0 && pick < BOX_SPOTS.length ? pick : Math.floor(Math.random() * BOX_SPOTS.length);
+      placeBox(box, i);
+      var bad = faults(box, fixed, BOX_SPOTS[i].z < 0);
+      if (bad.length) console.warn("[room] the box, spot " + i + ", " + bad.join("; "));
+      window.__room.spreadFaults = bad.length ? { box: bad } : {};
+      fixed.push({ el: box, b: bounds(box), name: "the box" });
+    }
+    var pc = screenBox(document.querySelector(".pc"));
+    var loose = [].slice.call(stage.querySelectorAll(".loose, .cat-toy:not([data-toy='box'])")).filter(ready);
+    loose.sort(function () {
+      return Math.random() - 0.5;
+    });
+    loose.forEach(function (e) {
+      var toy = e.classList.contains("cat-toy");
+      for (var tries = 0; tries < 200; tries++) {
+        var x = DESK_TOP.x0 + 40 + Math.random() * (DESK_TOP.x1 - DESK_TOP.x0 - 80);
+        var y = DESK_TOP.y0 + 40 + Math.random() * (DESK_TOP.y1 - DESK_TOP.y0 - 80);
+        // a toy is placed by its middle, a loose thing by its corner
+        if (!toy) {
+          x -= e.offsetWidth / 2;
+          y -= e.offsetHeight / 2;
+        }
+        setAt(e, { x: Math.round(x), y: Math.round(y), r: Math.round(Math.random() * 80 - 40) });
+        if (faults(e, fixed, false).length) continue;
+        var sb = screenBox(e);
+        var cx = (sb.l + sb.r) / 2,
+          cy = (sb.t + sb.b) / 2;
+        if (cx > pc.l && cx < pc.r && cy > pc.t && cy < pc.b) continue; // out of sight behind the computer
+        break;
+      }
+      if (tries === 200) (window.__room.spreadFaults = window.__room.spreadFaults || {})[named(e)] = faults(e, fixed, false);
+      e.dataset.placed = "1";
+      fixed.push({ el: e, b: bounds(e), name: named(e) });
+    });
+    document.documentElement.dataset.spread = "1";
+  }
+  // the toys arrive from cat.js once the fonts are in, and get their bodies a frame later:
+  // the spread waits for them, or goes without them if none come, and places them later
+  var spreadTimer;
+  function spreadSoon(ms) {
+    clearTimeout(spreadTimer);
+    spreadTimer = setTimeout(spread, ms);
+  }
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(function () {
+    spreadSoon(1500);
+  });
+  window.__room = { bounds: bounds, faults: faults, obstacles: obstacles, named: named, BOX_SPOTS: BOX_SPOTS, FLOOR: FLOOR, setAt: setAt, placeBox: placeBox, caseTest: caseTest, toStage: toStage, localMatrix: localMatrix };
 
   // ---- words where they can be read -------------------------------------------------
   // The name and the note go up on the wall behind the desk; Social Contacts Sync's
@@ -296,17 +616,19 @@
     // a typeface drawn as one bent tube per stroke
     var font = document.createElement("link");
     font.rel = "stylesheet";
-    font.href = "https://fonts.googleapis.com/css2?family=Tilt+Neon&display=swap";
+    // the neon's tubes, and the pen on the photos
+    font.href = "https://fonts.googleapis.com/css2?family=Tilt+Neon&family=Caveat:wght@500&family=Nanum+Pen+Script&family=Reenie+Beanie&display=swap";
     document.head.appendChild(font);
-    // With the lights off, pressing the sign switches it off and on again in
-    // another colour, the way a tube flickers when it strikes.
+    // Pressing the sign switches it off and on again in another colour, the way a
+    // tube flickers when it strikes.
     var NEON = ["#ff4fa0", "#3fd2ff", "#7dff6a", "#ffb43f", "#b77dff", "#ff5a4e"];
     var hue = 0;
-    var tube = el("button", "neon-switch", sign);
+    // over the whole name: the sign it hangs on has no size of its own
+    var tube = el("button", "neon-switch", tape);
     tube.type = "button";
     tube.setAttribute("aria-label", "Change the neon's colour");
     tube.addEventListener("click", function () {
-      if (!document.documentElement.classList.contains("lights-off") || sign.classList.contains("striking")) return;
+      if (sign.classList.contains("striking")) return;
       sign.classList.add("striking");
       setTimeout(function () {
         hue = (hue + 1) % NEON.length;
@@ -342,7 +664,100 @@
   win.style.cssText = "width:" + WIN.w + "px;height:" + WIN.h + "px";
   win.innerHTML = '<span class="sky"></span>' + skyline(WIN.w, WIN.h) + '<span class="pane"></span><span class="mullion v"></span><span class="mullion h"></span>';
   box(room, { x: WIN.along - 30, y: BACK, w: WIN.w + 60, d: 78, z: WIN.top - WIN.h - 20, h: 20, color: "var(--sill)" });
-  box(room, { x: WIN.along + 150, y: BACK + 6, w: 300, d: 64, z: WIN.top - WIN.h, h: 22, color: "var(--cushion)", r: 22 });
+  // at night the moon comes in through it and lies on the desk, crossed by the mullions
+  var moon = el("span", "moonlight", room, "left:" + (WIN.along - 60) + "px;top:" + (BACK + 2) + "px;width:" + (WIN.w + 120) + "px;height:460px;transform:translateZ(0.8px)");
+  moon.setAttribute("aria-hidden", "true");
+  // the cat's perch: a board hung on two chains from the top of the frame, deep enough to
+  // sleep on, with a fleece on it
+  var PERCH = { x: WIN.along + 120, w: 360, d: 190, z: WIN.top - WIN.h + 24 };
+  box(room, { x: PERCH.x, y: BACK, w: PERCH.w, d: PERCH.d, z: PERCH.z - 14, h: 14, color: "var(--perch)", r: 4, cls: "perch" });
+  box(room, { x: PERCH.x + 18, y: BACK + 12, w: PERCH.w - 36, d: PERCH.d - 26, z: PERCH.z, h: 26, color: "var(--fleece)", r: 34, topCls: "fleece", cls: "perch-fleece" });
+  [PERCH.x + 10, PERCH.x + PERCH.w - 14].forEach(function (x) {
+    // from the frame's top corner on the wall down to the board's front corner
+    var dy = PERCH.d - 8,
+      dz = PERCH.z - (WIN.top - 30);
+    var len = Math.hypot(dy, dz);
+    el("span", "chain", room, "left:" + x + "px;top:" + (BACK + 2) + "px;height:" + Math.round(len) + "px;transform:translateZ(" + (WIN.top - 30) + "px) rotateX(" + ((Math.atan2(dz, dy) * 180) / Math.PI).toFixed(2) + "deg)");
+  });
+
+  // ---- the photos the camera took ---------------------------------------------------
+  // One place per photo (photos.js), in its order: on the wall round the name and the
+  // poster, never over their words, or stuck on the computer's side round the note.
+  // On the wall: along it and the height of the photo's top; on the computer: in the note's
+  // own frame, which reads the right way up.
+  var SNAP_SPOTS = [
+    { along: -150, z: 860, r: -4 },
+    { pc: [-92, 30], r: -6 },
+    { along: 320, z: 452, r: 5 },
+    { pc: [96, 168], r: 7 },
+    { along: 380, z: 200, r: -6 },
+    { along: 170, z: 90, r: 8 },
+    { pc: [-58, 176], r: -4 },
+  ];
+  var snaps = {};
+  var pcSide = document.querySelector(".pc .side");
+  if (window.PHOTOS)
+    PHOTOS.all.forEach(function (p, i) {
+      var at = SNAP_SPOTS[i];
+      if (!at || (at.pc && !pcSide)) return;
+      var s;
+      if (at.pc) {
+        // laid out in the note's frame (see .pc-note), a hair off the case
+        var on = el("span", "pc-note snap-pc", pcSide);
+        s = el("a", "snap on-pc", on, "left:" + at.pc[0] + "px;top:" + at.pc[1] + "px;transform:translateZ(0.4px) rotate(" + at.r + "deg)");
+      } else {
+        // a hair in front of the wall, and of the poster it may overlap
+        var w = onWall("back", at.along, at.z, "snap-wall");
+        w.style.top = BACK + 5 + "px";
+        s = el("a", "snap on-wall-print", w, "transform:rotate(" + at.r + "deg)");
+      }
+      s.href = "about.html";
+      s.setAttribute("aria-label", "About me, with this photo: " + p.alt);
+      s.dataset.photo = p.id;
+      el("span", "snap-img", s, "background-image:url(" + p.src + ")");
+      el("span", "snap-pen", s).innerHTML = PHOTOS.pen(p);
+      snaps[p.id] = s;
+    });
+  function snapShow(id, on) {
+    var s = snaps[id];
+    if (!s || !window.PHOTOS) return;
+    s.classList.toggle("out", on);
+    var out = PHOTOS.out().filter(function (o) {
+      return o !== id;
+    });
+    PHOTOS.setOut(on ? out.concat(id) : out);
+  }
+  // a long caption is written smaller, so it stays on the print's edge
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(function () {
+    Object.keys(snaps).forEach(function (id) {
+      var pen = snaps[id].querySelector(".snap-pen");
+      var line = pen && pen.firstElementChild;
+      if (!line) return;
+      var room = pen.clientWidth, used = line.offsetWidth;
+      if (used > room) line.style.fontSize = (parseFloat(line.style.fontSize) || 1) * (room / used) * 0.96 + "em";
+    });
+  });
+  window.__room.snaps = {
+    el: function (id) {
+      return snaps[id];
+    },
+    show: snapShow,
+  };
+  if (window.PHOTOS) {
+    PHOTOS.out().forEach(function (id) {
+      if (snaps[id]) snaps[id].classList.add("out");
+    });
+    // back from About without the morph (reduced motion, or a browser without page
+    // transitions): the photo it showed is simply out, in its place
+    addEventListener("load", function () {
+      setTimeout(function () {
+        var shown = PHOTOS.shown();
+        if (!shown) return;
+        PHOTOS.setShown("");
+        snapShow(shown.id, true);
+      }, 300);
+    });
+  }
   function skyline(w, h) {
     var r = Math.random,
       d = "",
@@ -375,7 +790,7 @@
     box(room, { x: RIGHT - 60, y: y, w: 60, d: 14, z: SHELF.z - 78, h: 60, color: "var(--skirting)" });
   });
   var pot = el("span", "rbox plant", room, "left:" + (RIGHT - 80) + "px;top:" + (SHELF.y + 24) + "px;width:56px;height:56px;transform:translateZ(" + SHELF.z + "px)");
-  box(pot, { x: 0, y: 0, w: 56, d: 56, z: 0, h: 58, color: "var(--pot)", r: 8 });
+  box(pot, { x: 0, y: 0, w: 56, d: 56, z: 0, h: 58, color: "var(--pot)", r: 8, topCls: "pot-top" });
   [45, -45].forEach(function (deg) {
     var leaves = el("span", "leaves", pot, "transform:translateZ(58px) rotateZ(" + deg + "deg) rotateX(-90deg)");
     leaves.innerHTML = '<svg viewBox="0 0 140 130"><path d="M70 130C66 90 40 70 8 66c18 22 34 40 62 64zM70 130C74 84 98 58 132 52c-14 28-32 52-62 78zM70 130C60 80 62 36 74 2c14 34 12 82-4 128zM70 130C52 98 30 92 14 100c20 10 36 18 56 30zM70 130c18-34 40-44 58-40-16 16-34 28-58 40z" /></svg>';
@@ -384,8 +799,47 @@
   // the radio at the shelf's far end, partly out of the frame, with room between it and
   // the plant for the cat (a stand-in until the radio is designed)
   var radio = box(room, { x: RIGHT - 96, y: SHELF.y + SHELF.d - 250, w: 84, d: 210, z: SHELF.z, h: 120, color: "var(--radio)", west: "var(--radio)", r: 12 });
-  radio.querySelector("i.w").innerHTML = '<span class="radio-face"><span class="grille"></span><span class="dial"></span><span class="knob"></span><span class="knob"></span></span>';
-  radio.setAttribute("aria-hidden", "true");
+  radio.querySelector("i.w").innerHTML =
+    '<span class="radio-face"><span class="grille" aria-hidden="true"></span><span class="dial" aria-hidden="true"><span class="needle"></span></span>' +
+    '<span class="led" aria-hidden="true"></span><button type="button" class="knob power" aria-pressed="false" aria-label="Radio"></button>' +
+    '<button type="button" class="knob tune" aria-label="Next station"></button></span>';
+  [].forEach.call(radio.querySelectorAll("i:not(.w)"), function (f) {
+    f.setAttribute("aria-hidden", "true");
+  });
+  // Five royalty-free tracks, one per station, played by radio.js, which carries them on
+  // from page to page; the radio here is its knobs and dial. Between stations, the hiss.
+  var face = radio.querySelector(".radio-face");
+  var power = face.querySelector(".power");
+  var dial = face.querySelector(".dial");
+  // its halogen lamp, warm on the shelf and the wall round it while it plays
+  var lamp = el("span", "radio-lamp", room, "left:" + (RIGHT - 2) + "px;top:" + (SHELF.y + SHELF.d - 330) + "px;transform:translateZ(" + (SHELF.z + 260) + "px) rotateZ(90deg) rotateX(-90deg)");
+  lamp.setAttribute("aria-hidden", "true");
+  var pool = el("span", "radio-pool", room, "left:" + (RIGHT - SHELF.w) + "px;top:" + (SHELF.y + SHELF.d - 330) + "px;width:" + SHELF.w + "px;transform:translateZ(" + (SHELF.z + 0.5) + "px)");
+  pool.setAttribute("aria-hidden", "true");
+  function showRadio(st) {
+    power.setAttribute("aria-pressed", String(!!st.on));
+    face.classList.toggle("on", !!st.on);
+    [lamp, pool].forEach(function (l) {
+      l.classList.toggle("lit", !!st.on);
+    });
+    face.style.setProperty("--st", RADIO.stations > 1 ? st.station / (RADIO.stations - 1) : 0.5);
+  }
+  if (window.RADIO) {
+    showRadio(RADIO.state());
+    RADIO.onChange(showRadio);
+    power.addEventListener("click", function () {
+      if (window.CRT) CRT.clack();
+      var on = !RADIO.state().on;
+      if (on && window.CRT) CRT.snow(0.35);
+      RADIO.power(on);
+    });
+    face.querySelector(".tune").addEventListener("click", function () {
+      if (window.CRT) CRT.clack();
+      face.style.setProperty("--turn", (parseFloat(face.style.getPropertyValue("--turn")) || 0) + 60 + "deg");
+      if (RADIO.state().on && window.CRT) CRT.snow(0.35);
+      RADIO.next();
+    });
+  }
 
   // ---- the site's navigation: neon tubes in a plexiglass frame, top of the right wall
   var nav = document.createElement("nav");
@@ -405,9 +859,17 @@
     el("span", "post-card", pile).setAttribute("aria-hidden", "true");
     el("span", "post-env", pile).setAttribute("aria-hidden", "true");
     pile.appendChild(letter);
-    var stamp = el("span", "stamp", letter);
-    stamp.setAttribute("aria-hidden", "true");
-    stamp.innerHTML = '<img src="cupid.svg" alt="" />';
+    // the same envelope as on Cupid's page, closed, at its real size and scaled down
+    // evenly to lie on the computer: one turns into the other without changing shape
+    letter.style.setProperty("--w", "736px");
+    letter.style.setProperty("--h", "192px");
+    var env = el("span", "env-face", letter);
+    env.setAttribute("aria-hidden", "true");
+    env.innerHTML =
+      '<span class="env-pocket"></span><span class="env-flap"></span>' +
+      '<span class="env-seal"><svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.2 0 3.6 1.3 5.3 3.3 1.7-2 3.1-3.3 5.3-3.3 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z" /></svg></span>' +
+      '<span class="env-to">To the agency,<br />with the whole workflow inside</span>' +
+      '<span class="env-stamp"><img src="cupid.svg" alt="" /></span>';
   }
   var sticky = stage.querySelector(".thing.sticky");
   var side = document.querySelector(".pc .side");
@@ -432,6 +894,7 @@
     sw.setAttribute("aria-pressed", String(on));
     document.documentElement.classList.toggle("lights-off", !on);
   });
+  var navTubes = [].slice.call(document.querySelectorAll(".plexi a"));
   // in the dark, the tube and the switch's little light still show
   function glow() {
     var g = native.call(document.querySelector(".pc .glass"));
@@ -441,8 +904,28 @@
     var tint = getComputedStyle(sign).getPropertyValue("--neon").trim() || "#ff4fa0";
     var dim = sign.classList.contains("striking") ? 0.35 : 1;
     var neon = board ? "" : "radial-gradient(ellipse " + n.width * 0.75 + "px " + n.height * 1.7 + "px at " + (n.left + n.width / 2) + "px " + (n.top + n.height / 2) + "px, color-mix(in srgb, " + tint + " " + 45 * dim + "%, white), color-mix(in srgb, " + tint + " " + 50 * dim + "%, transparent) 55%, transparent 80%), ";
+    // the moon through the window and on the desk, and the radio's lamp while it plays
+    var w = native.call(win), m = native.call(moon), lp = native.call(lamp);
+    var light =
+      "radial-gradient(ellipse " + w.width * 0.7 + "px " + w.height * 0.75 + "px at " + (w.left + w.width / 2) + "px " + (w.top + w.height / 2) + "px, rgba(150,170,235,1), transparent 80%), " +
+      "radial-gradient(ellipse " + m.width * 0.5 + "px " + m.height * 0.55 + "px at " + (m.left + m.width / 2) + "px " + (m.top + m.height * 0.45) + "px, rgba(185,200,250,1), rgba(120,140,210,0.8) 45%, transparent 85%), " +
+      (lamp.classList.contains("lit") ? "radial-gradient(ellipse " + lp.width * 0.55 + "px " + lp.height * 0.5 + "px at " + (lp.left + lp.width / 2) + "px " + (lp.top + lp.height * 0.6) + "px, rgba(255,205,150,1), rgba(200,150,100,0.6) 45%, transparent 80%), " : "");
+    // the lit dial itself keeps its brightness, like the switch's little light
+    if (lamp.classList.contains("lit")) {
+      var dl = native.call(dial);
+      light = "radial-gradient(ellipse " + (dl.width * 0.9 + 20) + "px " + (dl.height * 0.9 + 20) + "px at " + (dl.left + dl.width / 2) + "px " + (dl.top + dl.height / 2) + "px, rgba(255,240,210,1) 30%, transparent 100%), " + light;
+    }
+    // and the tubes of the navigation on the other wall, each in its own colour
+    navTubes.forEach(function (a) {
+      var r = native.call(a);
+      if (!r.width) return;
+      var c = getComputedStyle(a).color;
+      // the box round a word on a slanted wall is tall: the glow keeps to the word
+      light += "radial-gradient(ellipse " + r.width * 0.62 + "px " + r.height * 0.62 + "px at " + (r.left + r.width / 2) + "px " + (r.top + r.height / 2) + "px, color-mix(in srgb, " + c + " 55%, white), color-mix(in srgb, " + c + " 35%, transparent) 55%, transparent 85%), ";
+    });
     night.style.background =
       neon +
+      light +
       "radial-gradient(circle at " + (k.left + k.width / 2) + "px " + (k.top + k.height / 2) + "px, rgba(255,255,255,1) 0 14px, transparent 36px), " +
       (lit ? "radial-gradient(ellipse 280px 230px at " + (g.left + g.width / 2) + "px " + (g.top + g.height / 2) + "px, rgba(200,255,210,1), rgba(80,140,100,0.6) 40%, transparent 75%), " : "") +
       "rgb(40, 46, 80)";

@@ -21,7 +21,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&family=Caveat:wght@500&family=Nanum+Pen+Script&family=Reenie+Beanie&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
@@ -98,12 +98,22 @@
           opacity: 0;
         }
       }
+      /* written on the print in pen; the heart in red pen */
       .instant .caption {
         position: absolute;
         left: 20px;
         right: 20px;
-        bottom: 18px;
-        font: 700 1.2rem "Bricolage Grotesque", sans-serif;
+        bottom: 12px;
+        font: 500 1.75rem/1 "Caveat", cursive;
+      }
+      .pen-heart {
+        width: 2.1rem;
+        height: auto;
+        fill: none;
+        stroke: #d0313f;
+        stroke-width: 2.6;
+        stroke-linecap: round;
+        stroke-linejoin: round;
       }
       .instant .hint {
         position: absolute;
@@ -301,6 +311,11 @@
           transition: none;
         }
       }
+      /* picked up from the bench, it developed long ago */
+      .instant.developed img,
+      .instant.developed .frame::after {
+        animation: none;
+      }
     </style>
   </head>
   <body data-page="about">
@@ -413,10 +428,21 @@
       <span class="loose eraser" data-cat="knock" style="left: 40px; top: 1100px; --r: -10deg" aria-hidden="true"></span>
     </div>
 
+    <script src="photos.js"></script>
     <script>
       // Shaking an instant photo does nothing to the chemistry. Here it helps a little.
       (function () {
         var print = document.getElementById("print");
+        // the photo the camera on the bench took; the bench puts it out when the reader goes back
+        if (window.PHOTOS) {
+          var shot = PHOTOS.current();
+          var img = print.querySelector("img");
+          img.src = shot.src;
+          img.alt = shot.alt;
+          print.querySelector(".caption").innerHTML = PHOTOS.pen(shot);
+          PHOTOS.setShown(shot.id);
+          if (PHOTOS.developed()) print.classList.add("developed");
+        }
         function developing() {
           return print.getAnimations({ subtree: true }).filter(function (a) {
             return a.animationName !== "shake";
@@ -443,6 +469,7 @@
         });
       })();
     </script>
+    <script src="radio.js"></script>
     <script src="site.js" defer></script>
     <script src="cat.js" defer></script>
   </body>
