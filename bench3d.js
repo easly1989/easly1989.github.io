@@ -33,7 +33,12 @@
   // Something printed round a cylinder: cut into narrow strips, each standing on
   // the curve. The host's centre is the axis; at is the angle the middle faces
   // (45deg faces the camera), z the height of the print's top edge.
+  // Round things cost the frame rate most (see 'Measure what the room can draw at 60 fps'):
+  // rings 6 px apart or more and label strips 12 px wide or more. MEASURE: ?strip=k and
+  // ?ring=k scale them further.
+  var MQ = new URLSearchParams(location.search), MSTRIP = +MQ.get("strip") || 1, MRING = +MQ.get("ring") || 1;
   function wrap(host, html, o) {
+    o.strip *= MSTRIP;
     var n = Math.ceil(o.w / o.strip);
     for (var i = 0; i < n; i++) {
       var x0 = i * o.strip;
@@ -175,8 +180,8 @@
     agenda: { h: 24, step: 2, kind: "book", page: "#f3ecda", cover: "var(--nutreek)", r: "5px 12px 12px 5px" },
     camera: { h: 120, step: 120, kind: "built", r: "8px", ground: ".label" }, // its boxes are drawn above
     envelope: { h: 4, step: 1, kind: "solid", color: "#ead3d9", r: "2px" },
-    mug: { h: 124, step: 3, kind: "mug", r: "50%", ground: ".label, .puddle" },
-    jar: { h: 200, step: 8, kind: "jar", r: "50%" },
+    mug: { h: 124, step: 6, kind: "mug", r: "50%", ground: ".label, .puddle" },
+    jar: { h: 200, step: 16, kind: "jar", r: "50%" },
   };
   // A round thing is rings of glass or china with a label wrapped round them, and the
   // pointer falls through the gaps between them: on and off it, the thing lifts and drops
@@ -201,6 +206,7 @@
       });
     t.insertBefore(el("span", "shade", t), t.firstChild);
     var host = sp.kind === "mug" ? t.querySelector(".cup") : t;
+    if (sp.kind === "mug" || sp.kind === "jar") sp.step *= MRING;
     var n = Math.floor(sp.h / sp.step);
     for (var i = 1; i <= n; i++) {
       var k = 0.95 - 0.25 * (i / n); // darker towards the mat
@@ -221,9 +227,9 @@
     }
     if (sp.kind === "book") el("span", "wall spine", t, "background:" + sp.cover + ";filter:brightness(0.85)");
     if (sp.kind === "mug") {
-      for (var j = 8; j <= 34; j++) el("span", "handle", host, "transform:translateZ(" + -j * 3 + "px);border-color:" + shade("#f4f1ea", 0.9 - j / 90));
+      for (var j = 8; j <= 34; j += 2 * MRING) el("span", "handle", host, "transform:translateZ(" + -j * 3 + "px);border-color:" + shade("#f4f1ea", 0.9 - j / 90));
       // the mug says what it is, round its side
-      wrap(host, '<span class="mug-print">Buy me<br />a coffee</span>', { r: 65.6, w: 170, h: 80, z: -18, at: 45, strip: 5 });
+      wrap(host, '<span class="mug-print">Buy me<br />a coffee</span>', { r: 65.6, w: 170, h: 80, z: -18, at: 45, strip: 15 });
       hitPlane(t, host, 132, sp.h);
     }
     if (sp.kind === "jar") {
@@ -233,7 +239,7 @@
       // Planora's label, stuck round the glass
       var tag = t.querySelector(".jar-tag");
       tag.classList.add("moved");
-      wrap(t, '<span class="jar-label"><b>Planora</b><small>Ideas for the group.<br />In testing.</small></span>', { r: 75.6, w: 176, h: 76, z: -64, at: 45, strip: 4 });
+      wrap(t, '<span class="jar-label"><b>Planora</b><small>Ideas for the group.<br />In testing.</small></span>', { r: 75.6, w: 176, h: 76, z: -64, at: 45, strip: 12 });
       hitPlane(t, t, 152, sp.h);
       // tipping it over was the flat bench's trick: a jar of rings cannot lie down
       t.removeAttribute("data-cat");
@@ -664,8 +670,12 @@
   win.style.cssText = "width:" + WIN.w + "px;height:" + WIN.h + "px";
   win.innerHTML = '<span class="sky"></span>' + skyline(WIN.w, WIN.h) + '<span class="pane"></span><span class="mullion v"></span><span class="mullion h"></span>';
   box(room, { x: WIN.along - 30, y: BACK, w: WIN.w + 60, d: 78, z: WIN.top - WIN.h - 20, h: 20, color: "var(--sill)" });
-  // at night the moon comes in through it and lies on the desk, crossed by the mullions
-  var moon = el("span", "moonlight", room, "left:" + (WIN.along - 60) + "px;top:" + (BACK + 2) + "px;width:" + (WIN.w + 120) + "px;height:460px;transform:translateZ(0.8px)");
+  // at night the moon comes in through it and lies on the desk, crossed by the mullions:
+  // from high up (about 50 degrees), so the patch starts well out from the wall, where the
+  // ray through the window's bottom edge lands, and runs out to the ray through its top
+  var MOON = 1.2; // tan of the moon's height above the horizon
+  var moonNear = BACK + (WIN.top - WIN.h) / MOON, moonFar = BACK + WIN.top / MOON;
+  var moon = el("span", "moonlight", room, "left:" + (WIN.along - 30) + "px;top:" + moonNear + "px;width:" + (WIN.w + 60) + "px;height:" + (moonFar - moonNear) + "px;transform:translateZ(0.8px)");
   moon.setAttribute("aria-hidden", "true");
   // the cat's perch: a board hung on two chains from the top of the frame, deep enough to
   // sleep on, with a fleece on it

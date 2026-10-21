@@ -1,0 +1,1716 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Carlo Ruggiero — Projects</title>
+    <meta
+      name="description"
+      content="Five projects by Carlo Ruggiero, a software developer: CloudBank, a free open-source self-hosted personal finance manager, Social Contacts Sync, plus Planora, Nutreek and Cupid."
+    />
+    <meta name="theme-color" content="#22594b" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#12352d" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" type="image/svg+xml" href="logo.svg" />
+    <meta property="og:title" content="Carlo Ruggiero — Projects" />
+    <meta
+      property="og:description"
+      content="CloudBank, Social Contacts Sync, Planora, Nutreek and Cupid — five projects by Carlo Ruggiero."
+    />
+    <meta property="og:type" content="website" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&family=VT323&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="expect" href="#room-ready" blocking="render" />
+
+    <!-- ===== Site config =====================================================
+         CONTACT_EMAIL: where the "Write to me" sheet sends people (mailto). -->
+    <script>
+      window.CONTACT_EMAIL = "caesar.themaster@gmail.com";
+    </script>
+    <style>
+      .fit {
+        position: relative;
+        height: calc(880px * var(--s, 1));
+      }
+      .stage {
+        position: absolute;
+        left: 50%;
+        top: 0;
+        width: 1280px;
+        height: 880px;
+        transform: translateX(-50%) scale(var(--s, 1));
+        transform-origin: top center;
+      }
+      .home-tape {
+        position: absolute;
+        left: 70px;
+        top: 150px;
+        transform: rotate(-2deg);
+        transform-origin: left bottom;
+        transition: transform 0.4s var(--ease-spring);
+      }
+      .home-tape.lifted {
+        transform: rotate(-2deg) skewY(-3deg) rotate(-1deg);
+      }
+      .intro {
+        position: absolute;
+        left: 70px;
+        top: 284px;
+        width: 360px;
+        padding: 1.3rem 1.4rem;
+        transform: rotate(-1.5deg);
+      }
+      .intro p {
+        margin: 0;
+      }
+
+      .thing {
+        position: absolute;
+        left: var(--x);
+        top: var(--y);
+        width: var(--w);
+        height: var(--h);
+        display: block;
+        padding: 0;
+        border: 0;
+        background: none;
+        text-decoration: none;
+        color: inherit;
+        cursor: pointer;
+        text-align: left;
+        transform: translate(var(--nx, 0px), var(--ny, 0px)) rotate(calc(var(--r, 0deg) + var(--nr, 0deg)));
+        transition:
+          transform 0.4s var(--ease-spring),
+          filter 0.4s ease,
+          scale 0.25s var(--ease-out);
+        filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.3));
+      }
+      /* picked up: its own page is about to open it */
+      .thing.lift {
+        scale: 1.06;
+        z-index: 30;
+        filter: drop-shadow(0 34px 30px rgba(0, 0, 0, 0.4));
+      }
+      /* what each object becomes on its page */
+      #ledger {
+        view-transition-name: cloudbank;
+      }
+      .thing.cards {
+        view-transition-name: scs;
+      }
+      .thing.jar {
+        view-transition-name: planora;
+      }
+      #agenda {
+        view-transition-name: nutreek;
+      }
+      .thing.envelope {
+        view-transition-name: cupid;
+      }
+      .mug .cup {
+        view-transition-name: mug;
+      }
+      .mug .puddle {
+        view-transition-name: puddle;
+      }
+      .camera .film {
+        view-transition-name: photo;
+      }
+      .thing:hover,
+      .thing:focus-visible {
+        transform: translate(var(--nx, 0px), calc(var(--ny, 0px) - 6px)) rotate(calc(var(--r, 0deg) + var(--nr, 0deg))) scale(1.03);
+        filter: drop-shadow(0 26px 26px rgba(0, 0, 0, 0.36));
+        z-index: 6;
+      }
+      .thing.opening {
+        z-index: 30;
+      }
+      .label {
+        position: absolute;
+        font: 700 0.95rem/1.2 "Bricolage Grotesque", sans-serif;
+      }
+      .label small {
+        display: block;
+        font: 400 0.85rem/1.3 "Atkinson Hyperlegible", sans-serif;
+        opacity: 0.85;
+        margin-top: 0.25rem;
+      }
+
+      /* CloudBank: a ledger with an elastic band. Opening: the band slips off
+         and the cover swings open on its spine. */
+      .ledger {
+        perspective: 1500px;
+      }
+      .ledger .inside {
+        position: absolute;
+        inset: 5px 5px 5px 12px;
+        border-radius: 2px 8px 8px 2px;
+        background:
+          linear-gradient(90deg, transparent 38px, rgba(196, 53, 106, 0.35) 38px 39px, transparent 39px),
+          linear-gradient(transparent 27px, var(--rule) 28px) 0 18px / 100% 28px,
+          var(--paper);
+      }
+      .ledger .cover {
+        position: absolute;
+        inset: 0;
+        border-radius: 6px 12px 12px 6px;
+        background: var(--cloudbank);
+        color: #fff;
+        transform-origin: left center;
+        transition: transform 0.8s cubic-bezier(0.5, 0, 0.2, 1) 0.2s;
+      }
+      .ledger .cover::before {
+        content: "";
+        position: absolute;
+        left: 14px;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: rgba(255, 255, 255, 0.25);
+      }
+      .ledger .cover img {
+        position: absolute;
+        left: 40px;
+        top: 40px;
+        width: 64px;
+        height: 64px;
+        background: #fff;
+        border-radius: 14px;
+        padding: 8px;
+      }
+      .ledger .label {
+        left: 40px;
+        bottom: 36px;
+        font-size: 1.6rem;
+      }
+      .ledger .band {
+        position: absolute;
+        right: 34px;
+        top: -4px;
+        bottom: -4px;
+        width: 9px;
+        background: #13213a;
+        border-radius: 3px;
+        transition:
+          transform 0.3s ease,
+          opacity 0.3s ease;
+      }
+      .ledger.opening .band {
+        transform: translateX(70px) rotate(10deg);
+        opacity: 0;
+      }
+      .ledger.opening .cover {
+        transform: rotateY(-165deg);
+      }
+      .ledger.opening {
+        transform: translate(60px, 20px) scale(1.08);
+      }
+
+      /* Social Contacts Sync: contact cards. Opening: they deal out and each
+         one gets a face. */
+      .cards .card {
+        position: absolute;
+        inset: 0;
+        background: var(--paper);
+        color: var(--paper-ink);
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        padding: 18px;
+        display: grid;
+        grid-template-columns: 58px 1fr;
+        gap: 14px;
+        align-items: center;
+        transition: transform 0.6s var(--ease-spring);
+      }
+      .cards .card:nth-child(1) {
+        transform: rotate(-9deg) translate(-16px, 6px);
+      }
+      .cards .card:nth-child(2) {
+        transform: rotate(5deg) translate(12px, -4px);
+      }
+      .cards.messy .card:nth-child(1) {
+        transform: rotate(-38deg) translate(-70px, 40px);
+      }
+      .cards.messy .card:nth-child(2) {
+        transform: rotate(24deg) translate(60px, 52px);
+      }
+      .cards.opening .card:nth-child(1) {
+        transform: translate(-150px, 50px) rotate(-4deg);
+      }
+      .cards.opening .card:nth-child(2) {
+        transform: translate(150px, 50px) rotate(4deg);
+      }
+      .cards.opening .card:nth-child(3) {
+        transform: translate(0, 50px);
+      }
+      .face {
+        width: 58px;
+        height: 58px;
+        border-radius: 50%;
+        background: #d6d3cc;
+        position: relative;
+        overflow: hidden;
+        transition: background 0.3s ease var(--fd, 0s);
+      }
+      .face::before,
+      .face::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        border-radius: 50%;
+        background: #ffd9b8;
+        transform: translateX(-50%) translateY(30px);
+        opacity: 0;
+        transition:
+          transform 0.4s var(--ease-spring) var(--fd, 0s),
+          opacity 0.3s ease var(--fd, 0s);
+      }
+      .face::before {
+        top: 13px;
+        width: 22px;
+        height: 22px;
+      }
+      .face::after {
+        top: 38px;
+        width: 44px;
+        height: 30px;
+      }
+      .face.has,
+      .cards.opening .face {
+        background: var(--scs);
+      }
+      .face.has::before,
+      .face.has::after,
+      .cards.opening .face::before,
+      .cards.opening .face::after {
+        transform: translateX(-50%);
+        opacity: 1;
+      }
+      .cards .card:nth-child(1) .face {
+        --fd: 0.45s;
+      }
+      .cards .card:nth-child(2) .face {
+        --fd: 0.65s;
+      }
+      .cards .lines i {
+        display: block;
+        height: 8px;
+        border-radius: 4px;
+        background: #d6d3cc;
+        margin: 6px 0;
+      }
+      .cards .label {
+        position: static;
+        font-size: 1.15rem;
+      }
+      .cards small {
+        display: block;
+        color: var(--paper-ink-2);
+        font-size: 0.85rem;
+      }
+
+      /* Planora: a jar of ideas. Opening: one slip jumps out and unfolds. */
+      .jar {
+        border-radius: 50%;
+      }
+      .jar .glass {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.12) 45%, rgba(255, 255, 255, 0.22) 72%);
+        box-shadow:
+          inset 0 0 0 7px rgba(255, 255, 255, 0.4),
+          inset 0 0 0 12px rgba(0, 0, 0, 0.08);
+        transition: transform 0.7s var(--ease-spring);
+      }
+      .jar .slip {
+        position: absolute;
+        width: 46px;
+        height: 18px;
+        border-radius: 2px;
+        left: var(--sx);
+        top: var(--sy);
+        background: var(--sc);
+        transform: rotate(var(--sr));
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        transition: transform 0.6s var(--ease-spring);
+      }
+      .jar.tipped .glass {
+        transform: rotate(80deg) translate(10px, -20px);
+      }
+      .jar.tipped .slip {
+        transform: translate(var(--tx), var(--ty)) rotate(calc(var(--sr) + 90deg));
+      }
+      .jar .unfold {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 190px;
+        padding: 0.7rem 0.9rem;
+        background: #fff3b8;
+        color: var(--paper-ink);
+        font: 700 0.95rem/1.3 "Bricolage Grotesque", sans-serif;
+        box-shadow: var(--shadow);
+        transform: translate(-50%, -50%) scale(0.25, 0.1);
+        opacity: 0;
+        transform-origin: center;
+        transition:
+          transform 0.6s var(--ease-spring) 0.3s,
+          opacity 0.2s ease 0.3s;
+        pointer-events: none;
+      }
+      .jar .unfold small {
+        display: block;
+        font: 400 0.82rem "Atkinson Hyperlegible", sans-serif;
+        color: var(--paper-ink-2);
+      }
+      .jar.opening .unfold {
+        opacity: 1;
+        transform: translate(-50%, -150%) rotate(-3deg) scale(1);
+      }
+      .jar-tag {
+        position: absolute;
+        left: 50%;
+        top: calc(100% + 0.7rem);
+        transform: translateX(-50%) rotate(3deg);
+        background: var(--paper);
+        color: var(--paper-ink);
+        padding: 0.4rem 0.75rem;
+        white-space: nowrap;
+        box-shadow: var(--shadow);
+      }
+      .jar-tag .label {
+        position: static;
+      }
+
+      /* Nutreek: an agenda. Opening: the cover lifts and the pages riffle
+         through to today. */
+      .agenda {
+        perspective: 1500px;
+      }
+      .agenda .inside,
+      .agenda .riff {
+        position: absolute;
+        inset: 5px 5px 5px 10px;
+        border-radius: 2px 8px 8px 2px;
+        background: linear-gradient(transparent 23px, var(--rule) 24px) 0 54px / 100% 24px, var(--paper);
+      }
+      .agenda .today-page {
+        padding: 18px 20px;
+        color: var(--paper-ink);
+        font-family: "Bricolage Grotesque", sans-serif;
+      }
+      .agenda .today-page b {
+        display: block;
+        font-size: 1.5rem;
+        line-height: 1.1;
+      }
+      .agenda .today-page span {
+        color: var(--nutreek);
+        font-weight: 700;
+      }
+      .agenda .riff {
+        transform-origin: left center;
+        transition: transform 0.45s cubic-bezier(0.5, 0, 0.3, 1);
+      }
+      .agenda .riff:nth-of-type(2) {
+        transition-delay: 0.55s;
+      }
+      .agenda .riff:nth-of-type(3) {
+        transition-delay: 0.7s;
+      }
+      .agenda .riff:nth-of-type(4) {
+        transition-delay: 0.85s;
+      }
+      .agenda .riff:nth-of-type(5) {
+        transition-delay: 1s;
+      }
+      .agenda .cover {
+        position: absolute;
+        inset: 0;
+        border-radius: 5px 12px 12px 5px;
+        background: var(--nutreek);
+        color: #fff;
+        transform-origin: left center;
+        transition: transform 0.6s cubic-bezier(0.5, 0, 0.2, 1) 0.1s;
+      }
+      .agenda .cover::after {
+        /* the elastic, across */
+        content: "";
+        position: absolute;
+        left: -3px;
+        right: -3px;
+        top: 62%;
+        height: 9px;
+        background: #143a17;
+        border-radius: 3px;
+      }
+      .agenda .cover .year {
+        position: absolute;
+        right: 22px;
+        top: 20px;
+        font: 800 1.1rem "Bricolage Grotesque", sans-serif;
+        opacity: 0.75;
+      }
+      .agenda .cover img {
+        position: absolute;
+        left: 24px;
+        top: 24px;
+        width: 46px;
+        height: 46px;
+        background: #fff;
+        border-radius: 12px;
+        padding: 6px;
+      }
+      .agenda .label {
+        left: 24px;
+        bottom: 26px;
+        font-size: 1.45rem;
+      }
+      .agenda .ribbon {
+        position: absolute;
+        left: 58%;
+        bottom: -26px;
+        width: 12px;
+        height: 40px;
+        background: #c43a3a;
+        clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
+      }
+      .agenda.opening .cover,
+      .agenda.opening .riff {
+        transform: rotateY(-165deg);
+      }
+      .agenda.opening {
+        transform: translate(40px, -30px) scale(1.08);
+      }
+
+      /* Cupid: a sealed envelope. Opening: the seal breaks, the flap lifts,
+         the letter comes out. */
+      .envelope .body {
+        position: absolute;
+        inset: 0;
+        background: #f2ede4;
+        border-radius: 4px;
+        z-index: 2;
+      }
+      .envelope .letter {
+        position: absolute;
+        left: 12px;
+        right: 12px;
+        top: 8px;
+        height: 120px;
+        background: var(--paper);
+        z-index: 1;
+        background-image: linear-gradient(transparent 15px, var(--rule) 16px);
+        background-size: 100% 16px;
+        transition: transform 0.6s var(--ease-out) 0.55s;
+      }
+      .envelope .flap {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        height: 62%;
+        background: #e9e2d5;
+        clip-path: polygon(0 0, 100% 0, 50% 100%);
+        transform-origin: top center;
+        z-index: 3;
+        transition: transform 0.5s cubic-bezier(0.5, 0, 0.3, 1) 0.2s;
+      }
+      .seal {
+        position: absolute;
+        left: 50%;
+        top: 58%;
+        width: 54px;
+        height: 54px;
+        margin: -27px 0 0 -27px;
+        z-index: 4;
+      }
+      .seal i {
+        position: absolute;
+        inset: 0;
+        border-radius: 46% 54% 50% 50%;
+        background: var(--cupid);
+        box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.2);
+        transition:
+          transform 0.4s var(--ease-out),
+          opacity 0.4s ease 0.3s;
+      }
+      .seal i:first-child {
+        clip-path: polygon(0 0, 55% 0, 45% 100%, 0 100%);
+      }
+      .seal i:last-child {
+        clip-path: polygon(55% 0, 100% 0, 100% 100%, 45% 100%);
+      }
+      .seal img {
+        position: absolute;
+        left: 14px;
+        top: 14px;
+        width: 26px;
+        filter: brightness(0) invert(1);
+        transition: opacity 0.2s ease;
+      }
+      .envelope.opening .seal i:first-child {
+        transform: translate(-16px, 8px) rotate(-25deg);
+        opacity: 0;
+      }
+      .envelope.opening .seal i:last-child {
+        transform: translate(16px, 8px) rotate(25deg);
+        opacity: 0;
+      }
+      .envelope.opening .seal img {
+        opacity: 0;
+      }
+      .envelope.opening .flap {
+        transform: rotateX(180deg);
+      }
+      .envelope.opening .letter {
+        transform: translateY(-110px);
+      }
+      .envelope .label {
+        left: 18px;
+        bottom: 12px;
+        color: var(--paper-ink);
+        z-index: 5;
+      }
+      .envelope .label small {
+        color: var(--paper-ink-2);
+        opacity: 1;
+      }
+
+      /* About: an instant camera lying on its back. Opening: the flash fires
+         and a print slides out of the top, still blank; About develops it. */
+      .camera .body {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        border-radius: 22px 22px 16px 16px;
+        background: linear-gradient(#f4f2ec, #dedad0);
+        box-shadow: inset 0 -6px 0 rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+      }
+      .camera .body::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto;
+        height: 46px;
+        background: #2a2a2a;
+      }
+      /* five stripes, one per product colour */
+      .camera .body::after {
+        content: "";
+        position: absolute;
+        left: 18px;
+        top: 58px;
+        width: 54px;
+        height: 22px;
+        background: linear-gradient(var(--cloudbank) 0 20%, var(--scs) 0 40%, var(--nutreek) 0 60%, var(--planora) 0 80%, var(--cupid) 0);
+        border-radius: 3px;
+      }
+      .camera .finder,
+      .camera .flashgun {
+        position: absolute;
+        z-index: 3;
+        top: 10px;
+        height: 26px;
+        border-radius: 5px;
+      }
+      .camera .finder {
+        left: 18px;
+        width: 34px;
+        background: radial-gradient(circle at 40% 40%, #6d7d8c, #1c232a 70%);
+      }
+      .camera .flashgun {
+        right: 16px;
+        width: 66px;
+        background: repeating-linear-gradient(90deg, #f6f6f2 0 3px, #d9d9d2 3px 6px);
+      }
+      .camera .lens {
+        position: absolute;
+        z-index: 3;
+        left: 50%;
+        top: 54px;
+        width: 92px;
+        height: 92px;
+        margin-left: -34px;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at 36% 34%, rgba(255, 255, 255, 0.55) 0 7%, transparent 8%),
+          radial-gradient(circle, #2c3a4a 0 34%, #10161c 35% 58%, #3a3a3a 59% 66%, #1b1b1b 67%);
+        box-shadow: 0 0 0 5px #cfcbc1;
+      }
+      .camera .slot {
+        position: absolute;
+        z-index: 3;
+        left: 22px;
+        right: 22px;
+        bottom: 9px;
+        height: 5px;
+        border-radius: 3px;
+        background: #3a3833;
+      }
+      .camera .film {
+        position: absolute;
+        z-index: 1;
+        left: 34px;
+        right: 34px;
+        top: 4px;
+        height: 160px;
+        padding: 9px 9px 30px;
+        background: #fbfbf8;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+        transition: transform 0.75s cubic-bezier(0.3, 0.7, 0.2, 1) 0.25s;
+      }
+      .camera .film::before {
+        content: "";
+        display: block;
+        height: 100%;
+        background: linear-gradient(160deg, #3b3a36, #24231f);
+      }
+      /* out of the top, the way instant cameras eject */
+      .camera.opening .film {
+        transform: translateY(-150px) rotate(-3deg);
+      }
+      .camera .burst {
+        position: absolute;
+        z-index: 4;
+        right: -60px;
+        top: -70px;
+        width: 220px;
+        height: 180px;
+        border-radius: 50%;
+        background: radial-gradient(closest-side, #fff, rgba(255, 255, 255, 0.75) 40%, transparent);
+        opacity: 0;
+        pointer-events: none;
+      }
+      .camera.opening .burst {
+        animation: flash 0.45s ease-out;
+      }
+      @keyframes flash {
+        12% {
+          opacity: 1;
+        }
+      }
+      .camera .label {
+        left: 0;
+        right: 0;
+        top: calc(100% + 0.4rem);
+        text-align: center;
+        color: var(--ruler);
+        z-index: 3;
+        transition: opacity 0.2s ease;
+      }
+      .camera.opening .label {
+        opacity: 0;
+      }
+      .sticky {
+        background: #ffe36e;
+        color: #2b2400;
+        padding: 18px;
+        font: 700 1.15rem/1.3 "Bricolage Grotesque", sans-serif;
+      }
+      .sticky small {
+        display: block;
+        margin-top: 0.4rem;
+        font: 400 0.9rem/1.35 "Atkinson Hyperlegible", sans-serif;
+      }
+
+      /* The mug: the way to the donate page. Opening: it tips over. */
+      .mug .cup {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background: #f4f1ea;
+        transition: transform 0.55s cubic-bezier(0.5, 0, 0.3, 1.3);
+        z-index: 2;
+      }
+      .mug .cup::before {
+        content: "";
+        position: absolute;
+        inset: 14px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 40% 40%, #7a4a2a, #4a2a16 70%);
+        transition: transform 0.6s ease 0.3s;
+      }
+      .mug .cup::after {
+        content: "";
+        position: absolute;
+        right: -30px;
+        top: 50%;
+        width: 44px;
+        height: 30px;
+        transform: translateY(-50%);
+        border: 9px solid #f4f1ea;
+        border-left: 0;
+        border-radius: 0 20px 20px 0;
+      }
+      .steam {
+        position: absolute;
+        left: 50%;
+        top: 30%;
+        width: 40px;
+        height: 60px;
+        transform: translateX(-50%);
+        pointer-events: none;
+        z-index: 3;
+        transition: opacity 0.2s ease;
+      }
+      .steam path {
+        fill: none;
+        stroke: rgba(255, 255, 255, 0.6);
+        stroke-width: 3;
+        stroke-linecap: round;
+        animation: steam 3s ease-in-out 3 both;
+      }
+      .steam path:nth-child(2) {
+        animation-delay: 1.4s;
+      }
+      @keyframes steam {
+        0% {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        40% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+          transform: translateY(-30px);
+        }
+      }
+      .puddle {
+        position: absolute;
+        left: -150px;
+        top: 40px;
+        width: 260px;
+        height: 170px;
+        transform-origin: 85% 25%;
+        transform: scale(0);
+        transition: transform 1s cubic-bezier(0.2, 0.7, 0.2, 1) 0.35s;
+        z-index: 1;
+        pointer-events: none;
+      }
+      .mug.opening .cup {
+        transform: translate(-12px, 18px) rotate(-78deg);
+      }
+      .mug.opening .cup::before {
+        transform: scale(0.35);
+      }
+      .mug.opening .steam {
+        opacity: 0;
+      }
+      .mug.opening .puddle {
+        transform: scale(1);
+      }
+      .mug .label {
+        left: 50%;
+        top: calc(100% + 0.8rem);
+        transform: translateX(-50%);
+        white-space: nowrap;
+        color: var(--ruler);
+        text-align: center;
+        z-index: 3;
+      }
+      .mug.opening .label {
+        opacity: 0;
+      }
+
+      /* The old computer, pushed into the corner: the one thing on the bench that
+         stands up off it. Only its power switch does anything until it has booted;
+         then the screen and the keyboard open the terminal. Only on the bench,
+         never in the phone column. */
+      .pc {
+        position: absolute;
+        left: 22px;
+        top: 6px;
+        width: 92px;
+        height: 112px;
+        transform-style: preserve-3d;
+        transform: perspective(700px) rotateX(46deg) rotateZ(-26deg);
+      }
+      .pc span,
+      .pc button {
+        position: absolute;
+        display: block;
+      }
+      .pc .floor {
+        left: -6px;
+        top: -4px;
+        width: 108px;
+        height: 122px;
+        border-radius: 12px;
+        background: rgba(0, 0, 0, 0.32);
+        box-shadow: 0 0 16px 8px rgba(0, 0, 0, 0.28);
+      }
+      /* the case: 92 wide, 70 deep, 80 tall */
+      .pc .top {
+        left: 0;
+        top: 0;
+        width: 92px;
+        height: 70px;
+        border-radius: 3px;
+        background: linear-gradient(135deg, #e7dfcb, #d3c9b0);
+        transform: translateZ(80px);
+      }
+      .pc .front {
+        left: 0;
+        top: -10px;
+        width: 92px;
+        height: 80px;
+        border-radius: 3px 3px 0 0;
+        background: linear-gradient(#d9cfb6, #c6bb9f);
+        transform-origin: 50% 100%;
+        transform: rotateX(-90deg);
+      }
+      .pc .side {
+        left: 0;
+        top: 0;
+        width: 80px;
+        height: 70px;
+        background: linear-gradient(90deg, #a99f86, #b9af95);
+        transform-origin: 0 50%;
+        transform: rotateY(-90deg);
+      }
+      /* vents along the side */
+      .pc .side::after {
+        content: "";
+        position: absolute;
+        left: 46px;
+        right: 10px;
+        top: 12px;
+        bottom: 12px;
+        background: repeating-linear-gradient(#8d846f 0 2px, transparent 2px 6px);
+      }
+      .pc .glass {
+        left: 6px;
+        top: 6px;
+        width: 62px;
+        height: 46px;
+        overflow: hidden;
+        border-radius: 8px / 7px;
+        background: radial-gradient(ellipse at 50% 45%, #2b3a31, #10170f 78%);
+        box-shadow:
+          0 0 0 3px #35332d,
+          inset 0 0 8px rgba(0, 0, 0, 0.85);
+        view-transition-name: crt;
+      }
+      .pc .glass::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        background:
+          radial-gradient(ellipse 60% 40% at 28% 18%, rgba(255, 255, 255, 0.16), transparent 70%),
+          repeating-linear-gradient(transparent 0 1px, rgba(0, 0, 0, 0.3) 1px 2px);
+        pointer-events: none;
+      }
+      /* drawn at twice the size and shrunk, so the boot text stays crisp */
+      .pc .lit {
+        left: 0;
+        top: 0;
+        width: 124px;
+        height: 92px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 6px 8px 7px;
+        box-sizing: border-box;
+        background: radial-gradient(ellipse at 50% 45%, #0e3b1b, #03130a 82%);
+        color: #74ff95;
+        font: 11px/1 "VT323", monospace;
+        text-shadow: 0 0 3px rgba(90, 255, 130, 0.85);
+        white-space: pre;
+        transform-origin: 0 0;
+        transform: scale(0.5);
+        opacity: 0;
+      }
+      .pc.on .lit {
+        opacity: 1;
+        animation: crt-on 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+      }
+      .pc.off-ing .lit {
+        animation: crt-off 0.45s ease-in both;
+      }
+      @keyframes crt-on {
+        0%,
+        35% {
+          transform: scale(0.5, 0.005);
+          filter: brightness(4);
+        }
+        100% {
+          transform: scale(0.5);
+          filter: none;
+        }
+      }
+      @keyframes crt-off {
+        0% {
+          transform: scale(0.5);
+        }
+        55% {
+          transform: scale(0.5, 0.005);
+          filter: brightness(3);
+        }
+        100% {
+          transform: scale(0, 0.005);
+          filter: brightness(5);
+        }
+      }
+      /* warming up: the tube shows green bars before it finds the picture */
+      .pc .stripes {
+        inset: 0;
+        background: repeating-linear-gradient(90deg, rgba(110, 255, 150, 0.55) 0 7px, transparent 7px 16px);
+        opacity: 0;
+      }
+      .pc.warm .stripes {
+        animation: stripes 1.5s linear both;
+      }
+      @keyframes stripes {
+        0% {
+          opacity: 0.95;
+          background-position: 0 0;
+        }
+        30% {
+          opacity: 0.7;
+          background-position: 23px 0;
+        }
+        55% {
+          opacity: 0.85;
+          background-position: 41px 0;
+        }
+        100% {
+          opacity: 0;
+          background-position: 96px 0;
+        }
+      }
+      .pc .boot,
+      .pc .boot span {
+        position: static;
+        min-height: 1em;
+      }
+      .pc .boot .cur::after {
+        content: "\2588";
+        animation: blink 1s steps(1) 12;
+      }
+      @keyframes blink {
+        50% {
+          opacity: 0;
+        }
+      }
+      .pc .drive {
+        left: 8px;
+        top: 60px;
+        width: 44px;
+        height: 12px;
+        border-radius: 2px;
+        background: linear-gradient(#cfc6ae, #bcb298);
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
+      }
+      .pc .drive::before {
+        content: "";
+        position: absolute;
+        left: 4px;
+        right: 4px;
+        top: 5px;
+        height: 3px;
+        border-radius: 2px;
+        background: #2b2823;
+      }
+      .pc .busy {
+        left: 56px;
+        top: 64px;
+        width: 5px;
+        height: 3px;
+        background: #6a4a35;
+      }
+      .pc.reading .busy {
+        animation: busy 0.22s steps(1) 12;
+      }
+      @keyframes busy {
+        50% {
+          background: #ff9a4d;
+          box-shadow: 0 0 4px #ff9a4d;
+        }
+      }
+      /* the switch: a 24px target around a small rocker and its light */
+      .pc .power {
+        right: 0;
+        bottom: 0;
+        width: 24px;
+        height: 24px;
+        padding: 0;
+        border: 0;
+        background: none;
+        cursor: pointer;
+      }
+      .pc .power::before {
+        content: "";
+        position: absolute;
+        left: 7px;
+        top: 7px;
+        width: 9px;
+        height: 9px;
+        border-radius: 2px;
+        background: linear-gradient(#6b6458, #47423a);
+        box-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
+      }
+      .pc .power::after {
+        content: "";
+        position: absolute;
+        left: 18px;
+        top: 3px;
+        width: 3px;
+        height: 3px;
+        border-radius: 50%;
+        background: #4d5a4f;
+      }
+      .pc.on .power::after {
+        background: #7dff9b;
+        box-shadow: 0 0 4px #7dff9b;
+      }
+      .pc.dead .power::after {
+        animation: dead 0.5s steps(1) 2;
+      }
+      @keyframes dead {
+        0% {
+          background: #ff5a4e;
+          box-shadow: 0 0 5px #ff5a4e;
+        }
+      }
+      /* the keyboard: 100 wide, 34 deep, 8 tall, in front of the case */
+      .pc .kb {
+        left: -4px;
+        top: 78px;
+        width: 100px;
+        height: 34px;
+        border-radius: 3px;
+        background: linear-gradient(#d5cbb2, #c3b99e);
+        transform: translateZ(8px);
+      }
+      .pc .kb::before {
+        content: "";
+        position: absolute;
+        left: 6px;
+        right: 6px;
+        top: 4px;
+        height: 20px;
+        background:
+          linear-gradient(90deg, transparent 4px, #c9bfa4 4px) 0 0 / 5.5px 5px,
+          linear-gradient(transparent 4px, #c9bfa4 4px) 0 0 / 5.5px 5px,
+          linear-gradient(#f5f0e4, #dad2bf);
+      }
+      .pc .kb::after {
+        content: "";
+        position: absolute;
+        left: 30%;
+        right: 30%;
+        bottom: 4px;
+        height: 4px;
+        border-radius: 1px;
+        background: #efe9dc;
+      }
+      .pc .kb-front {
+        left: -4px;
+        top: 104px;
+        width: 100px;
+        height: 8px;
+        background: #b3a98e;
+        transform-origin: 50% 100%;
+        transform: rotateX(-90deg);
+      }
+      .pc .kb-side {
+        left: -4px;
+        top: 78px;
+        width: 8px;
+        height: 34px;
+        background: #9c927a;
+        transform-origin: 0 50%;
+        transform: rotateY(-90deg);
+      }
+      /* once it waits at the prompt, the screen and the keyboard take you in */
+      .pc .use {
+        inset: 0;
+        padding: 0;
+        border: 0;
+        background: none;
+        cursor: pointer;
+      }
+      .pc .use:disabled {
+        cursor: default;
+      }
+      .pc.typing .kb::before {
+        transform: translateY(0.5px);
+      }
+      /* broken: someone reached the terminal without it. The glass is cracked, the
+         top is scorched, and it smokes a little, now and whenever it is switched */
+      .pc .crack {
+        position: absolute;
+        inset: 0;
+        z-index: 3;
+        width: 100%;
+        height: 100%;
+        fill: none;
+        stroke: rgba(235, 240, 235, 0.8);
+        stroke-width: 0.8;
+        display: none;
+      }
+      .pc .crack path {
+        vector-effect: non-scaling-stroke;
+      }
+      .pc .crack path + path {
+        fill: rgba(235, 240, 235, 0.25);
+      }
+      .pc.broken .crack {
+        display: block;
+      }
+      .pc.broken .glass {
+        background: radial-gradient(ellipse at 60% 40%, #1d231f, #0a0d0b 78%);
+      }
+      .pc.broken .top {
+        background:
+          radial-gradient(ellipse 34% 40% at 46% 42%, rgba(40, 30, 20, 0.55), transparent 70%),
+          linear-gradient(135deg, #ddd4bd, #c7bca1);
+      }
+      .fumes {
+        position: absolute;
+        left: 44px;
+        top: 12px;
+        width: 50px;
+        height: 30px;
+        pointer-events: none;
+      }
+      .fumes i {
+        position: absolute;
+        left: 10px;
+        top: 4px;
+        width: 26px;
+        height: 22px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(200, 200, 195, 0.75), rgba(170, 170, 165, 0) 70%);
+        opacity: 0;
+      }
+      .fumes.puff i {
+        animation: puff 2.6s ease-out 3 both;
+      }
+      .fumes.puff i:nth-child(2) {
+        left: 20px;
+        animation-delay: 0.7s;
+      }
+      .fumes.puff i:nth-child(3) {
+        left: 2px;
+        animation-delay: 1.4s;
+      }
+      @keyframes puff {
+        0% {
+          opacity: 0;
+          transform: translate(0, 0) scale(0.4);
+        }
+        20% {
+          opacity: 0.85;
+        }
+        100% {
+          opacity: 0;
+          transform: translate(52px, 16px) scale(2.4);
+        }
+      }
+
+      /* Phones: the bench becomes a column you scroll down. */
+      @media (max-width: 900px) {
+        .fit {
+          height: auto;
+        }
+        .stage {
+          position: relative;
+          left: auto;
+          width: auto;
+          height: auto;
+          transform: none;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 3rem;
+          padding: 1rem 1rem 5rem;
+        }
+        .home-tape,
+        .intro,
+        .thing,
+        .loose {
+          position: relative;
+          left: auto;
+          top: auto;
+        }
+        .intro {
+          width: min(100%, 22rem);
+        }
+        .thing {
+          width: min(var(--w), 86vw);
+          flex: none;
+        }
+        .cards {
+          margin-top: 1rem;
+        }
+        .jar {
+          margin-bottom: 2rem;
+        }
+        .mug {
+          margin: 0 30px 3rem 0;
+        }
+        .loose,
+        .pc {
+          display: none;
+        }
+      }
+    </style>
+    <link rel="stylesheet" href="bench3d.css" />
+  </head>
+  <body data-page="home">
+    <div class="mat">
+      <svg class="guides" aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 100 100">
+        <line x1="0" y1="100" x2="100" y2="0" vector-effect="non-scaling-stroke" />
+        <line x1="0" y1="60" x2="60" y2="0" vector-effect="non-scaling-stroke" />
+      </svg>
+      <header class="bar">
+        <a href="index.html" aria-current="page">Projects</a>
+        <a href="about.html">About</a>
+        <a href="donate.html">Donate</a>
+        <a href="https://github.com/easly1989" rel="noopener">GitHub</a>
+      </header>
+
+      <div class="fit">
+        <main class="stage" data-cat-world>
+          <div class="tape home-tape" data-cat="tape">
+            <h1>Carlo Ruggiero</h1>
+            <p>Software developer. Mostly Go, ten years and counting.</p>
+          </div>
+          <div class="paper ruled intro" data-cat="sit">
+            <p>
+              This is my bench. Everything on it is something I built and still look after. Pick
+              anything up to see what it is. The cat is not for sale, and does what it likes.
+            </p>
+          </div>
+
+          <a
+            class="thing camera"
+            href="about.html"
+            data-open="camera"
+            data-open-ms="1600"
+            data-cat="push sit"
+            style="--x: 96px; --y: 512px; --w: 220px; --h: 172px; --r: -6deg"
+            aria-label="About me: take a photo"
+          >
+            <span class="film" aria-hidden="true"></span>
+            <span class="body" aria-hidden="true"></span>
+            <span class="finder" aria-hidden="true"></span>
+            <span class="flashgun" aria-hidden="true"></span>
+            <span class="lens" aria-hidden="true"></span>
+            <span class="burst" aria-hidden="true"></span>
+            <span class="label">About me<small>Smile</small></span>
+          </a>
+
+          <a
+            class="thing ledger"
+            id="ledger"
+            href="cloudbank.html"
+            data-open="ledger"
+            data-open-ms="1050"
+            data-vt-ms="220"
+            data-cat="scratch hide sit"
+            style="--x: 486px; --y: 92px; --w: 250px; --h: 330px; --r: 4deg"
+            aria-label="CloudBank, a personal finance manager. Open the ledger"
+          >
+            <span class="inside" aria-hidden="true"></span>
+            <span class="cover">
+              <img src="logo.svg" alt="" />
+              <span class="label">CloudBank<small>Personal finance, self-hosted</small></span>
+            </span>
+            <span class="band" aria-hidden="true"></span>
+          </a>
+
+          <a
+            class="thing cards"
+            href="social-contacts-sync.html"
+            data-open="cards"
+            data-open-ms="1050"
+            data-cat="cards push"
+            style="--x: 812px; --y: 96px; --w: 260px; --h: 120px; --r: -3deg"
+            aria-label="Social Contacts Sync, profile photos for Google Contacts"
+          >
+            <span class="card" aria-hidden="true"><span class="face"></span><span class="lines"><i style="width: 80%"></i><i style="width: 55%"></i></span></span>
+            <span class="card" aria-hidden="true"><span class="face"></span><span class="lines"><i style="width: 70%"></i><i style="width: 45%"></i></span></span>
+            <span class="card"><span class="face has"></span><span><span class="label">Social Contacts Sync</span><small>Every contact gets a face</small></span></span>
+          </a>
+
+          <a
+            class="thing jar"
+            href="planora.html"
+            data-open="jar"
+            data-open-ms="1100"
+            data-cat="jar push"
+            style="--x: 1100px; --y: 70px; --w: 150px; --h: 150px"
+            aria-label="Planora, a shared activity planner for groups"
+          >
+            <span class="slip" style="--sx: 30px; --sy: 44px; --sr: -20deg; --sc: #ffe9a8; --tx: 90px; --ty: 80px" aria-hidden="true"></span>
+            <span class="slip" style="--sx: 70px; --sy: 60px; --sr: 35deg; --sc: #cfe3ff; --tx: 130px; --ty: 30px" aria-hidden="true"></span>
+            <span class="slip" style="--sx: 42px; --sy: 84px; --sr: 70deg; --sc: #f6c9d6; --tx: 60px; --ty: 120px" aria-hidden="true"></span>
+            <span class="slip" style="--sx: 66px; --sy: 96px; --sr: -50deg; --sc: #d6f0c9; --tx: 150px; --ty: 100px" aria-hidden="true"></span>
+            <span class="glass" aria-hidden="true"></span>
+            <span class="unfold" aria-hidden="true">Picnic by the lake?<small>4 of 5 can do Saturday</small></span>
+            <span class="jar-tag"><span class="label">Planora<small>Ideas for the group. In testing.</small></span></span>
+          </a>
+
+          <a
+            class="thing agenda"
+            href="nutreek.html"
+            data-open="agenda"
+            data-open-ms="1650"
+            data-vt-ms="220"
+            data-cat="sit scratch"
+            id="agenda"
+            style="--x: 488px; --y: 494px; --w: 220px; --h: 290px; --r: -4deg"
+            aria-label="Nutreek, a weekly nutrition planner. Open the agenda"
+          >
+            <span class="inside today-page" aria-hidden="true"><b>Today</b><span>this week's meals</span></span>
+            <span class="riff" aria-hidden="true"></span>
+            <span class="riff" aria-hidden="true"></span>
+            <span class="riff" aria-hidden="true"></span>
+            <span class="riff" aria-hidden="true"></span>
+            <span class="cover">
+              <img src="nutreek.svg" alt="" />
+              <span class="year" aria-hidden="true">2026</span>
+              <span class="label">Nutreek<small>The week's meals, planned</small></span>
+            </span>
+            <span class="ribbon" aria-hidden="true"></span>
+          </a>
+
+          <a
+            class="thing envelope"
+            href="cupid.html"
+            data-open="envelope"
+            data-open-ms="1250"
+            data-cat="envelope push"
+            style="--x: 828px; --y: 380px; --w: 210px; --h: 140px; --r: 8deg"
+            aria-label="Cupid, a management system for matchmaking agencies"
+          >
+            <span class="letter" aria-hidden="true"></span>
+            <span class="body" aria-hidden="true"></span>
+            <span class="flap" aria-hidden="true"></span>
+            <span class="seal" aria-hidden="true"><i></i><i></i><img src="cupid.svg" alt="" /></span>
+            <span class="label">Cupid<small>Sealed: available to license</small></span>
+          </a>
+
+          <button
+            class="thing sticky"
+            data-sheet="contact"
+            data-cat="push sit"
+            style="--x: 850px; --y: 610px; --w: 180px; --h: 150px; --r: -4deg"
+          >
+            Write to me<small>A project, a licence, or just to talk shop.</small>
+          </button>
+
+          <a
+            class="thing mug"
+            href="donate.html"
+            data-open="mug"
+            data-open-ms="1450"
+            data-cat="coffee push"
+            style="--x: 1100px; --y: 600px; --w: 130px; --h: 130px"
+            aria-label="Buy me a coffee: ways to support my work"
+          >
+            <svg class="puddle" viewBox="0 0 260 170" aria-hidden="true">
+              <path d="M222 30 C 250 40, 240 80, 210 92 C 190 100, 196 130, 160 140 C 120 152, 90 128, 60 140 C 24 154, 6 120, 26 100 C 44 82, 30 60, 64 52 C 98 44, 120 70, 150 50 C 176 32, 200 22, 222 30 Z" fill="#4a2a16" opacity="0.92" />
+              <circle cx="40" cy="160" r="6" fill="#4a2a16" opacity="0.8" />
+              <circle cx="236" cy="112" r="4" fill="#4a2a16" opacity="0.8" />
+            </svg>
+            <span class="cup" aria-hidden="true"></span>
+            <svg class="steam" viewBox="0 0 40 60" aria-hidden="true">
+              <path d="M12 55c-8-10 8-16 0-28s6-16 0-24" />
+              <path d="M28 55c-8-10 8-16 0-28s6-16 0-24" />
+            </svg>
+            <span class="label">Buy me a coffee<small>It keeps the bench open</small></span>
+          </a>
+
+          <span class="loose pencil" data-cat="knock" style="left: 120px; top: 800px; --r: -14deg" aria-hidden="true"></span>
+          <span class="loose eraser" data-cat="knock" style="left: 380px; top: 812px; --r: 12deg" aria-hidden="true"></span>
+          <span class="loose clip" data-cat="knock" style="left: 784px; top: 290px; --r: 30deg" aria-hidden="true"></span>
+          <span class="loose coin" data-cat="knock" style="left: 1060px; top: 560px" aria-hidden="true"></span>
+          <div class="pc" data-cat-avoid>
+            <span class="floor" aria-hidden="true"></span>
+            <span class="top" aria-hidden="true"></span>
+            <span class="side" aria-hidden="true"></span>
+            <span class="kb-side" aria-hidden="true"></span>
+            <span class="kb-front" aria-hidden="true"></span>
+            <span class="kb"><button class="use" type="button" disabled aria-label="Use the old computer"></button></span>
+            <span class="front">
+              <span class="glass" aria-hidden="true">
+                <span class="lit"><span class="stripes"></span><span class="boot"></span></span>
+                <svg class="crack" viewBox="0 0 100 75" preserveAspectRatio="none"><path d="M62 30 48 8M62 30 80 3M62 30 97 21M62 30 93 54M62 30 70 74M62 30 39 67M62 30 6 50M62 30 19 16M55 19 45 25M73 15 83 23M79 41 89 35M65 50 54 57M49 45 37 37M28 58 22 66M86 62 95 66" /><path d="M58 26 66 24 69 33 60 37Z" /></svg>
+                <button class="use" type="button" disabled tabindex="-1"></button>
+              </span>
+              <span class="drive" aria-hidden="true"></span>
+              <span class="busy" aria-hidden="true"></span>
+              <button class="power" type="button" aria-pressed="false" aria-label="Old computer's power switch"></button>
+            </span>
+            <span class="vh" aria-live="polite"></span>
+          </div>
+          <span class="fumes" aria-hidden="true"><i></i><i></i><i></i></span>
+        </main>
+      </div>
+    </div>
+
+    <template id="sheet-contact">
+      <form id="contact-form">
+        <h2 id="sheet-title">Write to me</h2>
+        <p class="status">A project, a licence, a seeded demo of Cupid, or just to talk shop.</p>
+        <p>This opens in your email app. Nothing is sent from this site.</p>
+        <label class="ask">
+          <span>Your name</span>
+          <input name="who" type="text" autocomplete="name" required />
+        </label>
+        <label class="ask">
+          <span>Project</span>
+          <select name="project">
+            <option>CloudBank</option>
+            <option>Social Contacts Sync</option>
+            <option>Planora</option>
+            <option>Nutreek</option>
+            <option>Cupid</option>
+            <option>Other</option>
+          </select>
+        </label>
+        <label class="ask">
+          <span>Message</span>
+          <textarea name="message" rows="5" required placeholder="I'd like to know more about…"></textarea>
+        </label>
+        <div class="actions">
+          <button class="btn" type="submit">Write the email</button>
+        </div>
+        <p class="direct">Or write to <a class="direct-mail" href="#">me</a> directly.</p>
+      </form>
+    </template>
+    <script>
+      // The contact sheet builds a mailto: URL. Nothing leaves the browser.
+      (function () {
+        var email = window.CONTACT_EMAIL || "";
+        document.addEventListener("click", function (e) {
+          var a = e.target.closest && e.target.closest(".direct-mail");
+          if (a) a.href = "mailto:" + email;
+        });
+        document.addEventListener("submit", function (e) {
+          var f = e.target;
+          if (f.id !== "contact-form") return;
+          e.preventDefault();
+          var who = f.elements.who.value.trim();
+          var project = f.elements.project.value;
+          var subject = "[" + project + "] Inquiry from " + who;
+          var body = f.elements.message.value.trim() + "\n\n— " + who;
+          location.href = "mailto:" + email + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
+          var d = f.closest("dialog");
+          if (d) d.close();
+        });
+      })();
+    </script>
+    <script src="crt.js"></script>
+    <script>
+      // The old computer. Only its switch does anything until it has booted; then
+      // the screen and the keyboard open the terminal. It stays on for the visit,
+      // unless someone went to the terminal without it: then it never starts again.
+      (function () {
+        var pc = document.querySelector(".pc");
+        if (!pc) return;
+        var reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var power = pc.querySelector(".power");
+        var uses = pc.querySelectorAll(".use");
+        var boot = pc.querySelector(".boot");
+        var says = pc.querySelector("[aria-live]");
+        var fumes = document.querySelector(".fumes");
+        var timers = [];
+        var lines = [
+          [0, "BENCH BIOS 1.07"],
+          [200, "MEMORY TEST 640K OK"],
+          [560, "FLOPPY A: 360K OK"],
+          [1100, "BOOT FROM A:"],
+          [1300, "7C00 EA 05 7C 00 00"],
+          [1380, "7C05 31 C0 8E D8 8E"],
+          [1460, "7C0A D0 BC 00 7C FB"],
+          [1900, "BENCH/OS 1.07"],
+          [2500, ""],
+          [2600, "carlo@bench:~$ ", true],
+        ];
+        function store(area, key, value) {
+          try {
+            if (value) window[area].setItem(key, value);
+            else window[area].removeItem(key);
+          } catch (e) {}
+        }
+        function fried() {
+          try {
+            return !!localStorage.getItem("pc:fried");
+          } catch (e) {
+            return false;
+          }
+        }
+        // cracked, scorched, and a few puffs of smoke that stop by themselves
+        function broken() {
+          pc.classList.add("broken");
+          fumes.classList.remove("puff");
+          void fumes.offsetWidth;
+          fumes.classList.add("puff");
+        }
+        function later(fn, ms) {
+          timers.push(setTimeout(fn, ms));
+        }
+        function stop() {
+          timers.forEach(clearTimeout);
+          timers = [];
+        }
+        function usable(yes) {
+          [].forEach.call(uses, function (b) {
+            b.disabled = !yes;
+          });
+        }
+        function print(text, cursor) {
+          var l = document.createElement("span");
+          l.textContent = text;
+          if (cursor) l.className = "cur";
+          boot.appendChild(l);
+        }
+        function on(instant) {
+          stop();
+          boot.textContent = "";
+          pc.classList.remove("off-ing");
+          pc.classList.add("on");
+          power.setAttribute("aria-pressed", "true");
+          if (instant) {
+            lines.forEach(function (l) {
+              print(l[1], l[2]);
+            });
+            return ready();
+          }
+          pc.classList.add("warm", "reading");
+          // it boots from drive A:
+          later(function () {
+            CRT.floppy(1.1);
+          }, 2100);
+          says.textContent = "The old computer starts.";
+          later(function () {
+            pc.classList.remove("warm");
+          }, 1500);
+          lines.forEach(function (l) {
+            later(function () {
+              print(l[1], l[2]);
+            }, 1000 + l[0]);
+          });
+          later(ready, 3700);
+        }
+        function ready() {
+          pc.classList.remove("reading");
+          pc.classList.add("ready");
+          usable(true);
+          says.textContent = "The old computer waits at a prompt.";
+          store("sessionStorage", "pc:on", "1");
+        }
+        function off(instant) {
+          stop();
+          usable(false);
+          pc.classList.remove("ready", "reading", "warm", "typing");
+          if (pc.classList.contains("on") && !instant) {
+            pc.classList.add("off-ing");
+            later(function () {
+              pc.classList.remove("on", "off-ing");
+              boot.textContent = "";
+            }, reduced ? 0 : 450);
+          } else {
+            pc.classList.remove("on");
+            boot.textContent = "";
+          }
+          power.setAttribute("aria-pressed", "false");
+          store("sessionStorage", "pc:on", "");
+        }
+        power.addEventListener("click", function () {
+          if (fried()) {
+            // someone cheated once: the light blinks red, it smokes, and that is all
+            pc.classList.remove("dead");
+            void pc.offsetWidth;
+            pc.classList.add("dead");
+            broken();
+            CRT.fizz();
+            says.textContent = "Nothing happens. It smells of burnt dust.";
+            return;
+          }
+          if (pc.classList.contains("on")) {
+            off();
+            CRT.off();
+            says.textContent = "The old computer is off.";
+          } else {
+            CRT.on();
+            on(reduced);
+          }
+        });
+        function use() {
+          if (!pc.classList.contains("ready") || pc.classList.contains("typing")) return;
+          var go = function () {
+            location.href = "terminal.html";
+          };
+          if (reduced) return go();
+          // a few keys go down, then the screen takes the whole window
+          var prompt = boot.querySelector(".cur");
+          pc.classList.add("typing");
+          "tty".split("").forEach(function (c, i) {
+            later(function () {
+              prompt.textContent += c;
+              CRT.key();
+            }, 60 * i);
+          });
+          later(go, 300);
+        }
+        [].forEach.call(uses, function (b) {
+          b.addEventListener("click", use);
+        });
+        if (fried()) {
+          store("sessionStorage", "pc:on", "");
+          broken();
+        } else
+          try {
+            if (sessionStorage.getItem("pc:on")) {
+              on(true);
+              CRT.hum(true);
+            }
+          } catch (e) {}
+        // back from the terminal, out of the back/forward cache
+        addEventListener("pageshow", function (e) {
+          if (!e.persisted) return;
+          if (fried()) {
+            off(true);
+            return broken();
+          }
+          if (!pc.classList.contains("typing")) return;
+          pc.classList.remove("typing");
+          boot.querySelector(".cur").textContent = "carlo@bench:~$ ";
+        });
+      })();
+    </script>
+    <script src="radio.js"></script>
+    <script src="photos.js"></script>
+    <script src="bench3d.js"></script>
+    <script src="vt-proto.js"></script>
+    <script src="place.js"></script>
+    <span id="room-ready" hidden></span>
+    <script src="site.js" defer></script>
+    <!-- MEASURE: the 2D cat left out; ?cat2d puts it back -->
+    <script>if (location.search.includes("cat2d")) document.write('<script src="cat.js" defer><\/script>')</script>
+      <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.min.js",
+          "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.core.js": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.core.min.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"
+        }
+      }
+    </script>
+    <script type="module" src="measure-cat.js"></script>
+  </body>
+</html>
