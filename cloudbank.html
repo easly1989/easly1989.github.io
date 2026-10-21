@@ -154,7 +154,7 @@
       <main>
         <section class="paper label-sheet" style="--c: var(--cloudbank)" data-cat="sit">
           <img class="mark" src="logo.svg" alt="" width="56" height="56" />
-          <p class="state">Shipping, <span data-cloudbank="stable">v3.10.0</span>. Open source under AGPL-3.0.</p>
+          <p class="state">Shipping, <span data-cloudbank="stable">v3.12.0</span>. Open source under AGPL-3.0.</p>
           <h1>CloudBank</h1>
           <p class="lede">
             Your money, self-hosted. A free personal finance manager — a from-scratch web port of
@@ -200,13 +200,13 @@
                   <li><a href="#notify"><span>Notifications</span><em>11</em></a></li>
                   <li><a href="#secure"><span>Security and sign-in</span><em>13</em></a></li>
                   <li><a href="#ai"><span>Optional AI</span><em>14</em></a></li>
-                  <li><a href="#phone"><span>Phone and Home Assistant</span><em>16</em></a></li>
+                  <li><a href="#phone"><span>Phone and Home Assistant</span><em>18</em></a></li>
                 </ol>
                 <h3>Getting it</h3>
                 <ol class="toc">
                   <li><a href="#demo"><span>Try the demo</span><em>1</em></a></li>
-                  <li><a href="#run"><span>Run it yourself</span><em>17</em></a></li>
-                  <li><a href="#support"><span>Support it</span><em>18</em></a></li>
+                  <li><a href="#run"><span>Run it yourself</span><em>19</em></a></li>
+                  <li><a href="#support"><span>Support it</span><em>20</em></a></li>
                 </ol>
                 <p class="owner">This ledger belongs to whoever runs it.</p>
               </section>
@@ -411,9 +411,20 @@
                 </p>
                 <ul class="rows">
                   <li><b>Reports</b><span>A report on each month, and on each week and year if you like, with <em>Why?</em> to see the numbers it was given.</span></li>
-                  <li><b>Proposals</b><span>Budgets from what you really spend, subscriptions that cost more, categories grown lately, goals falling behind.</span></li>
+                  <li><b>Proposals</b><span>Budgets from what you really spend, rules for the payees you always file alike, subscriptions that cost more, goals falling behind.</span></li>
                   <li><b>Unusual transactions</b><span>A payee far over its usual amount, a large new payee, a charge taken twice.</span></li>
-                  <li><b>Quick entry</b><span>Type "coffee 3.50 yesterday", or share a notification, and review it.</span></li>
+                </ul>
+                <span class="folio">14</span>
+              </section>
+            </div>
+
+            <div class="leaf">
+              <section class="page front" data-label="AI">
+                <h2>And around the numbers</h2>
+                <ul class="rows">
+                  <li><b>Ask your data</b><span>A question in your own words, answered from CloudBank's own queries, with the numbers it used.</span></li>
+                  <li><b>Quick entry</b><span>Type "coffee 3.50 yesterday", share a notification or snap a receipt, and review it.</span></li>
+                  <li><b>Tidying up</b><span>Categories for what Review left without one, clean names for raw bank payees, the columns of a new CSV.</span></li>
                   <li><b>Bank mails</b><span>Mails no pattern reads, card numbers and IBANs hidden first.</span></li>
                   <li><b>What it sends</b><span>Each job says it before you switch it on, and the last 90 days are kept word for word. Your key never leaves the server.</span></li>
                 </ul>
@@ -421,7 +432,15 @@
                   Setting it up, and what each job sees:
                   <a href="https://github.com/easly1989/cloudbank/blob/main/docs/ai.md" rel="noopener">the AI guide</a>.
                 </p>
-                <span class="folio">14</span>
+                <span class="folio">15</span>
+              </section>
+              <section class="page back" data-label="AI">
+                <h2>Ask it, or show it a receipt</h2>
+                <div class="shots one">
+                  <figure class="shot" style="--r: 1.2deg"><img width="1980" height="1290" src="assets/cloudbank-ai-ask.png" alt="CloudBank's AI insights answering how much went on restaurants this summer, with the numbers CloudBank computed below the answer" loading="lazy" /><figcaption>A question, and the numbers behind the answer.</figcaption></figure>
+                  <figure class="shot" style="--r: -1.4deg"><img width="1980" height="1290" src="assets/cloudbank-ai-receipt.png" alt="CloudBank's entry sheet with a bakery receipt's photo, its total, date and memo filled in by the AI" loading="lazy" /><figcaption>A receipt's photo, read into the entry sheet.</figcaption></figure>
+                </div>
+                <span class="folio">16</span>
               </section>
             </div>
 
@@ -432,7 +451,7 @@
                   <figure class="shot" style="--r: -1.2deg"><img width="1980" height="1290" src="assets/cloudbank-ai-insights.png" alt="CloudBank's AI insights: August's report and five budgets to review, each with Apply" loading="lazy" /><figcaption>A month in short, and budgets from what you spend.</figcaption></figure>
                   <figure class="shot" style="--r: 1.4deg"><img width="1980" height="1290" src="assets/cloudbank-ai-unusual.png" alt="CloudBank's Review page with five unusual transactions, each with Open in the register and It's fine" loading="lazy" /><figcaption>What looks unusual, on Review.</figcaption></figure>
                 </div>
-                <span class="folio">15</span>
+                <span class="folio">17</span>
               </section>
               <section class="page back" id="phone" data-label="Phone">
                 <h2>From your phone, and Home Assistant</h2>
@@ -449,7 +468,7 @@
                   <figure class="shot" style="--r: -1.5deg"><img width="1980" height="1290" src="assets/cloudbank-languages.png" alt="CloudBank settings with the six languages" loading="lazy" /><figcaption>Six languages, each by its own name.</figcaption></figure>
                   <figure class="shot" style="--r: 2deg"><img width="1980" height="1290" src="assets/cloudbank-export.png" alt="CloudBank import and export settings" loading="lazy" /><figcaption>Import, export and full backups.</figcaption></figure>
                 </div>
-                <span class="folio">16</span>
+                <span class="folio">18</span>
               </section>
             </div>
 
@@ -474,10 +493,10 @@ volumes:
                 <pre>docker compose up -d
 # open http://localhost:8080</pre>
                 <table>
-                  <tr><th scope="row">Stable, <code>:main</code></th><td><span data-cloudbank="stable">v3.11.0</span>, published <span data-cloudbank-date="stable">21 October 2026</span></td></tr>
+                  <tr><th scope="row">Stable, <code>:main</code></th><td><span data-cloudbank="stable">v3.12.0</span>, published <span data-cloudbank-date="stable">21 October 2026</span></td></tr>
                   <tr><th scope="row">Nightly, <code>:latest</code></th><td><span data-cloudbank="nightly">built from main</span>, published <span data-cloudbank-date="nightly">on every change</span></td></tr>
                 </table>
-                <span class="folio">17</span>
+                <span class="folio">19</span>
               </section>
               <section class="page back" id="support" data-label="Support">
                 <div class="note" style="margin-top: 0">
@@ -497,7 +516,7 @@ volumes:
                   <a class="btn" href="donate.html">Donate</a>
                   <a class="btn quiet" href="https://github.com/sponsors/easly1989" rel="noopener">GitHub Sponsors</a>
                 </p>
-                <span class="folio">18</span>
+                <span class="folio">20</span>
               </section>
             </div>
 
