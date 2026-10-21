@@ -326,7 +326,7 @@
   var cards = stage.querySelector(".thing.cards");
   if (cards) {
     cards.removeAttribute("data-cat");
-    var pin = onWall("right", 0, 290, "pinned");
+    var pin = onWall("right", 0, 250, "pinned");
     pin.appendChild(cards);
     el("span", "tape-strip one", pin);
     el("span", "tape-strip two", pin);
@@ -393,7 +393,7 @@
   // the same links as the bar the other pages keep; the bar itself goes
   var bar = document.querySelector("header.bar");
   if (bar) while (bar.firstElementChild) nav.appendChild(bar.firstElementChild);
-  var navWall = onWall("right", 190, 430, "navwall");
+  var navWall = onWall("right", 110, 385, "navwall");
   navWall.appendChild(nav);
 
   var letter = stage.querySelector(".thing.envelope");
