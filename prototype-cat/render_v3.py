@@ -60,6 +60,7 @@ for side in (-1, 1):
     hit, loc, normal, _ = cat.ray_cast(origin, Vector((-1, 0, 0)))
     EYES[side] = (loc, normal) if hit else (Vector((nose.x - 0.3, origin.y, origin.z)), Vector((1, 0, 0)))
 print("eyes", {k: tuple(round(c, 2) for c in v[0]) for k, v in EYES.items()})
+EYE_R = size.y * 0.088
 
 # Carlo's cat, from his photos: a black cap over the top of the head, down over its
 # right ear (-y) and round its left eye (+y); a black saddle from the neck down the
@@ -156,6 +157,29 @@ def coat_material(m):
     L(mask.outputs[0], both.inputs[0])
     L(tl.outputs[0], both.inputs[1])
     mask = both
+    # a dark rim round each eye, crisp: measured on the body itself, with no noise
+    for loc, _n in EYES.values():
+        d = N("ShaderNodeVectorMath")
+        d.operation = "DISTANCE"
+        L(attr.outputs["Vector"], d.inputs[0])
+        d.inputs[1].default_value = loc
+        out = N("ShaderNodeMath")
+        out.operation = "GREATER_THAN"
+        L(d.outputs["Value"], out.inputs[0])
+        out.inputs[1].default_value = EYE_R * 0.8
+        inn = N("ShaderNodeMath")
+        inn.operation = "LESS_THAN"
+        L(d.outputs["Value"], inn.inputs[0])
+        inn.inputs[1].default_value = EYE_R * 1.22
+        band = N("ShaderNodeMath")
+        band.operation = "MULTIPLY"
+        L(out.outputs[0], band.inputs[0])
+        L(inn.outputs[0], band.inputs[1])
+        both = N("ShaderNodeMath")
+        both.operation = "MAXIMUM"
+        L(mask.outputs[0], both.inputs[0])
+        L(band.outputs[0], both.inputs[1])
+        mask = both
     mix = N("ShaderNodeMix")
     mix.data_type = "RGBA"
     L(mask.outputs[0], mix.inputs["Factor"])
@@ -182,15 +206,15 @@ plain_material(bpy.data.materials["Pink"], "#e9aab3")
 
 # ---- eyes: two glossy dark beads on the face, fixed to the head bone ---------------------
 eye_mat = bpy.data.materials.new("Eye")
-plain_material(eye_mat, "#9cc49a", rough=0.15)
+plain_material(eye_mat, "#a9b98e", rough=0.15)
 # a little light of its own, so the side away from the sun stays green
 eb = next(n for n in eye_mat.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
-eb.inputs["Emission Color"].default_value = lin("#9cc49a")
-eb.inputs["Emission Strength"].default_value = 0.55
+eb.inputs["Emission Color"].default_value = lin("#a9b98e")
+eb.inputs["Emission Strength"].default_value = 0.2
 pupil_mat = bpy.data.materials.new("Pupil")
 plain_material(pupil_mat, "#141414", rough=0.1)
 head_bone = min(rig.data.bones, key=lambda b: (b.head_local - nose).length + (0 if b.children else 0.5))
-eye_r = size.y * 0.088
+eye_r = EYE_R
 for side in (-1, 1):
     loc, normal = EYES[side]
     # sunk into the head, so only the front of the eye shows
@@ -200,9 +224,9 @@ for side in (-1, 1):
     eye.scale = (0.5, 1, 1.05)
     eye.data.materials.append(eye_mat)
     # the slit: a thin dark bead just proud of the green
-    bpy.ops.mesh.primitive_uv_sphere_add(radius=eye_r * 0.55, segments=12, ring_count=6, location=centre + normal * eye_r * 0.42)
+    bpy.ops.mesh.primitive_uv_sphere_add(radius=eye_r * 0.62, segments=12, ring_count=6, location=centre + normal * eye_r * 0.44)
     pupil = bpy.context.active_object
-    pupil.scale = (0.3, 0.2, 1.15)
+    pupil.scale = (0.32, 0.3, 1.2)
     pupil.data.materials.append(pupil_mat)
     # the scales only reach matrix_world after an update
     bpy.context.view_layer.update()
