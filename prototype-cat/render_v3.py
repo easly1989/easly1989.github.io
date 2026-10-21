@@ -216,21 +216,27 @@ plain_material(pupil_mat, "#141414", rough=0.1)
 head_bone = min(rig.data.bones, key=lambda b: (b.head_local - nose).length + (0 if b.children else 0.5))
 eye_r = EYE_R
 for side in (-1, 1):
-    loc, normal = EYES[side]
-    # sunk into the head, so only the front of the eye shows
-    centre = cat.matrix_world @ (loc - normal * eye_r * 0.5)
-    bpy.ops.mesh.primitive_uv_sphere_add(radius=eye_r, segments=16, ring_count=8, location=centre)
-    eye = bpy.context.active_object
-    eye.scale = (0.5, 1, 1.05)
-    eye.data.materials.append(eye_mat)
-    # the slit: a thin dark bead just proud of the green
-    bpy.ops.mesh.primitive_uv_sphere_add(radius=eye_r * 0.62, segments=12, ring_count=6, location=centre + normal * eye_r * 0.44)
-    pupil = bpy.context.active_object
-    pupil.scale = (0.32, 0.3, 1.2)
-    pupil.data.materials.append(pupil_mat)
-    # the scales only reach matrix_world after an update
-    bpy.context.view_layer.update()
-    for o in (eye, pupil):
+    loc, hit_normal = EYES[side]
+    # The way the face looks at that point: the vertex normals round the eye, averaged,
+    # since one low-poly face can lean far off. The eye lies flat along it, so the skin
+    # cuts it round, the full size of the dark rim painted on the coat.
+    near = [v.normal for v in me.vertices if (v.co - loc).length < eye_r * 2.2]
+    n = (sum(near, Vector()) if near else hit_normal).normalized()
+    u = (Vector((0, 0, 1)) - n * n.z).normalized()  # up the face, for the slit
+    w = u.cross(n)  # so n, w, u turn the right way round
+    frame = Matrix((n, w, u)).transposed()  # columns: thin along n, wide across, tall up
+    for o_name, mat, radius, depth, out, slit in (
+        ("eye", eye_mat, eye_r * 0.86, 0.42, 0.06, False),
+        ("pupil", pupil_mat, eye_r * 0.86, 0.12, 0.06 + 0.42 * 0.86 * 0.78, True),
+    ):
+        bpy.ops.mesh.primitive_uv_sphere_add(radius=1, segments=24, ring_count=12, location=(0, 0, 0))
+        o = bpy.context.active_object
+        o.name = o_name
+        o.data.materials.append(mat)
+        # a bulge resting on the skin: its middle a hair proud of it, its edge just under
+        sx, sy, sz = (radius * depth, radius * 0.3, radius * 0.92) if slit else (radius * depth, radius, radius)
+        o.matrix_world = Matrix.Translation(cat.matrix_world @ (loc + n * eye_r * out)) @ frame.to_4x4() @ Matrix.Diagonal((sx, sy, sz, 1))
+        bpy.context.view_layer.update()
         world = o.matrix_world.copy()
         o.parent = rig
         o.parent_type = "BONE"
