@@ -243,6 +243,9 @@
         if (!POSE[page] && page !== "donate.html") return;
         ev.preventDefault();
         ev.stopImmediatePropagation();
+        // from here the page is leaving: nothing else answers, or a second click mid-move
+        // would start a second move, or open another page under this one's
+        document.body.inert = true;
         var gone = false;
         function go() {
           if (gone) return;
@@ -366,6 +369,7 @@
   // the back/forward cache brings the page back as it was left: names off, objects down
   addEventListener("pageshow", function (e) {
     if (!e.persisted) return;
+    document.body.inert = false;
     refill();
     // back from About through the cache, which runs its morph with the names as they were
     // left: the camera's print is back inside, and the page's photo lands in its place
