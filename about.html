@@ -21,7 +21,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&family=Caveat:wght@500&family=Nanum+Pen+Script&family=Reenie+Beanie&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
@@ -104,6 +104,25 @@
         right: 20px;
         bottom: 18px;
         font: 700 1.2rem "Bricolage Grotesque", sans-serif;
+      }
+      /* a photo from the room is written on in pen; the heart in red pen */
+      .instant .caption.pen {
+        bottom: 12px;
+        font: 500 1.75rem/1 "Caveat", cursive;
+      }
+      .pen-heart {
+        width: 2.1rem;
+        height: auto;
+        fill: none;
+        stroke: #d0313f;
+        stroke-width: 2.6;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      /* picked up in the room, it developed long ago */
+      .instant.developed img,
+      .instant.developed .frame::after {
+        animation: none;
       }
       .instant .hint {
         position: absolute;
@@ -413,16 +432,37 @@
       <span class="loose eraser" data-cat="knock" style="left: 40px; top: 1100px; --r: -10deg" aria-hidden="true"></span>
     </div>
 
+    <script src="photos.js"></script>
     <script>
       // Shaking an instant photo does nothing to the chemistry. Here it helps a little.
       (function () {
         var print = document.getElementById("print");
+        // In a visit to the room (index.html?room) the print is the photo the room's camera took
+        // last, or the one picked up there; the room pins it in its place when the reader goes
+        // back. Elsewhere it stays Carlo's usual one, as it was.
+        var room = false;
+        try {
+          room = sessionStorage.getItem("room") === "1";
+        } catch (e) {}
+        var shot = room && window.PHOTOS ? PHOTOS.current() : null;
+        if (shot) {
+          var img = print.querySelector("img");
+          img.src = shot.src;
+          img.alt = shot.alt;
+          var caption = print.querySelector(".caption");
+          caption.classList.add("pen");
+          caption.innerHTML = PHOTOS.pen(shot);
+          // only a print that came out of the camera goes to a place in the room
+          if (PHOTOS.taken()) PHOTOS.setShown(shot.id);
+          if (PHOTOS.developed()) print.classList.add("developed");
+        }
         function developing() {
           return print.getAnimations({ subtree: true }).filter(function (a) {
             return a.animationName !== "shake";
           });
         }
         function done() {
+          if (shot) PHOTOS.setDeveloped();
           print.classList.add("done");
           print.setAttribute("aria-label", "The photo, developed. Shake it anyway.");
         }
