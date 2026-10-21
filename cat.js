@@ -696,10 +696,11 @@
   };
   var lastPoke = {};
   function placeToys() {
-    var kinds = Object.keys(TOYS).filter(function (k) { return k !== "treats" || chance(0.5); });
+    // mockup: the box is the cat's own and always there; the paper bag is gone
+    var kinds = Object.keys(TOYS).filter(function (k) { return k !== "box" && k !== "bag" && (k !== "treats" || chance(0.5)); });
     kinds.sort(function () { return Math.random() - 0.5; });
     var n = narrow ? 2 : Math.round(rand(2, 4));
-    kinds.slice(0, n).forEach(function (k) {
+    ["box"].concat(kinds.slice(0, n - 1)).forEach(function (k) {
       var spot = freeSpot({ strict: true, pad: TOYS[k].pad || 60 });
       if (!spot) return; // no room on this bench: no toy
       var el = document.createElement("button");

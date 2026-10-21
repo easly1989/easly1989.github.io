@@ -1044,3 +1044,50 @@ html:not(.b3) .strip {
   outline-offset: 4px;
   border-radius: 4px;
 }
+
+/* ---- the radio on the shelf (a stand-in) ------------------------------------------------ */
+:root {
+  --radio: #d8c7a4;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --radio: #8f8064;
+  }
+}
+.b3 .radio-face {
+  position: absolute;
+  inset: 10px;
+  display: block;
+}
+.b3 .radio-face .grille {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 56%;
+  height: 100%;
+  border-radius: 8px;
+  background: repeating-linear-gradient(0deg, #5a4a36 0 3px, #8a7556 3px 7px);
+}
+.b3 .radio-face .dial {
+  position: absolute;
+  right: 0;
+  top: 6px;
+  width: 38%;
+  height: 30%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, transparent 48%, #c0392b 48% 52%, transparent 52%), #f3ead2;
+}
+.b3 .radio-face .knob {
+  position: absolute;
+  bottom: 8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #3a3027;
+}
+.b3 .radio-face .knob:first-of-type {
+  right: 36px;
+}
+.b3 .radio-face .knob:last-of-type {
+  right: 4px;
+}
