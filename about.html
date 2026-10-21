@@ -425,6 +425,19 @@
               <a class="btn quiet" href="https://github.com/easly1989" rel="noopener">See my GitHub</a>
             </p>
           </section>
+
+          <section class="paper card wide credits" id="radio-credits" aria-labelledby="radio-h" style="--r: 0.3deg; max-width: 40rem" hidden>
+            <h2 id="radio-h">Music on the radio</h2>
+            <p>The radio in the room plays these five tracks, each from Pixabay, under the Pixabay Content License.</p>
+            <ul>
+              <li><a href="https://pixabay.com/music/lofi-lofi-chill-vlog-beats-573883/" rel="noopener"><b>Lofi Chill Vlog Beats</b></a> by alex-morgan</li>
+              <li><a href="https://pixabay.com/music/lofi-lofi-pop-611108/" rel="noopener"><b>Lofi Pop</b></a> by ZephiraMusic</li>
+              <li><b>Ambient Guitar</b> by The_Mountain</li>
+              <li><a href="https://pixabay.com/music/lofi-lofi-house-611107/" rel="noopener"><b>Lofi House</b></a> by ZephiraMusic</li>
+              <li><a href="https://pixabay.com/music/post-rock-post-rock-crescendo-537468/" rel="noopener"><b>Post-Rock Crescendo</b></a> by alex-morgan</li>
+            </ul>
+            <p><a href="https://pixabay.com/service/license-summary/" rel="noopener">The Pixabay Content License</a></p>
+          </section>
         </div>
       </main>
 
@@ -445,6 +458,8 @@
           room = sessionStorage.getItem("room") === "1";
         } catch (e) {}
         var shot = room && window.PHOTOS ? PHOTOS.current() : null;
+        // the music the room's radio plays is credited here, in a visit to the room
+        if (room) document.getElementById("radio-credits").hidden = false;
         if (shot) {
           var img = print.querySelector("img");
           img.src = shot.src;
@@ -483,6 +498,7 @@
         });
       })();
     </script>
+    <script src="radio.js"></script>
     <script src="site.js" defer></script>
     <script src="cat.js" defer></script>
   </body>

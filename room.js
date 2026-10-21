@@ -600,6 +600,165 @@
     leaves.innerHTML = '<svg viewBox="0 0 140 130"><path d="M70 130C66 90 40 70 8 66c18 22 34 40 62 64zM70 130C74 84 98 58 132 52c-14 28-32 52-62 78zM70 130C60 80 62 36 74 2c14 34 12 82-4 128zM70 130C52 98 30 92 14 100c20 10 36 18 56 30zM70 130c18-34 40-44 58-40-16 16-34 28-58 40z" /></svg>';
   });
 
+  // ---- the radio at the shelf's far end, partly out of the frame -----------------------
+  // Room between it and the plant for the cat. It plays radio.js's stations, which carry on
+  // from page to page; here it is its knobs, its dial and its projector. Between stations, the
+  // hiss. Near enough the frame's edge that what it projects shows whole at every size.
+  var RAD = { x: RIGHT - 96, y: SHELF.y + SHELF.d - 440, w: 84, d: 210, z: SHELF.z, h: 120 };
+  var radio = box(room, { x: RAD.x, y: RAD.y, w: RAD.w, d: RAD.d, z: RAD.z, h: RAD.h, color: "var(--radio)", west: "var(--radio)", r: 12, cls: "radio" });
+  radio.querySelector("i.w").innerHTML =
+    '<span class="radio-face"><span class="grille" aria-hidden="true"></span><span class="dial" aria-hidden="true"><span class="needle"></span></span>' +
+    '<span class="led" aria-hidden="true"></span><button type="button" class="knob power" aria-pressed="false" aria-label="Radio"></button>' +
+    '<button type="button" class="knob tune" aria-label="Next station"></button></span>';
+  [].forEach.call(radio.querySelectorAll("i:not(.w)"), function (f) {
+    f.setAttribute("aria-hidden", "true");
+  });
+  var face = radio.querySelector(".radio-face");
+  // each knob stands proud of the face: its cap, and its side in a few rings behind it
+  [].forEach.call(face.querySelectorAll(".knob"), function (k) {
+    for (var ks = 1; ks <= 5; ks++) el("span", "knob-side", k, "transform:translateZ(" + -ks * 1.6 + "px);background:" + shade("#3b3027", 0.95 - ks * 0.08));
+  });
+  var power = face.querySelector(".power");
+  var dial = face.querySelector(".dial");
+  // what is on air, and by whom, for a screen reader whether the projector shows it or not
+  var onAir = el("span", "vh", face);
+  onAir.setAttribute("aria-live", "polite");
+  // A little projector on top of the radio, a wedge in its colour, taller on the room's side,
+  // its lens in the face that slopes towards the wall. It throws the track and its author up
+  // onto the wall behind, centred over its lens, over a wave that moves with the music, along
+  // a beam of light. Faint by day, bright at night; clicking it caps the lens, for the visit.
+  var PJ = { x: RAD.x + 16, y: RAD.y + 10, w: 52, d: 60, hi: 40, lo: 18 };
+  var proj = el("span", "projector", room, "left:" + PJ.x + "px;top:" + PJ.y + "px;width:" + PJ.w + "px;height:" + PJ.d + "px;transform:translateZ(" + (RAD.z + RAD.h) + "px)");
+  // a face w by h whose x runs along u and y along v, from o (unit vectors, in the case's frame)
+  function pjFace(cls, w, h, u, v, o, css) {
+    var n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+    var m = u.concat(0, v, 0, n, 0, o, 1).map(function (k) {
+      return +k.toFixed(4);
+    });
+    return el("span", "pj-face " + cls, proj, "width:" + w + "px;height:" + h + "px;transform:matrix3d(" + m.join(",") + ")" + (css || ""));
+  }
+  var slope = Math.hypot(PJ.w, PJ.hi - PJ.lo);
+  var down = [0, 0, -1];
+  var cut = ";clip-path:polygon(0 0, " + PJ.w + "px " + (PJ.hi - PJ.lo) + "px, " + PJ.w + "px " + PJ.hi + "px, 0 " + PJ.hi + "px)";
+  pjFace("pj-n", PJ.w, PJ.hi, [1, 0, 0], down, [0, 0, PJ.hi], cut);
+  pjFace("pj-e", PJ.d, PJ.lo, [0, 1, 0], down, [PJ.w, 0, PJ.lo]);
+  pjFace("pj-w", PJ.d, PJ.hi, [0, 1, 0], down, [0, 0, PJ.hi]);
+  pjFace("pj-s", PJ.w, PJ.hi, [1, 0, 0], down, [0, PJ.d, PJ.hi], cut);
+  var lensFace = pjFace("pj-top", PJ.d, slope, [0, 1, 0], [PJ.w / slope, 0, (PJ.lo - PJ.hi) / slope], [0, 0, PJ.hi]);
+  el("span", "proj-lens", lensFace, "left:" + (PJ.d / 2 - 15) + "px;top:" + (slope / 2 - 15) + "px");
+  // the whole of it, for the pointer: one upright plane through its middle, facing the camera
+  var projBtn = el("button", "proj-hit", proj, "transform:translateZ(" + PJ.hi + "px) rotateZ(45deg) rotateX(-90deg)");
+  projBtn.type = "button";
+  projBtn.setAttribute("aria-label", "Projector");
+  // the lens: where the beam starts, and what the words are centred over
+  var LAMP = { x: PJ.x + PJ.w / 2, y: PJ.y + PJ.d / 2, z: RAD.z + RAD.h + (PJ.hi + PJ.lo) / 2 };
+  var PROJ = { w: 260, h: 140, z: LAMP.z + 230 };
+  PROJ.along = LAMP.y - PROJ.w / 2;
+  var cast = el("div", "projection", onWall("right", PROJ.along, PROJ.z, "projected"), "width:" + PROJ.w + "px;height:" + PROJ.h + "px");
+  // the beam, in the upright plane through the lamp: from the lamp out to the words' edges
+  var beamH = PROJ.z - LAMP.z;
+  // (its shape cut out inside, blurred outside, so its edges are soft)
+  var ray = el("span", "proj-beam", room, "left:" + LAMP.x + "px;top:" + PROJ.along + "px;width:" + PROJ.w + "px;height:" + beamH + "px;transform:translateZ(" + PROJ.z + "px) rotateZ(90deg) rotateX(-90deg)");
+  ray.setAttribute("aria-hidden", "true");
+  el("span", "proj-beam-in", ray, "clip-path:polygon(" + (PROJ.w / 2 - 6) + "px " + beamH + "px, " + (PROJ.w / 2 + 6) + "px " + beamH + "px, " + PROJ.w + "px " + PROJ.h + "px, " + PROJ.w + "px 0, 0 0, 0 " + PROJ.h + "px)");
+  cast.setAttribute("aria-hidden", "true");
+  cast.innerHTML = '<b></b><small></small><canvas class="wave" width="220" height="44"></canvas>';
+  var waveC = cast.querySelector("canvas"),
+    waveX = waveC.getContext("2d");
+  var projOpen = true;
+  try {
+    projOpen = sessionStorage.getItem("radio-projector") !== "off";
+  } catch (e) {}
+  // The wave, drawn every frame while it shows: a soft wave that swells with the music's
+  // loudness, measured against the loudest of the last few seconds so every track fills it.
+  // Still, at mid height, under reduced motion or before the music can be read.
+  var waving = 0,
+    loud = 0.02,
+    amp = 0.5,
+    phase = 0;
+  function drawWave() {
+    waving = 0;
+    var bins = !still.matches && window.RADIO && RADIO.wave();
+    if (bins) {
+      var sq = 0;
+      for (var k = 0; k < bins.length; k++) sq += Math.pow((bins[k] - 128) / 128, 2);
+      var rms = Math.sqrt(sq / bins.length);
+      loud = Math.max(rms, loud * 0.995, 0.01);
+      amp = amp * 0.6 + (rms / loud) * 0.4;
+      phase += 0.12;
+    }
+    var W = waveC.width,
+      H = waveC.height,
+      N = 80;
+    waveX.clearRect(0, 0, W, H);
+    waveX.lineWidth = 3;
+    waveX.lineJoin = waveX.lineCap = "round";
+    waveX.strokeStyle = "rgba(255, 240, 214, 0.95)";
+    waveX.beginPath();
+    for (var i = 0; i <= N; i++) {
+      var f = i / N;
+      // two waves, tapering to nothing at the ends
+      var v = (0.7 * Math.sin(f * Math.PI * 6 + phase) + 0.3 * Math.sin(f * Math.PI * 14 - phase * 1.7)) * Math.sin(f * Math.PI);
+      var y = H / 2 - v * (0.15 + 0.85 * Math.min(1, amp)) * (H / 2 - 4);
+      if (i) waveX.lineTo(f * W, y);
+      else waveX.moveTo(0, y);
+    }
+    waveX.stroke();
+    if (cast.classList.contains("lit") && !still.matches) waving = requestAnimationFrame(drawWave);
+  }
+  still.addEventListener("change", function () {
+    if (!waving) drawWave();
+  });
+  // its halogen lamp, while it plays: the dial shines forward, never on the wall behind it.
+  // A halo standing just in front of its face, turned to the camera, and a pool where the
+  // light lands, on the desk in front of and below the shelf.
+  var lamp = el("span", "radio-lamp", room, "left:" + (RAD.x - 40 - 150) + "px;top:" + (RAD.y + RAD.d / 2) + "px;width:300px;height:240px;transform:translateZ(" + (RAD.z + RAD.h / 2 + 120) + "px) rotateZ(45deg) rotateX(-90deg)");
+  lamp.setAttribute("aria-hidden", "true");
+  var pool = el("span", "radio-pool", room, "left:" + (RAD.x - 300) + "px;top:" + (RAD.y - 90) + "px;width:" + (DESK.x + DESK.w - (RAD.x - 300)) + "px;height:" + (RAD.d + 180) + "px;transform:translateZ(0.6px)");
+  pool.setAttribute("aria-hidden", "true");
+  function showRadio(st) {
+    power.setAttribute("aria-pressed", String(!!st.on));
+    face.classList.toggle("on", !!st.on);
+    [lamp, pool].forEach(function (l) {
+      l.classList.toggle("lit", !!st.on);
+    });
+    face.style.setProperty("--st", RADIO.stations > 1 ? st.station / (RADIO.stations - 1) : 0.5);
+    var tr = RADIO.track();
+    onAir.textContent = st.on ? "On the radio: " + tr.title + ", by " + tr.author : "";
+    cast.querySelector("b").textContent = tr.title;
+    cast.querySelector("small").textContent = "by " + tr.author;
+    projBtn.setAttribute("aria-pressed", String(projOpen));
+    proj.classList.toggle("open", projOpen);
+    proj.classList.toggle("lit", projOpen && !!st.on);
+    cast.classList.toggle("lit", projOpen && !!st.on);
+    ray.classList.toggle("lit", projOpen && !!st.on);
+    if (!waving) drawWave();
+    glow();
+  }
+  if (window.RADIO) {
+    RADIO.onChange(showRadio);
+    power.addEventListener("click", function () {
+      if (window.CRT) CRT.clack();
+      var on = !RADIO.state().on;
+      if (on && window.CRT) CRT.snow(0.35);
+      RADIO.power(on);
+    });
+    projBtn.addEventListener("click", function () {
+      if (window.CRT) CRT.clack();
+      projOpen = !projOpen;
+      try {
+        sessionStorage.setItem("radio-projector", projOpen ? "on" : "off");
+      } catch (e) {}
+      showRadio(RADIO.state());
+    });
+    face.querySelector(".tune").addEventListener("click", function () {
+      if (window.CRT) CRT.clack();
+      face.style.setProperty("--turn", (parseFloat(face.style.getPropertyValue("--turn")) || 0) + 60 + "deg");
+      if (RADIO.state().on && window.CRT) CRT.snow(0.35);
+      RADIO.next();
+    });
+  }
+
   // ---- the site's navigation: neon tubes in a plexiglass frame, top of the right wall
   var nav = document.createElement("nav");
   nav.className = "plexi";
@@ -788,6 +947,25 @@
       var fr = f.getBoundingClientRect();
       holes.push(at(fr, fr.width * 0.75 + 40, fr.height * 0.75 + 40) + "rgba(255,255,255,1) 60%, transparent 100%)");
     }
+    // the radio while it plays: its lit dial, its halo, and where its light lands on the desk,
+    // nearer the radio than the pool's middle
+    if (lamp.classList.contains("lit")) {
+      var lp = lamp.getBoundingClientRect(),
+        pl = pool.getBoundingClientRect(),
+        dl = dial.getBoundingClientRect();
+      var px = pl.left + pl.width * 0.5 + (lp.left + lp.width / 2 - pl.left - pl.width * 0.5) * 0.4,
+        py = pl.top + pl.height * 0.5 + (lp.top + lp.height / 2 - pl.top - pl.height * 0.5) * 0.4;
+      holes.push(at(dl, dl.width * 0.9 + 20, dl.height * 0.9 + 20) + "rgba(255,240,210,1) 30%, transparent 100%)");
+      holes.push(at(lp, lp.width * 0.55, lp.height * 0.5) + "rgba(255,205,150,1), rgba(200,150,100,0.6) 45%, transparent 80%)");
+      holes.push("radial-gradient(ellipse " + pl.width * 0.32 + "px " + pl.height * 0.3 + "px at " + px + "px " + py + "px, rgba(230,180,130,0.9), rgba(170,130,90,0.4) 50%, transparent 85%)");
+    }
+    // what the projector throws on the wall
+    if (cast.classList.contains("lit")) {
+      var pr = cast.getBoundingClientRect();
+      holes.push(at(pr, pr.width * 0.6, pr.height * 0.62) + "rgba(255,236,206,1) 40%, rgba(200,170,130,0.5) 70%, transparent 100%)");
+      var br = ray.getBoundingClientRect();
+      holes.push(at(br, br.width * 0.4, br.height * 0.5, 0.6) + "rgba(240,215,180,0.7), transparent 100%)");
+    }
     // a faint green on the keyboard, the desk's edge and the wall, round the screen itself
     if (pc.classList.contains("on")) holes.push(at(g, g.width * 1.6, g.height * 1.9, 0.6) + "rgba(200,255,210,1), rgba(80,140,100,0.6) 40%, transparent 75%)");
     night.style.background = holes.join(", ") + ", rgb(40, 46, 80)";
@@ -919,6 +1097,7 @@
   spread();
   frame();
   setLight(lightWas !== "off");
+  if (window.RADIO) showRadio(RADIO.state());
   // again once the fonts are in, since words change the sizes: a small correction, not a new layout
   (document.fonts ? document.fonts.ready : Promise.resolve()).then(function () {
     spread(true);
