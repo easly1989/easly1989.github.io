@@ -269,6 +269,13 @@
       var tag = t.querySelector(".jar-tag");
       tag.classList.add("moved");
       wrap(t, '<span class="jar-label"><b>Planora</b><small>Ideas for the group.<br />In testing.</small></span>', { r: 75.6, w: 176, h: 76, z: -64, at: 45, strip: 12 });
+      // and the light on the glass, left of the front (the label faces the reader at 45
+      // degrees): a streak down it, above the label and below it, on the glass and not on the
+      // paper; and a fainter one down its right edge
+      [{ z: -12, h: 50 }, { z: -142, h: 46 }].forEach(function (p) {
+        wrap(t, '<span class="jar-shine"></span>', { r: 76.4, w: 34, h: p.h, z: p.z, at: 98, strip: 7 });
+      });
+      wrap(t, '<span class="jar-shine faint"></span>', { r: 76.4, w: 28, h: 150, z: -24, at: 345, strip: 7 });
       hitPlane(t, t, 152, sp.h);
       // tipping it over was the flat bench's trick: a jar of rings cannot lie down
       t.removeAttribute("data-cat");
@@ -906,6 +913,20 @@
   for (var rs = 1; rs <= 4; rs++) el("span", "rocker-slice", rock, "transform:translateZ(" + -rs * 1.5 + "px);background:" + shade("#e8e2d6", 0.9 - rs * 0.04));
   var night = el("div", "night", document.querySelector(".mat"));
   night.setAttribute("aria-hidden", "true");
+  // what of the night is not a hole in it (glow()): the window's light on the desk in its own
+  // shape, crossed by the shadows of the mullions on whatever it falls on, and the screen's,
+  // which flickers as an old CRT's does
+  night.innerHTML =
+    '<svg class="night-beam"><defs><linearGradient id="night-beam-fall" gradientUnits="userSpaceOnUse">' +
+    '<stop offset="0" stop-color="rgb(185,200,250)" /><stop offset="0.55" stop-color="rgb(150,170,235)" stop-opacity="0.85" />' +
+    '<stop offset="1" stop-color="rgb(120,140,210)" stop-opacity="0" /></linearGradient></defs><path fill="url(#night-beam-fall)" /></svg>' +
+    '<span class="night-screen"></span>';
+  var nightBeam = night.querySelector(".night-beam"),
+    nightScreen = night.querySelector(".night-screen");
+  // where three of the beam's corners are on screen, for its shape there
+  var beamCorners = ["left:0;top:0", "left:100%;top:0", "left:0;top:100%"].map(function (at) {
+    return el("span", "beam-corner", beam, "position:absolute;width:0;height:0;" + at);
+  });
   function setLight(on) {
     sw.setAttribute("aria-pressed", String(on));
     // (the first load's dark ends too, if the reader got to the switch first)
@@ -950,23 +971,60 @@
         ? 0.15
         : 1;
     var w = win.getBoundingClientRect(),
-      m = beam.getBoundingClientRect(),
       k = sw.getBoundingClientRect(),
       g = pc.querySelector(".glass").getBoundingClientRect();
     var holes = [
       // (with the tube out its light fades, rather than whitening, which in a multiply layer is brightest)
       at(n, n.width * 0.75, n.height * 1.7) + "color-mix(in srgb, color-mix(in srgb, " + tint + " 45%, white) " + 100 * dim + "%, transparent), color-mix(in srgb, " + tint + " " + 50 * dim + "%, transparent) 55%, transparent 80%)",
       at(w, w.width * 0.7, w.height * 0.75) + "rgba(150,170,235,1), transparent 80%)",
-      at(m, m.width * 0.5, m.height * 0.55, 0.45) + "rgba(185,200,250,1), rgba(120,140,210,0.8) 45%, transparent 85%)",
       "radial-gradient(circle at " + (k.left + k.width / 2) + "px " + (k.top + k.height / 2) + "px, rgba(255,255,255,1) 0 14px, transparent 36px)",
     ];
     navTubes.forEach(function (a) {
       var r = a.getBoundingClientRect();
       if (!r.width) return;
       var c = getComputedStyle(a).color;
-      // the box round a word on a slanted wall is tall: the glow keeps to the word
+      // the word itself, and its light thrown wide on the wall round it
       holes.push(at(r, r.width * 0.62, r.height * 0.62) + "color-mix(in srgb, " + c + " 55%, white), color-mix(in srgb, " + c + " 35%, transparent) 55%, transparent 85%)");
+      holes.push(at(r, r.width * 1.6 + 90, r.height * 1.4 + 120) + "color-mix(in srgb, " + c + " 70%, transparent), color-mix(in srgb, " + c + " 30%, transparent) 50%, transparent 100%)");
     });
+    // the window's light: the four panes of the beam on screen (its corners mapped from the
+    // beam's own 0 to 1 across and along, as its mask and clip in room.css have them), so the
+    // mullions' shadows cross what stands in it, the CloudBank ledger
+    var c = beamCorners.map(function (e) {
+      var r = e.getBoundingClientRect();
+      return [r.left, r.top];
+    });
+    var onBeam = function (u, v) {
+      return [0, 1].map(function (i) {
+        return (c[0][i] + u * (c[1][i] - c[0][i]) + v * (c[2][i] - c[0][i])).toFixed(1);
+      });
+    };
+    var panes = "";
+    [[0, 0.42], [0.46, 1]].forEach(function (vs) {
+      [[0, 0.486], [0.514, 1]].forEach(function (us) {
+        panes +=
+          "M" +
+          [[us[0], vs[0]], [us[1], vs[0]], [us[1], vs[1]], [us[0], vs[1]]]
+            .map(function (p) {
+              var e = 0.04 * (1 - p[1]); // the beam narrows towards the window
+              return onBeam(Math.min(Math.max(p[0], e), 1 - e), p[1]);
+            })
+            .join("L") +
+          "Z";
+      });
+    });
+    nightBeam.querySelector("path").setAttribute("d", panes);
+    var fall = nightBeam.querySelector("linearGradient"),
+      from = onBeam(0.5, 0),
+      to = onBeam(0.5, 1);
+    [["x1", from[0]], ["y1", from[1]], ["x2", to[0]], ["y2", to[1]]].forEach(function (a) {
+      fall.setAttribute(a[0], a[1]);
+    });
+    // the screen's: a green on the keyboard, the desk's edge and the wall, round the screen
+    nightScreen.style.display = pc.classList.contains("on") ? "block" : "none";
+    var sx = g.width * 1.85,
+      sy = g.height * 2.2;
+    Object.assign(nightScreen.style, { left: g.left + g.width / 2 - sx + "px", top: g.top + g.height * 0.6 - sy + "px", width: 2 * sx + "px", height: 2 * sy + "px" });
     // what has the keyboard's focus is lit, so its ring shows in the dark
     var f = document.activeElement;
     if (f && f !== document.body && fit.contains(f) && f.matches(":focus-visible")) {
@@ -992,8 +1050,6 @@
       var br = ray.getBoundingClientRect();
       holes.push(at(br, br.width * 0.4, br.height * 0.5, 0.6) + "rgba(240,215,180,0.7), transparent 100%)");
     }
-    // a faint green on the keyboard, the desk's edge and the wall, round the screen itself
-    if (pc.classList.contains("on")) holes.push(at(g, g.width * 1.6, g.height * 1.9, 0.6) + "rgba(200,255,210,1), rgba(80,140,100,0.6) 40%, transparent 75%)");
     night.style.background = holes.join(", ") + ", rgb(40, 46, 80)";
   }
   var lightWas = null;
