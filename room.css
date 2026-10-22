@@ -1469,3 +1469,333 @@ html:not(.iso) .strip {
     transition: none;
   }
 }
+
+/* ---- the radio on the shelf -------------------------------------------------------- */
+/* its colour, --radio, is in styles.css: the pages carry the radio too */
+/* the side it is drawn on lies with its x upright: the face is turned to stand level */
+.iso .radio-face {
+  transform-style: preserve-3d;
+  position: absolute;
+  left: 110px;
+  top: 10px;
+  width: 190px;
+  height: 100px;
+  display: block;
+  transform-origin: 0 0;
+  transform: rotate(90deg);
+}
+/* the end that shows carries the dial and the two knobs; the grille runs on out of view */
+.iso .radio-face .grille {
+  position: absolute;
+  left: 46%;
+  top: 38%;
+  right: 0;
+  bottom: 0;
+  border-radius: 8px;
+  background: repeating-linear-gradient(90deg, #5a4a36 0 3px, #8a7556 3px 7px);
+}
+.iso .radio-face .dial {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 2px;
+  height: 30%;
+  border-radius: 4px;
+  background: repeating-linear-gradient(90deg, #8d8169 0 1px, transparent 1px 9px) 0 70% / 100% 40% no-repeat, #f3ead2;
+}
+.iso .radio-face .needle {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: calc(6% + var(--st, 0) * 36%);
+  width: 3px;
+  background: #c0392b;
+  transition: left 0.5s var(--ease-out);
+}
+.iso .radio-face .led {
+  position: absolute;
+  left: 4px;
+  top: 44%;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #4a2a22;
+}
+/* the dial's halogen lamp: lit warm while it plays, a halo before its face and a pool on the desk */
+.iso .radio-face.on .dial {
+  background: repeating-linear-gradient(90deg, #8d8169 0 1px, transparent 1px 9px) 0 70% / 100% 40% no-repeat, #ffe4a8;
+  box-shadow:
+    0 0 12px 3px rgba(255, 190, 100, 0.55),
+    inset 0 0 7px rgba(255, 150, 50, 0.55);
+}
+.iso .radio-lamp,
+.iso .radio-pool {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+.iso .radio-lamp {
+  transform-origin: 50% 0;
+  background: radial-gradient(ellipse 46% 42% at 50% 50%, rgba(255, 200, 130, 0.22), rgba(255, 170, 90, 0.08) 55%, transparent 75%);
+}
+/* where the dial's light lands: the desk in front of the radio, brightest under the shelf */
+.iso .radio-pool {
+  background: radial-gradient(ellipse 70% 55% at 100% 50%, rgba(255, 200, 130, 0.3), rgba(255, 180, 110, 0.1) 55%, transparent 80%);
+}
+.iso .radio-lamp.lit,
+.iso .radio-pool.lit {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .iso .radio-lamp,
+  .iso .radio-pool {
+    transition: none;
+  }
+}
+.iso .radio-face.on .led {
+  background: #ff6a3c;
+  box-shadow: 0 0 8px 2px rgba(255, 106, 60, 0.8);
+}
+.iso .radio-face .knob {
+  position: absolute;
+  bottom: 4px;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 42% 36%, rgba(255, 255, 255, 0.32), transparent 34%),
+    radial-gradient(circle, #6f5e4c 0 52%, #2a221b 56%, transparent 58%),
+    repeating-conic-gradient(#3b3027 0 7deg, #5a4a3b 7deg 14deg);
+  box-shadow:
+    0 3px 0 #17120e,
+    0 5px 6px rgba(0, 0, 0, 0.45),
+    inset 0 2px 2px rgba(255, 255, 255, 0.22),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.55);
+  cursor: pointer;
+  pointer-events: auto;
+}
+/* a notch on each knob shows how it is turned */
+/* the cap stands 8px off the face; its side is the rings room.js puts behind it */
+.iso .radio-face .knob {
+  translate: 0 0 8px;
+  transform-style: preserve-3d;
+}
+.iso .radio-face .knob-side {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.iso .radio-face .knob::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 3px;
+  width: 3px;
+  height: 11px;
+  margin-left: -1.5px;
+  border-radius: 2px;
+  background: #e8dcc0;
+}
+.iso .radio-face .power {
+  left: 0;
+  transform: rotate(-60deg);
+  transition: transform 0.2s var(--ease-out);
+}
+.iso .radio-face.on .power {
+  transform: rotate(30deg);
+}
+.iso .radio-face .tune {
+  left: 42px;
+  transform: rotate(var(--turn, 0deg));
+  transition: transform 0.3s var(--ease-out);
+}
+.iso .radio-face .knob:focus-visible {
+  outline: 3px solid #ffd34d;
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .iso .radio-face .needle,
+  .iso .radio-face .knob {
+    transition: none;
+  }
+}
+
+/* ---- the projector on the radio, and what it throws on the wall behind -------------- */
+/* a wedge, its faces set by room.js; the lens in the face that slopes towards the wall */
+.iso .projector {
+  position: absolute;
+  display: block;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+.iso .projector .pj-face {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: block;
+  transform-origin: 0 0;
+  transform-style: preserve-3d;
+  border-radius: 3px;
+}
+.iso .projector .pj-w {
+  background: var(--radio);
+}
+.iso .projector .pj-s {
+  background: color-mix(in srgb, var(--radio) 84%, black);
+}
+.iso .projector .pj-n,
+.iso .projector .pj-e {
+  background: color-mix(in srgb, var(--radio) 66%, black);
+}
+.iso .projector .pj-top {
+  background: color-mix(in srgb, var(--radio) 90%, white);
+}
+/* the lens: dark glass in a ring; lit while it projects, its lamp flickering a little as a
+   lamp in a projector does, and the light it throws with it; capped when shut */
+.iso .projector .proj-lens {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  box-sizing: border-box;
+  border: 4px solid color-mix(in srgb, var(--radio) 55%, black);
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #5a5348, #1d1a17 70%);
+  transform: translateZ(-0.6px);
+  transition: background 0.4s ease, box-shadow 0.4s ease;
+}
+.iso .projector.lit .proj-lens {
+  background: radial-gradient(closest-side, #fffaf0, #ffd796 55%, #c98a3c);
+  box-shadow: 0 0 14px 4px rgba(255, 200, 130, 0.75);
+  animation: lamp-flicker 3.1s steps(1) infinite;
+}
+.iso .on-wall.projected > .projection.lit,
+.iso .proj-beam.lit {
+  animation: lamp-flicker 3.1s steps(1) infinite;
+}
+@keyframes lamp-flicker {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  21% {
+    filter: brightness(0.82);
+  }
+  23% {
+    filter: brightness(1);
+  }
+  58% {
+    filter: brightness(0.9);
+  }
+  60% {
+    filter: brightness(1.05);
+  }
+  62% {
+    filter: brightness(0.86);
+  }
+  64% {
+    filter: brightness(1);
+  }
+  87% {
+    filter: brightness(0.93);
+  }
+  89% {
+    filter: brightness(1);
+  }
+}
+.iso .projector:not(.open) .proj-lens {
+  background: radial-gradient(circle at 50% 50%, #3a332c 0 4px, #2a241f 5px 40%, #3a332c 41%);
+  box-shadow: none;
+}
+/* the whole of it, for the pointer: one upright plane through its middle, facing the camera */
+.iso .projector .proj-hit {
+  position: absolute;
+  left: -14px;
+  top: 30px;
+  width: 80px;
+  height: 64px;
+  padding: 0;
+  border: 0;
+  background: none;
+  transform-origin: 50% 0;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.iso .projector .proj-hit:focus-visible {
+  outline: 3px solid #ffd34d;
+  outline-offset: 3px;
+}
+/* the beam, from the lamp up to the words: faint by day, plainer at night */
+.iso .proj-beam {
+  position: absolute;
+  transform-origin: 0 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+/* brightest at the lamp and down its middle, fading out to its sides and towards the wall */
+.iso .proj-beam-in {
+  position: absolute;
+  inset: 0;
+  filter: blur(7px);
+  background: linear-gradient(to top, rgba(255, 232, 196, 0.45), rgba(255, 232, 196, 0.14) 65%, rgba(255, 232, 196, 0.04));
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 30%, #000 70%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 30%, #000 70%, transparent);
+}
+.iso .proj-beam.lit {
+  opacity: 0.55;
+}
+.iso.lights-off .proj-beam.lit {
+  opacity: 0.9;
+}
+/* the light on the wall: the track, its author and the wave, faint by day, bright at night */
+.iso .on-wall.projected > .projection {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 4px;
+  padding: 10px 14px;
+  box-sizing: border-box;
+  border-radius: 28px;
+  background: radial-gradient(ellipse 60% 62% at 50% 50%, rgba(255, 236, 206, 0.32), rgba(255, 220, 170, 0.12) 60%, transparent 78%);
+  color: #fff3dc;
+  text-align: center;
+  text-shadow: 0 0 6px rgba(255, 210, 150, 0.9), 0 0 16px rgba(255, 190, 120, 0.6);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s ease, visibility 0s linear 0.5s;
+}
+.iso .on-wall.projected > .projection.lit {
+  opacity: 0.72;
+  visibility: visible;
+  transition: opacity 0.5s ease;
+}
+.iso.lights-off .on-wall.projected > .projection.lit {
+  opacity: 1;
+}
+.iso .projection b {
+  font: 700 22px/1.1 "Bricolage Grotesque", sans-serif;
+}
+.iso .projection small {
+  font: 400 17px/1.2 "Atkinson Hyperlegible", sans-serif;
+}
+.iso .projection .wave {
+  width: 220px;
+  height: 44px;
+  filter: drop-shadow(0 0 6px rgba(255, 200, 140, 0.9));
+}
+@media (prefers-reduced-motion: reduce) {
+  .iso .projector .proj-lens,
+  .iso .proj-beam,
+  .iso .proj-beam.lit,
+  .iso .projector.lit .proj-lens,
+  .iso .on-wall.projected > .projection.lit,
+  .iso .on-wall.projected > .projection {
+    transition: none;
+    animation: none;
+  }
+}
