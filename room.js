@@ -495,8 +495,13 @@
   tube.type = "button";
   tube.setAttribute("aria-label", "Change the neon's colour");
   tube.addEventListener("click", function () {
+    strike(true);
+  });
+  // the tube flickers out and back, in its next colour when asked
+  function strike(change) {
     if (sign.classList.contains("striking")) return;
     function next() {
+      if (!change) return;
       hue = (hue + 1) % NEON.length;
       sign.style.setProperty("--neon", NEON[hue]);
       glow();
@@ -515,7 +520,7 @@
       sign.classList.remove("striking");
       glow();
     }, 1100);
-  });
+  }
   var intro = stage.querySelector(".intro");
   var words = intro.querySelector("p").textContent.replace(/\s+/g, " ").trim();
   var first = words.indexOf(". ") + 1;
@@ -891,6 +896,9 @@
   night.setAttribute("aria-hidden", "true");
   function setLight(on) {
     sw.setAttribute("aria-pressed", String(on));
+    // (the first load's dark ends too, if the reader got to the switch first)
+    document.documentElement.classList.remove("dawn");
+    stage.removeAttribute("aria-busy");
     document.documentElement.classList.toggle("lights-off", !on);
     try {
       sessionStorage.setItem("room-light", on ? "on" : "off");
@@ -910,7 +918,8 @@
   var navTubes = [].slice.call(nav.querySelectorAll("a"));
   // drawn again when something it follows changes: the light, the frame, the neon, the screen
   function glow() {
-    if (!document.documentElement.classList.contains("lights-off")) return;
+    var h = document.documentElement.classList;
+    if (!h.contains("lights-off") && !h.contains("dawn")) return;
     function at(r, w, h, dy) {
       return "radial-gradient(ellipse " + w + "px " + h + "px at " + (r.left + r.width / 2) + "px " + (r.top + r.height * (dy || 0.5)) + "px, ";
     }
@@ -929,7 +938,8 @@
       k = sw.getBoundingClientRect(),
       g = pc.querySelector(".glass").getBoundingClientRect();
     var holes = [
-      at(n, n.width * 0.75, n.height * 1.7) + "color-mix(in srgb, " + tint + " " + 45 * dim + "%, white), color-mix(in srgb, " + tint + " " + 50 * dim + "%, transparent) 55%, transparent 80%)",
+      // (with the tube out its light fades, rather than whitening, which in a multiply layer is brightest)
+      at(n, n.width * 0.75, n.height * 1.7) + "color-mix(in srgb, color-mix(in srgb, " + tint + " 45%, white) " + 100 * dim + "%, transparent), color-mix(in srgb, " + tint + " " + 50 * dim + "%, transparent) 55%, transparent 80%)",
       at(w, w.width * 0.7, w.height * 0.75) + "rgba(150,170,235,1), transparent 80%)",
       at(m, m.width * 0.5, m.height * 0.55, 0.45) + "rgba(185,200,250,1), rgba(120,140,210,0.8) 45%, transparent 85%)",
       "radial-gradient(circle at " + (k.left + k.width / 2) + "px " + (k.top + k.height / 2) + "px, rgba(255,255,255,1) 0 14px, transparent 36px)",
@@ -1094,14 +1104,45 @@
     cancelAnimationFrame(pending);
     pending = requestAnimationFrame(frame);
   });
+  // ---- the first load of a visit: the room in the dark ---------------------------------
+  // Built but dark, the neon name striking, until the switch clicks the light on once the
+  // room and whatever holds it (Willy, later, through ROOM.holdLight) are ready. The dark is
+  // a CSS animation that ends lit on its own (room.css, .dawn); this only ends it sooner, or
+  // at its end puts the switch where the light is. Later loads in the visit skip it.
+  var holds = [];
+  var dawn = lightWas === null && !still.matches;
+  var dawnAt = performance.now();
+  var lightUp = function () {};
+  if (dawn) {
+    document.documentElement.classList.add("dawn");
+    stage.setAttribute("aria-busy", "true");
+    sw.setAttribute("aria-pressed", "false");
+    lightUp = function () {
+      if (!document.documentElement.classList.contains("dawn")) return;
+      if (window.CRT) CRT.clack();
+      setLight(true);
+    };
+    setTimeout(lightUp, 4000);
+  } else setLight(lightWas !== "off");
   spread();
   frame();
-  setLight(lightWas !== "off");
+  if (dawn) strike(false);
   if (window.RADIO) showRadio(RADIO.state());
+  // the light waits for everything that holds it, and for the name to have struck
+  function settle() {
+    var n = holds.length;
+    Promise.all(holds).then(function () {
+      if (holds.length !== n) return settle();
+      setTimeout(lightUp, Math.max(0, 1600 - (performance.now() - dawnAt)));
+    });
+  }
   // again once the fonts are in, since words change the sizes: a small correction, not a new layout
   (document.fonts ? document.fonts.ready : Promise.resolve()).then(function () {
     spread(true);
     frame();
+    // and once every script after it has run, so that each has had its chance to hold it
+    if (document.readyState === "loading") addEventListener("DOMContentLoaded", settle);
+    else settle();
   });
   // what the room's other modules use of it: morph.js turns things to face the reader, and
   // takes a photo out of its place or names the one that has just landed in it
@@ -1119,6 +1160,10 @@
         landed = null;
         return l;
       },
+    },
+    // keeps the first load's dark until p settles, or the dark's own end: for Willy
+    holdLight: function (p) {
+      holds.push(p);
     },
   };
 })();

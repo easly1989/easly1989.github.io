@@ -16,6 +16,7 @@ python checks/contrast.py
 python checks/moves.py
 python checks/photos.py
 python checks/radio.py
+python checks/dark.py
 ```
 
 `contrast.py` also needs `pip install pillow numpy`.
@@ -56,7 +57,14 @@ python checks/radio.py
   by now; in the console it is quiet and back out it carries on from where it stopped; the radio
   in a page's bar stops it, starts it and changes station; About credits every track; every
   station's words on the wall are inside the window at every size; clicking the projector caps
-  it for the visit. A visible window with autoplay allowed.
+  it for the visit; out of the room while it plays, every page still carries the radio that
+  stops it. A visible window with autoplay allowed.
+- `dark.py` — the first load of a visit is dark, the neon name striking, the room busy and its
+  switch off, until the switch clicks the light on within about 4 s, in both schemes; later
+  loads show the room at once with its light as left; the switch pressed in the dark puts the
+  light on at once; under reduced motion it is lit from the
+  start; and with whatever holds the light never letting go and the page's scripts stopped
+  once the room is up, the dark still ends on its own. A visible window.
 
 `cdp.py` is the driver (Chrome comes from `CHROME`, or the usual Windows path), and
 `serve.py` the server: no caching, byte ranges, nothing logged. `python checks/serve.py`
