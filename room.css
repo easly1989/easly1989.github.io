@@ -1433,6 +1433,16 @@ html:not(.iso) .strip {
 .iso.lights-off .night {
   opacity: 1;
 }
+/* the first load of a visit is dark, and at the end lit on its own, whatever the script does */
+.iso.dawn .night {
+  animation: dawn 4s;
+}
+@keyframes dawn {
+  from,
+  to {
+    opacity: 1;
+  }
+}
 /* the window's light on the desk: its shape, wider as it reaches into the room, crossed by
    the shadows of its mullions. By day a still sunbeam; in the dark scheme the moon, faint while
    the room's own light is on and strong with it off */
