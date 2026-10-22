@@ -15,7 +15,13 @@ const DIRS = 16; // the headings he walks at on it
 const ARC = 360 / DIRS;
 const TURN_COST = 8; // a turn of one ARC on the spot costs as much as this much ground
 const BEND_COST = 3; // and turning it as he steps, as a cat mostly turns, this much
-const LIMIT = 80000; // states looked at before giving up on a walk
+const LIMIT = 10000; // states looked at before giving up on a walk (a walk on the desk takes 50 to 2000)
+const PATIENCE = 1000; // and before being led round things (no walk on the desk takes 700)
+const GREED = 2; // how much more the way left counts than the way come: a good way, found soon
+const SLICE = 8; // ms of searching in a frame, before letting the page paint it
+// the grid points next to one, and every one a step of his reaches (two along, two along and
+// one across, one and one): each step joins two of them, so where these cannot get, he cannot
+const AROUND = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1], [2, 0], [-2, 0], [0, 2], [0, -2], [2, 1], [2, -1], [-2, 1], [-2, -1], [1, 2], [1, -2], [-1, 2], [-1, -2]];
 export const AIR = 0.42; // seconds in the air
 const LIFT = 40; // how far the arc rises over the higher end, at most
 
@@ -37,18 +43,25 @@ export function arc(j, f) {
 
 export function planner({ surfaces, jumps, fits }) {
   const named = Object.fromEntries(surfaces.map((s) => [s.name, s]));
-  const memo = new Map();
+  // what fits() said, by surface and clip, at each whole px and degree (a number for a key: a
+  // string, built on every ask, cost more than most of what fits() does)
+  const memo = {};
   const fit = (s, x, y, h, clip) => {
-    const k = s.name + clip + Math.round(x) + "," + Math.round(y) + "," + Math.round(norm(h));
-    if (!memo.has(k)) memo.set(k, fits(x, y, s.z, h, clip, { on: s }));
-    return memo.get(k);
+    const m = ((memo[s.name] ??= {})[clip] ??= new Map());
+    const k = ((Math.round(x) + 8192) * 16384 + Math.round(y) + 8192) * 360 + ((Math.round(h) % 360) + 360) % 360;
+    let r = m.get(k);
+    if (r === undefined) m.set(k, (r = fits(x, y, s.z, h, clip, { on: s })));
+    return r;
   };
 
-  // whether a straight line can be walked, looking along it
-  function line(s, a, b) {
-    const h = toward(a, b),
-      n = Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / (STEP / 2));
-    for (let i = 0; i <= n; i++) if (!fit(s, a[0] + ((b[0] - a[0]) * i) / n, a[1] + ((b[1] - a[1]) * i) / n, h, "walk")) return false;
+  // whether a straight line can be walked, looking along it, or with his heading going from h0
+  // to h1 as he goes, as the room walks him through a step that bends: every 10 px, and every 2
+  // degrees as he turns, when his nose and tail sweep much further than his feet go
+  function line(s, a, b, h0 = toward(a, b), h1 = h0) {
+    const d = norm(h1 - h0),
+      n = Math.ceil(Math.max(Math.hypot(b[0] - a[0], b[1] - a[1]) / (STEP / 2), Math.abs(d) / 2));
+    // from the far end, where a step that fails mostly does
+    for (let i = n; i >= 0; i--) if (!fit(s, a[0] + ((b[0] - a[0]) * i) / n, a[1] + ((b[1] - a[1]) * i) / n, h0 + (d * i) / n, "walk")) return false;
     return true;
   }
   // whether he can turn on the spot from one heading to another, the short way round, in the
@@ -62,30 +75,102 @@ export function planner({ surfaces, jumps, fits }) {
 
   // a walk on s from [x, y, heading] to [x, y] (facing heading, if one is given): the points
   // he passes, each with the way he faces there; a point repeated with another heading is a
-  // turn on the spot. null if there is no way.
-  function walk(s, from, to) {
+  // turn on the spot. null if there is no way. A promise: the search lets the page draw its
+  // frames as it goes.
+  async function walk(s, from, to) {
     const dir = (h) => ((Math.round(h / ARC) % DIRS) + DIRS) % DIRS;
     const d0 = dir(from[2]);
+    // the grid starts where he is: on a narrow surface, a grid of its own could leave him no
+    // line to walk along
     const gi = Math.round((to[0] - from[0]) / STEP),
       gj = Math.round((to[1] - from[1]) / STEP);
     const gd = to[2] == null ? null : dir(to[2]);
     const at = (i, j) => [from[0] + i * STEP, from[1] + j * STEP];
-    const key = (i, j, d) => i + "," + j + "," + d;
+    const cell = (i, j) => (i + 1024) * 2048 + j + 1024;
+    const key = (i, j, d) => cell(i, j) * DIRS + d;
+    // whether he can stand at a point of the grid facing some way; where he is, he is,
+    // whatever he is doing there
+    const stood = new Map();
+    const stands = (i, j) => {
+      const k = cell(i, j);
+      let ok = stood.get(k);
+      if (ok === undefined) {
+        const p = at(i, j);
+        ok = i === 0 && j === 0;
+        for (let d = 0; d < DIRS && !ok; d++) ok = fit(s, p[0], p[1], d * ARC, "walk");
+        stood.set(k, ok);
+      }
+      return ok;
+    };
+    // unless he is there already: no room to walk off from where he is, or nowhere to stand at
+    // the end, so no way there
+    const end = at(gi, gj);
+    if ((gi || gj) && !fit(s, from[0], from[1], from[2], "walk")) return null;
+    if (!stands(gi, gj) || (gd != null && (gi || gj) && !fit(s, end[0], end[1], gd * ARC, "walk"))) return null;
+
+    // How far the end is from a point of the grid, round whatever is in the way: a search back
+    // from the end, over the points he can stand on facing some way, taken only as far as it is
+    // asked. Infinity where it cannot get to. When the search below is long, it is in a pocket,
+    // or there is no way at all, and this leads it out, or says so; on an open desk it costs
+    // more than it saves, so until then the search heads for the end as the crow flies.
+    const far = new Map([[cell(gi, gj), 0]]),
+      settled = new Set(),
+      ring = [{ i: gi, j: gj, f: 0 }];
+    // now and then, out of the way of the page's frame
+    let since = performance.now();
+    async function breathe() {
+      if (performance.now() - since < SLICE) return;
+      await pause();
+      since = performance.now();
+    }
+    async function away(i, j) {
+      const k = cell(i, j);
+      while (!settled.has(k) && ring.length) {
+        await breathe();
+        const c = pop(ring),
+          ck = cell(c.i, c.j);
+        if (settled.has(ck)) continue;
+        settled.add(ck);
+        for (const [di, dj] of AROUND) {
+          const ni = c.i + di,
+            nj = c.j + dj,
+            nk = cell(ni, nj),
+            f = c.f + STEP * Math.hypot(di, dj);
+          if (settled.has(nk) || far.get(nk) <= f || !stands(ni, nj)) continue;
+          far.set(nk, f);
+          push(ring, { i: ni, j: nj, f });
+        }
+      }
+      return settled.has(k) ? far.get(k) : Infinity;
+    }
     const open = [{ i: 0, j: 0, d: d0, g: 0, f: 0 }];
     const best = new Map([[key(0, 0, d0), 0]]);
     const back = new Map();
-    let seen = 0;
+    let seen = 0,
+      led = false;
     while (open.length && seen++ < LIMIT) {
+      await breathe();
+      if (!led && seen > PATIENCE) {
+        // led from here on, from the start again (what fits() said is kept)
+        led = true;
+        if ((await away(0, 0)) === Infinity) return null;
+        open.splice(0, open.length, { i: 0, j: 0, d: d0, g: 0, f: 0 });
+        best.clear();
+        best.set(key(0, 0, d0), 0);
+        back.clear();
+      }
       const c = pop(open);
       if (c.g > best.get(key(c.i, c.j, c.d))) continue;
       if (c.i === gi && c.j === gj && (gd == null || c.d === gd)) {
-        const grid = trace(back, c, at);
-        const smoothed = smooth(s, grid.map((p) => p.slice()), from, to);
-        return walkable(s, smoothed) ? smoothed : grid;
+        // pulled straight, or as the grid went, from the way he faces (the grid's first heading
+        // is the nearest to it); or, if he cannot take that as the room walks him, no way
+        const grid = trace(back, c, at, key);
+        const smoothed = await smooth(s, grid.map((p) => p.slice()), from, to, breathe);
+        grid[0][2] = from[2];
+        return (await walkable(s, smoothed, breathe)) ? smoothed : (await walkable(s, grid, breathe)) ? grid : null;
       }
-      // a step ahead lands on the grid point nearest two steps along his heading, and is
-      // checked halfway there too; a step may bend one ARC either way, along the heading
-      // between, and the halfway point faces between; or he turns on the spot
+      // a step ahead lands on the grid point nearest two steps along his heading; a step may
+      // bend one ARC either way, along the heading between; or he turns on the spot
       const step = (h) => ahead(h).map((x) => Math.round(2 * x));
       const v = step(c.d * ARC);
       const next = [
@@ -98,33 +183,36 @@ export function planner({ surfaces, jumps, fits }) {
         next.push({ i: c.i + u[0], j: c.j + u[1], d: (c.d + e + DIRS) % DIRS, cost: STEP * Math.hypot(u[0], u[1]) + BEND_COST, bend: e });
       }
       for (const n of next) {
-        const p = at(n.i, n.j),
-          mid = at((c.i + n.i) / 2, (c.j + n.j) / 2);
-        const h = n.bend ? (c.d + n.bend / 2) * ARC : n.d * ARC;
-        if (!fit(s, p[0], p[1], n.d * ARC, "walk") || !fit(s, mid[0], mid[1], h, "walk")) continue;
+        const p = at(n.i, n.j);
+        // the step as the room walks him through it: his heading going from this one to the next
+        if ((n.i !== c.i || n.j !== c.j) && !line(s, at(c.i, c.j), p, c.d * ARC, (c.d + (n.bend || 0)) * ARC)) continue;
         if (n.d !== c.d && !n.bend && !turn(s, p, c.d * ARC, n.d * ARC)) continue; // and the turn's sweep
         const g = c.g + n.cost,
-          k = key(n.i, n.j, n.d);
-        if (best.has(k) && best.get(k) <= g) continue;
+          k = key(n.i, n.j, n.d),
+          left = !led ? STEP * Math.hypot(gi - n.i, gj - n.j) : settled.has(cell(n.i, n.j)) ? far.get(cell(n.i, n.j)) : await away(n.i, n.j);
+        if (left === Infinity || (best.has(k) && best.get(k) <= g)) continue;
         best.set(k, g);
         back.set(k, c);
-        push(open, { ...n, g, f: g + STEP * Math.hypot(gi - n.i, gj - n.j) });
+        push(open, { ...n, g, f: g + GREED * left });
       }
     }
     return null;
   }
 
-  // whether every step of a walk can be taken: each line looking along it, each turn
-  function walkable(s, pts) {
+  // whether every step of a walk can be taken as the room takes it: each turn on the spot, and
+  // each line with his heading going from one end's to the other's (breathe lets the page have
+  // its frames, as the search does)
+  async function walkable(s, pts, breathe) {
     for (let i = 1; i < pts.length; i++) {
+      await breathe();
       const [a, b] = [pts[i - 1], pts[i]];
-      if (a[0] === b[0] && a[1] === b[1] ? !turn(s, a, a[2], b[2]) : !line(s, a, b) || norm(toward(a, b) - b[2]) !== 0) return false;
+      if (a[0] === b[0] && a[1] === b[1] ? !turn(s, a, a[2], b[2]) : !line(s, a, b, a[2], b[2])) return false;
     }
     return true;
   }
 
   // the grid's zig-zags pulled straight wherever a straight line can be walked
-  function smooth(s, pts, from, to) {
+  async function smooth(s, pts, from, to, breathe) {
     const end = [to[0], to[1], to[2] == null ? pts[pts.length - 1][2] : to[2]];
     if (line(s, pts[pts.length - 1], end)) pts.push(end);
     const out = [[from[0], from[1], from[2]]];
@@ -133,7 +221,10 @@ export function planner({ surfaces, jumps, fits }) {
       let m = pts.length - 1;
       const was = out[out.length - 1][2];
       const ok = (m) => pts[k][0] === pts[m][0] && pts[k][1] === pts[m][1] ? turn(s, pts[k], was, pts[m][2]) : line(s, pts[k], pts[m]) && turn(s, pts[k], was, toward(pts[k], pts[m]));
-      while (m > k + 1 && !ok(m)) m--;
+      for (; m > k + 1; m--) {
+        await breathe();
+        if (ok(m)) break;
+      }
       const a = pts[k],
         b = pts[m];
       // a step the grid took on the spot is a turn; otherwise the line, looking along it
@@ -202,18 +293,18 @@ export function planner({ surfaces, jumps, fits }) {
     walk: (s, from, to) => walk(named[s], from, to),
     // from { surface, x, y, heading } to { surface, x, y, heading? }: a list of legs, each
     // { walk: points } or { jump: hop }, or null. Between surfaces, the shorter ways are the
-    // likelier, not certain: rand() picks.
-    route(from, to, rand = Math.random) {
+    // likelier, not certain: rand() picks. A promise, as walk is.
+    async route(from, to, rand = Math.random) {
       const a = named[from.surface],
         b = named[to.surface];
       if (a === b) {
-        const w = walk(a, [from.x, from.y, from.heading], [to.x, to.y, to.heading]);
+        const w = await walk(a, [from.x, from.y, from.heading], [to.x, to.y, to.heading]);
         return w && [{ walk: w }];
       }
       const ways = [];
       for (const hop of hops(a, b)) {
-        const w1 = walk(a, [from.x, from.y, from.heading], [hop.from[0], hop.from[1], hop.h0]);
-        const w2 = w1 && walk(b, [hop.to[0], hop.to[1], hop.h1], [to.x, to.y, to.heading]);
+        const w1 = await walk(a, [from.x, from.y, from.heading], [hop.from[0], hop.from[1], hop.h0]);
+        const w2 = w1 && (await walk(b, [hop.to[0], hop.to[1], hop.h1], [to.x, to.y, to.heading]));
         if (w2) ways.push({ legs: [{ walk: w1 }, { jump: hop }, { walk: w2 }], cost: length(w1) + length(w2) + Math.hypot(hop.to[0] - hop.from[0], hop.to[1] - hop.from[1]) });
       }
       if (!ways.length) return null;
@@ -237,9 +328,13 @@ export function planner({ surfaces, jumps, fits }) {
   };
 }
 
-function trace(back, c, at) {
+// out of the way of the page's frame: on again once it is painted (setImmediate is Node's, for
+// the check, which has no frames)
+const pause = () => new Promise((r) => (globalThis.requestAnimationFrame ? requestAnimationFrame(() => setTimeout(r)) : setImmediate(r)));
+
+function trace(back, c, at, key) {
   const out = [];
-  for (let n = c; n; n = back.get(n.i + "," + n.j + "," + n.d)) out.unshift([...at(n.i, n.j), n.d * ARC]);
+  for (let n = c; n; n = back.get(key(n.i, n.j, n.d))) out.unshift([...at(n.i, n.j), n.d * ARC]);
   return out;
 }
 

@@ -37,28 +37,72 @@ const fits = (x, y, z, h, clip, { on: s } = {}) => {
 const jumps = [{ a: "desk", b: "perch", to: [550, -120], heading: 180 }];
 const P = planner({ surfaces: [desk, perch], jumps, fits });
 
-// every point of a walk, every few px, fits where it is, looking the way it walks
+// every point of a walk, every few px, fits where it is, facing as the room walks him: from
+// one point's heading to the next's
 function walked(s, pts) {
   for (let i = 1; i < pts.length; i++) {
     const [a, b] = [pts[i - 1], pts[i]];
-    const n = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / 5));
-    for (let k = 0; k <= n; k++) assert.ok(fits(a[0] + ((b[0] - a[0]) * k) / n, a[1] + ((b[1] - a[1]) * k) / n, s.z, b[2], "walk", { on: s }), "walks into something at " + a + " to " + b);
+    const d = ((((b[2] - a[2] + 180) % 360) + 360) % 360) - 180;
+    const n = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / 3), Math.abs(d));
+    for (let k = 0; k <= n; k++) assert.ok(fits(a[0] + ((b[0] - a[0]) * k) / n, a[1] + ((b[1] - a[1]) * k) / n, s.z, a[2] + (d * k) / n, "walk", { on: s }), "walks into something at " + a + " to " + b);
   }
 }
 
-// round the wall, through the gap behind it
-const w = P.walk("desk", [100, 400, 0], [900, 400]);
+// how long a walk takes to find, in ms, on a planner of its own (nothing remembered), and the
+// longest the work held the thread at a time: the tick below runs whenever it is let (not on a
+// timer, which on Windows waits 15 ms whatever it is asked)
+async function timed(f) {
+  let last = performance.now(),
+    held = 0,
+    on = true;
+  (function tick() {
+    const t = performance.now();
+    held = Math.max(held, t - last);
+    last = t;
+    if (on) setImmediate(tick);
+  })();
+  const t = performance.now();
+  const out = await f(planner({ surfaces: [desk, perch], jumps, fits }));
+  on = false;
+  return { out, ms: performance.now() - t, held: Math.max(held, performance.now() - last) };
+}
+
+// round the wall, through the gap behind it, soon, and never holding the thread long
+const across = await timed((P) => P.walk("desk", [100, 400, 0], [900, 400]));
+const w = across.out;
 assert.ok(w, "finds a way round the wall");
 walked(desk, w);
 assert.ok(w.some((p) => p[0] > 400 && p[0] < 600 && p[1] < 110), "goes through the gap");
 assert.deepEqual(w[w.length - 1].slice(0, 2), [900, 400]);
+assert.ok(across.ms < 80, "finds the way across in " + Math.round(across.ms) + " ms");
+assert.ok(across.held < 12, "holds the thread for " + Math.round(across.held) + " ms at a time");
+
+// nowhere he can stand: no way, found out at once
+const wall = await timed((P) => P.walk("desk", [100, 400, 0], [500, 400]));
+assert.equal(wall.out, null);
+assert.ok(wall.ms < 10, "gives up on a spot in the wall in " + Math.round(wall.ms) + " ms");
+
+// no room to walk off: his tail is in the wall, though a step away from it is clear
+assert.ok(!fits(395, 300, 0, 180, "walk", { on: desk }) && fits(355, 300, 0, 180, "walk", { on: desk }));
+assert.equal(await P.walk("desk", [395, 300, 180], [100, 300]), null);
 
 // facing a given way at the end
-const f = P.walk("desk", [100, 400, 0], [200, 400, 90]);
+const f = await P.walk("desk", [100, 400, 0], [200, 400, 90]);
 assert.equal(f[f.length - 1][2], 90);
+walked(desk, f);
+
+// round the wall and back, from many places, every walk taken as the room takes it
+let seed = 5;
+const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+for (let n = 0; n < 12; n++) {
+  const a = P.spot("desk", "walk", rand),
+    b = P.spot("desk", "walk", rand);
+  const p = await P.walk("desk", a, b);
+  if (p) walked(desk, p);
+}
 
 // up onto the perch: a walk to the take-off, the jump, a walk on the perch
-const r = P.route({ surface: "desk", x: 100, y: 400, heading: 0 }, { surface: "perch", x: 400, y: -120, heading: 180 });
+const r = await P.route({ surface: "desk", x: 100, y: 400, heading: 0 }, { surface: "perch", x: 400, y: -120, heading: 180 });
 assert.deepEqual(r.map((l) => Object.keys(l)[0]), ["walk", "jump", "walk"]);
 walked(desk, r[0].walk);
 walked(perch, r[2].walk);
@@ -66,7 +110,7 @@ assert.equal(r[1].jump.h1, 180);
 assert.ok(r[1].jump.from[1] > -40, "takes off from the desk, in front of the perch");
 assert.ok(arc(r[1].jump, 0.8)[2] > 300, "the arc comes over the perch's edge from above");
 // and down again
-assert.ok(P.route({ surface: "perch", x: 400, y: -120, heading: 180 }, { surface: "desk", x: 100, y: 400, heading: 0 }));
+assert.ok(await P.route({ surface: "perch", x: 400, y: -120, heading: 180 }, { surface: "desk", x: 100, y: 400, heading: 0 }));
 
 // a spot on the perch fits
 const sp = P.spot("perch", "sleep", Math.random, [0, 180]);
@@ -74,6 +118,6 @@ assert.ok(sp && fits(sp[0], sp[1], 300, sp[2], "sleep", { on: perch }));
 
 // shut in: a desk cut in two by a wall right across has no way over
 const shut = planner({ surfaces: [{ ...desk }], jumps: [], fits: (x, y, z, h, c, o) => fits(x, y, z, h, c, o) && Math.abs(x - 500) > 60 + 20 });
-assert.equal(shut.walk("desk", [100, 400, 0], [900, 400]), null);
+assert.equal(await shut.walk("desk", [100, 400, 0], [900, 400]), null);
 
 console.log("willy-paths: ok");
