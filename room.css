@@ -631,13 +631,36 @@ html:not(.iso) .strip {
 .iso .jar .slice.base {
   background: rgba(255, 255, 255, 0.12);
 }
+/* glass throws next to no shadow of its own: what does is the label round its middle, a ring
+   on the side the label is, falling half as far as the top's would */
+.iso .jar > .shade {
+  background: rgba(0, 0, 0, 0.08);
+  border: 14px solid transparent;
+  border-bottom-color: rgba(0, 0, 0, 0.42);
+  border-left-color: rgba(0, 0, 0, 0.42);
+  transform: translateZ(calc(-1 * var(--h3) - var(--lift) + 0.5px))
+    translate(calc(var(--h3) * 0.09 + var(--lift) * 0.5), calc(var(--h3) * 0.15 + var(--lift) * 0.8));
+}
+.iso .jar-shine {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, transparent 8%, rgba(255, 255, 255, 0.9) 34%, rgba(255, 255, 255, 0.5) 52%, rgba(255, 255, 255, 0.15) 70%, transparent);
+  -webkit-mask: linear-gradient(transparent, #000 14%, #000 78%, transparent);
+  mask: linear-gradient(transparent, #000 14%, #000 78%, transparent);
+}
+.iso .jar-shine.faint {
+  opacity: 0.5;
+}
 .iso .jar .unfold {
   translate: 0 0 20px;
 }
 .iso .jar .jar-tag.moved {
   visibility: hidden;
 }
+/* someone has tried to peel it off: its edges are ragged, and its right end is torn away, the
+   white of the paper showing where it was scraped */
 .iso .jar-label {
+  position: relative;
   display: block;
   height: 100%;
   padding: 10px 16px;
@@ -645,6 +668,17 @@ html:not(.iso) .strip {
   color: var(--paper-ink);
   font: 800 1.5rem/1.05 "Bricolage Grotesque", sans-serif;
   text-align: center;
+  clip-path: polygon(1% 4%, 12% 2%, 30% 3.5%, 52% 1%, 70% 3%, 81% 2%, 84% 10%, 88% 6%, 90% 19%, 94% 14%, 92.5% 31%, 97% 38%, 94.5% 52%, 99% 61%, 96% 73%, 98.5% 86%, 95% 97%, 80% 99%, 61% 97.5%, 40% 99%, 21% 98%, 3% 99%, 1% 86%, 2% 69%, 0 50%, 2% 31%, 0 13%);
+}
+.iso .jar-label::after {
+  content: "";
+  position: absolute;
+  top: 6%;
+  right: 3%;
+  width: 13%;
+  height: 62%;
+  background: repeating-linear-gradient(104deg, rgba(255, 255, 255, 0.85) 0 2px, rgba(255, 255, 255, 0.4) 2px 5px);
+  clip-path: polygon(30% 0, 100% 8%, 92% 40%, 100% 70%, 70% 100%, 40% 82%, 12% 90%, 0 52%, 18% 24%);
 }
 .iso .jar-label small {
   display: block;
@@ -1132,7 +1166,7 @@ html:not(.iso) .strip {
 .iso .env-to {
   left: 2rem;
   bottom: 1.6rem;
-  color: #4a2230;
+  color: #200a10;
 }
 .iso .env-stamp {
   right: 1.5rem;
@@ -1433,6 +1467,55 @@ html:not(.iso) .strip {
 .iso.lights-off .night {
   opacity: 1;
 }
+/* the window's light, its panes drawn by room.js (glow()), soft at the edges as moonlight is */
+.iso .night-beam {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: blur(3px);
+}
+/* the screen's light, a little unsteady, as an old CRT's is */
+.iso .night-screen {
+  position: absolute;
+  display: none;
+  background: radial-gradient(closest-side, rgba(200, 255, 210, 1), rgba(80, 140, 100, 0.65) 45%, transparent 80%);
+  animation: crt 3.3s infinite;
+}
+@keyframes crt {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  6% {
+    opacity: 0.9;
+  }
+  8% {
+    opacity: 1;
+  }
+  31% {
+    opacity: 0.95;
+  }
+  33% {
+    opacity: 0.82;
+  }
+  35% {
+    opacity: 0.97;
+  }
+  58% {
+    opacity: 0.92;
+  }
+  74% {
+    opacity: 1;
+  }
+  76% {
+    opacity: 0.86;
+  }
+  78% {
+    opacity: 0.99;
+  }
+}
 /* the first load of a visit is dark, and at the end lit on its own, whatever the script does */
 .iso.dawn .night {
   animation: dawn 4s;
@@ -1477,6 +1560,9 @@ html:not(.iso) .strip {
   .iso .night,
   .iso .light-switch .rocker {
     transition: none;
+  }
+  .iso .night-screen {
+    animation: none;
   }
 }
 
