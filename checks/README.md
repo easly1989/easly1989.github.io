@@ -26,9 +26,11 @@ python checks/dark.py
   corners; a window too small for the room, a phone, and the home without `?room` get the bench
   as before; `?room` is remembered for the session and `?room=0` turns it off; nothing on the
   desk moves when the fonts arrive after the first frame. Headless.
-- `fps.py` — the room keeps pace with a 60 Hz display in both schemes, with its light on and
-  off, and with the radio playing. It draws without vsync, so it measures what a frame costs. It opens a visible window, since a hidden one throttles its frames: leave it in front
-  until it closes. The white square crossing the desk in that window is the check's own, there
+- `fps.py` — the room keeps pace with a 60 Hz display while Willy walks, in both schemes, with
+  its light on and off, and with the radio playing; he rests between walks, so a sample is taken
+  again until he has walked through enough of it. It draws without vsync, so it measures what a
+  frame costs. It opens a visible window, since a hidden one throttles its frames: leave it in
+  front until it closes; a few minutes. The white square crossing the desk in that window is the check's own, there
   so every frame is drawn again; the site has no such thing.
 - `contrast.py` — with the room's light on, every text the reader can see clears 4.5:1 against
   what is really behind it, in both schemes; with the light off, the night is a view the reader

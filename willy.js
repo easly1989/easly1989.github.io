@@ -23,6 +23,11 @@ const lift = (at) => LIFT[0] + (LIFT[1] - LIFT[0]) * at;
 const CLEAR = 4; // px he keeps from everything solid
 const OVER = 6; // px he may hang over the edge of what he stands on, being soft
 const LYING = 20; // and lying down or asleep, his paws and tail spilling over
+// the fill from all round, with the room's light on and off, and how strong each of the room's
+// sources is on him at full power
+const FILL = [1.7, 1.0];
+const STRENGTH = { room: 1.5, window: 1.4, screen: 1.2, radio: 1.4 };
+const SHADOW = 0.5; // how dark his shadow is, as dark as the room's own (room.css, .shade)
 
 // Willy in the room, with his clips. Throws if there is no WebGL 2 or the model fails to load.
 export async function willy(room, stage, src = "assets/willy.glb") {
@@ -48,14 +53,41 @@ export async function willy(room, stage, src = "assets/willy.glb") {
   const target = new THREE.Vector3(0, 0, ANCHOR_Z);
   cam.position.copy(target).addScaledVector(new THREE.Vector3(-1, -1, 1).normalize(), 3000);
   cam.lookAt(target);
-  const sky = new THREE.HemisphereLight(0xffffff, 0x5a6470, 1.7);
+  // a soft fill from all round, and the room's own sources (ROOM.lights()) as point lights,
+  // moved with him, since his world is centred on him; all four always there, an unlit one at
+  // nothing, so that one switching on recompiles no shader
+  const sky = new THREE.HemisphereLight(0xffffff, 0x5a6470, FILL[0]);
   sky.position.set(0, 0, 1);
   scene.add(sky);
-  const sun = new THREE.DirectionalLight(0xffffff, 1.5);
-  sun.position.set(-0.6, 0.9, 1.2);
-  scene.add(sun);
+  const lamps = [0, 1, 2, 3].map(() => {
+    const l = new THREE.PointLight(0xffffff, 0, 0, 0);
+    scene.add(l);
+    return l;
+  });
+  let sources = [],
+    here = [0, 0, 0];
+  // each source where it is from him, as strong as it is now
+  const shine = () => {
+    lamps.forEach((l, i) => {
+      const s = sources[i];
+      l.intensity = s ? s.power * (STRENGTH[s.name] ?? 1) : 0;
+      if (!s) return;
+      l.color.set(s.color);
+      l.distance = s.reach;
+      l.position.set(s.at[0] - here[0], here[1] - s.at[1], s.at[2] - here[2]);
+    });
+    sky.intensity = sources.some((s) => s.name === "room" && s.power) ? FILL[0] : FILL[1];
+  };
 
-  const gltf = await new GLTFLoader().loadAsync(src);
+  let gltf;
+  try {
+    gltf = await new GLTFLoader().loadAsync(src);
+  } catch (e) {
+    // no Willy: nothing of him left in the room
+    renderer.dispose();
+    cv.remove();
+    throw e;
+  }
   const holder = new THREE.Group();
   const model = gltf.scene;
   model.rotation.x = Math.PI / 2; // glTF is y-up; the room is z-up
@@ -75,6 +107,18 @@ export async function willy(room, stage, src = "assets/willy.glb") {
   const mixer = new THREE.AnimationMixer(model);
   const clips = Object.fromEntries(gltf.animations.map((c) => [c.name, mixer.clipAction(c)]));
   const size = measure(model, skinned, mixer, clips);
+  const blob = shadow(size.idle);
+  scene.add(blob);
+  // his many shaders (one a shell of fur) compiled in the background where the browser can,
+  // rather than all at once in his first frame
+  await renderer.compileAsync(scene, cam);
+  // lit as the room is, and drawn again whenever its lights change
+  sources = window.ROOM.lights();
+  window.ROOM.onLights(() => {
+    sources = window.ROOM.lights();
+    shine();
+    renderer.render(scene, cam);
+  });
   const moments = (clip, at) => {
     const m = size[clip].moments;
     return at == null ? m : [m[Math.min(m.length - 1, Math.max(0, Math.round(at * (m.length - 1))))]];
@@ -88,14 +132,26 @@ export async function willy(room, stage, src = "assets/willy.glb") {
     // faces, in degrees: 0 along the room's x, 90 towards the back wall
     // On a low thing he walks over (room.js, ground()) he stands on its top: as high as the
     // ground under his front and his hind paws, between them, so he climbs on and off it.
-    place(x, y, z, heading) {
+    // His shadow lies on that; in the air, on under.z, what is under him, his paws under.by
+    // above it, and fades the higher they are. As the room's own shadows do (room.css,
+    // .shade), it falls away from a light high behind on the left, further the taller he is
+    // and the higher in the air.
+    place(x, y, z, heading, under = null) {
       const r = (heading * Math.PI) / 180,
         f = [Math.cos(r), -Math.sin(r)],
         reach = [size.idle.x1 * 0.6, size.idle.x0 * 0.35];
-      z = reach.reduce((s, d) => s + window.ROOM.ground(x + f[0] * d, y + f[1] * d, z), 0) / reach.length;
+      if (!under) {
+        z = reach.reduce((s, d) => s + window.ROOM.ground(x + f[0] * d, y + f[1] * d, z), 0) / reach.length;
+        under = { z, by: 0 };
+      }
       const b = BIAS / Math.sqrt(3);
       cv.style.transform = "translate3d(" + (x - b - W / 2) + "px," + (y + b - H / 2) + "px," + (z + ANCHOR_Z + b) + "px) rotateZ(45deg) rotateX(-54.7356deg)";
-      holder.rotation.z = (heading * Math.PI) / 180;
+      holder.rotation.z = blob.rotation.z = r;
+      // (the room's y runs towards the viewer, his world's the other way)
+      blob.position.set(size.idle.z1 * 0.18 + under.by * 0.5, -(size.idle.z1 * 0.3 + under.by * 0.8), under.z - z + 0.5);
+      blob.material.opacity = SHADOW * Math.max(0, 1 - under.by / 300);
+      here = [x, y, z];
+      shine();
     },
     draw(dt) {
       mixer.update(dt);
@@ -202,6 +258,29 @@ function shape(b, x, y, z, heading, clear = CLEAR) {
     ys = q.map((p) => p[1]);
   const part = { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys), q };
   return { ...part, z0: z + 2, z1: z + b.z1, parts: [part] };
+}
+
+// His shadow: a soft dark blob under his body and legs, not his tail, on what he stands on. No
+// shadow maps: the room's sources are too many and too soft for one to mean anything.
+function shadow(b) {
+  // a disc in rings, black, even over most of it and fading out at its rim, as the room's
+  // blurred shadows do (most of it is under him)
+  const g = new THREE.RingGeometry(0, 0.5, 32, 8);
+  const p = g.attributes.position,
+    rgba = new Float32Array(p.count * 4);
+  for (let i = 0; i < p.count; i++) {
+    const out = Math.min(1, Math.max(0, (2 * Math.hypot(p.getX(i), p.getY(i)) - 0.7) / 0.3));
+    rgba[i * 4 + 3] = 1 - out * out * (3 - 2 * out);
+  }
+  g.setAttribute("color", new THREE.BufferAttribute(rgba, 4));
+  // as long as his body and head, about as wide again as he is, turned with him (the room
+  // turns it about where he stands)
+  const x0 = b.x0 * 0.5,
+    x1 = b.x1;
+  g.scale(x1 - x0, (b.y1 - b.y0) * 1.7, 1).translate((x0 + x1) / 2, (b.y0 + b.y1) / 2, 0);
+  const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false }));
+  m.renderOrder = -1;
+  return m;
 }
 
 // Fur: shells over the body, each a hair further out, with fewer strands kept the further out

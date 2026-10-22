@@ -29,7 +29,7 @@ blender -b --python cat-src/build.py -- assets/willy.glb
 ```
 
 The build takes a minute or so. It prints how much ground a walk cycle covers (`STRIDE`) and how
-high the jump's root is as it leaves the ground and meets it (`LIFT`): `willy-review.js` and
+high the jump's root is as it leaves the ground and meets it (`LIFT`): `willy-moves.js` and
 `willy.js` hold those two, so they change with his size. It stops without writing anything if a
 clip goes through the ground.
 
@@ -89,8 +89,25 @@ room, somewhere he fits in it, found anew on each play:
 - `wander`, anywhere, the cushion too, sitting or sleeping where it gets to.
 
 `room` draws the room he takes, green, or red where it goes into something. `&willy=<path>`
-tries another build. The page loads three.js r186 from jsDelivr and is a tool for checking
-clips, not part of the site.
+tries another build. The page is a tool for checking clips, not part of the site, but it moves
+him with the room's own code (`willy-moves.js`), so what it shows is what the reader sees.
+
+## In the room
+
+`willy-room.js` is Willy's life in the room (`index.html?room`): he goes from place to place on
+the desk, jumps up to the cushion under the window or to the shelf, sits, sleeps or looks about
+where he gets to, and goes on. He does not answer clicks yet. three.js and his model load only
+from there, after the room is built (`ROOM.ready`), and the first load's dark waits for him
+(`ROOM.holdLight`), no longer than it lasts. Without WebGL 2, or if anything fails, there is no
+Willy and the room is as it is. Under reduced motion he sleeps on the cushion and does not move.
+
+He is lit by the room's own sources (`ROOM.lights()`): its light, the window, the computer's
+screen while it is on and the radio's lamp while it plays, as point lights over a soft fill. In
+the dark the room's night layer darkens him with everything else, and lights him where it lights
+the room. His shadow is a soft blob in his own canvas, on what he stands on; there are no shadow
+maps. He is drawn only when he is anywhere new, and not at all while the tab is hidden.
+
+three.js r186 is in `vendor/three/` (see its README), behind the import map in `index.html`.
 
 Where he can go (the desk, the cushion, the shelf) is worked out by `willy-paths.js` from what
 the room says (`ROOM.surfaces`, `ROOM.jumps`, `ROOM.clear`, `ROOM.ground`) and the room each clip
