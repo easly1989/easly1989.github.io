@@ -48,10 +48,11 @@ FIRST = f"""addEventListener('DOMContentLoaded', () => {{
   window.__first = Object.assign({LAYOUT}, {{ fonts: document.fonts.status }});
 }})"""
 
-# a loose thing whose middle is seen behind the computer, the jar or the mug, as if in it
+# a loose thing whose middle is seen behind the computer, the jar or the mug, as if in it (the
+# mug's steam hides nothing)
 HIDDEN = """(() => {
   const box = (e) => { const r = { l: 1e9, t: 1e9, r: -1e9, b: -1e9 };
-    [e, ...e.querySelectorAll('*')].forEach((n) => [...n.getClientRects()].forEach((c) => {
+    [e, ...e.querySelectorAll('*')].filter((n) => !n.closest('.steam')).forEach((n) => [...n.getClientRects()].forEach((c) => {
       r.l = Math.min(r.l, c.left); r.t = Math.min(r.t, c.top); r.r = Math.max(r.r, c.right); r.b = Math.max(r.b, c.bottom); }));
     return r; };
   const tall = [...document.querySelectorAll('.pc, .thing.jar, .thing.mug')].map((e) => [e.className.split(' ').pop(), box(e)]);
