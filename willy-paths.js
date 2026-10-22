@@ -255,8 +255,9 @@ export function planner({ surfaces, jumps, fits }) {
       const f = ahead(j.heading);
       const top = [j.to[0] + f[0] * slide, j.to[1] + f[1] * slide, hi.z];
       if (!fit(hi, top[0], top[1], j.heading, "idle")) continue;
-      for (const d of [240, 280, 200, 320, 160, 360, 120])
-        for (const turn of [30, -30, 45, -45, 60, -60, 75, -75, 90, -90, 15, -15, 105, -105, 120, -120]) {
+      // (far and wide last: round what stands in front of a shelf against the wall)
+      for (const d of [240, 280, 200, 320, 160, 360, 120, 400, 440])
+        for (const turn of [30, -30, 45, -45, 60, -60, 75, -75, 90, -90, 15, -15, 105, -105, 120, -120, 135, -135, 150, -150]) {
           // up, he comes from behind the way he lands facing; down, he leaps off ahead
           const g = ahead(j.heading + (up ? 180 : 0) + turn);
           const bottom = [top[0] + g[0] * d, top[1] + g[1] * d, lo.z];
@@ -275,9 +276,10 @@ export function planner({ surfaces, jumps, fits }) {
   }
   function works(j, lo, hi, up) {
     const [A, B] = up ? [lo, hi] : [hi, lo];
-    // standing at either end he is on the surface; crouched to go or stretched to land, he
-    // may reach out over its edge, into the air, but into nothing solid
-    if (!fit(A, j.from[0], j.from[1], j.h0, "idle") || !fit(B, j.to[0], j.to[1], j.h1, "idle")) return false;
+    // standing at either end he is on the surface, and on the lower one he walks to it or off
+    // it, so there he fits walking; crouched to go or stretched to land, he may reach out over
+    // its edge, into the air, but into nothing solid
+    if (!fit(A, j.from[0], j.from[1], j.h0, up ? "walk" : "idle") || !fit(B, j.to[0], j.to[1], j.h1, up ? "idle" : "walk")) return false;
     if (!fits(j.from[0], j.from[1], A.z, j.h0, "jump-up") || !fits(j.to[0], j.to[1], B.z, j.h1, "jump-land")) return false;
     // in between, clear air, sampled, but the edges of the two surfaces, which he clears
     for (let f = 0.05; f < 0.96; f += 0.05) {
