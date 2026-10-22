@@ -84,6 +84,7 @@ room, somewhere he fits in it, found anew on each play:
 - `sit` on the desk;
 - `sleep` on the cushion under the window or on the desk, whichever he likes;
 - `jump`, the jump up onto the cushion;
+- `shelf`, from the desk up onto the shelf, between the plant and the radio;
 - `walk`, from one place on the desk to another and back, round whatever is in the way;
 - `wander`, anywhere, the cushion too, sitting or sleeping where it gets to.
 
@@ -91,11 +92,11 @@ room, somewhere he fits in it, found anew on each play:
 tries another build. The page loads three.js r186 from jsDelivr and is a tool for checking
 clips, not part of the site.
 
-Where he can go is worked out by `willy-paths.js` from what the room says (`ROOM.surfaces`,
-`ROOM.jumps`, `ROOM.clear`, `ROOM.ground`) and the room each clip takes, measured on the model by
-`willy.js`. He walks round tall things and over low ones (the notebooks), turning as he steps;
-he turns on the spot only where he has room to. A route is a promise: the search takes a few ms
-of each frame, so the page never waits on it, and it heads for how far each point is from the
-end round whatever is in the way, not for the straight line to it. `node
-checks/willy-paths.test.mjs` checks the planner on a made-up room, and how soon it finds a walk
-across it.
+Where he can go (the desk, the cushion, the shelf) is worked out by `willy-paths.js` from what
+the room says (`ROOM.surfaces`, `ROOM.jumps`, `ROOM.clear`, `ROOM.ground`) and the room each clip
+takes, measured on the model by `willy.js`. He walks round tall things and over low ones (the
+notebooks), turning as he steps; he turns on the spot only where he has room to. A route is a
+promise: the search takes a few ms of each frame, so the page never waits on it. It heads
+straight for the end, and when that takes long, it is led round whatever is in the way by how
+far the end is from each point. `node checks/willy-paths.test.mjs` checks the planner on a
+made-up room, and how soon it finds a walk across it.

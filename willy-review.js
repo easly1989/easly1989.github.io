@@ -122,6 +122,16 @@ const SHOW = {
   "jump-air": jumpShow((j) => [{ ...j[1], dur: AIR + 0.3, at: (t) => j[1].at(Math.min(t, AIR)) }]),
   "jump-land": jumpShow((j) => [{ ...j[2], dur: dur("jump-land") + 0.8, at: (t) => j[2].at(Math.min(t, dur("jump-land"))) }]),
   jump: jumpShow((j) => [...j, { dur: 1, at: () => j[2].at(dur("jump-land")) }]),
+  // from somewhere on the desk up onto the shelf, where he looks at the plant a while
+  shelf: async () => {
+    const hop = P.hops("desk", "shelf")[0];
+    for (let n = 0; hop && n < 30; n++) {
+      const p = spot("desk", "sit");
+      const r = p && (await go({ surface: "desk", ...xyh(p) }, { surface: "shelf", x: hop.to[0], y: hop.to[1], heading: hop.h1 }));
+      if (r) return [...legs(r), hold("idle", [hop.to[0], hop.to[1], hop.h1], "shelf", 2, true)];
+    }
+    return null;
+  },
   // trips from place to place, each ending in a sit on the desk or a sleep on the perch, the
   // last one back where the first began, so the loop closes
   wander: async () => {
