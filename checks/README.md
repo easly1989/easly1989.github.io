@@ -27,7 +27,7 @@ python checks/dark.py
   as before; `?room` is remembered for the session and `?room=0` turns it off; nothing on the
   desk moves when the fonts arrive after the first frame. Headless.
 - `fps.py` — the room keeps pace with a 60 Hz display while Willy walks, in both schemes, with
-  its light on and off, and with the radio playing; he rests between walks, so a sample is taken
+  its light on and off, with the radio playing and with the computer on; he rests between walks, so a sample is taken
   again until he has walked through enough of it. It draws without vsync, so it measures what a
   frame costs. It opens a visible window, since a hidden one throttles its frames: leave it in
   front until it closes; a few minutes. The white square crossing the desk in that window is the check's own, there

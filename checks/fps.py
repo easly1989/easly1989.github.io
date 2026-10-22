@@ -53,7 +53,8 @@ base = serve()
 b = Browser(1940, 1100, headless=False, flags=["--disable-gpu-vsync", "--disable-frame-rate-limit", "--autoplay-policy=no-user-gesture-required"])
 try:
     for w, h in SIZES:
-        for scheme, light, radio in (("light", "on", False), ("dark", "on", False), ("dark", "off", False), ("light", "on", True), ("dark", "off", True)):
+        # (the computer on: its screen's light flickers, over the whole window, in the dark)
+        for scheme, light, radio, pc in (("light", "on", False, False), ("dark", "on", False, False), ("dark", "off", False, False), ("light", "on", True, False), ("dark", "off", True, False), ("dark", "off", False, True)):
             b.size(w, h)
             b.media(prefers_color_scheme=scheme)
             b.nav(base + "/index.html?room", 1)
@@ -65,6 +66,8 @@ try:
                 continue
             if radio:
                 b.js("document.querySelector('.radio-face .power').click()")
+            if pc:
+                b.js("document.querySelector('.pc .power').click()")
             b.js(MOVER)
             time.sleep(1)
             for _ in range(TRIES):
@@ -74,7 +77,7 @@ try:
                 if s["walked"] >= WALKED:
                     break
             ok = s["p50"] <= FRAME_MS and s["slow"] < 5 and s["walked"] >= WALKED
-            what = f"{w} x {h} {scheme}, light {light}{', radio on' if radio else ''}: {1000 / s['p50']:.0f} fps, {s['slow']}% of {s['frames']} frames over 25 ms, Willy walking in {s['walked']}%"
+            what = f"{w} x {h} {scheme}, light {light}{', radio on' if radio else ''}{', computer on' if pc else ''}: {1000 / s['p50']:.0f} fps, {s['slow']}% of {s['frames']} frames over 25 ms, Willy walking in {s['walked']}%"
             print(("ok    " if ok else "FAIL  ") + what)
             if not ok:
                 failures.append(what)
