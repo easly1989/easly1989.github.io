@@ -1,6 +1,7 @@
 """The room's frame rate: the still room, with one thing moving across it so that every frame is
 drawn again, keeps pace with a 60 Hz display, in both schemes, with the room's light on and
-off. Needs a window that is actually
+off, and with the radio playing, its projector throwing a wave that moves on every frame. Needs a
+window that is actually
 painting, so it opens one: a headless or hidden Chrome throttles its frames and measures
 nothing."""
 import sys
@@ -32,26 +33,30 @@ STATS = """(() => {
 
 failures = []
 base = serve()
-b = Browser(1940, 1100, headless=False)
+# Frames are drawn as fast as they can be, not to the display's beat, so a frame's interval
+# is what it costs: on a 90 Hz display a 12 ms frame misses a beat and reads as 45 fps
+b = Browser(1940, 1100, headless=False, flags=["--disable-gpu-vsync", "--disable-frame-rate-limit", "--autoplay-policy=no-user-gesture-required"])
 try:
     for w, h in SIZES:
-        for scheme, light in (("light", "on"), ("dark", "on"), ("dark", "off")):
+        for scheme, light, radio in (("light", "on", False), ("dark", "on", False), ("dark", "off", False), ("light", "on", True), ("dark", "off", True)):
             b.size(w, h)
             b.media(prefers_color_scheme=scheme)
             b.nav(base + "/index.html?room", 1)
-            b.js(f"sessionStorage.setItem('room-light', '{light}')")
+            b.js(f"sessionStorage.setItem('room-light', '{light}'); sessionStorage.removeItem('radio'); sessionStorage.removeItem('radio-projector')")
             b.nav(base + "/index.html", SETTLE)
             if not b.js("document.documentElement.classList.contains('iso')"):
                 failures.append(f"{w} x {h} {scheme}, light {light}: the room shows")
                 print("FAIL  " + failures[-1])
                 continue
+            if radio:
+                b.js("document.querySelector('.radio-face .power').click()")
             b.js(MOVER)
             time.sleep(1)
             b.js(REC)
             time.sleep(SAMPLE)
             s = b.js(STATS)
             ok = s["p50"] <= FRAME_MS and s["slow"] < 5
-            what = f"{w} x {h} {scheme}, light {light}: {1000 / s['p50']:.0f} fps, {s['slow']}% of {s['frames']} frames over 25 ms"
+            what = f"{w} x {h} {scheme}, light {light}{', radio on' if radio else ''}: {1000 / s['p50']:.0f} fps, {s['slow']}% of {s['frames']} frames over 25 ms"
             print(("ok    " if ok else "FAIL  ") + what)
             if not ok:
                 failures.append(what)

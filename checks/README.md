@@ -15,6 +15,7 @@ python checks/fps.py
 python checks/contrast.py
 python checks/moves.py
 python checks/photos.py
+python checks/radio.py
 ```
 
 `contrast.py` also needs `pip install pillow numpy`.
@@ -25,7 +26,7 @@ python checks/photos.py
   as before; `?room` is remembered for the session and `?room=0` turns it off; nothing on the
   desk moves when the fonts arrive after the first frame. Headless.
 - `fps.py` — the room keeps pace with a 60 Hz display in both schemes, with its light on and
-  off. It opens a visible window, since a hidden one throttles its frames: leave it in front
+  off, and with the radio playing. It draws without vsync, so it measures what a frame costs. It opens a visible window, since a hidden one throttles its frames: leave it in front
   until it closes. The white square crossing the desk in that window is the check's own, there
   so every frame is drawn again; the site has no such thing.
 - `contrast.py` — with the room's light on, every text the reader can see clears 4.5:1 against
@@ -47,6 +48,15 @@ python checks/photos.py
   way shows the visit's last photo; a pinned photo is a labelled link with a focus ring; and
   with all seven out, each is inside the window and clear of the name, the poster's words and
   the window at every size. A visible window, like `moves.py`.
+
+- `radio.py` — the radio is off at first with nothing fetched; outside a visit to the room the
+  pages carry no radio, and in one every page's bar carries it, off; switched on by its knob in
+  the room it plays the tuned station at 0.4 and its projector shows the track on the wall; the
+  next station is fetched only once tuned in; on the next page it carries on where it would be
+  by now; in the console it is quiet and back out it carries on from where it stopped; the radio
+  in a page's bar stops it, starts it and changes station; About credits every track; every
+  station's words on the wall are inside the window at every size; clicking the projector caps
+  it for the visit. A visible window with autoplay allowed.
 
 `cdp.py` is the driver (Chrome comes from `CHROME`, or the usual Windows path), and
 `serve.py` the server: no caching, byte ranges, nothing logged. `python checks/serve.py`
