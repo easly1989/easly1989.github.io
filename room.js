@@ -439,6 +439,8 @@
   function screenBox(e) {
     var r = { l: 1e9, t: 1e9, r: -1e9, b: -1e9 };
     [e].concat([].slice.call(e.querySelectorAll("*"), 0, 600)).forEach(function (n) {
+      // the mug's steam hides nothing, and it rises once the room is up
+      if (n.closest(".steam")) return;
       [].forEach.call(n.getClientRects(), function (c) {
         r.l = Math.min(r.l, c.left);
         r.t = Math.min(r.t, c.top);
@@ -464,8 +466,9 @@
         var sb = screenBox(e);
         var cx = (sb.l + sb.r) / 2,
           cy = (sb.t + sb.b) / 2;
+        // with some room to spare, so that nothing sits half behind a rim either
         var behind = tall.some(function (t) {
-          return cx > t.l && cx < t.r && cy > t.t && cy < t.b;
+          return cx > t.l - 10 && cx < t.r + 10 && cy > t.t - 10 && cy < t.b + 10;
         });
         if (!behind) break;
       }
