@@ -597,11 +597,11 @@
 
   // ---- the shelf on the right wall, with the plant (and room for the radio) ---------
   var SHELF = { y: 520, d: 700, z: 170, w: 112 }; // runs on past the edge of the frame
-  box(room, { x: RIGHT - SHELF.w, y: SHELF.y, w: SHELF.w, d: SHELF.d, z: SHELF.z - 18, h: 18, color: "var(--sill)" });
+  box(room, { x: RIGHT - SHELF.w, y: SHELF.y, w: SHELF.w, d: SHELF.d, z: SHELF.z - 18, h: 18, color: "var(--sill)", cls: "wall-shelf" });
   [SHELF.y + 40, SHELF.y + 330, SHELF.y + SHELF.d - 60].forEach(function (y) {
-    box(room, { x: RIGHT - 60, y: y, w: 60, d: 14, z: SHELF.z - 78, h: 60, color: "var(--skirting)" });
+    box(room, { x: RIGHT - 60, y: y, w: 60, d: 14, z: SHELF.z - 78, h: 60, color: "var(--skirting)", cls: "shelf-bracket" });
   });
-  var pot = el("span", "rbox plant", room, "left:" + (RIGHT - 80) + "px;top:" + (SHELF.y + 24) + "px;width:56px;height:56px;transform:translateZ(" + SHELF.z + "px)");
+  var pot = el("span", "rbox plant", room, "left:" + (RIGHT - 80) + "px;top:" + (SHELF.y + 10) + "px;width:56px;height:56px;transform:translateZ(" + SHELF.z + "px)");
   box(pot, { x: 0, y: 0, w: 56, d: 56, z: 0, h: 58, color: "var(--pot)", r: 8, topCls: "pot-top" });
   [45, -45].forEach(function (deg) {
     var leaves = el("span", "leaves", pot, "transform:translateZ(58px) rotateZ(" + deg + "deg) rotateX(-90deg)");
@@ -609,10 +609,11 @@
   });
 
   // ---- the radio at the shelf's far end, partly out of the frame -----------------------
-  // Room between it and the plant for the cat. It plays radio.js's stations, which carry on
-  // from page to page; here it is its knobs, its dial and its projector. Between stations, the
-  // hiss. Near enough the frame's edge that what it projects shows whole at every size.
-  var RAD = { x: RIGHT - 96, y: SHELF.y + SHELF.d - 440, w: 84, d: 210, z: SHELF.z, h: 120 };
+  // Room between it and the plant's leaves for the cat to land in: about 400 px, he takes 370
+  // landing. It plays radio.js's stations, which carry on from page to page; here it is its
+  // knobs, its dial and its projector. Between stations, the hiss. Near enough the frame's
+  // edge that what it projects shows whole at every size.
+  var RAD = { x: RIGHT - 96, y: SHELF.y + SHELF.d - 220, w: 84, d: 210, z: SHELF.z, h: 120 };
   var radio = box(room, { x: RAD.x, y: RAD.y, w: RAD.w, d: RAD.d, z: RAD.z, h: RAD.h, color: "var(--radio)", west: "var(--radio)", r: 12, cls: "radio" });
   radio.querySelector("i.w").innerHTML =
     '<span class="radio-face"><span class="grille" aria-hidden="true"></span><span class="dial" aria-hidden="true"><span class="needle"></span></span>' +
@@ -635,8 +636,15 @@
   // its lens in the face that slopes towards the wall. It throws the track and its author up
   // onto the wall behind, centred over its lens, over a wave that moves with the music, along
   // a beam of light. Faint by day, bright at night; clicking it caps the lens, for the visit.
-  var PJ = { x: RAD.x + 16, y: RAD.y + 10, w: 52, d: 60, hi: 40, lo: 18 };
-  var proj = el("span", "projector", room, "left:" + PJ.x + "px;top:" + PJ.y + "px;width:" + PJ.w + "px;height:" + PJ.d + "px;transform:translateZ(" + (RAD.z + RAD.h) + "px)");
+  // It is turned towards the back wall (turn, degrees) on a toothed wheel, as if it could be
+  // aimed (it cannot), and throws the words further back (shift, px), so that they show whole
+  // by the frame's edge.
+  var PJ = { x: RAD.x + 16, y: RAD.y + 10, w: 52, d: 60, hi: 32, lo: 14, turn: 45, shift: 100, wheel: 8, r: 42 };
+  var wheel = el("span", "pj-wheel", room, "left:" + (PJ.x + PJ.w / 2 - PJ.r) + "px;top:" + (PJ.y + PJ.d / 2 - PJ.r) + "px;width:" + 2 * PJ.r + "px;height:" + 2 * PJ.r + "px;transform:translateZ(" + (RAD.z + RAD.h + PJ.wheel) + "px)");
+  wheel.setAttribute("aria-hidden", "true");
+  // its side, in a few rings under its top, as the knobs' are
+  for (var ws = 1; ws <= 5; ws++) el("span", "pj-wheel-side", wheel, "transform:translateZ(" + -ws * 1.6 + "px);filter:brightness(" + (0.8 - ws * 0.07) + ")");
+  var proj = el("span", "projector", room, "left:" + PJ.x + "px;top:" + PJ.y + "px;width:" + PJ.w + "px;height:" + PJ.d + "px;transform:translateZ(" + (RAD.z + RAD.h + PJ.wheel) + "px) rotateZ(" + -PJ.turn + "deg)");
   // a face w by h whose x runs along u and y along v, from o (unit vectors, in the case's frame)
   function pjFace(cls, w, h, u, v, o, css) {
     var n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
@@ -659,16 +667,17 @@
   projBtn.type = "button";
   projBtn.setAttribute("aria-label", "Projector");
   // the lens: where the beam starts, and what the words are centred over
-  var LAMP = { x: PJ.x + PJ.w / 2, y: PJ.y + PJ.d / 2, z: RAD.z + RAD.h + (PJ.hi + PJ.lo) / 2 };
+  var LAMP = { x: PJ.x + PJ.w / 2, y: PJ.y + PJ.d / 2, z: RAD.z + RAD.h + PJ.wheel + (PJ.hi + PJ.lo) / 2 };
   var PROJ = { w: 260, h: 140, z: LAMP.z + 230 };
-  PROJ.along = LAMP.y - PROJ.w / 2;
+  PROJ.along = LAMP.y - PROJ.w / 2 - PJ.shift;
   var cast = el("div", "projection", onWall("right", PROJ.along, PROJ.z, "projected"), "width:" + PROJ.w + "px;height:" + PROJ.h + "px");
   // the beam, in the upright plane through the lamp: from the lamp out to the words' edges
-  var beamH = PROJ.z - LAMP.z;
-  // (its shape cut out inside, blurred outside, so its edges are soft)
-  var ray = el("span", "proj-beam", room, "left:" + LAMP.x + "px;top:" + PROJ.along + "px;width:" + PROJ.w + "px;height:" + beamH + "px;transform:translateZ(" + PROJ.z + "px) rotateZ(90deg) rotateX(-90deg)");
+  var beamH = PROJ.z - LAMP.z,
+    apex = PROJ.w / 2 + PJ.shift;
+  // (its shape cut out, and blurred round it, so its edges are soft)
+  var ray = el("span", "proj-beam", room, "left:" + LAMP.x + "px;top:" + PROJ.along + "px;width:" + (PROJ.w + PJ.shift) + "px;height:" + beamH + "px;transform:translateZ(" + PROJ.z + "px) rotateZ(90deg) rotateX(-90deg)");
   ray.setAttribute("aria-hidden", "true");
-  el("span", "proj-beam-in", ray, "clip-path:polygon(" + (PROJ.w / 2 - 6) + "px " + beamH + "px, " + (PROJ.w / 2 + 6) + "px " + beamH + "px, " + PROJ.w + "px " + PROJ.h + "px, " + PROJ.w + "px 0, 0 0, 0 " + PROJ.h + "px)");
+  el("span", "proj-beam-shape", el("span", "proj-beam-in", ray), "clip-path:polygon(" + (apex - 6) + "px " + beamH + "px, " + (apex + 6) + "px " + beamH + "px, " + PROJ.w + "px " + PROJ.h + "px, " + PROJ.w + "px 0, 0 0, 0 " + PROJ.h + "px)");
   cast.setAttribute("aria-hidden", "true");
   cast.innerHTML = '<b></b><small></small><canvas class="wave" width="220" height="44"></canvas>';
   var waveC = cast.querySelector("canvas"),
@@ -1149,17 +1158,25 @@
     else settle();
   });
   // ---- what Willy stands on, and what he keeps out of ---------------------------------
-  // The desk (the mat on it is 4 px proud, too little to matter) and the fleece on the perch,
-  // in room px; the jumps between them, landing along the perch, since across it he would not
-  // fit (where he takes off from, Willy works out); and everything solid, measured once the
-  // loose things have their places.
+  // The desk (the mat on it is 4 px proud, too little to matter), the fleece on the perch and
+  // the shelf, in room px; the jumps between them, landing along the perch and the shelf, since
+  // across them he would not fit (where he takes off from, Willy works out); and everything
+  // solid, measured once the loose things have their places.
   var SURFACES = [
     { name: "desk", z: 0, x0: DESK.x, y0: DESK.y, x1: DESK.x + DESK.w, y1: DESK.y + DESK.d },
     { name: "perch", z: PERCH.z + 26, x0: PERCH.x, y0: BACK, x1: PERCH.x + PERCH.w, y1: BACK + PERCH.d, of: ".perch, .perch-fleece" },
+    { name: "shelf", z: SHELF.z, x0: RIGHT - SHELF.w, y0: SHELF.y, x1: RIGHT, y1: SHELF.y + SHELF.d, of: ".wall-shelf, .shelf-bracket" },
   ];
-  var JUMPS = [180, 0].map(function (h) {
-    return { a: "desk", b: "perch", to: [PERCH.x + PERCH.w / 2, BACK + PERCH.d / 2], heading: h };
-  });
+  var JUMPS = [180, 0]
+    .map(function (h) {
+      return { a: "desk", b: "perch", to: [PERCH.x + PERCH.w / 2, BACK + PERCH.d / 2], heading: h };
+    })
+    .concat(
+      // onto the shelf between the plant and the radio, along it, either way
+      [90, 270].map(function (h) {
+        return { a: "desk", b: "shelf", to: [RIGHT - SHELF.w / 2, (SHELF.y + 66 + RAD.y) / 2], heading: h };
+      }),
+    );
   // what Willy walks over rather than round: anything this low on the desk, a book, an
   // envelope, a card, as a cat does; he stands on its top
   var LOW = 50;
@@ -1170,7 +1187,7 @@
       var all = obstacles()
         // not the perch's chains: thin, he brushes past them, and as boxes they would fill the
         // air over the whole perch; nor the loose things, 12 px at most, which he steps over
-        .concat([].slice.call(stage.querySelectorAll(".sill, .perch, .perch-fleece, .plant, .radio, .projector")))
+        .concat([].slice.call(stage.querySelectorAll(".sill, .perch, .perch-fleece, .wall-shelf, .shelf-bracket, .plant, .radio, .projector")))
         .map(function (e) {
           var of = SURFACES.filter(function (s) {
             return s.of && e.matches(s.of);
