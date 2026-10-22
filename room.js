@@ -548,7 +548,7 @@
   win.setAttribute("aria-hidden", "true");
   win.style.cssText = "width:" + WIN.w + "px;height:" + WIN.h + "px";
   win.innerHTML = '<span class="sky"></span>' + skyline(WIN.w, WIN.h) + '<span class="pane"></span><span class="mullion v"></span><span class="mullion h"></span>';
-  box(room, { x: WIN.along - 30, y: BACK, w: WIN.w + 60, d: 78, z: WIN.top - WIN.h - 20, h: 20, color: "var(--sill)" });
+  box(room, { x: WIN.along - 30, y: BACK, w: WIN.w + 60, d: 78, z: WIN.top - WIN.h - 20, h: 20, color: "var(--sill)", cls: "sill" });
   // its light on the desk, crossed by the mullions: the sun by day, the moon by night, from
   // high up (about 50 degrees), so the patch starts well out from the wall, where the ray
   // through the window's bottom edge lands, and runs out to the ray through its top
@@ -1142,13 +1142,68 @@
   // again once the fonts are in, since words change the sizes: a small correction, not a new layout
   (document.fonts ? document.fonts.ready : Promise.resolve()).then(function () {
     spread(true);
+    solids = null;
     frame();
     // and once every script after it has run, so that each has had its chance to hold it
     if (document.readyState === "loading") addEventListener("DOMContentLoaded", settle);
     else settle();
   });
+  // ---- what Willy stands on, and what he keeps out of ---------------------------------
+  // The desk (the mat on it is 4 px proud, too little to matter) and the fleece on the perch,
+  // in room px; the jumps between them, landing along the perch, since across it he would not
+  // fit (where he takes off from, Willy works out); and everything solid, measured once the
+  // loose things have their places.
+  var SURFACES = [
+    { name: "desk", z: 0, x0: DESK.x, y0: DESK.y, x1: DESK.x + DESK.w, y1: DESK.y + DESK.d },
+    { name: "perch", z: PERCH.z + 26, x0: PERCH.x, y0: BACK, x1: PERCH.x + PERCH.w, y1: BACK + PERCH.d, of: ".perch, .perch-fleece" },
+  ];
+  var JUMPS = [180, 0].map(function (h) {
+    return { a: "desk", b: "perch", to: [PERCH.x + PERCH.w / 2, BACK + PERCH.d / 2], heading: h };
+  });
+  // what Willy walks over rather than round: anything this low on the desk, a book, an
+  // envelope, a card, as a cat does; he stands on its top
+  var LOW = 50;
+  var solids = null,
+    lows = null;
+  function solid() {
+    if (!solids) {
+      var all = obstacles()
+        // not the perch's chains: thin, he brushes past them, and as boxes they would fill the
+        // air over the whole perch; nor the loose things, 12 px at most, which he steps over
+        .concat([].slice.call(stage.querySelectorAll(".sill, .perch, .perch-fleece, .plant, .radio, .projector")))
+        .map(function (e) {
+          var of = SURFACES.filter(function (s) {
+            return s.of && e.matches(s.of);
+          })[0];
+          return { b: bounds(e), name: named(e), of: of && of.name };
+        });
+      lows = all.filter(function (o) {
+        return !o.of && Math.abs(o.b.z0) < 2 && o.b.z1 <= LOW; // standing on the desk, not under it
+      });
+      solids = all.filter(function (o) {
+        return lows.indexOf(o) < 0;
+      });
+    }
+    return solids;
+  }
+  // how high the ground is at x, y on the surface at z: the top of a low thing there, if any
+  function ground(x, y, z) {
+    solid();
+    return lows.reduce(function (h, o) {
+      var b = o.b;
+      return z === 0 && x >= b.x0 && x <= b.x1 && y >= b.y0 && y <= b.y1 ? Math.max(h, b.z1) : h;
+    }, z);
+  }
+  // the solids a shape goes into, but those that make the surfaces named in past
+  function hit(shape, past) {
+    return solid().filter(function (o) {
+      return !(past && past.indexOf(o.of) >= 0) && overlap(shape, o.b);
+    });
+  }
+
   // what the room's other modules use of it: morph.js turns things to face the reader, and
-  // takes a photo out of its place or names the one that has just landed in it
+  // takes a photo out of its place or names the one that has just landed in it; Willy walks
+  // its surfaces and keeps out of its solids
   window.ROOM = {
     stage: stage,
     localMatrix: localMatrix,
@@ -1167,6 +1222,26 @@
     // keeps the first load's dark until p settles, or the dark's own end: for Willy
     holdLight: function (p) {
       holds.push(p);
+    },
+    surfaces: SURFACES,
+    jumps: JUMPS,
+    ground: ground,
+    // what is low enough to walk over, and how high, by name
+    lows: function () {
+      solid();
+      return lows.map(function (o) {
+        return [o.name, Math.round(o.b.z1)];
+      });
+    },
+    // whether a shape, in bounds()'s form, goes into nothing solid, but what makes the
+    // surfaces named in past (for a jump, which clears their edges); or what it goes into
+    clear: function (shape, past) {
+      return !hit(shape, past).length;
+    },
+    into: function (shape, past) {
+      return hit(shape, past).map(function (o) {
+        return o.name;
+      });
     },
   };
 })();
