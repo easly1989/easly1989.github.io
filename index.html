@@ -68,14 +68,14 @@
             '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tilt+Neon&family=Caveat:wght@500&family=Nanum+Pen+Script&family=Reenie+Beanie&display=swap" />' +
             '<link rel="stylesheet" href="room.css" />',
         );
-        // ?review: the page for checking Willy's clips (willy-review.js), with three.js r186
-        if (new URLSearchParams(location.search).has("review"))
-          document.write(
-            '<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.min.js",' +
-              '"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.core.js":"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.core.min.js",' +
-              '"three/addons/":"https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"}}</scr' + 'ipt>' +
-              '<script type="module" src="willy-review.js"></scr' + 'ipt>',
-          );
+        // Willy (willy-room.js), with three.js r186 from vendor/three, which he loads only once the
+        // room is up; or, with ?review, the page for checking his clips (willy-review.js)
+        document.write(
+          '<script type="importmap">{"imports":{"three":"./vendor/three/build/three.module.min.js",' +
+            '"./vendor/three/build/three.core.js":"./vendor/three/build/three.core.min.js",' +
+            '"three/addons/":"./vendor/three/examples/jsm/"}}</scr' + 'ipt>' +
+            '<script type="module" src="' + (new URLSearchParams(location.search).has("review") ? "willy-review.js" : "willy-room.js") + '"></scr' + 'ipt>',
+        );
       })();
     </script>
     <style>
