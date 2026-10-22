@@ -928,8 +928,12 @@
     setTimeout(glow);
   });
   var navTubes = [].slice.call(nav.querySelectorAll("a"));
+  var heard = []; // who hears of the lights changing (ROOM.onLights)
   // drawn again when something it follows changes: the light, the frame, the neon, the screen
   function glow() {
+    heard.forEach(function (f) {
+      f();
+    });
     var h = document.documentElement.classList;
     if (!h.contains("lights-off") && !h.contains("dawn")) return;
     function at(r, w, h, dy) {
@@ -1148,11 +1152,17 @@
       setTimeout(lightUp, Math.max(0, 1600 - (performance.now() - dawnAt)));
     });
   }
-  // again once the fonts are in, since words change the sizes: a small correction, not a new layout
+  // again once the fonts are in, since words change the sizes: a small correction, not a new
+  // layout; and from then on the room is where it stays, for Willy (ROOM.ready)
+  var readied;
+  var ready = new Promise(function (r) {
+    readied = r;
+  });
   (document.fonts ? document.fonts.ready : Promise.resolve()).then(function () {
     spread(true);
     solids = null;
     frame();
+    readied();
     // and once every script after it has run, so that each has had its chance to hold it
     if (document.readyState === "loading") addEventListener("DOMContentLoaded", settle);
     else settle();
@@ -1218,6 +1228,32 @@
     });
   }
 
+  // ---- the room's lights, for Willy -----------------------------------------------------
+  // Each source where it is, in room px, in the colour the dark's holes give it (glow()), how
+  // strong it is now (0 when off) and how far it reaches (0, everywhere): the room's own light,
+  // high above the back left; the window, from high outside it, the moon by night and with the
+  // light off, the sun by day; the computer's screen while it is on; the radio's lamp while it
+  // plays. Whoever listens hears of every change.
+  var spots = null;
+  function lights() {
+    if (!spots) {
+      var mid = function (e) {
+        var b = bounds(e);
+        return [(b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2, (b.z0 + b.z1) / 2];
+      };
+      spots = { screen: mid(pc.querySelector(".glass")), radio: mid(dial) };
+    }
+    var h = document.documentElement.classList,
+      dark = h.contains("lights-off") || h.contains("dawn"),
+      night = dark || matchMedia("(prefers-color-scheme: dark)").matches;
+    return [
+      { name: "room", at: [DESK.x + 200, BACK, 1600], color: "#fff1dc", power: dark ? 0 : 1, reach: 0 },
+      { name: "window", at: [WIN.along + WIN.w / 2, BACK - 1000, WIN.top - WIN.h / 2 + 1000 * HIGH], color: night ? "#b9c8fa" : "#ffe4a0", power: dark ? 1 : 0.35, reach: 0 },
+      { name: "screen", at: spots.screen, color: "#c8ffd2", power: pc.classList.contains("on") ? 1 : 0, reach: 700 },
+      { name: "radio", at: spots.radio, color: "#ffcd96", power: lamp.classList.contains("lit") ? 1 : 0, reach: 800 },
+    ];
+  }
+
   // what the room's other modules use of it: morph.js turns things to face the reader, and
   // takes a photo out of its place or names the one that has just landed in it; Willy walks
   // its surfaces and keeps out of its solids
@@ -1240,8 +1276,15 @@
     holdLight: function (p) {
       holds.push(p);
     },
+    // settles once the room is where it stays: its loose things placed, its words measured
+    ready: ready,
     surfaces: SURFACES,
     jumps: JUMPS,
+    lights: lights,
+    // f is called whenever a light changes
+    onLights: function (f) {
+      heard.push(f);
+    },
     ground: ground,
     // what is low enough to walk over, and how high, by name
     lows: function () {
