@@ -82,8 +82,8 @@ function legs(route) {
   return route.flatMap((l) => (l.walk ? walking(l.walk, l.surface, gone) : jumping(l.jump)));
 }
 // a route, with each walk told the surface it is on
-function go(from, to) {
-  const r = P.route(from, to);
+async function go(from, to) {
+  const r = await P.route(from, to);
   if (!r) return null;
   let s = from.surface;
   return r.map((l) => (l.jump ? ((s = l.jump.b), l) : { ...l, surface: s }));
@@ -100,14 +100,14 @@ const jumpShow = (f) => () => (firstHop() ? f(jumping(firstHop())) : null);
 
 const SHOW = {
   idle: () => placed("idle", "desk", 0, true),
-  walk: () => {
+  walk: async () => {
     for (let n = 0; n < 60; n++) {
       const a = spot("desk", "walk"),
         b = spot("desk", "walk");
       const A = { surface: "desk", x: a[0], y: a[1], heading: a[2] },
         B = { surface: "desk", x: b[0], y: b[1], heading: b[2] };
-      const there = go(A, B),
-        back = there && go(B, A);
+      const there = await go(A, B),
+        back = there && (await go(B, A));
       if (back && Math.hypot(a[0] - b[0], a[1] - b[1]) > 300) return legs([...there, ...back]);
     }
   },
@@ -124,7 +124,7 @@ const SHOW = {
   jump: jumpShow((j) => [...j, { dur: 1, at: () => j[2].at(dur("jump-land")) }]),
   // trips from place to place, each ending in a sit on the desk or a sleep on the perch, the
   // last one back where the first began, so the loop closes
-  wander: () => {
+  wander: async () => {
     // from somewhere the perch can be reached from, so that he gets around; on the perch he
     // goes where he has room to sleep, or stays where he lands
     const hop = firstHop();
@@ -134,7 +134,7 @@ const SHOW = {
     for (let n = 0; n < 30 && !start; n++) {
       const p = spot("desk", "sit");
       const s = p && { surface: "desk", ...xyh(p) };
-      if (s && go(s, top)) start = s;
+      if (s && (await go(s, top))) start = s;
     }
     if (!start) return null;
     const out = [];
@@ -149,7 +149,7 @@ const SHOW = {
         // on the desk he sits, or now and then sleeps; on the perch he sleeps if he has room
         const curl = w.fits(to.x, to.y, SURF[s].z, to.heading, "sleep", { on: SURF[s] });
         const clip = s === "desk" ? (curl && Math.random() < 0.3 ? "sleep" : "sit") : curl ? "sleep" : "idle";
-        const r = to && go(at, to);
+        const r = to && (await go(at, to));
         if (!r) continue;
         out.push(...legs(r), hold(clip, [to.x, to.y, to.heading], s, clip === "sit" ? 1.2 : 2.5, clip === "idle"));
         at = to;
@@ -166,9 +166,13 @@ function xyh(p) {
 let show = null;
 let t = 0;
 let held = false; // by at(), for a screenshot
-function play(name) {
+let asked = 0; // the last show asked for: one that is still finding its way when another is asked is dropped
+async function play(name) {
+  const ask = ++asked;
   held = false;
-  const moments = SHOW[name]();
+  status.textContent = "finding a way for " + name;
+  const moments = await SHOW[name]();
+  if (ask !== asked) return;
   status.textContent = "";
   if (!moments || !moments.length) return (status.textContent = "no place in the room for " + name);
   show = { name, moments, total: moments.reduce((n, m) => n + m.dur, 0) };

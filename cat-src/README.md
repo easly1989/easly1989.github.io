@@ -94,5 +94,8 @@ clips, not part of the site.
 Where he can go is worked out by `willy-paths.js` from what the room says (`ROOM.surfaces`,
 `ROOM.jumps`, `ROOM.clear`, `ROOM.ground`) and the room each clip takes, measured on the model by
 `willy.js`. He walks round tall things and over low ones (the notebooks), turning as he steps;
-he turns on the spot only where he has room to. `node checks/willy-paths.test.mjs` checks the
-planner on a made-up room.
+he turns on the spot only where he has room to. A route is a promise: the search takes a few ms
+of each frame, so the page never waits on it, and it heads for how far each point is from the
+end round whatever is in the way, not for the straight line to it. `node
+checks/willy-paths.test.mjs` checks the planner on a made-up room, and how soon it finds a walk
+across it.
