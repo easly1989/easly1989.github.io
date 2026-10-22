@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Willy's clips</title>
+    <!-- A tool for looking at Willy's clips on their own, outside the site: turn him round,
+         scrub through a clip, stand him on the desk or on the perch drawn to its size. Serve
+         the repo root (python -m http.server) and open /cat-src/viewer.html. -->
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"
+        }
+      }
+    </script>
+    <style>
+      :root {
+        --bg: #dfe3e6;
+        --ink: #1d2226;
+        --panel: #ffffff;
+        --line: #b9c0c6;
+        --on: #2f6f4f;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #22272b;
+          --ink: #e6eaed;
+          --panel: #2e3439;
+          --line: #4b545b;
+          --on: #6fc79a;
+        }
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: var(--bg);
+        color: var(--ink);
+        font: 15px/1.4 system-ui, sans-serif;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      .panel {
+        position: fixed;
+        left: 12px;
+        top: 12px;
+        max-width: min(560px, calc(100% - 24px));
+        padding: 12px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        display: grid;
+        gap: 10px;
+      }
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
+      }
+      button {
+        font: inherit;
+        padding: 6px 10px;
+        min-height: 36px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: transparent;
+        color: inherit;
+        cursor: pointer;
+      }
+      button[aria-pressed="true"] {
+        background: var(--on);
+        border-color: var(--on);
+        color: var(--panel);
+      }
+      button:focus-visible,
+      input:focus-visible {
+        outline: 2px solid var(--on);
+        outline-offset: 2px;
+      }
+      input[type="range"] {
+        flex: 1;
+        min-width: 160px;
+      }
+      output {
+        font-variant-numeric: tabular-nums;
+        min-width: 7em;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="panel" role="group" aria-label="Willy's clips">
+      <div class="row" id="clips" aria-label="Clip"></div>
+      <div class="row">
+        <button type="button" id="play" aria-pressed="true">Play</button>
+        <label for="t">Time</label>
+        <input id="t" type="range" min="0" max="1" step="0.001" value="0" />
+        <output id="at" for="t">0 / 0</output>
+      </div>
+      <div class="row" aria-label="View">
+        <button type="button" data-view="side">Side</button>
+        <button type="button" data-view="front">Front</button>
+        <button type="button" data-view="top">Top</button>
+        <button type="button" data-view="room">Room</button>
+        <button type="button" id="where" aria-pressed="false">On the perch</button>
+        <button type="button" id="bones" aria-pressed="false">Bones</button>
+        <button type="button" id="reload">Reload model</button>
+      </div>
+    </div>
+    <script type="module">
+      import * as THREE from "three";
+      import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+      import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+      import { fur, outline } from "../willy.js";
+
+      const SCALE = 55; // room px per model unit, as willy.js has it
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setPixelRatio(devicePixelRatio);
+      document.body.prepend(renderer.domElement);
+      const scene = new THREE.Scene();
+      const cam = new THREE.PerspectiveCamera(30, 1, 10, 20000);
+      const orbit = new OrbitControls(cam, renderer.domElement);
+      orbit.target.set(0, 90, 0);
+      scene.add(new THREE.HemisphereLight(0xffffff, 0x667788, 2));
+      const sun = new THREE.DirectionalLight(0xffffff, 1.6);
+      sun.position.set(-300, 600, 400);
+      scene.add(sun);
+
+      // the desk: a floor with a grid of one model unit; the perch: its board, 360 by 190 px,
+      // as he stands on it where he lands (facing along it, 5 px left of its middle), with
+      // the window's wall 95 px to his left
+      const desk = new THREE.Group();
+      const floor = new THREE.Mesh(new THREE.PlaneGeometry(1400, 1000), new THREE.MeshLambertMaterial({ color: 0x3f6b55 }));
+      floor.rotation.x = -Math.PI / 2;
+      desk.add(floor, new THREE.GridHelper(1430, 26, 0x2b4a3b, 0x2b4a3b));
+      desk.children[1].position.y = 0.5;
+      const perch = new THREE.Group();
+      const board = new THREE.Mesh(new THREE.BoxGeometry(360, 40, 190), new THREE.MeshLambertMaterial({ color: 0xc9c2b4 }));
+      board.position.set(5, -20, 0);
+      const wall = new THREE.Mesh(new THREE.BoxGeometry(600, 700, 10), new THREE.MeshLambertMaterial({ color: 0x8c8f92 }));
+      wall.position.set(5, 200, -100);
+      perch.add(board, wall);
+      perch.visible = false;
+      scene.add(desk, perch);
+
+      let model, mixer, actions, current, bones;
+      const loader = new GLTFLoader();
+      async function load() {
+        const gltf = await loader.loadAsync((new URLSearchParams(location.search).get("model") || "../assets/willy.glb") + "?" + Date.now()); // ?model= tries another build
+        if (model) scene.remove(model, bones);
+        model = gltf.scene;
+        model.scale.setScalar(SCALE);
+        model.traverse((o) => {
+          if (o.isMesh) o.material = new THREE.MeshLambertMaterial({ map: o.material.map });
+        });
+        // ?fur=<reach>&tail=<longer by>&shells=<n> tries his fur on it
+        const q = new URLSearchParams(location.search);
+        if (q.has("fur")) {
+          const skinned = [];
+          model.traverse((o) => o.isSkinnedMesh && skinned.push(o));
+          const o = { reach: +q.get("fur"), tail: +(q.get("tail") || 0), ...(q.has("shells") && { shells: +q.get("shells") }) };
+          fur(skinned, o);
+          outline(skinned, o);
+        }
+        scene.add(model);
+        bones = new THREE.SkeletonHelper(model);
+        bones.visible = document.getElementById("bones").getAttribute("aria-pressed") === "true";
+        scene.add(bones);
+        mixer = new THREE.AnimationMixer(model);
+        actions = Object.fromEntries(gltf.animations.map((c) => [c.name, mixer.clipAction(c)]));
+        const list = document.getElementById("clips");
+        list.replaceChildren(
+          ...Object.keys(actions).map((n) => {
+            const b = document.createElement("button");
+            b.type = "button";
+            b.textContent = n;
+            b.addEventListener("click", () => pick(n));
+            return b;
+          }),
+        );
+        const asked = new URLSearchParams(location.search).get("clip");
+        pick([current, asked, "sit"].find((n) => n in actions) || Object.keys(actions)[0]);
+      }
+      function pick(n) {
+        current = n;
+        for (const a of Object.values(actions)) a.stop();
+        const a = actions[n];
+        a.play();
+        a.paused = !playing;
+        t.max = a.getClip().duration;
+        for (const b of document.querySelectorAll("#clips button")) b.setAttribute("aria-pressed", String(b.textContent === n));
+      }
+
+      let playing = true;
+      const t = document.getElementById("t");
+      const out = document.getElementById("at");
+      document.getElementById("play").addEventListener("click", (e) => {
+        playing = !playing;
+        e.currentTarget.setAttribute("aria-pressed", String(playing));
+        e.currentTarget.textContent = playing ? "Play" : "Paused";
+        actions[current].paused = !playing;
+      });
+      t.addEventListener("input", () => {
+        playing = false;
+        const p = document.getElementById("play");
+        p.setAttribute("aria-pressed", "false");
+        p.textContent = "Paused";
+        actions[current].paused = true;
+        actions[current].time = +t.value;
+      });
+      const VIEWS = { side: [0, 90, 900], front: [900, 90, 0], top: [1, 900, 0], room: [-520, 600, 520] };
+      for (const b of document.querySelectorAll("[data-view]"))
+        b.addEventListener("click", () => {
+          cam.position.set(...VIEWS[b.dataset.view]);
+          orbit.target.set(0, 90, 0);
+          orbit.update();
+        });
+      document.getElementById("where").addEventListener("click", (e) => {
+        const on = e.currentTarget.getAttribute("aria-pressed") !== "true";
+        e.currentTarget.setAttribute("aria-pressed", String(on));
+        perch.visible = on;
+        desk.visible = !on;
+      });
+      document.getElementById("bones").addEventListener("click", (e) => {
+        const on = e.currentTarget.getAttribute("aria-pressed") !== "true";
+        e.currentTarget.setAttribute("aria-pressed", String(on));
+        bones.visible = on;
+      });
+      document.getElementById("reload").addEventListener("click", load);
+
+      cam.position.set(...VIEWS.room);
+      orbit.update();
+      await load();
+      const clock = new THREE.Clock();
+      renderer.setAnimationLoop(() => {
+        const w = innerWidth,
+          h = innerHeight;
+        if (renderer.domElement.width !== Math.floor(w * devicePixelRatio)) {
+          renderer.setSize(w, h, false);
+          cam.aspect = w / h;
+          cam.updateProjectionMatrix();
+        }
+        mixer.update(playing ? clock.getDelta() : (clock.getDelta(), 0));
+        const a = actions[current];
+        if (playing) t.value = a.time;
+        out.value = (+a.time).toFixed(2) + " / " + a.getClip().duration.toFixed(2) + " s";
+        renderer.render(scene, cam);
+      });
+      window.__viewer = { scene, pick, actions, cam, orbit, VIEWS, setTime: (s) => ((actions[current].paused = true), (actions[current].time = s), (playing = false), mixer.update(0)) };
+    </script>
+  </body>
+</html>
