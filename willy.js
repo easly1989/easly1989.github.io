@@ -299,7 +299,7 @@ function measure(model, skinned, mixer, clips) {
     // each moment holds the samples either side of it too, so nothing slips between two
     const moments = [];
     for (let i = 0; i <= MOMENTS; i++) moments.push(plain(at.slice(Math.max(0, 2 * i - 1), 2 * i + 2).reduce((u, b) => u.union(b), new THREE.Box3()), yaws[2 * i]));
-    out[name] = { ...plain(all), moments: ["walk", "trot", "run", "sneak", "idle"].includes(name) ? [plain(all)] : moments };
+    out[name] = { ...plain(all), moments: ["walk", "trot", "run", "sneak", "chase", "idle"].includes(name) ? [plain(all)] : moments };
   }
   // "turn": what any turn takes at any moment of it, the way he faces then
   const turns = Object.values(out).filter((c) => c.moments.some((m) => m.yaw));

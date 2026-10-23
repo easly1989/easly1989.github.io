@@ -46,7 +46,7 @@ CLIPS = {
     "Trot_F": "trot", "Run_F": "run", "Crouch_F": "sneak", "Pet": "pet", "Pet_sit": "pet-sit", "Pet_lie": "pet-lie",
     "Digging": "knead", "Drop_L_sit": "sit-paw-left", "Drop_R_sit": "sit-paw-right", "Land_stop": "land-stop",
 }
-GAITS = ("walk", "trot", "run", "sneak")  # clips that travel: the room paces their feet to the ground
+GAITS = ("walk", "trot", "run", "sneak", "chase")  # clips that travel: the room paces their feet to the ground
 # the jump comes whole; the room draws the arc, so it is cut where he leaves the ground and where
 # he meets it again (frames, at 30 a second)
 JUMP = {"jump-up": (1, 21), "jump-air": (21, 61), "jump-land": (61, 79)}
@@ -137,7 +137,8 @@ for name, a in kept.items():
 # clips made here: one of the model's, frame by frame, with some bones turned on top of its pose.
 # turns(t) gives, t seconds in, (bone, axis, degrees) for the same bones every time; the axis is
 # his own, carried along by his spine (x across him, y from his nose to his tail, z up), through
-# the bone, after its own pose
+# the bone, after its own pose; or "trunk", the line from his hips to his chest as the clip has
+# them, which lying down is not his spine's y (his hips lie turned)
 def chatter(t):
     """Sitting, his head up at the birds, his jaw going in bursts, the tip of his tail lashing."""
     burst = 0.3 < t < 1.3 or 1.7 < t < 2.3
@@ -163,7 +164,39 @@ def loaf(t):
     return out
 
 
-SCRIPTED = {"chatter": ("sit-idle", chatter), "knead-lie": ("lie-idle", knead_lie), "loaf": ("lie-idle", loaf)}
+def ease(x):
+    """0 to 1, slow at both ends."""
+    x = min(1, max(0, x))
+    return x * x * (3 - 2 * x)
+
+
+def roll_over(t):
+    """Lying, he rolls over onto his back, his paws in the air paddling, and back onto his belly.
+    Not quite all the way over: a cat on its back leans to one side, its head still half up."""
+    k = ease(min(t / 0.7, (2.7 - t) / 0.7))
+    over = 160 * k
+    pad = math.sin(2 * math.pi * 2.5 * t) * k
+    out = [("Spine", "trunk", over), ("Neck", "trunk", -0.35 * over)]
+    for side, sign in (("L", 1), ("R", -1)):
+        out += [("UpperArm." + side, "x", 20 * pad * sign), ("Thigh." + side, "x", -15 * pad * sign)]
+    return out
+
+
+def chase(t):
+    """Trotting round after his own tail: his body bent round to his left, his head and his tail
+    each turned towards the other."""
+    return [(b, "z", 14) for b in ("Spine.1", "Spine.2", "Spine.3")] + [("Neck", "z", 16), ("Head", "z", 12)] + [
+        ("tail" + n, "z", -14) for n in ("", ".1", ".2", ".3", ".4")]
+
+
+def peekaboo(t):
+    """Low, as if behind something, he leans out to his left to look, holds it, and pulls back."""
+    k = ease(min((t - 0.6) / 0.4, (2.3 - t) / 0.4))
+    return [("Spine.3", "z", 10 * k), ("Neck", "z", 25 * k), ("Head", "z", 12 * k), ("Head", "x", -8 * k)]
+
+
+SCRIPTED = {"chatter": ("sit-idle", chatter), "knead-lie": ("lie-idle", knead_lie), "loaf": ("lie-idle", loaf),
+            "roll-over": ("lie-idle", roll_over), "chase": ("trot", chase), "peekaboo": ("crouch", peekaboo)}
 AXES = {"x": Vector((1, 0, 0)), "y": Vector((0, 1, 0)), "z": Vector((0, 0, 1))}
 spine_rest = rig.data.bones["Spine"].matrix_local.to_3x3().normalized().inverted()
 for name, (base, turns) in SCRIPTED.items():
@@ -176,10 +209,9 @@ for name, (base, turns) in SCRIPTED.items():
     f0, f1 = (int(v) for v in src.frame_range)
     rows = {}
     for fr in range(f0, f1 + 1):
-        offs = {}
+        wanted = {}
         for bone, ax, deg in turns((fr - f0) / 30):
-            offs.setdefault(bone, []).append((ax, deg))
-        M = {}
+            wanted.setdefault(bone, []).append((ax, deg))
 
         def posed(b):
             """b's matrix in the armature's space at fr, its turns and its parents' put on."""
@@ -189,17 +221,24 @@ for name, (base, turns) in SCRIPTED.items():
                 q = Quaternion(v[1])
                 m = up @ ours[b.name] @ Matrix.LocRotScale(Vector(v[0]), q, Vector(v[2]))
                 if b.name in offs:
-                    body = M["Spine"].to_3x3().normalized() @ spine_rest
+                    # (the spine's own turns are about where it is before them)
+                    body = (m if b.name == "Spine" else M["Spine"]).to_3x3().normalized() @ spine_rest
                     for ax, deg in offs[b.name]:
-                        q = q @ Quaternion(m.to_3x3().normalized().inverted() @ body @ AXES[ax], math.radians(deg))
+                        axis = trunk if ax == "trunk" else body @ AXES[ax]
+                        q = q @ Quaternion(m.to_3x3().normalized().inverted() @ axis, math.radians(deg))
                         m = up @ ours[b.name] @ Matrix.LocRotScale(Vector(v[0]), q, Vector(v[2]))
                     rows.setdefault(b.name, []).append(q)
                 M[b.name] = m
             return M[b.name]
 
-        posed(rig.data.bones["Spine"])
-        for b in rig.data.bones:
-            posed(b)
+        # first as the clip has him, for the line of his trunk, then turned
+        for offs in ({}, wanted):
+            M = {}
+            posed(rig.data.bones["Spine"])
+            for b in rig.data.bones:
+                posed(b)
+            if not offs:
+                trunk = (M["Spine.3"].translation - M["Spine"].translation).normalized()
     a = src.copy()
     a.name = name
     fc = curves(a)
