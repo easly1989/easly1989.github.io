@@ -4,8 +4,9 @@
 // moments, a clip held somewhere, and him put at a moment of a show.
 import { arc, AIR } from "./willy-paths.js";
 
-const SPEED = 95; // px a second, walking
-const STRIDE = 189.6; // px of ground one walk cycle covers (cat-src/build.py prints it)
+// each gait: px a second, and px of ground one of its cycles covers (cat-src/build.py prints
+// those); a little under the clip's own pace, and the sneak slow, as stalking is
+const GAITS = { walk: [95, 189.6], trot: [250, 244.1], run: [600, 510.1], sneak: [110, 211.5], chase: [250, 244.1] };
 const norm = (d) => ((((d + 180) % 360) + 360) % 360) - 180;
 
 // w is Willy (willy.js), P his planner (willy-paths.js), surfaces the room's
@@ -42,9 +43,11 @@ export function moves(w, P, surfaces) {
       i = Math.min(m.length - 2, Math.floor(x));
     return Math.abs(m[i].yaw + (m[i + 1].yaw - m[i].yaw) * (x - i)) / Math.abs(m[m.length - 1].yaw || 1);
   }
-  // a walk's points as moments, the feet paced by the ground covered (and by turning)
-  function walking(pts, s, gone = { d: 0 }) {
-    const out = [];
+  // a walk's points as moments, in that gait, the feet paced by the ground covered (and by
+  // turning)
+  function walking(pts, s, gone = { d: 0 }, gait = "walk") {
+    const [SPEED, STRIDE] = GAITS[gait],
+      out = [];
     for (let i = 1; i < pts.length; i++) {
       const [a, b] = [pts[i - 1], pts[i]];
       const len = Math.hypot(b[0] - a[0], b[1] - a[1]),
@@ -58,7 +61,7 @@ export function moves(w, P, surfaces) {
       gone.d += dd;
       out.push({
         dur: len / SPEED,
-        at: (t, k = t / (len / SPEED)) => ({ x: a[0] + (b[0] - a[0]) * k, y: a[1] + (b[1] - a[1]) * k, z: SURF[s].z, h: a[2] + turn * k, clip: "walk", time: (((d0 + dd * k) / STRIDE) * dur("walk")) % dur("walk") }),
+        at: (t, k = t / (len / SPEED)) => ({ x: a[0] + (b[0] - a[0]) * k, y: a[1] + (b[1] - a[1]) * k, z: SURF[s].z, h: a[2] + turn * k, clip: gait, time: (((d0 + dd * k) / STRIDE) * dur(gait)) % dur(gait) }),
       });
     }
     return out;
@@ -72,10 +75,30 @@ export function moves(w, P, surfaces) {
       { dur: land, at: (t) => ({ x: j.to[0], y: j.to[1], z: j.to[2], h: j.h1, clip: "jump-land", time: t }) },
     ];
   }
-  // a route's legs as moments
-  function legs(route) {
+  // a pounce: low and watching a while, the tail sweeping, then a short low leap d px straight
+  // ahead (the jump starts as low as the crouch ends)
+  function pouncing([x, y, h], d, s, watch = 1.5) {
+    const z = SURF[s].z,
+      r = (h * Math.PI) / 180;
+    const j = { from: [x, y, z], to: [x + Math.cos(r) * d, y - Math.sin(r) * d, z], h0: h, h1: h };
+    return [hold("crouch", [x, y, h], s, watch, true), ...jumping(j)];
+  }
+  // chasing his tail: trotting round a tight circle to his left, r px across from where he
+  // stands, laps times, and back where he began, facing the way he was
+  function chasing([x, y, h], s, laps = 2, r = 45) {
+    const a = (h * Math.PI) / 180,
+      c = [x - Math.sin(a) * r, y - Math.cos(a) * r], // his left, in the room (whose y runs the other way)
+      n = 16 * laps;
+    const pts = [...Array(n + 1).keys()].map((i) => {
+      const t = a - Math.PI / 2 + (2 * Math.PI * i) / 16; // where on the circle, from its centre
+      return [c[0] + Math.cos(t) * r, c[1] - Math.sin(t) * r, h + (360 * i) / 16];
+    });
+    return walking(pts, s, { d: 0 }, "chase");
+  }
+  // a route's legs as moments, walking in that gait
+  function legs(route, gait = "walk") {
     const gone = { d: 0 };
-    return route.flatMap((l) => (l.walk ? walking(l.walk, l.surface, gone) : jumping(l.jump)));
+    return route.flatMap((l) => (l.walk ? walking(l.walk, l.surface, gone, gait) : jumping(l.jump)));
   }
   // a route from { surface, x, y, heading } to another, with each walk told the surface it is
   // on; or null
@@ -112,5 +135,5 @@ export function moves(w, P, surfaces) {
     a.time = Math.min(p.time, dur(p.clip));
   }
 
-  return { dur, hold, turning, walking, jumping, legs, go, now, pose };
+  return { dur, hold, turning, walking, jumping, pouncing, chasing, legs, go, now, pose };
 }
