@@ -143,7 +143,7 @@ export async function willy(room, stage, src = "assets/willy.glb") {
   // (his body only: neither its fur nor its outline casts a shadow of its own)
   for (const mesh of skinned) mesh.layers.enable(SHADE.layer);
   const blob = shadow(renderer);
-  scene.add(blob);
+  room.insertBefore(blob.canvas, cv);
   holder.rotation.order = "ZYX"; // tilted in his own frame, then turned to his heading
   const legs = LEGS.map((l) => l.map((n) => model.getObjectByName(THREE.PropertyBinding.sanitizeNodeName(n))));
   const legged = legs.every((l) => l.every(Boolean));
@@ -203,7 +203,7 @@ export async function willy(room, stage, src = "assets/willy.glb") {
   // (room.js, ground()) each paw stands on the ground under it: his shoulders and his hips rise
   // by part of the step between their two paws, his body tilts between them, and each leg bends
   // to put its paw where the clip has it, as high above its own ground. His shadow lies on the
-  // lowest of those grounds; in the air, on under.z, what is under him, his paws under.by above
+  // highest of those grounds, on a book rather than under it; in the air, on under.z, what is under him, his paws under.by above
   // it, and fades the higher they are. As the room's own shadows do (room.css, .shade), it falls
   // away from a light high behind on the left, further the taller he is and the higher in the air.
   const stand = () => {
@@ -241,7 +241,7 @@ export async function willy(room, stage, src = "assets/willy.glb") {
         reach(l, feet[i].end.clone().setZ(feet[i].end.z + steps[i] - lift));
       });
     }
-    const u = under || { z: z + (steps.length ? Math.min(...steps) : 0), by: 0 },
+    const u = under || { z: z + (steps.length ? Math.max(...steps) : 0), by: 0 },
       h = z + lift,
       b = BIAS / Math.sqrt(3);
     cv.style.transform = "translate3d(" + (x - b - W / 2) + "px," + (y + b - H / 2) + "px," + (h + ANCHOR_Z + b) + "px) rotateZ(45deg) rotateX(-54.7356deg)";
@@ -268,8 +268,10 @@ export async function willy(room, stage, src = "assets/willy.glb") {
       }
     }
     blob.fall(fall);
-    blob.position.z = u.z - h + 0.5;
-    blob.material.opacity = SHADOW * strength * Math.max(0, 1 - u.by / 300);
+    // (the surface it lies on: what he stands on, or a book on it)
+    const on = window.ROOM.surfaces.filter((s) => x >= s.x0 && x <= s.x1 && y >= s.y0 && y <= s.y1 && s.z <= u.z + 0.5).sort((a, b) => b.z - a.z)[0];
+    blob.on(x, y, u.z - h, u.z + 0.5, on);
+    blob.canvas.style.opacity = SHADOW * strength * Math.max(0, 1 - u.by / 300);
     shine();
   };
   // his many shaders (one a shell of fur) compiled in the background where the browser can,
@@ -596,7 +598,9 @@ function shape(b, x, y, z, heading, clear = CLEAR) {
 // fallen away from a light high behind on the left as the room's shadows do (room.css,
 // .shade), darker the nearer it is to the ground, so that it starts at his paws; then blurred,
 // as the room's are. Not a shadow map: the room's sources are too many and too soft for one to
-// mean anything. A plane at his feet, turned with nothing; cast() draws it anew.
+// mean anything. Drawn not in his canvas but in one of its own, lying on the ground (on()):
+// his canvas faces the reader, so below his feet it goes into whatever he stands on, and
+// whatever of his shadow falls towards the reader would be cut off there. cast() draws it anew.
 function shadow(renderer) {
   const { size, texels, high, fall, blur } = SHADE;
   const target = () => new THREE.WebGLRenderTarget(texels, texels, { depthBuffer: true });
@@ -635,18 +639,40 @@ void main() {
   const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), soft);
   quad.frustumCulled = false;
   const flat = new THREE.Camera();
-  const g = new THREE.PlaneGeometry(size, size),
-    uv = g.attributes.uv;
-  for (let i = 0; i < uv.count; i++) uv.setX(i, 1 - uv.getX(i));
-  const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: a.texture, transparent: true, depthWrite: false }));
-  m.renderOrder = -1;
-  m.fall = fallBy;
+  const cv = document.createElement("canvas");
+  cv.className = "willy-shadow";
+  cv.setAttribute("aria-hidden", "true");
+  Object.assign(cv, { width: texels, height: texels });
+  cv.style.cssText = "position:absolute;left:0;top:0;width:" + size + "px;height:" + size + "px;pointer-events:none;transition:none";
+  const pen = cv.getContext("2d");
+  const copy = new THREE.ShaderMaterial({
+    uniforms: { map: { value: null } },
+    vertexShader: soft.vertexShader,
+    fragmentShader: `uniform sampler2D map;
+varying vec2 vUv;
+void main() { gl_FragColor = texture2D(map, vUv); }`,
+    depthTest: false,
+    depthWrite: false,
+  });
+  let below = 0; // how far the ground is below him
+  const m = { canvas: cv, fall: fallBy };
+  // on the ground at z in the room, under him at x, y, below him, and only as far as the
+  // surface s goes, rather than out into the air past its edge: the eye looks up with his
+  // world's x mirrored, so the picture lies mirrored back (its rows already run the room's way)
+  m.on = (x, y, under, z, s) => {
+    below = under;
+    const x0 = x - size / 2,
+      y0 = y - size / 2,
+      cut = (n) => Math.max(0, n).toFixed(1) + "px";
+    cv.style.clipPath = s ? "inset(" + [s.y0 - y0, x0 + size - s.x1, y0 + size - s.y1, s.x0 - x0].map(cut).join(" ") + ")" : "";
+    cv.style.transform = "translate3d(" + x0 + "px," + y0 + "px," + z + "px) scaleX(-1)";
+  };
   // (the weights are a gaussian of 2 taps' width: a tap every half of each pass's px)
   const tap = size / texels;
   m.cast = (scene) => {
     const was = renderer.getRenderTarget(),
       over = scene.overrideMaterial;
-    eye.position.set(0, 0, m.position.z);
+    eye.position.set(0, 0, below + 0.5);
     eye.updateMatrixWorld();
     scene.overrideMaterial = dark;
     renderer.setRenderTarget(a);
@@ -661,6 +687,14 @@ void main() {
         renderer.setRenderTarget(to);
         renderer.render(quad, flat);
       }
+    // into his canvas a moment and copied out of it, on the GPU: read back, it stalls a frame
+    renderer.setRenderTarget(null);
+    quad.material = copy;
+    copy.uniforms.map.value = a.texture;
+    renderer.render(quad, flat);
+    quad.material = soft;
+    pen.clearRect(0, 0, texels, texels);
+    pen.drawImage(renderer.domElement, 0, 0, texels, texels);
     renderer.setRenderTarget(was);
   };
   return m;
