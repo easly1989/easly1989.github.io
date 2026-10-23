@@ -6,7 +6,7 @@ import { arc, AIR } from "./willy-paths.js";
 
 // each gait: px a second, and px of ground one of its cycles covers (cat-src/build.py prints
 // those); a little under the clip's own pace, and the sneak slow, as stalking is
-const GAITS = { walk: [95, 189.6], trot: [250, 244.1], run: [600, 510.1], sneak: [110, 211.5] };
+const GAITS = { walk: [95, 189.6], trot: [250, 244.1], run: [600, 510.1], sneak: [110, 211.5], chase: [250, 244.1] };
 const norm = (d) => ((((d + 180) % 360) + 360) % 360) - 180;
 
 // w is Willy (willy.js), P his planner (willy-paths.js), surfaces the room's
@@ -83,6 +83,18 @@ export function moves(w, P, surfaces) {
     const j = { from: [x, y, z], to: [x + Math.cos(r) * d, y - Math.sin(r) * d, z], h0: h, h1: h };
     return [hold("crouch", [x, y, h], s, watch, true), ...jumping(j)];
   }
+  // chasing his tail: trotting round a tight circle to his left, r px across from where he
+  // stands, laps times, and back where he began, facing the way he was
+  function chasing([x, y, h], s, laps = 2, r = 45) {
+    const a = (h * Math.PI) / 180,
+      c = [x - Math.sin(a) * r, y - Math.cos(a) * r], // his left, in the room (whose y runs the other way)
+      n = 16 * laps;
+    const pts = [...Array(n + 1).keys()].map((i) => {
+      const t = a - Math.PI / 2 + (2 * Math.PI * i) / 16; // where on the circle, from its centre
+      return [c[0] + Math.cos(t) * r, c[1] - Math.sin(t) * r, h + (360 * i) / 16];
+    });
+    return walking(pts, s, { d: 0 }, "chase");
+  }
   // a route's legs as moments, walking in that gait
   function legs(route, gait = "walk") {
     const gone = { d: 0 };
@@ -123,5 +135,5 @@ export function moves(w, P, surfaces) {
     a.time = Math.min(p.time, dur(p.clip));
   }
 
-  return { dur, hold, turning, walking, jumping, pouncing, legs, go, now, pose };
+  return { dur, hold, turning, walking, jumping, pouncing, chasing, legs, go, now, pose };
 }

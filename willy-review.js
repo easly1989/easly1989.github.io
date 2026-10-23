@@ -33,7 +33,17 @@ const SHOW = {
   run: () => gaitShow("run"),
   sneak: () => gaitShow("sneak"),
   sit: () => placed("sit", "desk", 1.5),
-  ...Object.fromEntries(["stretch", "yawn", "groom", "shake", "claws", "swat-left", "swat-right", "look-around", "look-down", "look-side", "crouch", "drink", "eat", "pet", "pet-sit", "pet-lie", "knead", "sit-paw-left", "sit-paw-right", "land-stop", "chatter", "knead-lie", "loaf"].map((c) => [c, () => placed(c, "desk", 0.6)])),
+  ...Object.fromEntries(["stretch", "yawn", "groom", "shake", "claws", "swat-left", "swat-right", "look-around", "look-down", "look-side", "crouch", "drink", "eat", "pet", "pet-sit", "pet-lie", "knead", "sit-paw-left", "sit-paw-right", "land-stop", "chatter", "knead-lie", "loaf", "roll-over", "peekaboo"].map((c) => [c, () => placed(c, "desk", 0.6)])),
+  // round after his tail, somewhere on the desk with room for the circle, and looking about after
+  chase: () => {
+    for (let n = 0; n < 60; n++) {
+      const p = spot("desk", "idle");
+      if (!p) return null;
+      const show = M.chasing(p, "desk");
+      if (show.every((m) => [0, 0.5].every((k) => { const q = m.at(m.dur * k); return w.fits(q.x, q.y, SURF.desk.z, q.h, "chase", { on: SURF.desk }); }))) return [...show, hold("idle", p, "desk", 1, true)];
+    }
+    return null;
+  },
   // on the perch, along it, or on the desk, whichever he likes this time
   sleep: () => {
     const [a, b] = Math.random() < 0.5 ? ["perch", "desk"] : ["desk", "perch"];

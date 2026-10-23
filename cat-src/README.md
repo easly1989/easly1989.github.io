@@ -28,7 +28,7 @@ python cat-src/unpack.py "<path to>/Fully Animated Cats v2.1.unitypackage"
 blender -b --python cat-src/build.py -- assets/willy.glb
 ```
 
-The build takes a minute or so. It prints how much ground a cycle of each gait covers (`STRIDE`: walk, trot, run, sneak) and how
+The build takes a minute or so. It prints how much ground a cycle of each gait covers (`STRIDE`: walk, trot, run, sneak, chase) and how
 high the jump's root is as it leaves the ground and meets it (`LIFT`): `willy-moves.js` and
 `willy.js` hold those two, so they change with his size. It stops without writing anything if a
 clip goes through the ground.
@@ -68,7 +68,12 @@ clip goes through the ground.
   - `pet`, `pet-sit` and `pet-lie`, pushing up into a hand;
   - `knead` (the model's digging), standing; `sit-paw-left` and `sit-paw-right`, a paw pushed
     down to the side, sitting; `land-stop`, landing from a running leap and stopping. The pounce
-    has no clip of its own: `willy-moves.js` makes it of `crouch` and the jump's three parts.
+    has no clip of its own: `willy-moves.js` makes it of `crouch` and the jump's three parts;
+  - made here (`SCRIPTED`), one of the model's clips with some bones turned on top of it:
+    `chatter` (sitting, at the birds, the jaw going), `knead-lie` (lying, the front paws pressing
+    in turn), `loaf` (lying, the front paws folded under), `roll-over` (onto his back, paws
+    paddling, and back), `peekaboo` (low, leaning out to look and back) and `chase` (trotting,
+    bent round after his tail, a gait: `willy-moves.js` runs it round a tight circle).
 - **Each file's rest.** Every animation file keys its clips against its own armature at rest,
   and not all of them rest as the model does: the Action file's spine is 80° off, the Rest
   file's thighs 14–19°. Each bone is put back where its file puts it in its parent's space,
@@ -125,15 +130,17 @@ Willy and the room is as it is. Under reduced motion he sleeps on the cushion an
 He is lit by the room's own sources (`ROOM.lights()`): its light, the window, the computer's
 screen while it is on and the radio's lamp while it plays, as point lights over a soft fill. In
 the dark the room's night layer darkens him with everything else, and lights him where it lights
-the room. His shadow is a soft blob in his own canvas, on what he stands on; there are no shadow
-maps. He is drawn only when he is anywhere new, and not at all while the tab is hidden.
+the room. His shadow is drawn in his own canvas: his shape seen from under what he stands on,
+fallen away from the light as the room's shadows are, darker the nearer the ground, so it starts
+at his paws, and blurred; there are no shadow maps. He is drawn only when he is anywhere new, and not at all while the tab is hidden.
 
 three.js r186 is in `vendor/three/` (see its README), behind the import map in `index.html`.
 
 Where he can go (the desk, the cushion, the shelf) is worked out by `willy-paths.js` from what
 the room says (`ROOM.surfaces`, `ROOM.jumps`, `ROOM.clear`, `ROOM.ground`) and the room each clip
 takes, measured on the model by `willy.js`. He walks round tall things and over low ones (the
-notebooks), turning as he steps; he turns on the spot only where he has room to. A route is a
+notebooks), turning as he steps; on a low thing each paw stands on the ground under it, his
+body tilted between them and each leg bent to reach (`willy.js`, `stand()`); he turns on the spot only where he has room to. A route is a
 promise: the search takes a few ms of each frame, so the page never waits on it. It heads
 straight for the end, and when that takes long, it is led round whatever is in the way by how
 far the end is from each point. `node checks/willy-paths.test.mjs` checks the planner on a
