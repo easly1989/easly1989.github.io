@@ -821,6 +821,30 @@
     sticky.removeAttribute("data-cat");
     el("span", "pc-note", side).appendChild(sticky);
   }
+  // a broken computer smokes out of the vents on that same side
+  var fumes = document.querySelector(".fumes");
+  if (fumes && side) side.appendChild(fumes);
+  // and while it runs, warm air comes out of them, barely to be seen; now and then, at no set
+  // time and never as hard twice, a gust of it lifts the note (room.css, .gust)
+  if (side) el("span", "draught", side).innerHTML = "<i></i><i></i><i></i><i></i>";
+  var pcCase = document.querySelector(".pc");
+  if (pcCase && sticky && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    (function gust() {
+      setTimeout(function () {
+        if (pcCase.classList.contains("on") && !document.hidden) {
+          pcCase.style.setProperty("--k", (0.45 + Math.random() * 0.55).toFixed(2));
+          pcCase.classList.add("gust");
+        }
+        gust();
+      }, 9000 + Math.random() * 21000);
+    })();
+    // done, or cut short by the computer going off
+    ["animationend", "animationcancel"].forEach(function (type) {
+      sticky.addEventListener(type, function (e) {
+        if (e.animationName === "gust") pcCase.classList.remove("gust");
+      });
+    });
+  }
 
   // ---- the photos the camera took ---------------------------------------------------
   // One place per photo (photos.js), in its order: on the back wall round the name and the
