@@ -120,19 +120,30 @@ him with the room's own code (`willy-moves.js`), so what it shows is what the re
 
 ## In the room
 
-`willy-room.js` is Willy's life in the room (`index.html?room`): he goes from place to place on
-the desk, jumps up to the cushion under the window or to the shelf, sits, sleeps or looks about
-where he gets to, and goes on. He does not answer clicks yet. three.js and his model load only
+`willy-room.js` is Willy's life in the room (`index.html?room`): one everyday action after
+another, from `willy-life.js`, picked at random, weighted, among those he can do where he is
+(the desk, the cushion under the window, the shelf), never the same twice running and none again
+before its cooldown. They are the 2D cat's (`cat.js`), with its weights, remapped to the room:
+wandering, trotting, napping, grooming, the zoomies, chasing his tail, a pounce on nothing,
+kneading on the cushion, chattering at the birds from it, looking down from the shelf, and so
+on; those that need a prop or a toy come with those. A few say something in a bubble over his
+head. The cushion is too shallow to sit or lie on where he lands in its middle: he settles a
+little to its front, as a cat flops onto its side, and gets up back where he landed. `node
+checks/willy-life.test.mjs` checks how he picks. He does not answer clicks yet. three.js and his model load only
 from there, after the room is built (`ROOM.ready`), and the first load's dark waits for him
 (`ROOM.holdLight`), no longer than it lasts. Without WebGL 2, or if anything fails, there is no
 Willy and the room is as it is. Under reduced motion he sleeps on the cushion and does not move.
 
 He is lit by the room's own sources (`ROOM.lights()`): its light, the window, the computer's
 screen while it is on and the radio's lamp while it plays, as point lights over a soft fill. In
-the dark the room's night layer darkens him with everything else, and lights him where it lights
-the room. His shadow is drawn in his own canvas: his shape seen from under what he stands on,
-fallen away from the light as the room's shadows are, darker the nearer the ground, so it starts
-at his paws, and blurred; there are no shadow maps. He is drawn only when he is anywhere new, and not at all while the tab is hidden.
+the dark he is cut out of the room's night layer, which is drawn flat on the screen and would
+light him wherever the floor behind him is lit (`cutout()`: his shape, white, in a canvas inside
+it, less wherever a face of something solid stands in front of him, `ROOM.before()`). He is lit
+instead by a dim blue fill and by each source as far as it reaches him, the moon only as much of
+him as is in the window's light (`ROOM.moonlit()`). His shadow is drawn in his own canvas: his
+shape seen from under what he stands on, darker the nearer the ground, so it starts at his paws,
+and blurred; there are no shadow maps. With the light on it falls away from it as the room's
+shadows do; in the dark, away from the strongest source that reaches him, or not at all. He is drawn only when he is anywhere new, and not at all while the tab is hidden.
 
 Over every clip `willy.js` adds the small motions that keep him from ever being quite still
 (`alive()`): his back rising and falling as he breathes, slower asleep; his tail swaying, root to
