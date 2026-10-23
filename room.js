@@ -344,12 +344,13 @@
     return m;
   }
   // the room-space box round an element and everything in it (z up from the mat)
+  var BODYLESS = /\b(shade|anchor|burst|cam-out|film)\b/;
   function bounds(root) {
     var b = { x0: 1e9, y0: 1e9, z0: 1e9, x1: -1e9, y1: -1e9, z1: -1e9, parts: [] };
     [root].concat([].slice.call(root.querySelectorAll("*"), 0, 600)).forEach(function (e) {
       // the blurred shadow on the mat is light, not body, and so is the flash's burst; the
       // camera's print waits inside it
-      if (!(e instanceof HTMLElement) || !e.offsetWidth || /\b(shade|anchor|burst|cam-out|film)\b/.test(e.className)) return;
+      if (!(e instanceof HTMLElement) || !e.offsetWidth || BODYLESS.test(e.className)) return;
       if (getComputedStyle(e).visibility === "hidden") return;
       var m = toStage(e);
       // each part keeps its own box and footprint, so a shape with a notch (a box with
@@ -1282,7 +1283,7 @@
           var of = SURFACES.filter(function (s) {
             return s.of && e.matches(s.of);
           })[0];
-          return { b: bounds(e), name: named(e), of: of && of.name };
+          return { b: bounds(e), name: named(e), of: of && of.name, e: e };
         });
       lows = all.filter(function (o) {
         return !o.of && Math.abs(o.b.z0) < 2 && o.b.z1 <= LOW; // standing on the desk, not under it
@@ -1334,6 +1335,118 @@
     ];
   }
 
+  // whether the moon or the sun, through the window, falls on x, y at height z: the ray through
+  // it lands that much nearer the wall the higher the point (the mullions' shadows aside)
+  function moonlit(x, y, z) {
+    var w = y + z / HIGH;
+    return x >= WIN.along - 30 && x <= WIN.along + WIN.w + 30 && w >= near && w <= far;
+  }
+  // where a point of the room is on screen, in the viewport's px: the room is drawn without
+  // perspective, so three of its axes, measured once for each size of the window, say it all
+  var axes = null,
+    axesFor = "";
+  function toScreen(x, y, z) {
+    var key = innerWidth + "x" + innerHeight + " " + getComputedStyle(stage).getPropertyValue("--s");
+    if (!axes || axesFor !== key) {
+      axesFor = key;
+      axes = [[0, 0, 0], [1000, 0, 0], [0, 1000, 0], [0, 0, 1000]].map(function (p) {
+        var s = el("span", "", room, "position:absolute;left:0;top:0;width:0;height:0;transform:translate3d(" + p.join("px,") + "px)"),
+          r = s.getBoundingClientRect();
+        s.remove();
+        return [r.left, r.top];
+      });
+    }
+    var o = axes[0];
+    return [0, 1].map(function (i) {
+      return o[i] + ((axes[1][i] - o[i]) * x + (axes[2][i] - o[i]) * y + (axes[3][i] - o[i]) * z) / 1000;
+    });
+  }
+  // the outlines on screen of the solid things in front of a box w (in bounds()'s form), as the
+  // reader sees them, from the front left and above: the outline of each of their faces (the
+  // hull of their box's corners would hide what is round them, the space over a keyboard). A box
+  // is in front where the two are apart along an axis and it is the nearer along it (the
+  // lower x, the higher y, the higher z); where they are apart along two that disagree, the one
+  // whose middle is nearer
+  function before(w) {
+    var depth = function (b) {
+      return -(b.x0 + b.x1) / 2 + (b.y0 + b.y1) / 2 + (b.z0 + b.z1) / 2;
+    };
+    return solid()
+      .filter(function (o) {
+        var b = o.b;
+        if (o.of) return false;
+        var front = b.x1 <= w.x0 || b.y0 >= w.y1 || b.z0 >= w.z1,
+          behind = b.x0 >= w.x1 || b.y1 <= w.y0 || b.z1 <= w.z0;
+        return front && behind ? depth(b) > depth(w) : front;
+      })
+      .reduce(function (all, o) {
+        return all.concat(
+          faces(o).map(function (f) {
+            return hull(
+              f.map(function (c) {
+                return toScreen(c[0], c[1], c[2]);
+              })
+            );
+          })
+        );
+      }, []);
+  }
+  // the corners in the room of each part of a solid thing that hides what is behind it: those
+  // that paint more than a tint (not the jar's glass, nor the plane through it that takes the
+  // pointer), each cut to what it shows through (a strip of a label wrapped round)
+  function faces(o) {
+    if (o.faces) return o.faces;
+    var root = o.e,
+      see = function (e) {
+        for (var a = e; a !== root.parentElement; a = a.parentElement) if (+getComputedStyle(a).opacity < 0.5) return false;
+        var cs = getComputedStyle(e),
+          tint = cs.backgroundColor.match(/^rgba\(.*,\s*([\d.]+)\)$|\/\s*([\d.]+)(%?)\s*\)$/),
+          alpha = !tint ? 1 : tint[1] ? +tint[1] : tint[3] ? tint[2] / 100 : +tint[2];
+        return cs.visibility !== "hidden" && (cs.backgroundImage !== "none" || alpha >= 0.5);
+      };
+    o.faces = [root]
+      .concat([].slice.call(root.querySelectorAll("*"), 0, 600))
+      .filter(function (e) {
+        return e instanceof HTMLElement && e.offsetWidth && !BODYLESS.test(e.className) && see(e);
+      })
+      .map(function (e) {
+        for (var c = e.parentElement; c !== root && root.contains(c); c = c.parentElement)
+          if (getComputedStyle(c).overflow === "hidden") {
+            e = c;
+            break;
+          }
+        var m = toStage(e);
+        return [[0, 0], [e.offsetWidth, 0], [e.offsetWidth, e.offsetHeight], [0, e.offsetHeight]].map(function (c) {
+          var p = m.transformPoint(new DOMPoint(c[0], c[1], 0));
+          return [p.x, p.y, p.z];
+        });
+      });
+    return o.faces;
+  }
+  // the convex hull of points, in order round it
+  function hull(pts) {
+    pts.sort(function (a, b) {
+      return a[0] - b[0] || a[1] - b[1];
+    });
+    var cross = function (o, a, b) {
+      return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+    };
+    var lower = [],
+      upper = [];
+    pts.forEach(function (p) {
+      while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) lower.pop();
+      lower.push(p);
+    });
+    pts
+      .slice()
+      .reverse()
+      .forEach(function (p) {
+        while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) upper.pop();
+        upper.push(p);
+      });
+    return lower.slice(0, -1).concat(upper.slice(0, -1));
+  }
+
   // what the room's other modules use of it: morph.js turns things to face the reader, and
   // takes a photo out of its place or names the one that has just landed in it; Willy walks
   // its surfaces and keeps out of its solids
@@ -1361,6 +1474,11 @@
     surfaces: SURFACES,
     jumps: JUMPS,
     lights: lights,
+    moonlit: moonlit,
+    toScreen: toScreen,
+    before: before,
+    // the layer that darkens the room with its light off, where Willy draws himself out of it
+    night: night,
     // f is called whenever a light changes
     onLights: function (f) {
       heard.push(f);

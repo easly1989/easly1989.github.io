@@ -13,7 +13,7 @@ from serve import serve
 SIZES = [(1440, 900), (1920, 1080)]
 SETTLE, SAMPLE = 3, 5
 WALKED = 30  # % of a sample's frames he must have walked in
-TRIES = 12  # he may be asleep for up to 40 s
+TRIES = 16  # he may nap where he is for up to 50 s (willy-life.js)
 # a frame at 60 Hz, plus a millisecond of the timer's own jitter
 FRAME_MS = 1000 / 60 + 1
 
@@ -42,7 +42,7 @@ STATS = """(() => {
   const f = __f, d = [];
   for (let i = 1; i < f.length; i++) d.push(f[i] - f[i - 1]);
   d.sort((a, b) => a - b);
-  if (!d.length) return { p50: 1e9, slow: 100, frames: 0 }; // JSON has no Infinity
+  if (!d.length) return { p50: 1e9, slow: 100, frames: 0, walked: 0 }; // JSON has no Infinity
   return { p50: +d[Math.floor(d.length / 2)].toFixed(2), slow: +(100 * d.filter((x) => x > 25).length / d.length).toFixed(1), frames: d.length, walked: +(100 * __w / d.length).toFixed(0) };
 })()"""
 
