@@ -18,7 +18,7 @@ and its slit pupil.
 
 ## Rebuild
 
-With Python 3 and Blender 5.2 or later, from the repo root:
+With Python 3, Blender 5.2 or later and Node.js (for `npx gltfpack`), from the repo root:
 
 ```bash
 python cat-src/unpack.py "<path to>/Fully Animated Cats v2.1.unitypackage"
@@ -28,7 +28,7 @@ python cat-src/unpack.py "<path to>/Fully Animated Cats v2.1.unitypackage"
 blender -b --python cat-src/build.py -- assets/willy.glb
 ```
 
-The build takes a minute or so. It prints how much ground a walk cycle covers (`STRIDE`) and how
+The build takes a minute or so. It prints how much ground a cycle of each gait covers (`STRIDE`: walk, trot, run, sneak) and how
 high the jump's root is as it leaves the ground and meets it (`LIFT`): `willy-moves.js` and
 `willy.js` hold those two, so they change with his size. It stops without writing anything if a
 clip goes through the ground.
@@ -56,10 +56,31 @@ clip goes through the ground.
   - `lie`, `lie-idle`, `lie-from`;
   - `sleep` (lying down, then curling up), `sleep-idle` and `wake`;
   - the jump in three parts, `jump-up`, `jump-air` and `jump-land`, cut from the model's
-    jump in place.
+    jump in place;
+  - `stretch`, `yawn`, `shake` (his head) and the swat, `swat-left` and `swat-right`, from
+    standing and back;
+  - `groom`, licking a paw, sitting;
+  - `claws`, up on his hind legs against something upright: the chair;
+  - `look-around`, `look-down` and `look-side`, standing;
+  - `crouch`, low, where a pounce starts;
+  - `drink`, nose down to half his height (the mug), and `eat`, nose to the floor;
+  - the gaits besides the walk, `trot`, `run` and `sneak` (low, stalking);
+  - `pet`, `pet-sit` and `pet-lie`, pushing up into a hand;
+  - `knead` (the model's digging), standing; `sit-paw-left` and `sit-paw-right`, a paw pushed
+    down to the side, sitting; `land-stop`, landing from a running leap and stopping. The pounce
+    has no clip of its own: `willy-moves.js` makes it of `crouch` and the jump's three parts.
+- **Each file's rest.** Every animation file keys its clips against its own armature at rest,
+  and not all of them rest as the model does: the Action file's spine is 80° off, the Rest
+  file's thighs 14–19°. Each bone is put back where its file puts it in its parent's space,
+  frame by frame, against the model's rest.
 - **Lifting.** A clip in which his fuller belly would sink into the ground is lifted, frame by
   frame, until it rests on it.
 - **Export.** Checks no clip takes him through the ground, and exports the `.glb`.
+- **Packing.** Packs it with gltfpack 1.3.0 (meshopt compression), to about a third of its size:
+  1.5 MB to 577 KB with the first 18 clips. Rotations, translations and scales keep its finest
+  steps (16 bits), and positions and UVs stay floats, because `willy.js` grows his fur and
+  outline in model units. Packed and unpacked, no bone is more than 0.05 px from where the other
+  puts it, and no vertex more than 0.2 px. `willy.js` reads it with three.js's meshopt decoder.
 
 His fur (shells combed back, longer on the tail) and his thin outline are drawn at run time, by
 `willy.js`.

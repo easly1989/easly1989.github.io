@@ -6,6 +6,7 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
+import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 
 const SCALE = 55; // room px per model unit: cat-src/build.py makes him 388 px nose to tail tip
 const W = 560; // room enough for all of him, 388 px nose to tail, whichever way he faces
@@ -28,6 +29,23 @@ const LYING = 20; // and lying down or asleep, his paws and tail spilling over
 const FILL = [1.7, 1.0];
 const STRENGTH = { room: 1.5, window: 1.4, screen: 1.2, radio: 1.4 };
 const SHADOW = 0.5; // how dark his shadow is, as dark as the room's own (room.css, .shade)
+// and the room it is drawn in, px square, the texels across it, how high above the ground he
+// still darkens it, how far each point of him falls away from the light per px of its height
+// (room.css, .shade: 0.18 and 0.3 along the room's x and y, whose y runs the other way), and
+// how soft it is: each pass of the blur, px
+const SHADE = { size: 600, texels: 192, high: 240, fall: [0.18, -0.3], blur: [7, 7], layer: 1 };
+// his legs, front then hind, left then right: the two bones that bend, the bone whose head is
+// the wrist or the hock, and the paw
+const LEGS = [
+  ["UpperArm.L", "Forearm.L", "Pastern.L", "Hand.L"],
+  ["UpperArm.R", "Forearm.R", "Pastern.R", "Hand.R"],
+  ["Thigh.L", "Shin.L", "Hook.L", "Foot.L"],
+  ["Thigh.R", "Shin.R", "Hook.R", "Foot.R"],
+];
+// how much of the step between two paws their shoulders and their hips rise by: his front legs
+// stand nearly straight, with little to spare for the lower paw to reach down
+const RAISE = [0.1, 0.2];
+const EASE = 0.05; // s a paw takes to meet a new ground: a step up comes mid-stride
 
 // Willy in the room, with his clips. Throws if there is no WebGL 2 or the model fails to load.
 export async function willy(room, stage, src = "assets/willy.glb") {
@@ -81,7 +99,8 @@ export async function willy(room, stage, src = "assets/willy.glb") {
 
   let gltf;
   try {
-    gltf = await new GLTFLoader().loadAsync(src);
+    // (packed by gltfpack, cat-src/README.md: his clips take a third of the room)
+    gltf = await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync(src);
   } catch (e) {
     // no Willy: nothing of him left in the room
     renderer.dispose();
@@ -107,8 +126,73 @@ export async function willy(room, stage, src = "assets/willy.glb") {
   const mixer = new THREE.AnimationMixer(model);
   const clips = Object.fromEntries(gltf.animations.map((c) => [c.name, mixer.clipAction(c)]));
   const size = measure(model, skinned, mixer, clips);
-  const blob = shadow(size.idle);
+  // (his body only: neither its fur nor its outline casts a shadow of its own)
+  for (const mesh of skinned) mesh.layers.enable(SHADE.layer);
+  const blob = shadow(renderer);
   scene.add(blob);
+  holder.rotation.order = "ZYX"; // tilted in his own frame, then turned to his heading
+  const legs = LEGS.map((l) => l.map((n) => model.getObjectByName(THREE.PropertyBinding.sanitizeNodeName(n))));
+  const legged = legs.every((l) => l.every(Boolean));
+  let at = { x: 0, y: 0, z: 0, heading: 0, under: null },
+    steps = [0, 0, 0, 0],
+    then = 0,
+    bent = [];
+  // the leg bones as the clip has them, before stand() bent them
+  const unbend = () => {
+    for (const [b, q] of bent) b.quaternion.copy(q);
+    bent = [];
+  };
+  // him where place() put him, in the pose the clip has him in. On a low thing he walks over
+  // (room.js, ground()) each paw stands on the ground under it: his shoulders and his hips rise
+  // by part of the step between their two paws, his body tilts between them, and each leg bends
+  // to put its paw where the clip has it, as high above its own ground. His shadow lies on the
+  // lowest of those grounds; in the air, on under.z, what is under him, his paws under.by above
+  // it, and fades the higher they are. As the room's own shadows do (room.css, .shade), it falls
+  // away from a light high behind on the left, further the taller he is and the higher in the air.
+  const stand = () => {
+    unbend();
+    const { x, y, z, heading, under } = at,
+      r = (heading * Math.PI) / 180;
+    holder.rotation.set(0, 0, r);
+    holder.position.set(0, 0, 0);
+    holder.updateMatrixWorld(true);
+    const feet = legged ? legs.map(([top, , end, paw]) => ({ top: top.getWorldPosition(new THREE.Vector3()), end: end.getWorldPosition(new THREE.Vector3()), paw: paw.getWorldPosition(new THREE.Vector3()) })) : [];
+    // (the room's y runs towards the viewer, his world's the other way)
+    const want = feet.map((f) => (under ? 0 : window.ROOM.ground(x + f.paw.x, y - f.paw.y, z) - z));
+    const now = performance.now() / 1000,
+      dt = now - then;
+    then = now;
+    steps = want.map((g, i) => (dt > 0.25 || under || Math.abs(g - steps[i]) < 0.5 ? g : g + (steps[i] - g) * Math.exp(-dt / EASE)));
+    let lift = 0;
+    if (steps.some((g) => g > 0)) {
+      const pair = (a, b, k) => Math.min(a, b) + k * Math.abs(a - b),
+        along = (i) => feet[i].paw.x * Math.cos(r) + feet[i].paw.y * Math.sin(r),
+        front = pair(steps[0], steps[1], RAISE[0]),
+        hind = pair(steps[2], steps[3], RAISE[1]),
+        xf = (along(0) + along(1)) / 2,
+        xh = (along(2) + along(3)) / 2,
+        tilt = (front - hind) / (xf - xh);
+      lift = front - xf * tilt;
+      holder.rotation.set(0, -Math.atan(tilt), r); // (nose up is a turn the other way about his y)
+      // tilted about the height of his shoulders and hips, which a tilt about his feet would
+      // push back and forth, out of his legs' reach
+      const pivot = new THREE.Vector3(0, 0, feet.reduce((n, f) => n + f.top.z, 0) / 4);
+      holder.position.copy(pivot).sub(pivot.clone().applyEuler(holder.rotation));
+      holder.updateMatrixWorld(true);
+      legs.forEach((l, i) => {
+        for (const b of l.slice(0, 3)) bent.push([b, b.quaternion.clone()]);
+        reach(l, feet[i].end.clone().setZ(feet[i].end.z + steps[i] - lift));
+      });
+    }
+    const u = under || { z: z + (steps.length ? Math.min(...steps) : 0), by: 0 },
+      h = z + lift,
+      b = BIAS / Math.sqrt(3);
+    cv.style.transform = "translate3d(" + (x - b - W / 2) + "px," + (y + b - H / 2) + "px," + (h + ANCHOR_Z + b) + "px) rotateZ(45deg) rotateX(-54.7356deg)";
+    blob.position.z = u.z - h + 0.5;
+    blob.material.opacity = SHADOW * Math.max(0, 1 - u.by / 300);
+    here = [x, y, h];
+    shine();
+  };
   // his many shaders (one a shell of fur) compiled in the background where the browser can,
   // rather than all at once in his first frame
   await renderer.compileAsync(scene, cam);
@@ -129,32 +213,17 @@ export async function willy(room, stage, src = "assets/willy.glb") {
     clips,
     mixer,
     // where he stands, in room px (z the height of what he stands on), and which way he
-    // faces, in degrees: 0 along the room's x, 90 towards the back wall
-    // On a low thing he walks over (room.js, ground()) he stands on its top: as high as the
-    // ground under his front and his hind paws, between them, so he climbs on and off it.
-    // His shadow lies on that; in the air, on under.z, what is under him, his paws under.by
-    // above it, and fades the higher they are. As the room's own shadows do (room.css,
-    // .shade), it falls away from a light high behind on the left, further the taller he is
-    // and the higher in the air.
+    // faces, in degrees: 0 along the room's x, 90 towards the back wall; in the air, what is
+    // under him (stand())
     place(x, y, z, heading, under = null) {
-      const r = (heading * Math.PI) / 180,
-        f = [Math.cos(r), -Math.sin(r)],
-        reach = [size.idle.x1 * 0.6, size.idle.x0 * 0.35];
-      if (!under) {
-        z = reach.reduce((s, d) => s + window.ROOM.ground(x + f[0] * d, y + f[1] * d, z), 0) / reach.length;
-        under = { z, by: 0 };
-      }
-      const b = BIAS / Math.sqrt(3);
-      cv.style.transform = "translate3d(" + (x - b - W / 2) + "px," + (y + b - H / 2) + "px," + (z + ANCHOR_Z + b) + "px) rotateZ(45deg) rotateX(-54.7356deg)";
-      holder.rotation.z = blob.rotation.z = r;
-      // (the room's y runs towards the viewer, his world's the other way)
-      blob.position.set(size.idle.z1 * 0.18 + under.by * 0.5, -(size.idle.z1 * 0.3 + under.by * 0.8), under.z - z + 0.5);
-      blob.material.opacity = SHADOW * Math.max(0, 1 - under.by / 300);
-      here = [x, y, z];
-      shine();
+      at = { x, y, z, heading, under };
+      stand();
     },
     draw(dt) {
+      unbend();
       mixer.update(dt);
+      stand();
+      blob.cast(scene);
       renderer.render(scene, cam);
     },
     size,
@@ -230,7 +299,7 @@ function measure(model, skinned, mixer, clips) {
     // each moment holds the samples either side of it too, so nothing slips between two
     const moments = [];
     for (let i = 0; i <= MOMENTS; i++) moments.push(plain(at.slice(Math.max(0, 2 * i - 1), 2 * i + 2).reduce((u, b) => u.union(b), new THREE.Box3()), yaws[2 * i]));
-    out[name] = { ...plain(all), moments: name === "walk" || name === "idle" ? [plain(all)] : moments };
+    out[name] = { ...plain(all), moments: ["walk", "trot", "run", "sneak", "idle"].includes(name) ? [plain(all)] : moments };
   }
   // "turn": what any turn takes at any moment of it, the way he faces then
   const turns = Object.values(out).filter((c) => c.moments.some((m) => m.yaw));
@@ -247,6 +316,39 @@ function up(z, clip, at, i, n) {
   return clip === "jump-air" ? z + lift(at ?? (n > 1 ? i / (n - 1) : 0)) : z;
 }
 
+// One leg bent so that the head of its third bone (the wrist, the hock) is at target, in his
+// world, or as near as the leg reaches: its first two bones turn in the plane they bend in, and
+// the third keeps the way it was turned, so the paw stays as flat as the clip had it.
+function reach([upper, mid, end], target) {
+  const a = upper.getWorldPosition(new THREE.Vector3()),
+    b = mid.getWorldPosition(new THREE.Vector3()),
+    c = end.getWorldPosition(new THREE.Vector3()),
+    keep = end.getWorldQuaternion(new THREE.Quaternion());
+  const ab = a.distanceTo(b),
+    bc = b.distanceTo(c),
+    at = THREE.MathUtils.clamp(a.distanceTo(target), Math.abs(ab - bc) + 0.01, ab + bc - 0.01);
+  const angle = (u, v) => Math.acos(THREE.MathUtils.clamp(u.dot(v) / (u.length() * v.length()), -1, 1)),
+    cosine = (n) => Math.acos(THREE.MathUtils.clamp(n, -1, 1));
+  const axis = c.clone().sub(a).cross(b.clone().sub(a));
+  if (axis.lengthSq() < 1e-6) return; // straight: no plane to bend in
+  axis.normalize();
+  turn(upper, axis, cosine((bc * bc - ab * ab - at * at) / (-2 * ab * at)) - angle(c.clone().sub(a), b.clone().sub(a)));
+  turn(mid, axis, cosine((at * at - ab * ab - bc * bc) / (-2 * ab * bc)) - angle(a.clone().sub(b), c.clone().sub(b)));
+  // then the whole leg swung about the shoulder or the hip, onto the target
+  const to = end.getWorldPosition(new THREE.Vector3()).sub(a),
+    aim = target.clone().sub(a),
+    swing = to.clone().cross(aim);
+  if (swing.lengthSq() > 1e-9) turn(upper, swing.normalize(), angle(to, aim));
+  end.quaternion.copy(end.parent.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(keep));
+  end.updateMatrixWorld(true);
+}
+// a bone turned by angle about an axis in his world
+function turn(bone, axis, angle) {
+  const q = bone.getWorldQuaternion(new THREE.Quaternion()).invert();
+  bone.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(axis.clone().applyQuaternion(q), angle));
+  bone.updateMatrixWorld(true);
+}
+
 // that room where he stands, as the room measures its own things (room.js, bounds()): turned
 // to his heading, clear px larger, from just above what he stands on
 function shape(b, x, y, z, heading, clear = CLEAR) {
@@ -260,26 +362,73 @@ function shape(b, x, y, z, heading, clear = CLEAR) {
   return { ...part, z0: z + 2, z1: z + b.z1, parts: [part] };
 }
 
-// His shadow: a soft dark blob under his body and legs, not his tail, on what he stands on. No
-// shadow maps: the room's sources are too many and too soft for one to mean anything.
-function shadow(b) {
-  // a disc in rings, black, even over most of it and fading out at its rim, as the room's
-  // blurred shadows do (most of it is under him)
-  const g = new THREE.RingGeometry(0, 0.5, 32, 8);
-  const p = g.attributes.position,
-    rgba = new Float32Array(p.count * 4);
-  for (let i = 0; i < p.count; i++) {
-    const out = Math.min(1, Math.max(0, (2 * Math.hypot(p.getX(i), p.getY(i)) - 0.7) / 0.3));
-    rgba[i * 4 + 3] = 1 - out * out * (3 - 2 * out);
-  }
-  g.setAttribute("color", new THREE.BufferAttribute(rgba, 4));
-  // as long as his body and head, about as wide again as he is, turned with him (the room
-  // turns it about where he stands)
-  const x0 = b.x0 * 0.5,
-    x1 = b.x1;
-  g.scale(x1 - x0, (b.y1 - b.y0) * 1.7, 1).translate((x0 + x1) / 2, (b.y0 + b.y1) / 2, 0);
-  const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false }));
+// His shadow: his own shape as seen from under the ground he stands on, each point of him
+// fallen away from a light high behind on the left as the room's shadows do (room.css,
+// .shade), darker the nearer it is to the ground, so that it starts at his paws; then blurred,
+// as the room's are. Not a shadow map: the room's sources are too many and too soft for one to
+// mean anything. A plane at his feet, turned with nothing; cast() draws it anew.
+function shadow(renderer) {
+  const { size, texels, high, fall, blur } = SHADE;
+  const target = () => new THREE.WebGLRenderTarget(texels, texels, { depthBuffer: true });
+  const a = target(),
+    b = target();
+  // looking up from the ground: his world's x comes out mirrored, so the plane reads it so
+  const eye = new THREE.OrthographicCamera(-size / 2, size / 2, size / 2, -size / 2, -2, high);
+  eye.layers.set(SHADE.layer);
+  eye.up.set(0, 1, 0);
+  eye.lookAt(0, 0, 1);
+  // each point moved along the ground by its height, which the eye sees as its depth (-z)
+  eye.projectionMatrix.multiply(new THREE.Matrix4().set(1, 0, fall[0], 0, 0, 1, -fall[1], 0, 0, 0, 1, 0, 0, 0, 0, 1));
+  const dark = new THREE.MeshDepthMaterial();
+  dark.onBeforeCompile = (sh) => {
+    sh.fragmentShader = sh.fragmentShader.replace("gl_FragColor = vec4( vec3( 1.0 - fragCoordZ ), opacity );", "gl_FragColor = vec4( vec3( 0.0 ), 1.0 - fragCoordZ );");
+  };
+  // a gaussian blur, one way per pass
+  const soft = new THREE.ShaderMaterial({
+    uniforms: { map: { value: null }, along: { value: new THREE.Vector2() } },
+    vertexShader: "varying vec2 vUv;\nvoid main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }",
+    fragmentShader: `uniform sampler2D map;
+uniform vec2 along;
+varying vec2 vUv;
+void main() {
+  float w[5] = float[](0.227, 0.194, 0.121, 0.054, 0.016);
+  vec4 s = texture2D(map, vUv) * w[0];
+  for (int i = 1; i < 5; i++) s += (texture2D(map, vUv + along * float(i)) + texture2D(map, vUv - along * float(i))) * w[i];
+  gl_FragColor = s;
+}`,
+    depthTest: false,
+    depthWrite: false,
+  });
+  const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), soft);
+  quad.frustumCulled = false;
+  const flat = new THREE.Camera();
+  const g = new THREE.PlaneGeometry(size, size),
+    uv = g.attributes.uv;
+  for (let i = 0; i < uv.count; i++) uv.setX(i, 1 - uv.getX(i));
+  const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: a.texture, transparent: true, depthWrite: false }));
   m.renderOrder = -1;
+  // (the weights are a gaussian of 2 taps' width: a tap every half of each pass's px)
+  const tap = size / texels;
+  m.cast = (scene) => {
+    const was = renderer.getRenderTarget(),
+      over = scene.overrideMaterial;
+    eye.position.set(0, 0, m.position.z);
+    eye.updateMatrixWorld();
+    scene.overrideMaterial = dark;
+    renderer.setRenderTarget(a);
+    renderer.setClearColor(0x000000, 0);
+    renderer.clear();
+    renderer.render(scene, eye);
+    scene.overrideMaterial = over;
+    for (const px of blur)
+      for (const [from, to, dir] of [[a, b, [1, 0]], [b, a, [0, 1]]]) {
+        soft.uniforms.map.value = from.texture;
+        soft.uniforms.along.value.set(dir[0], dir[1]).multiplyScalar(px / 2 / tap / texels);
+        renderer.setRenderTarget(to);
+        renderer.render(quad, flat);
+      }
+    renderer.setRenderTarget(was);
+  };
   return m;
 }
 

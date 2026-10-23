@@ -1,7 +1,7 @@
 // The review page for Willy's clips: index.html?room&review. A tool for checking clips as
 // they are made, not part of the site: it plays any clip in a loop on Willy, in a place in the
-// room where he fits in it, found anew on each play. walk goes from one place on the desk to
-// another and back, round whatever is in the way; wander goes anywhere, the perch too, by its
+// room where he fits in it, found anew on each play. walk, trot, run and sneak go from one place
+// on the desk to another and back, round whatever is in the way; wander goes anywhere, the perch too, by its
 // jumps, and sits or sleeps where it gets to. "room" draws the room he takes in the clip.
 import { willy } from "./willy.js";
 import { planner, AIR } from "./willy-paths.js";
@@ -28,23 +28,28 @@ const jumpShow = (f) => () => (firstHop() ? f(jumping(firstHop())) : null);
 
 const SHOW = {
   idle: () => placed("idle", "desk", 0, true),
-  walk: async () => {
-    for (let n = 0; n < 60; n++) {
-      const a = spot("desk", "walk"),
-        b = spot("desk", "walk");
-      const A = { surface: "desk", x: a[0], y: a[1], heading: a[2] },
-        B = { surface: "desk", x: b[0], y: b[1], heading: b[2] };
-      const there = await go(A, B),
-        back = there && (await go(B, A));
-      if (back && Math.hypot(a[0] - b[0], a[1] - b[1]) > 300) return legs([...there, ...back]);
-    }
-  },
+  walk: () => gaitShow("walk"),
+  trot: () => gaitShow("trot"),
+  run: () => gaitShow("run"),
+  sneak: () => gaitShow("sneak"),
   sit: () => placed("sit", "desk", 1.5),
+  ...Object.fromEntries(["stretch", "yawn", "groom", "shake", "claws", "swat-left", "swat-right", "look-around", "look-down", "look-side", "crouch", "drink", "eat", "pet", "pet-sit", "pet-lie", "knead", "sit-paw-left", "sit-paw-right", "land-stop", "chatter", "knead-lie", "loaf"].map((c) => [c, () => placed(c, "desk", 0.6)])),
   // on the perch, along it, or on the desk, whichever he likes this time
   sleep: () => {
     const [a, b] = Math.random() < 0.5 ? ["perch", "desk"] : ["desk", "perch"];
     const at = (s) => placed("sleep", s, 2, false, s === "perch" ? ALONG : null);
     return at(a) || at(b);
+  },
+  // from somewhere on the desk with room ahead, onto a spot 150 px in front of him
+  pounce: () => {
+    for (let n = 0; n < 60; n++) {
+      const p = spot("desk", "crouch");
+      if (!p) return null;
+      const r = (p[2] * Math.PI) / 180,
+        at = (k) => [p[0] + Math.cos(r) * 150 * k, p[1] - Math.sin(r) * 150 * k];
+      if ([0.5, 1].every((k) => w.fits(...at(k), SURF.desk.z, p[2], "walk", { on: SURF.desk }))) return [...M.pouncing(p, 150, "desk"), hold("idle", [...at(1), p[2]], "desk", 1, true)];
+    }
+    return null;
   },
   "jump-up": jumpShow((j) => [{ ...j[0], dur: dur("jump-up") + 0.6, at: (t) => j[0].at(Math.min(t, dur("jump-up"))) }]),
   "jump-air": jumpShow((j) => [{ ...j[1], dur: AIR + 0.3, at: (t) => j[1].at(Math.min(t, AIR)) }]),
@@ -97,6 +102,18 @@ const SHOW = {
     return out;
   },
 };
+// from one place on the desk to another and back, round whatever is in the way, in that gait
+async function gaitShow(gait) {
+  for (let n = 0; n < 60; n++) {
+    const a = spot("desk", "walk"),
+      b = spot("desk", "walk");
+    const A = { surface: "desk", x: a[0], y: a[1], heading: a[2] },
+      B = { surface: "desk", x: b[0], y: b[1], heading: b[2] };
+    const there = await go(A, B),
+      back = there && (await go(B, A));
+    if (back && Math.hypot(a[0] - b[0], a[1] - b[1]) > 300) return legs([...there, ...back], gait);
+  }
+}
 function xyh(p) {
   return { x: p[0], y: p[1], heading: p[2] };
 }
