@@ -98,6 +98,17 @@ async function live() {
     if (p && free(xyh("desk", p))) at = xyh("desk", p);
   }
   if (!at) throw new Error("no room on the desk");
+  // what he looks at as he rests, now and then something else: one of the room's sources that is
+  // on (the window, the screen, the radio's lamp), the reader, out of the screen, or nothing
+  const LOOKS = [2, 6]; // s
+  let lookAt = 0;
+  const gaze = (p) => {
+    const lit = ROOM.lights().filter((s) => s.power && s.name !== "room"),
+      r = Math.random();
+    if (r < 0.35 || !p) return null;
+    if (r < 0.55 || !lit.length) return [p.x - 600, p.y + 600, 500];
+    return lit[Math.floor(Math.random() * lit.length)].at;
+  };
   let show = resting("look", at),
     total = show.reduce((n, m) => n + m.dur, 0),
     t = 0,
@@ -127,8 +138,12 @@ async function live() {
         });
       return;
     }
-    const p = M.now(show, t),
-      key = [p.x, p.y, p.z, p.h, p.clip, p.time].map((v) => (typeof v === "number" ? v.toFixed(2) : v)).join();
+    const p = M.now(show, t);
+    if (time > lookAt) {
+      w.look(gaze(p));
+      lookAt = time + between(LOOKS) * 1000;
+    }
+    const key = [p.x, p.y, p.z, p.h, p.clip, p.time].map((v) => (typeof v === "number" ? v.toFixed(2) : v)).join();
     if (key !== drawn) {
       M.pose(p);
       w.draw(0);
