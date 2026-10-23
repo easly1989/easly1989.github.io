@@ -6,15 +6,18 @@ Unity Asset Store), whose files sit in cat-src/animx/, git-ignored: see README.m
 Takes the model's lightest level of detail and the clips Willy uses, made to stand where he is
 put (the clips' own travel is taken out: the room moves him); makes him chubbier, with a fuller
 tail; gives him his coat, from Carlo's photos, and his sage eyes with an upright slit; checks no
-clip takes him through the ground; and exports a .glb.
+clip takes him through the ground; and exports a .glb, packed by gltfpack.
 """
+import math
 import os
+import shutil
+import subprocess
 import sys
 
 import bmesh
 import bpy
 import numpy as np
-from mathutils import Vector
+from mathutils import Matrix, Quaternion, Vector
 
 ARGS = sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else []
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -36,7 +39,14 @@ CLIPS = {
     "Lie_to": "lie", "Lie_idle": "lie-idle", "Lie_from": "lie-from",
     "Sleep_to": "curl", "Sleep_idle": "sleep-idle", "Sleep_from": "uncurl",
     "InPlace": "jump",
+    "Stretching": "stretch", "Yaw": "yawn", "Licking_sit": "groom", "Shaking": "shake",
+    "SharpensClaws": "claws", "Paw_L": "swat-left", "Paw_R": "swat-right",
+    "Look": "look-around", "LookDown": "look-down", "LookSite": "look-side", "Crouch_idle": "crouch",
+    "Drink_U": "drink", "Eat_D": "eat",
+    "Trot_F": "trot", "Run_F": "run", "Crouch_F": "sneak", "Pet": "pet", "Pet_sit": "pet-sit", "Pet_lie": "pet-lie",
+    "Digging": "knead", "Drop_L_sit": "sit-paw-left", "Drop_R_sit": "sit-paw-right", "Land_stop": "land-stop",
 }
+GAITS = ("walk", "trot", "run", "sneak")  # clips that travel: the room paces their feet to the ground
 # the jump comes whole; the room draws the arc, so it is cut where he leaves the ground and where
 # he meets it again (frames, at 30 a second)
 JUMP = {"jump-up": (1, 21), "jump-air": (21, 61), "jump-land": (61, 79)}
@@ -58,16 +68,26 @@ meshes = [o for o in bpy.data.objects if o.type == "MESH"]
 # the clips, taken from the animation files onto this armature
 for a in list(bpy.data.actions):
     bpy.data.actions.remove(a)
-kept = {}
+def rel(b):
+    """A bone at rest, in its parent's space."""
+    return b.parent.matrix_local.inverted() @ b.matrix_local if b.parent else b.matrix_local.copy()
+
+
+kept, rests = {}, {}
 for f in sorted(os.listdir(SRC)):
     if f.startswith("A_Cat_") and f.endswith(".fbx"):
-        objs = set(bpy.data.objects)
+        objs, acts = set(bpy.data.objects), set(bpy.data.actions)
         bpy.ops.import_scene.fbx(filepath=os.path.join(SRC, f))
+        arm = next(o for o in set(bpy.data.objects) - objs if o.type == "ARMATURE")
+        rest = {b.name: rel(b) for b in arm.data.bones}
+        for a in set(bpy.data.actions) - acts:
+            rests[a.name] = rest
         for o in set(bpy.data.objects) - objs:
             bpy.data.objects.remove(o)
 for a in list(bpy.data.actions):
     name = a.name.split("|")[-1]
     if name in CLIPS and CLIPS[name] not in kept:
+        rests[CLIPS[name]] = rests[a.name]
         a.name = CLIPS[name]
         kept[a.name] = a
     else:
@@ -80,6 +100,125 @@ def curves(a):
     return a.layers[0].strips[0].channelbag(a.slots[0]).fcurves
 
 
+# each file keys its clips against its own armature at rest, and not every file's rests as the
+# model's does (the Action file's spine is 80 degrees off, others' legs a few): each bone is put
+# where the file puts it in its parent's space, frame by frame, against the model's rest
+ours = {b.name: rel(b) for b in rig.data.bones}
+WAYS = (("location", 3, (0, 0, 0)), ("rotation_quaternion", 4, (1, 0, 0, 0)), ("scale", 3, (1, 1, 1)))
+for name, a in kept.items():
+    fc = curves(a)
+    f0, f1 = (int(v) for v in a.frame_range)
+    for bone, r in rests[name].items():
+        fix = ours[bone].inverted() @ r
+        if fix.translation.length < 1e-5 and fix.to_quaternion().angle < 1e-4:
+            continue
+        path = f'pose.bones["{bone}"].'
+        old = {(c.data_path[len(path) :], c.array_index): c for c in fc if c.data_path.startswith(path)}
+        assert not any(w == "rotation_euler" for w, _ in old), bone + " is keyed in Euler angles"
+        rows, q0 = [], None
+        for fr in range(f0, f1 + 1):
+            v = [[old[w, i].evaluate(fr) if (w, i) in old else d[i] for i in range(n)] for w, n, d in WAYS]
+            loc, q, s = (fix @ Matrix.LocRotScale(Vector(v[0]), Quaternion(v[1]), Vector(v[2]))).decompose()
+            if q0:
+                q.make_compatible(q0)
+            q0 = q
+            rows.append((loc, q, s))
+        for c in old.values():
+            fc.remove(c)
+        for k, (w, n, _) in enumerate(WAYS):
+            for i in range(n):
+                c = fc.new(path + w, index=i)
+                c.keyframe_points.add(len(rows))
+                for j, row in enumerate(rows):
+                    c.keyframe_points[j].co = (f0 + j, row[k][i])
+                    c.keyframe_points[j].interpolation = "LINEAR"
+
+
+# clips made here: one of the model's, frame by frame, with some bones turned on top of its pose.
+# turns(t) gives, t seconds in, (bone, axis, degrees) for the same bones every time; the axis is
+# his own, carried along by his spine (x across him, y from his nose to his tail, z up), through
+# the bone, after its own pose
+def chatter(t):
+    """Sitting, his head up at the birds, his jaw going in bursts, the tip of his tail lashing."""
+    burst = 0.3 < t < 1.3 or 1.7 < t < 2.3
+    lash = math.sin(2 * math.pi * 3 * t)
+    return [("Head", "x", -18 * min(1, t / 0.3, (2.7 - t) / 0.3)), ("jaw", "x", 14 * burst * max(0, math.sin(2 * math.pi * 7 * t))),
+            ("tail.5", "z", 12 * lash), ("tail.6", "z", 15 * lash), ("tail.7", "z", 18 * lash)]
+
+
+def knead_lie(t):
+    """Lying, his front paws pressing down in turn."""
+    p = math.sin(2 * math.pi * t / 0.9)
+    out = []
+    for side, k in (("L", max(0, p)), ("R", max(0, -p))):
+        out += [("UpperArm." + side, "x", 25 * k), ("Forearm." + side, "x", -40 * k), ("Hand." + side, "x", 20 * k)]
+    return out
+
+
+def loaf(t):
+    """Lying on his belly, his front paws folded away under his chest."""
+    out = []
+    for side in ("L", "R"):
+        out += [("UpperArm." + side, "x", -10), ("Forearm." + side, "x", 150), ("Hand." + side, "x", -70)]
+    return out
+
+
+SCRIPTED = {"chatter": ("sit-idle", chatter), "knead-lie": ("lie-idle", knead_lie), "loaf": ("lie-idle", loaf)}
+AXES = {"x": Vector((1, 0, 0)), "y": Vector((0, 1, 0)), "z": Vector((0, 0, 1))}
+spine_rest = rig.data.bones["Spine"].matrix_local.to_3x3().normalized().inverted()
+for name, (base, turns) in SCRIPTED.items():
+    src = kept[base]
+    ch = {}
+    for c in curves(src):
+        if c.data_path.startswith('pose.bones["'):
+            bone, way = c.data_path[len('pose.bones["') :].split('"].')
+            ch[bone, way, c.array_index] = c
+    f0, f1 = (int(v) for v in src.frame_range)
+    rows = {}
+    for fr in range(f0, f1 + 1):
+        offs = {}
+        for bone, ax, deg in turns((fr - f0) / 30):
+            offs.setdefault(bone, []).append((ax, deg))
+        M = {}
+
+        def posed(b):
+            """b's matrix in the armature's space at fr, its turns and its parents' put on."""
+            if b.name not in M:
+                v = [[ch[b.name, w, i].evaluate(fr) if (b.name, w, i) in ch else d[i] for i in range(n)] for w, n, d in WAYS]
+                up = posed(b.parent) if b.parent else Matrix()
+                q = Quaternion(v[1])
+                m = up @ ours[b.name] @ Matrix.LocRotScale(Vector(v[0]), q, Vector(v[2]))
+                if b.name in offs:
+                    body = M["Spine"].to_3x3().normalized() @ spine_rest
+                    for ax, deg in offs[b.name]:
+                        q = q @ Quaternion(m.to_3x3().normalized().inverted() @ body @ AXES[ax], math.radians(deg))
+                        m = up @ ours[b.name] @ Matrix.LocRotScale(Vector(v[0]), q, Vector(v[2]))
+                    rows.setdefault(b.name, []).append(q)
+                M[b.name] = m
+            return M[b.name]
+
+        posed(rig.data.bones["Spine"])
+        for b in rig.data.bones:
+            posed(b)
+    a = src.copy()
+    a.name = name
+    fc = curves(a)
+    for bone, qs in rows.items():
+        path = f'pose.bones["{bone}"].rotation_quaternion'
+        for c in [c for c in fc if c.data_path == path]:
+            fc.remove(c)
+        for j in range(1, len(qs)):
+            qs[j].make_compatible(qs[j - 1])
+        for i in range(4):
+            c = fc.new(path, index=i)
+            c.keyframe_points.add(len(qs))
+            for j, q in enumerate(qs):
+                c.keyframe_points[j].co = (f0 + j, q[i])
+                c.keyframe_points[j].interpolation = "LINEAR"
+    kept[name] = a
+    TRACKS[name] = [(name, None)]
+
+
 # where he goes is the room's to say: the root stays where he stands. A turn keeps the root's
 # turn, which is about that same point; the room turns him by as much once it ends. Taking off
 # and landing keep the root's height, which lifts the body while the paws are still on the
@@ -87,9 +226,10 @@ def curves(a):
 # below, is what willy.js must hold).
 ROOT = 'pose.bones["Root"].location'
 kept["jump-air"] = kept["jump"].copy()
-stride = kept["walk"].copy()  # to measure his stride by, before the walk is made to stand
-for c in [c for c in curves(stride) if c.data_path in ("location", "rotation_euler", "rotation_quaternion", "scale")]:
-    curves(stride).remove(c)
+strides = {g: kept[g].copy() for g in GAITS}  # to measure his strides by, before the gaits are made to stand
+for stride in strides.values():
+    for c in [c for c in curves(stride) if c.data_path in ("location", "rotation_euler", "rotation_quaternion", "scale")]:
+        curves(stride).remove(c)
 # the files also key the armature object itself, at rest, which would undo his size here
 OBJECT = ("location", "rotation_euler", "rotation_quaternion", "scale")
 for name, a in kept.items():
@@ -104,6 +244,9 @@ def frames(a, r):
 
 
 def use(a):
+    # from rest: a bone the clip does not key would keep the last clip's pose
+    for b in rig.pose.bones:
+        b.location, b.rotation_quaternion, b.rotation_euler, b.scale = (0, 0, 0), (1, 0, 0, 0), (0, 0, 0), (1, 1, 1)
     ad.action = a
     if hasattr(ad, "action_slot") and a.slots:
         ad.action_slot = a.slots[0]
@@ -370,17 +513,16 @@ rig.scale = rig.scale * (LENGTH / long)
 rig.rotation_euler.z = 1.5707963
 bpy.context.view_layer.update()
 
-# how much ground one walk cycle covers, so the room can pace his feet to it
-ad.action = stride
-if hasattr(ad, "action_slot") and stride.slots:
-    ad.action_slot = stride.slots[0]
-ends = []
-for fr in (int(stride.frame_range[0]), int(stride.frame_range[1])):
-    bpy.context.scene.frame_set(fr)
-    ends.append(rig.matrix_world @ rig.pose.bones["Root"].head)
-print("STRIDE", round((ends[1] - ends[0]).length * PX, 1), "px a cycle of", round((stride.frame_range[1] - stride.frame_range[0]) / bpy.context.scene.render.fps, 3), "s")
-ad.action = None
-bpy.data.actions.remove(stride)
+# how much ground one cycle of each gait covers, so the room can pace his feet to it
+for g, stride in strides.items():
+    use(stride)
+    ends = []
+    for fr in (int(stride.frame_range[0]), int(stride.frame_range[1])):
+        bpy.context.scene.frame_set(fr)
+        ends.append(rig.matrix_world @ rig.pose.bones["Root"].head)
+    print("STRIDE", g, round((ends[1] - ends[0]).length * PX, 1), "px a cycle of", round((stride.frame_range[1] - stride.frame_range[0]) / bpy.context.scene.render.fps, 3), "s")
+    ad.action = None
+    bpy.data.actions.remove(stride)
 
 def lowest():
     """The lowest point of him now, in room px."""
@@ -432,6 +574,12 @@ if under:
     sys.exit("through the ground: " + ", ".join(f"{n} {z:.1f} px" for n, z in under.items()))
 
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
-bpy.ops.export_scene.gltf(filepath=OUT, export_format="GLB", export_animation_mode="NLA_TRACKS", export_image_format="JPEG",
+RAW = OUT[:-4] + ".raw.glb"
+bpy.ops.export_scene.gltf(filepath=RAW, export_format="GLB", export_animation_mode="NLA_TRACKS", export_image_format="JPEG",
                           export_jpeg_quality=80, export_optimize_animation_size=True, export_morph=True, export_skins=True)
-print("built", OUT, os.path.getsize(OUT) // 1024, "KB,", len(TRACKS), "clips:", ", ".join(TRACKS))
+# packed by gltfpack (meshopt): a third of the size, his clips at the finest steps it keeps, and
+# positions and UVs left as floats, because willy.js grows his fur and outline in model units
+npx = shutil.which("npx") or sys.exit("gltfpack needs Node.js: npx was not found")
+subprocess.run([npx, "--yes", "gltfpack@1.3.0", "-i", RAW, "-o", OUT, "-c", "-kn", "-km", "-vpf", "-vtf", "-ar", "16", "-at", "16", "-as", "16"], check=True)
+print("built", OUT, os.path.getsize(RAW) // 1024, "->", os.path.getsize(OUT) // 1024, "KB,", len(TRACKS), "clips:", ", ".join(TRACKS))
+os.remove(RAW)
