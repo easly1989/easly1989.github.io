@@ -24,10 +24,17 @@ const lift = (at) => LIFT[0] + (LIFT[1] - LIFT[0]) * at;
 const CLEAR = 4; // px he keeps from everything solid
 const OVER = 6; // px he may hang over the edge of what he stands on, being soft
 const LYING = 20; // and lying down or asleep, his paws and tail spilling over
-// the fill from all round, with the room's light on and off, and how strong each of the room's
-// sources is on him at full power
-const FILL = [1.7, 1.0];
+// the fill from all round with the room's light on, and how strong each of the room's sources is
+// on him at full power
+const FILL = 1.7;
 const STRENGTH = { room: 1.5, window: 1.4, screen: 1.2, radio: 1.4 };
+// With the room's light off the room is darkened by a layer multiplied over it (room.js, glow()),
+// with holes where its sources shine; on screen, so it would light him wherever the floor behind
+// him is lit, his legs in the window's light and his back not. So he is cut out of it (cutout())
+// and lit by his own lights only: this fill, as dark as the layer leaves the room (rgb(40, 46,
+// 80)), and each source from where it is, as far as it reaches him; the moon only as much of
+// him as is in the window's light.
+const NIGHT = { sky: 0x8093ff, ground: 0x2c3248, power: 0.25 };
 const SHADOW = 0.5; // how dark his shadow is, as dark as the room's own (room.css, .shade)
 // and the room it is drawn in, px square, the texels across it, how high above the ground he
 // still darkens it, how far each point of him falls away from the light per px of its height
@@ -52,7 +59,9 @@ export async function willy(room, stage, src = "assets/willy.glb") {
   const cv = document.createElement("canvas");
   cv.className = "willy";
   cv.setAttribute("aria-hidden", "true");
-  cv.style.cssText = "position:absolute;left:0;top:0;width:" + W + "px;height:" + H + "px;pointer-events:none";
+  // (never transitioned, not even by reduced motion's 0.01ms on everything, in styles.css:
+  // cutout() measures where he is the moment he is moved)
+  cv.style.cssText = "position:absolute;left:0;top:0;width:" + W + "px;height:" + H + "px;pointer-events:none;transition:none";
   const renderer = new THREE.WebGLRenderer({ canvas: cv, alpha: true, antialias: true, failIfMajorPerformanceCaveat: true });
   room.appendChild(cv);
   // drawn at the size the stage shows it at
@@ -74,7 +83,7 @@ export async function willy(room, stage, src = "assets/willy.glb") {
   // a soft fill from all round, and the room's own sources (ROOM.lights()) as point lights,
   // moved with him, since his world is centred on him; all four always there, an unlit one at
   // nothing, so that one switching on recompiles no shader
-  const sky = new THREE.HemisphereLight(0xffffff, 0x5a6470, FILL[0]);
+  const sky = new THREE.HemisphereLight(0xffffff, 0x5a6470, FILL);
   sky.position.set(0, 0, 1);
   scene.add(sky);
   const lamps = [0, 1, 2, 3].map(() => {
@@ -83,18 +92,23 @@ export async function willy(room, stage, src = "assets/willy.glb") {
     return l;
   });
   let sources = [],
-    here = [0, 0, 0];
+    here = [0, 0, 0],
+    moon = 1; // how much of him is in the window's light
+  const dark = () => !sources.some((s) => s.name === "room" && s.power);
   // each source where it is from him, as strong as it is now
   const shine = () => {
+    const night = dark();
     lamps.forEach((l, i) => {
       const s = sources[i];
-      l.intensity = s ? s.power * (STRENGTH[s.name] ?? 1) : 0;
+      l.intensity = s ? s.power * (STRENGTH[s.name] ?? 1) * (night && s.name === "window" ? moon : 1) : 0;
       if (!s) return;
       l.color.set(s.color);
       l.distance = s.reach;
       l.position.set(s.at[0] - here[0], here[1] - s.at[1], s.at[2] - here[2]);
     });
-    sky.intensity = sources.some((s) => s.name === "room" && s.power) ? FILL[0] : FILL[1];
+    sky.color.set(night ? NIGHT.sky : 0xffffff);
+    sky.groundColor.set(night ? NIGHT.ground : 0x5a6470);
+    sky.intensity = night ? NIGHT.power : FILL;
   };
 
   let gltf;
@@ -133,6 +147,47 @@ export async function willy(room, stage, src = "assets/willy.glb") {
   holder.rotation.order = "ZYX"; // tilted in his own frame, then turned to his heading
   const legs = LEGS.map((l) => l.map((n) => model.getObjectByName(THREE.PropertyBinding.sanitizeNodeName(n))));
   const legged = legs.every((l) => l.every(Boolean));
+  const skull = model.getObjectByName("Head");
+  // what of him the moon is looked for on: his head and along his back
+  const torso = ["Head", "Spine.3", "Spine.2", "Spine.1", "Spine"].map((n) => model.getObjectByName(THREE.PropertyBinding.sanitizeNodeName(n))).filter(Boolean);
+  // him cut out of the dark layer: his body drawn plain white into a canvas in it, where the
+  // layer then leaves the room as it is, but where something solid stands in front of him
+  const veil = document.createElement("canvas");
+  veil.className = "night-willy";
+  veil.style.cssText = "position:absolute;inset:0;width:100%;height:100%";
+  window.ROOM.night.append(veil);
+  const pen = veil.getContext("2d"),
+    plain = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  let veiled = false;
+  const cutout = () => {
+    if (!dark()) {
+      if (veiled) pen.clearRect(0, 0, veil.width, veil.height);
+      veiled = false;
+      return;
+    }
+    const k = devicePixelRatio,
+      vw = Math.round(innerWidth * k),
+      vh = Math.round(innerHeight * k);
+    if (veil.width !== vw || veil.height !== vh) Object.assign(veil, { width: vw, height: vh });
+    pen.clearRect(0, 0, vw, vh);
+    const over = scene.overrideMaterial,
+      seen = cam.layers.mask;
+    scene.overrideMaterial = plain;
+    cam.layers.set(SHADE.layer); // (his body, without the fur's fringe or his shadow)
+    renderer.render(scene, cam);
+    scene.overrideMaterial = over;
+    cam.layers.mask = seen;
+    const r = cv.getBoundingClientRect();
+    pen.drawImage(cv, r.left * k, r.top * k, r.width * k, r.height * k);
+    pen.globalCompositeOperation = "destination-out";
+    for (const hull of window.ROOM.before(shape(size.idle, at.x, at.y, here[2], at.heading, 0))) {
+      pen.beginPath();
+      hull.forEach(([px, py], i) => (i ? pen.lineTo(px * k, py * k) : pen.moveTo(px * k, py * k)));
+      pen.fill();
+    }
+    pen.globalCompositeOperation = "source-over";
+    veiled = true;
+  };
   // none under reduced motion, where he sleeps and does not move
   const life = matchMedia("(prefers-reduced-motion: reduce)").matches ? null : alive(model, holder);
   let at = { x: 0, y: 0, z: 0, heading: 0, under: null },
@@ -190,9 +245,31 @@ export async function willy(room, stage, src = "assets/willy.glb") {
       h = z + lift,
       b = BIAS / Math.sqrt(3);
     cv.style.transform = "translate3d(" + (x - b - W / 2) + "px," + (y + b - H / 2) + "px," + (h + ANCHOR_Z + b) + "px) rotateZ(45deg) rotateX(-54.7356deg)";
-    blob.position.z = u.z - h + 0.5;
-    blob.material.opacity = SHADOW * Math.max(0, 1 - u.by / 300);
     here = [x, y, h];
+    // in the dark, the moon as far as it falls on him, and his shadow cast by the strongest
+    // light that reaches him, away from it; or none, where none does
+    const room = (v) => [x + v.x, y - v.y, h + v.z];
+    moon = torso.length ? torso.filter((b) => window.ROOM.moonlit(...room(b.getWorldPosition(new THREE.Vector3())))).length / torso.length : 1;
+    let fall = SHADE.fall,
+      strength = 1;
+    if (dark()) {
+      const mid = [x, y, h + ANCHOR_Z],
+        reaching = sources
+          .filter((s) => s.power && s.name !== "room")
+          .map((s) => ({ s, e: s.power * (s.name === "window" ? moon : s.reach ? Math.max(0, 1 - Math.hypot(...s.at.map((c, i) => c - mid[i])) / s.reach) : 1) }))
+          .sort((a, b) => b.e - a.e)[0];
+      strength = reaching ? Math.min(1, reaching.e) : 0;
+      if (reaching) {
+        const a = reaching.s.at,
+          up = Math.max(60, a[2] - mid[2]),
+          f = [(mid[0] - a[0]) / up, -(mid[1] - a[1]) / up], // (his world's y runs the other way)
+          n = Math.hypot(...f);
+        fall = n > 1.2 ? f.map((c) => (c * 1.2) / n) : f;
+      }
+    }
+    blob.fall(fall);
+    blob.position.z = u.z - h + 0.5;
+    blob.material.opacity = SHADOW * strength * Math.max(0, 1 - u.by / 300);
     shine();
   };
   // his many shaders (one a shell of fur) compiled in the background where the browser can,
@@ -202,7 +279,9 @@ export async function willy(room, stage, src = "assets/willy.glb") {
   sources = window.ROOM.lights();
   window.ROOM.onLights(() => {
     sources = window.ROOM.lights();
-    shine();
+    stand();
+    blob.cast(scene);
+    cutout();
     renderer.render(scene, cam);
   });
   const moments = (clip, at) => {
@@ -228,6 +307,7 @@ export async function willy(room, stage, src = "assets/willy.glb") {
       life?.apply(Object.keys(clips).find((n) => clips[n].isScheduled()) || "", here);
       stand();
       blob.cast(scene);
+      cutout();
       renderer.render(scene, cam);
     },
     size,
@@ -236,13 +316,24 @@ export async function willy(room, stage, src = "assets/willy.glb") {
     look(p) {
       if (life) life.target = p;
     },
+    // a slow blink, s long; an ear turned
+    blink: (s) => life?.blink(s),
+    twitch: () => life?.twitch(),
+    // where the top of his head is on the screen, in the viewport's px
+    head() {
+      const v = skull.getWorldPosition(new THREE.Vector3());
+      v.z += 40;
+      v.project(cam);
+      const r = cv.getBoundingClientRect();
+      return [r.left + ((v.x + 1) / 2) * r.width, r.top + ((1 - v.y) / 2) * r.height];
+    },
     // whether he fits at x, y, standing at z and facing heading, in that clip: clear of
     // everything solid in the room (but what makes the surfaces named in past), wholly on the
     // surface on, when one is given, and at the moment at (0 to 1 of the way through the
     // clip), or at every moment of it
     fits(x, y, z, heading, clip, { on = null, at = null, past = [] } = {}) {
       return moments(clip, at).every((m, i, all) => {
-        const over = /^(lie|sleep|wake)/.test(clip) ? LYING : OVER;
+        const over = /^(lie|sleep|wake|curl|uncurl|loaf|knead-lie|pet-lie|roll-over)/.test(clip) ? LYING : OVER;
         if (on && !shape(m, x, y, z, heading, 0).parts[0].q.every(([a, b]) => a >= on.x0 - over && a <= on.x1 + over && b >= on.y0 - over && b <= on.y1 + over)) return false;
         return window.ROOM.clear(shape(m, x, y, up(z, clip, at, i, all.length), heading), past);
       });
@@ -394,7 +485,8 @@ function alive(model, holder) {
     flick = null,
     earAt = between(TWITCH.every),
     ear = null,
-    blinkAt = between(BLINK.every);
+    blinkAt = between(BLINK.every),
+    blinkLen = BLINK.s;
   const move = (b, axis, a) => {
     if (!a) return;
     touched.push([b, b.quaternion.clone()]);
@@ -404,6 +496,14 @@ function alive(model, holder) {
   const pulse = (s, len) => (s < 0 || s > len ? 0 : Math.sin((Math.PI * s) / len));
   return {
     target: null, // where he looks, in room px, or nowhere
+    // a blink now, of s seconds (a slow one is a cat's smile), and an ear turned now
+    blink(s) {
+      blinkAt = clock;
+      blinkLen = s;
+    },
+    twitch() {
+      earAt = clock;
+    },
     // the clip's own pose back, before the mixer sets the next
     restore() {
       for (let i = touched.length - 1; i >= 0; i--) touched[i][0].quaternion.copy(touched[i][1]);
@@ -446,8 +546,11 @@ function alive(model, holder) {
       }
       if (ear) move(B.ears[ear.i], up, (ear.i ? 1 : -1) * TWITCH.deg * deg * pulse(clock - ear.at, 0.4));
       // a blink
-      if (clock > blinkAt + BLINK.s) blinkAt = clock + between(BLINK.every);
-      const shut = pulse(clock - blinkAt, BLINK.s) * BLINK.deg * deg;
+      if (clock > blinkAt + blinkLen) {
+        blinkAt = clock + between(BLINK.every);
+        blinkLen = BLINK.s;
+      }
+      const shut = pulse(clock - blinkAt, blinkLen) * BLINK.deg * deg;
       B.lids.forEach((b, i) => move(b, left, i < 2 ? -shut : shut)); // (the upper lids close one way about his left, the lower ones the other)
       // the head turned to where he looks, in the rests only, the neck taking part of it
       const head = B.head.getWorldPosition(new THREE.Vector3()),
@@ -504,8 +607,11 @@ function shadow(renderer) {
   eye.layers.set(SHADE.layer);
   eye.up.set(0, 1, 0);
   eye.lookAt(0, 0, 1);
-  // each point moved along the ground by its height, which the eye sees as its depth (-z)
-  eye.projectionMatrix.multiply(new THREE.Matrix4().set(1, 0, fall[0], 0, 0, 1, -fall[1], 0, 0, 0, 1, 0, 0, 0, 0, 1));
+  // each point moved along the ground by its height, which the eye sees as its depth (-z), by f
+  // a px of height, along his world's x and y
+  const level = eye.projectionMatrix.clone();
+  const fallBy = (f) => eye.projectionMatrix.copy(level).multiply(new THREE.Matrix4().set(1, 0, f[0], 0, 0, 1, -f[1], 0, 0, 0, 1, 0, 0, 0, 0, 1));
+  fallBy(fall);
   const dark = new THREE.MeshDepthMaterial();
   dark.onBeforeCompile = (sh) => {
     sh.fragmentShader = sh.fragmentShader.replace("gl_FragColor = vec4( vec3( 1.0 - fragCoordZ ), opacity );", "gl_FragColor = vec4( vec3( 0.0 ), 1.0 - fragCoordZ );");
@@ -534,6 +640,7 @@ void main() {
   for (let i = 0; i < uv.count; i++) uv.setX(i, 1 - uv.getX(i));
   const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: a.texture, transparent: true, depthWrite: false }));
   m.renderOrder = -1;
+  m.fall = fallBy;
   // (the weights are a gaussian of 2 taps' width: a tap every half of each pass's px)
   const tap = size / texels;
   m.cast = (scene) => {
