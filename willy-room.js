@@ -13,7 +13,7 @@ let ready;
 ROOM.holdLight(new Promise((r) => (ready = r)));
 live()
   .catch((e) => {
-    room.querySelector("canvas.willy")?.remove();
+    room.querySelectorAll("canvas.willy, canvas.willy-shadow").forEach((c) => c.remove());
     console.warn("No Willy:", e);
   })
   .finally(() => ready());
