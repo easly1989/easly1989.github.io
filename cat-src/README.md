@@ -134,6 +134,14 @@ the room. His shadow is drawn in his own canvas: his shape seen from under what 
 fallen away from the light as the room's shadows are, darker the nearer the ground, so it starts
 at his paws, and blurred; there are no shadow maps. He is drawn only when he is anywhere new, and not at all while the tab is hidden.
 
+Over every clip `willy.js` adds the small motions that keep him from ever being quite still
+(`alive()`): his back rising and falling as he breathes, slower asleep; his tail swaying, root to
+tip, and now and then flicking at its tip; now and then an ear turned back a moment, or a blink;
+and, while he rests, his head turned to whatever he looks at (`look()`), as far as a neck turns.
+`willy-room.js` has him look, every few seconds, at one of the room's sources that is on (the
+window, the screen, the radio's lamp), at the reader, or at nothing. None of it under reduced
+motion.
+
 three.js r186 is in `vendor/three/` (see its README), behind the import map in `index.html`.
 
 Where he can go (the desk, the cushion, the shelf) is worked out by `willy-paths.js` from what
