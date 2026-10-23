@@ -698,11 +698,45 @@ html:not(.iso) .strip {
 .iso .pc .floor {
   filter: blur(6px);
 }
-.iso .fumes {
-  left: -260px;
-  top: 330px;
-  scale: 3 3 3;
-  translate: 0 0 380px;
+/* out of the vents on the side, in the side's own axes: x runs up it, y along it */
+.iso .pc .side .fumes {
+  z-index: 2;
+  left: 44px;
+  top: 10px;
+  width: 26px;
+  height: 50px;
+}
+/* darker than on the bench: grey on the grey-beige case would not show */
+.iso .pc .side .fumes i {
+  left: 0;
+  top: 12px;
+  width: 18px;
+  height: 22px;
+  background: radial-gradient(circle, rgba(105, 103, 98, 0.8), rgba(120, 118, 112, 0) 70%);
+}
+.iso .pc .side .fumes.puff i {
+  animation-name: vent-puff;
+}
+.iso .pc .side .fumes.puff i:nth-child(2) {
+  left: 2px;
+  top: 2px;
+}
+.iso .pc .side .fumes.puff i:nth-child(3) {
+  left: 4px;
+  top: 26px;
+}
+@keyframes vent-puff {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.4);
+  }
+  20% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(64px, -6px) scale(2.2);
+  }
 }
 /* the yellow note, stuck on its side. The side's own axes run up and along, so
    the note is turned to stand upright, and drawn at its usual size */
@@ -713,8 +747,17 @@ html:not(.iso) .strip {
   width: 180px;
   height: 150px;
   transform-origin: 0 0;
-  transform: rotate(90deg) scale(0.25);
+  /* scaled in depth as well, so the note lifts off the case in proportion */
+  transform: rotate(90deg) scale3d(0.25, 0.25, 0.25);
 }
+/* the side holds what stands off it in depth: the note's loose end, the air from the vents.
+   Its z runs out of the case */
+.iso .pc .side,
+.iso .pc .pc-note {
+  transform-style: preserve-3d;
+}
+/* stuck along its top edge: a paper's thickness at its edges, and its lower part curling
+   away from the case, lighter where it turns to the light and darker at its very edge */
 .iso .pc .pc-note > .sticky {
   position: absolute;
   left: 0;
@@ -722,12 +765,145 @@ html:not(.iso) .strip {
   width: 180px;
   height: 150px;
   translate: none;
-  transform: rotate(-3deg);
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
+  transform: translateZ(1px) rotate(-3deg) rotateX(2deg);
+  transform-origin: 50% 0;
+  border-radius: 1px 1px 10px 10px / 1px 1px 5px 5px;
+  background: linear-gradient(#ffe36e 0 64%, #ffeb8c 84%, #ffe98a 92%, #e8c450 100%);
+  box-shadow:
+    inset 0 -1px 0 rgba(140, 100, 0, 0.35),
+    0 1px 0 #d9b43c;
+}
+/* its shadow on the case, further off where the paper curls away; only with the light on */
+.iso .pc .pc-note:not(.snap-pc)::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  right: 0;
+  top: 8px;
+  bottom: -8px;
+  border-radius: 2px 2px 40% 40% / 2px 2px 14px 14px;
+  background: rgba(40, 30, 10, 0.34);
+  filter: blur(6px);
+  transform: rotate(-3deg) translate(4px, 0);
+  transform-origin: 50% 0;
+}
+.iso.lights-off .pc .pc-note:not(.snap-pc)::before {
+  opacity: 0;
 }
 .iso .pc .pc-note > .sticky:hover,
 .iso .pc .pc-note > .sticky:focus-visible {
-  transform: rotate(-3deg) scale(1.05);
+  transform: translateZ(1px) rotate(-3deg) rotateX(2deg) scale(1.05);
+}
+/* now and then, while the computer runs (room.js picks when, and how hard: --k), a gust out
+   of the vents lifts the note's loose end off the case, a flutter in it, and lets it fall
+   back; its shadow goes with it */
+.iso .pc.on.gust .pc-note > .sticky {
+  animation: gust 1.9s ease-in-out;
+}
+.iso .pc.on.gust .pc-note:not(.snap-pc)::before {
+  animation: gust-shade 1.9s ease-in-out;
+}
+@keyframes gust {
+  0%,
+  100% {
+    transform: translateZ(1px) rotate(-3deg) rotateX(2deg);
+  }
+  25% {
+    transform: translateZ(1px) rotate(-3.2deg) rotateX(calc(2deg + 5deg * var(--k, 1)));
+  }
+  40% {
+    transform: translateZ(1px) rotate(-2.9deg) rotateX(calc(2deg + 3deg * var(--k, 1)));
+  }
+  55% {
+    transform: translateZ(1px) rotate(-3.1deg) rotateX(calc(2deg + 7deg * var(--k, 1)));
+  }
+  75% {
+    transform: translateZ(1px) rotate(-3deg) rotateX(calc(2deg + 2deg * var(--k, 1)));
+  }
+}
+@keyframes gust-shade {
+  0%,
+  100% {
+    transform: rotate(-3deg) translate(4px, 0);
+    filter: blur(6px);
+  }
+  25%,
+  55% {
+    transform: rotate(-3deg) translate(calc(4px + 4px * var(--k, 1)), calc(4px * var(--k, 1)));
+    filter: blur(8px);
+  }
+  40%,
+  75% {
+    transform: rotate(-3deg) translate(calc(4px + 2px * var(--k, 1)), calc(2px * var(--k, 1)));
+    filter: blur(7px);
+  }
+}
+/* warm air out of the vents: faint streaks leaving the slots, out of the case and up */
+.iso .pc .side .draught {
+  left: 46px;
+  top: 12px;
+  width: 24px;
+  height: 46px;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+.iso .pc .side .draught i {
+  position: absolute;
+  left: 4px;
+  width: 16px;
+  height: 1.5px;
+  border-radius: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 252, 240, 0.4), transparent);
+  filter: blur(0.6px);
+  opacity: 0;
+}
+.iso .pc .side .draught i:nth-child(1) {
+  top: 8px;
+}
+.iso .pc .side .draught i:nth-child(2) {
+  top: 18px;
+  animation-delay: 0.8s;
+}
+.iso .pc .side .draught i:nth-child(3) {
+  top: 28px;
+  animation-delay: 1.5s;
+}
+.iso .pc .side .draught i:nth-child(4) {
+  top: 37px;
+  animation-delay: 2.3s;
+}
+.iso .pc.on .side .draught i {
+  animation-name: air;
+  animation-duration: 2.9s;
+  animation-timing-function: ease-out;
+  animation-iteration-count: infinite;
+}
+@keyframes air {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scaleX(0.6);
+  }
+  25% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(9px, 0, 16px) scaleX(1.3);
+  }
+}
+/* broken, the note nearly caught fire: its corner by the vents burnt away ragged, its edges
+   scorched brown to black, the rest yellowed by the heat */
+.iso .pc.broken .pc-note > .sticky {
+  background:
+    radial-gradient(ellipse 32% 26% at 0% 92%, #1a0e05 0 30%, #4b2a0f 55%, rgba(120, 75, 25, 0.7) 75%, transparent),
+    radial-gradient(ellipse 12% 30% at 0% 50%, rgba(80, 45, 12, 0.75), transparent),
+    radial-gradient(ellipse 30% 9% at 40% 100%, rgba(90, 52, 14, 0.8), transparent),
+    radial-gradient(ellipse 60% 50% at 10% 80%, rgba(160, 105, 30, 0.45), transparent),
+    linear-gradient(#f2d660 0 64%, #f4dc7a 84%, #e9cf6e 92%, #c99f3a 100%);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 38% 100%, 34% 97%, 30% 99%, 26% 95%, 22% 97%, 19% 92%, 15% 94%, 12% 88%, 8% 90%, 6% 83%, 3% 84%, 2% 77%, 0 74%, 1% 66%, 0 60%);
+}
+.iso .pc.broken .pc-note:not(.snap-pc)::before {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 38% 100%, 15% 94%, 0 74%);
 }
 
 /* ---- on the walls ---------------------------------------------------------------- */
