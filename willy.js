@@ -13,6 +13,11 @@ const W = 560; // room enough for all of him, 388 px nose to tail, whichever way
 const H = 560;
 const ANCHOR_Z = 88; // the canvas stands at his body's middle, not at his feet
 const BIAS = 50; // and a little towards the viewer, so the ground under him stays behind it
+// Facing the reader, his canvas goes down into the ground a little in front of him, and what of
+// him is there (his paws stretched out lying, his tail hanging towards the reader) went into the
+// desk or the book beside him and was cut off. So below the height of his feet it folds forward,
+// flat this high above his ground, over the books (30 px at most); on screen nothing changes.
+const FOLD = 40;
 // a little long, as Willy's is; reach in model units of a cat 5.64 long, tail how much longer
 // the tail's is
 const FUR = { reach: 0.28, shells: 20, strands: 26, comb: 0.9, outline: 0.09, tail: 0.5 };
@@ -64,6 +69,25 @@ export async function willy(room, stage, src = "assets/willy.glb") {
   cv.style.cssText = "position:absolute;left:0;top:0;width:" + W + "px;height:" + H + "px;pointer-events:none;transition:none";
   const renderer = new THREE.WebGLRenderer({ canvas: cv, alpha: true, antialias: true, failIfMajorPerformanceCaveat: true });
   room.appendChild(cv);
+  // the fold: the row of his canvas where it is FOLD above his ground, and the part below it,
+  // copied into a canvas of its own lying flat (stand())
+  const b = BIAS / Math.sqrt(3),
+    fold = (ANCHOR_Z + b - FOLD) / Math.sqrt(2 / 3) + H / 2;
+  cv.style.clipPath = "inset(0 0 " + (H - fold - 0.5) + "px 0)";
+  const low = document.createElement("canvas");
+  low.className = "willy-low";
+  low.setAttribute("aria-hidden", "true");
+  low.style.cssText = "position:absolute;left:0;top:0;width:" + W + "px;height:" + (H - fold) + "px;pointer-events:none;transition:none;transform-origin:0 0";
+  room.appendChild(low);
+  const lowPen = low.getContext("2d");
+  const show = () => {
+    renderer.render(scene, cam);
+    const k = cv.width / W,
+      top = Math.round(fold * k);
+    if (low.width !== cv.width || low.height !== cv.height - top) Object.assign(low, { width: cv.width, height: cv.height - top });
+    lowPen.clearRect(0, 0, low.width, low.height);
+    lowPen.drawImage(cv, 0, top, cv.width, low.height, 0, 0, low.width, low.height);
+  };
   // drawn at the size the stage shows it at
   const resize = () => {
     const s = parseFloat(getComputedStyle(stage).getPropertyValue("--s")) || 1;
@@ -242,9 +266,15 @@ export async function willy(room, stage, src = "assets/willy.glb") {
       });
     }
     const u = under || { z: z + (steps.length ? Math.max(...steps) : 0), by: 0 },
-      h = z + lift,
-      b = BIAS / Math.sqrt(3);
+      h = z + lift;
     cv.style.transform = "translate3d(" + (x - b - W / 2) + "px," + (y + b - H / 2) + "px," + (h + ANCHOR_Z + b) + "px) rotateZ(45deg) rotateX(-54.7356deg)";
+    // the fold's row, where his canvas's rows run (across: along the room's x and y; down: back
+    // to front and down), and below it flat, back to front, the same on screen
+    const r2 = Math.SQRT1_2,
+      r6 = 1 / Math.sqrt(6),
+      t = fold - H / 2,
+      o = [x - b - (W / 2) * r2 - t * r6, y + b - (W / 2) * r2 + t * r6, h + FOLD];
+    low.style.transform = "matrix3d(" + [r2, r2, 0, 0, -3 * r6, 3 * r6, 0, 0, -1 / Math.sqrt(3), 1 / Math.sqrt(3), 1 / Math.sqrt(3), 0, ...o, 1].map((n) => +n.toFixed(5)).join(",") + ")";
     here = [x, y, h];
     // in the dark, the moon as far as it falls on him, and his shadow cast by the strongest
     // light that reaches him, away from it; or none, where none does
@@ -284,7 +314,7 @@ export async function willy(room, stage, src = "assets/willy.glb") {
     stand();
     blob.cast(scene);
     cutout();
-    renderer.render(scene, cam);
+    show();
   });
   const moments = (clip, at) => {
     const m = size[clip].moments;
@@ -310,7 +340,7 @@ export async function willy(room, stage, src = "assets/willy.glb") {
       stand();
       blob.cast(scene);
       cutout();
-      renderer.render(scene, cam);
+      show();
     },
     size,
     // where he looks, a point in room px, or nowhere (null): he turns his head to it while he
