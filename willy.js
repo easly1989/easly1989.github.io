@@ -133,6 +133,8 @@ export async function willy(room, stage, src = "assets/willy.glb") {
   holder.rotation.order = "ZYX"; // tilted in his own frame, then turned to his heading
   const legs = LEGS.map((l) => l.map((n) => model.getObjectByName(THREE.PropertyBinding.sanitizeNodeName(n))));
   const legged = legs.every((l) => l.every(Boolean));
+  // none under reduced motion, where he sleeps and does not move
+  const life = matchMedia("(prefers-reduced-motion: reduce)").matches ? null : alive(model, holder);
   let at = { x: 0, y: 0, z: 0, heading: 0, under: null },
     steps = [0, 0, 0, 0],
     then = 0,
@@ -221,12 +223,19 @@ export async function willy(room, stage, src = "assets/willy.glb") {
     },
     draw(dt) {
       unbend();
+      life?.restore();
       mixer.update(dt);
+      life?.apply(Object.keys(clips).find((n) => clips[n].isScheduled()) || "", here);
       stand();
       blob.cast(scene);
       renderer.render(scene, cam);
     },
     size,
+    // where he looks, a point in room px, or nowhere (null): he turns his head to it while he
+    // rests, as far as a neck turns
+    look(p) {
+      if (life) life.target = p;
+    },
     // whether he fits at x, y, standing at z and facing heading, in that clip: clear of
     // everything solid in the room (but what makes the surfaces named in past), wholly on the
     // surface on, when one is given, and at the moment at (0 to 1 of the way through the
@@ -347,6 +356,124 @@ function turn(bone, axis, angle) {
   const q = bone.getWorldQuaternion(new THREE.Quaternion()).invert();
   bone.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(axis.clone().applyQuaternion(q), angle));
   bone.updateMatrixWorld(true);
+}
+
+// The small motions over every clip, as a cat is never quite still: his breathing, his tail
+// swaying and now and then flicking at its tip, now and then an ear turning or a blink, and his
+// head turned to whatever he looks at, as far as a neck turns. Each is a turn of a few bones on
+// top of the clip's pose, about his own axes, put back before the next frame.
+const RESTS = new Set(["idle", "sit", "sit-idle", "lie", "lie-idle", "loaf", "crouch", "pet", "pet-sit", "pet-lie", "knead-lie"]);
+const ASLEEP = /^(sleep|curl|uncurl)/;
+const STILL_TAIL = /^(jump|run|land-stop|roll-over|chase)/;
+const LOOK = { yaw: 70, pitch: 30, neck: 0.4, ease: 0.18, fade: 0.3 }; // degrees as far as he turns, s
+const BREATH = { awake: [0.45, 1.5], asleep: [0.28, 2.5] }; // a second, degrees
+const SWAY = { awake: [0.25, 4], asleep: [0.15, 1], lag: 0.7, flick: [5, 14], flickDeg: 25 }; // a second, degrees, rad a bone, s apart, degrees
+const TWITCH = { every: [3, 9], deg: 30 }; // s apart, degrees
+const BLINK = { every: [2.5, 7], s: 0.16, deg: 60 }; // s apart, s it takes, degrees the lids close
+function alive(model, holder) {
+  const bone = (n) => model.getObjectByName(THREE.PropertyBinding.sanitizeNodeName(n));
+  const B = {
+    neck: bone("Neck"),
+    head: bone("Head"),
+    back: [bone("Spine.2"), bone("Spine.3")],
+    ears: [bone("ear.L"), bone("ear.R")],
+    lids: [bone("lid_up.L"), bone("lid_up.R"), bone("lid_down.L"), bone("lid_down.R")],
+    nose: [bone("nose.L"), bone("nose.R")],
+    tail: ["tail.1", "tail.2", "tail.3", "tail.4", "tail.5", "tail.6", "tail.7"].map(bone),
+  };
+  if (Object.values(B).flat().some((b) => !b)) return null;
+  const between = ([a, b]) => a + Math.random() * (b - a),
+    deg = Math.PI / 180,
+    touched = [];
+  let clock = 0,
+    then = null,
+    yaw = 0,
+    pitch = 0,
+    weight = 0,
+    flickAt = between(SWAY.flick),
+    flick = null,
+    earAt = between(TWITCH.every),
+    ear = null,
+    blinkAt = between(BLINK.every);
+  const move = (b, axis, a) => {
+    if (!a) return;
+    touched.push([b, b.quaternion.clone()]);
+    turn(b, axis, a);
+  };
+  // how far through a quick there and back he is, 0 to 1 and back, s after it began
+  const pulse = (s, len) => (s < 0 || s > len ? 0 : Math.sin((Math.PI * s) / len));
+  return {
+    target: null, // where he looks, in room px, or nowhere
+    // the clip's own pose back, before the mixer sets the next
+    restore() {
+      for (let i = touched.length - 1; i >= 0; i--) touched[i][0].quaternion.copy(touched[i][1]);
+      touched.length = 0;
+    },
+    apply(clip, here) {
+      const now = performance.now() / 1000,
+        dt = then == null ? 0 : Math.min(0.1, now - then);
+      then = now;
+      clock += dt;
+      holder.updateMatrixWorld(true);
+      const e = holder.matrixWorld.elements,
+        forward = new THREE.Vector3(e[0], e[1], e[2]).normalize(),
+        left = new THREE.Vector3(e[4], e[5], e[6]).normalize(),
+        up = new THREE.Vector3(e[8], e[9], e[10]).normalize();
+      const sleeping = ASLEEP.test(clip),
+        resting = RESTS.has(clip);
+      // breathing: his back rising and falling between his hips and his chest
+      if (resting || sleeping) {
+        const [f, a] = sleeping ? BREATH.asleep : BREATH.awake,
+          b = a * deg * (0.5 + 0.5 * Math.sin(2 * Math.PI * f * clock));
+        move(B.back[0], left, -b);
+        move(B.back[1], left, b);
+      }
+      // the tail: a slow wave from its root to its tip, and now and then a flick of the tip
+      if (!STILL_TAIL.test(clip)) {
+        const [f, a] = sleeping ? SWAY.asleep : SWAY.awake;
+        if (!sleeping && clock > flickAt) {
+          flick = { at: clock, side: Math.random() < 0.5 ? -1 : 1 };
+          flickAt = clock + between(SWAY.flick);
+        }
+        const k = flick ? pulse(clock - flick.at, 0.45) : 0;
+        B.tail.forEach((b, i) => move(b, up, (a * Math.sin(2 * Math.PI * f * clock - i * SWAY.lag) + (i >= 4 && flick ? flick.side * k * SWAY.flickDeg * (i - 3) / 3 : 0)) * deg));
+      }
+      if (sleeping) return;
+      // an ear turned back a moment, now and then, one at a time
+      if (clock > earAt) {
+        ear = { at: clock, i: Math.random() < 0.5 ? 0 : 1 };
+        earAt = clock + between(TWITCH.every);
+      }
+      if (ear) move(B.ears[ear.i], up, (ear.i ? 1 : -1) * TWITCH.deg * deg * pulse(clock - ear.at, 0.4));
+      // a blink
+      if (clock > blinkAt + BLINK.s) blinkAt = clock + between(BLINK.every);
+      const shut = pulse(clock - blinkAt, BLINK.s) * BLINK.deg * deg;
+      B.lids.forEach((b, i) => move(b, left, i < 2 ? -shut : shut)); // (the upper lids close one way about his left, the lower ones the other)
+      // the head turned to where he looks, in the rests only, the neck taking part of it
+      const head = B.head.getWorldPosition(new THREE.Vector3()),
+        nose = B.nose[0].getWorldPosition(new THREE.Vector3()).add(B.nose[1].getWorldPosition(new THREE.Vector3())).multiplyScalar(0.5),
+        facing = nose.sub(head).normalize();
+      let want = [0, 0];
+      if (this.target && resting) {
+        const p = this.target,
+          to = new THREE.Vector3(p[0] - here[0], here[1] - p[1], p[2] - here[2]).sub(head).normalize(),
+          flat = (v) => v.clone().projectOnPlane(up).normalize(),
+          [a, b] = [flat(facing), flat(to)],
+          turnBy = Math.atan2(a.clone().cross(b).dot(up), a.dot(b)),
+          lift = Math.asin(THREE.MathUtils.clamp(to.dot(up), -1, 1)) - Math.asin(THREE.MathUtils.clamp(facing.dot(up), -1, 1));
+        want = [THREE.MathUtils.clamp(turnBy, -LOOK.yaw * deg, LOOK.yaw * deg), THREE.MathUtils.clamp(lift, -LOOK.pitch * deg, LOOK.pitch * deg)];
+      }
+      const ease = (t) => 1 - Math.exp(-dt / t);
+      weight += ((this.target && resting ? 1 : 0) - weight) * ease(LOOK.fade);
+      yaw += (want[0] - yaw) * ease(LOOK.ease);
+      pitch += (want[1] - pitch) * ease(LOOK.ease);
+      const across = left.clone().applyAxisAngle(up, yaw * weight);
+      move(B.neck, up, yaw * weight * LOOK.neck);
+      move(B.head, up, yaw * weight * (1 - LOOK.neck));
+      move(B.neck, across, -pitch * weight * LOOK.neck); // (nose up is a turn the other way about his left)
+      move(B.head, across, -pitch * weight * (1 - LOOK.neck));
+    },
+  };
 }
 
 // that room where he stands, as the room measures its own things (room.js, bounds()): turned
