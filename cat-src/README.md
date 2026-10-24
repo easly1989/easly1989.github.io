@@ -140,9 +140,11 @@ the dark he is cut out of the room's night layer, which is drawn flat on the scr
 light him wherever the floor behind him is lit (`cutout()`: his shape, white, in a canvas inside
 it, less wherever a face of something solid stands in front of him, `ROOM.before()`). He is lit
 instead by a dim blue fill and by each source as far as it reaches him, the moon only as much of
-him as is in the window's light (`ROOM.moonlit()`). His shadow is drawn in his own canvas: his
-shape seen from under what he stands on, darker the nearer the ground, so it starts at his paws,
-and blurred; there are no shadow maps. With the light on it falls away from it as the room's
+him as is in the window's light (`ROOM.moonlit()`). His shadow is his shape seen from under what
+he stands on, darker the nearer the ground, so it starts at his paws, and blurred; there are no
+shadow maps. It is drawn in a canvas of its own lying on that ground, cut to its edges: in his
+canvas, which faces the reader, whatever of it falls towards the reader went into the ground
+under him and was cut off. With the light on it falls away from it as the room's
 shadows do; in the dark, away from the strongest source that reaches him, or not at all. He is drawn only when he is anywhere new, and not at all while the tab is hidden.
 
 Over every clip `willy.js` adds the small motions that keep him from ever being quite still
