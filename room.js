@@ -15,8 +15,13 @@
     (parent || stage).appendChild(e);
     return e;
   }
+  // A side drawn darker, k of its colour, or a face dimmed to k: the room's painted light, which
+  // the light pass (room-light.js) does instead when it runs, by setting --shading to 0
   function shade(color, k) {
-    return "color-mix(in srgb, " + color + " " + Math.round(k * 100) + "%, black)";
+    return "color-mix(in srgb, " + color + " calc(100% - " + Math.round((1 - k) * 100) + "% * var(--shading, 1)), black)";
+  }
+  function dim(k) {
+    return "brightness(calc(1 - " + +(1 - k).toFixed(3) + " * var(--shading, 1)))";
   }
   // A box standing on z, w along x, d along y, h up: its top and the four sides.
   function box(parent, o) {
@@ -214,7 +219,7 @@
         var cover = i >= n - 1;
         s.style.inset = cover ? "0" : "2px 3px 2px 6px";
         s.style.background = cover ? sp.cover : shade(sp.page, i % 2 ? k : k - 0.06);
-        if (cover) s.style.filter = "brightness(0.8)";
+        if (cover) s.style.filter = dim(0.8);
       } else if (sp.kind === "solid") {
         s.style.inset = "0";
         s.style.background = shade(sp.color, k);
@@ -224,7 +229,7 @@
       } else if (sp.kind === "jar" && i === n) s.classList.add("base");
       host.insertBefore(s, host.firstChild);
     }
-    if (sp.kind === "book") el("span", "wall spine", t, "background:" + sp.cover + ";filter:brightness(0.85)");
+    if (sp.kind === "book") el("span", "wall spine", t, "background:" + sp.cover + ";filter:" + dim(0.85));
     if (sp.kind === "mug") {
       // Its side is upright strips all the way round, not a stack of rings: rings show
       // their gaps, in stripes, as soon as the mug is turned, and it falls over.
@@ -312,7 +317,7 @@
       look.forEach(function (f) {
         s.style[f[0]] = f[1];
       });
-      if (i < h) s.style.filter = "brightness(" + (0.7 + (0.2 * i) / h) + ")";
+      if (i < h) s.style.filter = dim(0.7 + (0.2 * i) / h);
     }
   });
 
@@ -651,7 +656,7 @@
   var wheel = el("span", "pj-wheel", room, "left:" + (PJ.x + PJ.w / 2 - PJ.r) + "px;top:" + (PJ.y + PJ.d / 2 - PJ.r) + "px;width:" + 2 * PJ.r + "px;height:" + 2 * PJ.r + "px;transform:translateZ(" + (RAD.z + RAD.h + PJ.wheel) + "px)");
   wheel.setAttribute("aria-hidden", "true");
   // its side, in a few rings under its top, as the knobs' are
-  for (var ws = 1; ws <= 5; ws++) el("span", "pj-wheel-side", wheel, "transform:translateZ(" + -ws * 1.6 + "px);filter:brightness(" + (0.8 - ws * 0.07) + ")");
+  for (var ws = 1; ws <= 5; ws++) el("span", "pj-wheel-side", wheel, "transform:translateZ(" + -ws * 1.6 + "px);filter:" + dim(0.8 - ws * 0.07));
   var proj = el("span", "projector", room, "left:" + PJ.x + "px;top:" + PJ.y + "px;width:" + PJ.w + "px;height:" + PJ.d + "px;transform:translateZ(" + (RAD.z + RAD.h + PJ.wheel) + "px) rotateZ(" + -PJ.turn + "deg)");
   // a face w by h whose x runs along u and y along v, from o (unit vectors, in the case's frame)
   function pjFace(cls, w, h, u, v, o, css) {
@@ -1476,6 +1481,8 @@
     lights: lights,
     moonlit: moonlit,
     toScreen: toScreen,
+    // the matrix from an element's own px to the room's, through every transform on the way
+    toStage: toStage,
     before: before,
     // the layer that darkens the room with its light off, where Willy draws himself out of it
     night: night,
