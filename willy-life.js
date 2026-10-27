@@ -6,7 +6,8 @@
 // An action's run(at) gives where he ends up and the show that takes him there, as moments
 // (willy-moves.js), or null when it cannot be done this time (no room for it, say). A moment may
 // carry cues for when it starts: say, [text, ms] in a bubble over his head; look, a point in the
-// room, "reader", "around" (somewhere about him) or null; blink, s of a slow blink; twitch, an ear.
+// room, "reader", "around" (somewhere about him) or null; blink, s of a slow blink; twitch, an ear;
+// act, something done to the room as it starts (the mouse knocked).
 
 // one of actions, or null: where, the surface he is on; now, s; ran, when each last ran, s;
 // last, the one he did last; skip, those already tried this time that could not be done
@@ -147,6 +148,44 @@ export function everyday({ w, P, M, SURF }) {
         const to = xyh("desk", [...ahead(1), at.heading]);
         const then = sitting(to, 1);
         return then && { to, moments: [...M.pouncing(here(at), 150, "desk"), ...then] };
+      },
+    },
+    {
+      // the old mouse by the keyboard (ROOM.mouse): he creeps up to it, watches it, and pounces;
+      // it slides off a little where he lands on it
+      n: "knock the mouse about",
+      w: 4,
+      cool: 45,
+      where: ["desk"],
+      run: (at) => {
+        const mouse = window.ROOM && window.ROOM.mouse;
+        if (!mouse || !mouse.body) return null; // (no mouse drawn: room-mouse.js)
+        const [mx, my, mz] = mouse.at();
+        // landing as near it as he fits, so his paws come down on it
+        const tries = [];
+        for (const L of [230, 250, 270, 300]) {
+          const round = [];
+          for (const d of [120, 170, 220]) for (let i = 0; i < 16; i++) round.push([L + d, d, (i * Math.PI) / 8]);
+          tries.push(...round.sort(() => Math.random() - 0.5));
+        }
+        for (const [D, d, a] of tries) {
+          const heading = ((a * 180) / Math.PI + 180) % 360,
+            from = xyh("desk", [mx + Math.cos(a) * D, my - Math.sin(a) * D, heading]),
+            ahead = (k) => [from.x - Math.cos(a) * d * k, from.y + Math.sin(a) * d * k];
+          // (where he waits need only take him walking up and crouching, not turning round)
+          if (!fits(from, "walk") || !fits(from, "crouch")) continue;
+          if (![0.5, 1].every((k) => w.fits(...ahead(k), SURF.desk.z, heading, "walk", { on: SURF.desk }))) continue;
+          const land = xyh("desk", [...ahead(1), heading]),
+            then = sitting(land, between([1.5, 2.5]));
+          if (!then) continue;
+          cue(then[0], { act: () => mouse.knock(heading), look: [mx, my, mz] });
+          return going(at, from, "walk", (to) => {
+            const leap = M.pouncing(here(to), d, "desk", between([1.2, 2.2]));
+            cue(leap[0], { look: [mx, my, mz] });
+            return [...leap, ...then];
+          });
+        }
+        return null;
       },
     },
     // kneading is for soft things: the cushion under the window
