@@ -703,8 +703,17 @@ html:not(.iso) .strip {
   transform-style: preserve-3d;
 }
 .iso .pc .kb::before,
-.iso .pc .kb::after {
+.iso .pc .kb::after,
+.iso .pc .kb-front,
+.iso .pc .kb-side {
   content: none;
+  display: none;
+}
+/* its edge, all round it (room.js) */
+.iso .pc .kb-rim {
+  position: absolute;
+  display: block;
+  transform-origin: 0 0;
 }
 /* (pressed while it types, as the flat pattern nudges on the bench) */
 .iso .pc.typing .kb .rbox {
