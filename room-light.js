@@ -41,15 +41,18 @@ async function start() {
   const scene = new THREE.Scene();
   const cam = new THREE.OrthographicCamera();
   cam.matrixAutoUpdate = false;
-  const { body, big, glows, cut } = faces(stage);
+  const { body, big, glows, cut, backs } = faces(stage);
   const lit = new THREE.MeshLambertMaterial({ color: 0xffffff, side: THREE.DoubleSide, shadowSide: THREE.DoubleSide });
   // (what glows hides nothing drawn after it, below: the plant's leaves reach behind the board
-  // the tubes are on, where the CSS room draws them in front)
-  const glowing = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, depthWrite: false });
+  // the tubes are on, where the CSS room draws them in front; and it gives way to what lies on
+  // it, the window's bars on its glass)
+  const glowing = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, depthWrite: false, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 4 });
   const solid = mesh(body, lit);
   solid.castShadow = solid.receiveShadow = true;
   const walls = mesh(big, lit);
   walls.receiveShadow = true;
+  const hidden = mesh(backs, new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false, side: THREE.DoubleSide })); // (in the shadow maps only)
+  hidden.castShadow = true;
   const glowMeshes = glows.map((f) => {
     const m = mesh([f], lit);
     m.receiveShadow = true;
@@ -94,7 +97,7 @@ async function start() {
     return me;
   });
   const hole = opening(stage.querySelector(".window"));
-  scene.add(solid, walls, ...glowMeshes, ...cutMeshes, windowWall(hole));
+  scene.add(solid, walls, hidden, ...glowMeshes, ...cutMeshes, windowWall(hole));
 
   // The sources it casts: the room's light, and the window's sun or moon, far off, through the
   // window only, and in the dark the computer's screen and the radio's lamp. What glows in the
@@ -186,11 +189,13 @@ async function start() {
   // What moves on its own, lifted when pointed at: its faces go with it (follow()), as long as
   // it is moving, and a little longer
   const movers = new Map();
-  for (const f of body)
+  for (const f of body.concat(backs))
     if (f.mover) {
       if (!movers.has(f.mover)) movers.set(f.mover, { key: "", faces: [] });
       movers.get(f.mover).faces.push(f);
     }
+  // and the mouse (room-mouse.js), once it is there, as solid as they are, where it is now
+  let mouse = null;
   function follow() {
     let moved = false;
     for (const [e, mv] of movers) {
@@ -201,9 +206,25 @@ async function start() {
       moved = true;
       for (const f of mv.faces) place(f, m.multiply(f.rel));
     }
-    if (!moved) return false;
-    write(solid, body);
-    return (shadows = true);
+    if (moved) {
+      write(solid, body);
+      write(hidden, backs);
+    }
+    const mb = ROOM.mouse && ROOM.mouse.body;
+    if (mb) {
+      if (!mouse) {
+        mouse = new THREE.Mesh(mb.geometry, lit);
+        mouse.matrixAutoUpdate = false;
+        mouse.castShadow = mouse.receiveShadow = true;
+        scene.add(mouse);
+      }
+      const m = mb.matrix();
+      if (!m.equals(mouse.matrix)) {
+        mouse.matrix.copy(m);
+        moved = true;
+      }
+    }
+    return moved && (shadows = true);
   }
   follow();
 
@@ -408,7 +429,7 @@ void main() {
     if (ticking) requestAnimationFrame(tick);
   });
   const wake = (ms) => (ev) => {
-    if (!ev.target.closest || !ev.target.closest(".thing")) return;
+    if (!ev.target.closest || !ev.target.closest(MOVERS)) return;
     until = Math.max(until, performance.now() + ms);
     if (!ticking) {
       ticking = true;
@@ -425,6 +446,7 @@ void main() {
   };
   ROOM.onLights(flicker);
   flicker(); // (the computer may be on already)
+  if (ROOM.mouse) ROOM.mouse.moved = guard(() => follow() && draw()); // (room-mouse.js, as it loads and as it moves)
   (function meet() {
     if (!cv.isConnected) return;
     if (!ROOM.willy) return requestAnimationFrame(meet); // (he comes when he has loaded)
@@ -444,6 +466,7 @@ const SKIP = /\b(shade|anchor|burst|hit-plane|window-light|beam-corner|radio-lam
 const MAY = ".window .sky, .window .pane, .pc .glass, .neon h1, .plexi, .light-switch, .light-switch *";
 const GLOWS = ".window .sky, .window .pane, .pc.on .glass, .neon h1, .plexi, .lights-off .light-switch, .lights-off .light-switch *, .dawn .light-switch, .dawn .light-switch *";
 const CUT = ".plant .leaves"; // cut to the shape of the drawing it holds
+const MOVERS = ".thing, .pc-mouse"; // what moves on the desk, with its faces
 const BIG = 4e6; // px², a wall or the floor: lit, and casting nothing, since nothing is behind it
 const probe = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
 const colours = new Map();
@@ -528,9 +551,10 @@ function place(f, m) {
 }
 // every element of the room that paints more than a tint, in its own shape, where it is and
 // the way it faces; the window's own faces (but its bars) let the light in; a strip of a print
-// round a curve is the face of its slice of the print
+// round a curve is the face of its slice of the print, and the rest of the way round is there
+// for the shadow it throws (backs: a label round the jar throws a band, not part of one)
 function faces(stage) {
-  const out = { body: [], big: [], glows: [], cut: [] };
+  const out = { body: [], big: [], glows: [], cut: [], backs: [] };
   for (const e of stage.querySelectorAll("*")) {
     if (!(e instanceof HTMLElement) || !e.offsetWidth || !e.offsetHeight) continue;
     if (SKIP.test(e.className)) continue;
@@ -545,7 +569,7 @@ function faces(stage) {
     if (!may && !cut && !(strip ? [...e.querySelectorAll("*")].some((d) => d instanceof HTMLElement && !SKIP.test(d.className) && paints(d)) : paints(e, cs))) continue;
     if (!may && e.closest(".window") && !e.matches(".mullion")) continue;
     let m = ROOM.toStage(e);
-    const mover = e.closest(".thing"),
+    const mover = e.closest(MOVERS),
       drawing = cut && getComputedStyle(e.querySelector("svg")).transform;
     if (drawing && drawing !== "none") m = m.multiply(new DOMMatrix(drawing)); // (the drawing where its own transform puts it: the leaves stand up out of their box)
     const f = { e, shape: outline(e, cs), mover, rel: mover && ROOM.toStage(mover).inverse().multiply(m) };
@@ -553,6 +577,19 @@ function faces(stage) {
     place(f, m);
     if (!isFinite(f.n.x)) continue;
     (may ? out.glows : cut ? out.cut : !mover && e.offsetWidth * e.offsetHeight > BIG ? out.big : out.body).push(f);
+    // and the rest of the way round, which the CSS room leaves out since no one sees it: the
+    // strip turned a third and two thirds round the curve's axis, its host's middle (room.js,
+    // wrap()), which closes the ring for any print a third of the way round or more
+    if (strip)
+      for (const turn of [120, 240]) {
+        const host = e.parentElement,
+          mh = ROOM.toStage(host),
+          [cx, cy] = [host.offsetWidth / 2, host.offsetHeight / 2],
+          bm = mh.translate(cx, cy).rotate(0, 0, turn).translate(-cx, -cy).multiply(mh.inverse()).multiply(m),
+          b = { e, shape: f.shape, mover, rel: mover && ROOM.toStage(mover).inverse().multiply(bm) };
+        place(b, bm);
+        out.backs.push(b);
+      }
   }
   return out;
 }

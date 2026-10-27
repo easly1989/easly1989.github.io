@@ -34,6 +34,36 @@
     el("i", "w", b, "left:" + -o.h + "px;width:" + o.h + "px;background:" + (o.west || shade(c, 0.9)) + ";transform:translateZ(" + o.h + "px) rotateY(-90deg)");
     return b;
   }
+  // The upright edge of something rounded, standing on z, w along x, d along y, h up (hb at the
+  // back, y = 0, if its top slopes), its corners r round: short faces along its outline in one
+  // piece, each as dark as the way it faces (a box's sides meet square, and show past a rounded
+  // top); a sloping face is cut to the slope
+  function rim(parent, o) {
+    var hb = o.hb == null ? o.h : o.hb,
+      at = function (y) {
+        return hb + ((o.h - hb) * y) / o.d;
+      };
+    var pts = [];
+    [[o.w - o.r, o.d - o.r, 90], [o.w - o.r, o.r, 0], [o.r, o.r, -90], [o.r, o.d - o.r, 180]].forEach(function (c) {
+      for (var s = 0; s <= 3; s++) {
+        var t = ((c[2] - s * 30) * Math.PI) / 180;
+        pts.push([c[0] + o.r * Math.cos(t), c[1] + o.r * Math.sin(t)]);
+      }
+    });
+    pts.forEach(function (p, i) {
+      var q = pts[(i + 1) % pts.length],
+        dx = q[0] - p[0],
+        dy = q[1] - p[1],
+        len = Math.hypot(dx, dy);
+      if (len < 0.01) return;
+      var k = 0.735 + 0.12 * (dy / len) + 0.09 * (dx / len), // (its outside is dx, dy turned a quarter: +y south, +x east)
+        hp = at(p[1]),
+        hq = at(q[1]),
+        H = Math.max(hp, hq),
+        cut = hp === hq ? "" : ";clip-path:polygon(0 " + (H - hp).toFixed(2) + "px, 100% " + (H - hq).toFixed(2) + "px, 100% 100%, 0 100%)";
+      el("i", "rim", parent, "left:" + (o.x + p[0]) + "px;top:" + (o.y + p[1]) + "px;width:" + (len + 0.3) + "px;height:" + H + "px;background:" + shade(o.color, k) + ";transform:rotateZ(" + Math.atan2(dy, dx) + "rad) translateZ(" + (o.z + H) + "px) rotateX(-90deg)" + cut);
+    });
+  }
   // Something printed round a cylinder: cut into narrow strips, each standing on
   // the curve. The host's centre is the axis; at is the angle the middle faces
   // (45deg faces the camera), z the height of the print's top edge.
@@ -330,7 +360,9 @@
   function localMatrix(n) {
     var cs = getComputedStyle(n);
     var o = cs.transformOrigin.split(" ").map(parseFloat);
-    var m = new DOMMatrix().translate(n.offsetLeft, n.offsetTop).translate(o[0], o[1], o[2] || 0);
+    // (its offset runs from inside its parent's border: the window's frame is one)
+    var p = n.offsetParent;
+    var m = new DOMMatrix().translate(n.offsetLeft + (p ? p.clientLeft : 0), n.offsetTop + (p ? p.clientTop : 0)).translate(o[0], o[1], o[2] || 0);
     var t = triple(cs.translate, 0);
     if (t) m = m.translate(t[0], t[1], t[2]);
     if (cs.rotate && cs.rotate !== "none") m = m.rotate(0, 0, parseFloat(cs.rotate.split(" ").pop()));
@@ -349,13 +381,14 @@
     return m;
   }
   // the room-space box round an element and everything in it (z up from the mat)
-  var BODYLESS = /\b(shade|anchor|burst|cam-out|film)\b/;
+  var BODYLESS = /\b(shade|anchor|burst|cam-out|film|pc-mouse-cord)\b/;
   function bounds(root) {
     var b = { x0: 1e9, y0: 1e9, z0: 1e9, x1: -1e9, y1: -1e9, z1: -1e9, parts: [] };
     [root].concat([].slice.call(root.querySelectorAll("*"), 0, 600)).forEach(function (e) {
       // the blurred shadow on the mat is light, not body, and so is the flash's burst; the
       // camera's print waits inside it
       if (!(e instanceof HTMLElement) || !e.offsetWidth || BODYLESS.test(e.className)) return;
+      if (e.closest(".pc-mouse")) return; // (its patch stands for it: mouse-patch)
       if (getComputedStyle(e).visibility === "hidden") return;
       var m = toStage(e);
       // each part keeps its own box and footprint, so a shape with a notch (a box with
@@ -570,17 +603,18 @@
     far = BACK + WIN.top / HIGH;
   var beam = el("span", "window-light", room, "left:" + (WIN.along - 30) + "px;top:" + near + "px;width:" + (WIN.w + 60) + "px;height:" + (far - near) + "px;transform:translateZ(0.8px)");
   beam.setAttribute("aria-hidden", "true");
-  // the cat's perch: a board hung on two chains from the top of the frame, deep enough to
+  // the cat's perch: a board hung on two chains from the wall over the frame, deep enough to
   // sleep on, with a fleece on it
   var PERCH = { x: WIN.along + 120, w: 360, d: 190, z: WIN.top - WIN.h + 24 };
   box(room, { x: PERCH.x, y: BACK, w: PERCH.w, d: PERCH.d, z: PERCH.z - 14, h: 14, color: "var(--perch)", r: 4, cls: "perch" });
   box(room, { x: PERCH.x + 18, y: BACK + 12, w: PERCH.w - 36, d: PERCH.d - 26, z: PERCH.z, h: 26, color: "var(--fleece)", r: 34, topCls: "fleece", cls: "perch-fleece" });
   [PERCH.x + 10, PERCH.x + PERCH.w - 14].forEach(function (x) {
-    // from the frame's top corner on the wall down to the board's front corner
-    var dy = PERCH.d - 8,
-      dz = PERCH.z - (WIN.top - 30);
+    // from the wall just over the frame down to the board's front corner
+    var top = WIN.top + 16,
+      dy = PERCH.d - 8,
+      dz = PERCH.z - top;
     var len = Math.hypot(dy, dz);
-    el("span", "chain", room, "left:" + x + "px;top:" + (BACK + 2) + "px;height:" + Math.round(len) + "px;transform:translateZ(" + (WIN.top - 30) + "px) rotateX(" + ((Math.atan2(dz, dy) * 180) / Math.PI).toFixed(2) + "deg)");
+    el("span", "chain", room, "left:" + x + "px;top:" + (BACK + 2) + "px;height:" + Math.round(len) + "px;transform:translateZ(" + top + "px) rotateX(" + ((Math.atan2(dz, dy) * 180) / Math.PI).toFixed(2) + "deg)");
   });
 
   function skyline(w, h) {
@@ -834,26 +868,64 @@
     for (var row = 0; row < 4; row++)
       for (var col = 0; col < 16; col++) box(kb, { x: 6 + col * 5.5, y: 4 + row * 5, w: 4, d: 4, z: 0, h: 1.4, color: "#efe9dc" });
     box(kb, { x: 30, y: 26, w: 40, d: 4, z: 0, h: 1.4, color: "#efe9dc" });
-    // and its edge runs round the keyboard's rounded corners in one piece (the bench's front
-    // and side meet square and leave the far end open): short upright faces along the
-    // outline, each as dark as the way it faces
-    var K = { x: kb.offsetLeft, y: kb.offsetTop, w: kb.offsetWidth, d: kb.offsetHeight, h: 8, r: 3 },
-      rim = [];
-    [[K.w - K.r, K.d - K.r, 90], [K.w - K.r, K.r, 0], [K.r, K.r, -90], [K.r, K.d - K.r, 180]].forEach(function (c) {
-      for (var s = 0; s <= 3; s++) {
-        var t = ((c[2] - s * 30) * Math.PI) / 180;
-        rim.push([c[0] + K.r * Math.cos(t), c[1] + K.r * Math.sin(t)]);
-      }
-    });
-    rim.forEach(function (p, i) {
-      var q = rim[(i + 1) % rim.length],
-        dx = q[0] - p[0],
-        dy = q[1] - p[1],
-        len = Math.hypot(dx, dy);
-      if (len < 0.01) return;
-      var k = 0.735 + 0.12 * (dy / len) + 0.09 * (dx / len); // (its outside is dx, dy turned a quarter: +y south, +x east)
-      el("i", "kb-rim", kb.parentNode, "left:" + (K.x + p[0]) + "px;top:" + (K.y + p[1]) + "px;width:" + (len + 0.3) + "px;height:" + K.h + "px;background:" + shade("#c9bfa4", k) + ";transform:rotateZ(" + Math.atan2(dy, dx) + "rad) translateZ(" + K.h + "px) rotateX(-90deg)");
-    });
+    // and its edge runs round its rounded corners in one piece (the bench's front and side
+    // meet square and leave the far end open)
+    rim(kb.parentNode, { x: kb.offsetLeft, y: kb.offsetTop, w: kb.offsetWidth, d: kb.offsetHeight, z: 0, h: 2.5, hb: 5.5, r: 3, color: "#c9bfa4" });
+  }
+  // The mouse, an old one with a ball under it, right of the keyboard, its cord running back to
+  // the computer: Willy's to knock about (willy-life.js, ROOM.mouse), in the computer's own px.
+  // It is no obstacle itself, but the patch it can be knocked about in is, so he never walks
+  // through it; it moves from where it was put by up to reach px, and turns up to 45deg. Here
+  // it is only where it is, its nose at the top; room-mouse.js draws it there.
+  var pcMouse = null;
+  if (kb) {
+    var pcBox = kb.parentNode,
+      MS = { x: 112, y: 90, w: 17, d: 22, h: 7, reach: 8 };
+    el("span", "mouse-patch", pcBox, "left:" + (MS.x - MS.reach) + "px;top:" + (MS.y - MS.reach) + "px;width:" + (MS.w + 2 * MS.reach) + "px;height:" + (MS.d + 2 * MS.reach) + "px;transform:translateZ(" + MS.h + "px)");
+    var cord = el("span", "pc-mouse-cord", pcBox, "left:0;top:0;width:150px;height:150px;transform:translateZ(0.3px)");
+    cord.setAttribute("aria-hidden", "true");
+    cord.innerHTML = '<svg viewBox="0 0 150 150"><path /></svg>';
+    var mouse = el("span", "pc-mouse", pcBox, "left:" + MS.x + "px;top:" + MS.y + "px;width:" + MS.w + "px;height:" + MS.d + "px");
+    mouse.setAttribute("aria-hidden", "true");
+    var shove = { x: 0, y: 0, a: 0 };
+    // the cord, from the mouse's nose round behind the keyboard to the computer's side, from
+    // where the mouse is now, part way along its slide (room-mouse.js lays it each frame)
+    var lay = function () {
+      var cs = getComputedStyle(mouse),
+        t = triple(cs.translate, 0) || [0, 0],
+        r = ((parseFloat(cs.rotate) || 0) * Math.PI) / 180,
+        sx = MS.x + MS.w / 2 + t[0] + (MS.d / 2) * Math.sin(r),
+        sy = MS.y + MS.d / 2 + t[1] - (MS.d / 2) * Math.cos(r);
+      cord.querySelector("path").setAttribute("d", "M" + sx.toFixed(1) + " " + sy.toFixed(1) + "C" + (sx + 10 * Math.sin(r)).toFixed(1) + " " + (sy - 10 * Math.cos(r)).toFixed(1) + " 112 52 92 36");
+    };
+    lay();
+    pcMouse = {
+      lay: lay,
+      // where it is in the room: the middle of its top
+      at: function () {
+        var p = toStage(mouse).transformPoint(new DOMPoint(MS.w / 2, MS.d / 2, MS.h));
+        return [p.x, p.y, p.z];
+      },
+      // knocked along heading (deg, as Willy's): it slides a little that way and turns
+      knock: function (heading) {
+        var r = (heading * Math.PI) / 180,
+          inv = toStage(pcBox).inverse(),
+          p = pcMouse.at(),
+          a = inv.transformPoint(new DOMPoint(p[0], p[1], 0)),
+          b = inv.transformPoint(new DOMPoint(p[0] + Math.cos(r) * 100, p[1] - Math.sin(r) * 100, 0)),
+          len = Math.hypot(b.x - a.x, b.y - a.y) || 1,
+          step = 5 + Math.random() * 6,
+          x = shove.x + ((b.x - a.x) / len) * step,
+          y = shove.y + ((b.y - a.y) / len) * step,
+          far = Math.hypot(x, y) / MS.reach;
+        shove.x = far > 1 ? x / far : x;
+        shove.y = far > 1 ? y / far : y;
+        shove.a = Math.max(-45, Math.min(45, shove.a + (Math.random() < 0.5 ? -1 : 1) * (10 + Math.random() * 20)));
+        mouse.style.translate = shove.x.toFixed(1) + "px " + shove.y.toFixed(1) + "px";
+        mouse.style.rotate = shove.a.toFixed(1) + "deg";
+        lay(); // (at once where it has nothing to slide: under reduced motion)
+      },
+    };
   }
   // a broken computer smokes out of the vents on that same side
   var fumes = document.querySelector(".fumes");
@@ -1550,6 +1622,8 @@
     surfaces: SURFACES,
     jumps: JUMPS,
     lights: lights,
+    // the mouse by the keyboard, for Willy: at(), where it is; knock(heading)
+    mouse: pcMouse,
     // the night's holes as they are now (glow())
     glows: function () {
       return holes;
