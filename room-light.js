@@ -322,12 +322,15 @@ void main() {
     for (const o of list) {
       if (o.cast) continue; // (its light is one of the lamps, cast for real)
       if (o.air) {
-        inAir(o.crt && flickers ? { ...o, air: o.air * crt(performance.now()) } : o); // (the screen's glass flickers with its light)
+        inAir(o);
         continue;
       }
+      // (the screen's flickers as the CSS night layer's did, with the light it casts)
+      const k = o.crt && flickers ? crt(performance.now()) : 1;
       u.at.value.set((o.x / W) * 2 - 1, 1 - (o.y / H) * 2, (o.w / W) * 2, (o.h / H) * 2);
       o.stops.slice(0, 4).forEach(([c, at], i) => {
-        const [r, g, b, a] = rgba(c);
+        const [r, g, b, a0] = rgba(c),
+          a = a0 * k;
         u.col.value[i].set(r * a, g * a, b * a, a); // (premultiplied, as CSS mixes a gradient's stops)
         u.pos.value.setComponent(i, at);
       });

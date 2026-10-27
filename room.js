@@ -1195,14 +1195,9 @@
     Object.assign(nightScreen.style, { left: g.left + g.width / 2 - sx + "px", top: g.top + g.height * 0.6 - sy + "px", width: 2 * sx + "px", height: 2 * sy + "px" });
     if (pc.classList.contains("on")) {
       var screen = hole(g, sx, sy, [["rgba(200,255,210,1)", 0], ["rgba(80,140,100,0.65)", 0.45], ["transparent", 0.8]], 0.6);
-      screen.own = screen.cast = true;
+      // (the light pass draws it too, flickering with the light the screen casts)
+      screen.own = screen.crt = true;
       holes.push(screen);
-      // and for the light pass, the glass itself glowing, a little past its bezel (the night
-      // layer's own element does that), unsteady as the light it casts
-      var phosphor = hole(g, g.width * 0.72, g.height * 0.72, [["rgba(170,255,190,1)", 0], ["rgba(90,170,110,0.5)", 0.6], ["transparent", 1]]);
-      phosphor.air = 0.4;
-      phosphor.own = phosphor.crt = true;
-      holes.push(phosphor);
     }
     // what has the keyboard's focus is lit, so its ring shows in the dark
     var f = document.activeElement;
