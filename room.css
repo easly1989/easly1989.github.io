@@ -1643,6 +1643,29 @@ html:not(.iso) .strip {
 .iso.lights-off .night {
   opacity: 1;
 }
+/* With the light pass running (room-light.js) the room's light is real, multiplied over it from
+   a canvas of its own, and none of it is painted: no darker sides (--shading), no shadows under
+   things, no layer for the night or patch for the window. Without it, all of those stay. */
+.iso.lit {
+  --shading: 0;
+}
+.iso.lit .night,
+.iso.lit .window-light,
+.iso.lit .shade {
+  display: none;
+}
+.iso.lit .floor-plane {
+  filter: none;
+}
+.iso .light-pass {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 11;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
 /* the window's light, its panes drawn by room.js (glow()), soft at the edges as moonlight is */
 .iso .night-beam {
   position: absolute;
@@ -1692,8 +1715,13 @@ html:not(.iso) .strip {
     opacity: 0.99;
   }
 }
-/* the first load of a visit is dark, and at the end lit on its own, whatever the script does */
+/* the first load of a visit is dark, and at the end lit on its own, whatever the script does:
+   the light pass, which draws that dark itself, is put away then if it is still drawing it */
 .iso.dawn .night {
+  animation: dawn 4s;
+}
+.iso.lit.dawn .light-pass {
+  opacity: 0;
   animation: dawn 4s;
 }
 @keyframes dawn {

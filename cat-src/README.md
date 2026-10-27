@@ -135,8 +135,10 @@ from there, after the room is built (`ROOM.ready`), and the first load's dark wa
 Willy and the room is as it is. Under reduced motion he sleeps on the cushion and does not move.
 
 He is lit by the room's own sources (`ROOM.lights()`): its light, the window, the computer's
-screen while it is on and the radio's lamp while it plays, as point lights over a soft fill. In
-the dark he is cut out of the room's night layer, which is drawn flat on the screen and would
+screen while it is on and the radio's lamp while it plays, as point lights over a soft fill. The
+room's light pass (`room-light.js`), which lights and shades the room itself, leaves him as his
+own canvas lights him: it draws him white, where he is and in his pose, so what he stands in
+front of is shaded and he is not. Without it, in the dark he is cut out of the room's night layer, which is drawn flat on the screen and would
 light him wherever the floor behind him is lit (`cutout()`: his shape, white, in a canvas inside
 it, less wherever a face of something solid stands in front of him, `ROOM.before()`). He is lit
 instead by a dim blue fill and by each source as far as it reaches him, the moon only as much of

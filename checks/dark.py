@@ -9,8 +9,12 @@ import time
 from cdp import Browser
 from serve import serve
 
-STATE = """(() => { const h = document.documentElement, n = document.querySelector('.night'), s = document.querySelector('.stage'), w = document.querySelector('.light-switch');
-  return { room: h.classList.contains('iso'), dawn: h.classList.contains('dawn'), dark: +getComputedStyle(n).opacity, busy: s.getAttribute('aria-busy'),
+# how dark it is: the night layer's, or with the light pass running (room-light.js), its canvas's
+# when what it draws is the dark
+STATE = """(() => { const h = document.documentElement, n = document.querySelector('.night'), s = document.querySelector('.stage'), w = document.querySelector('.light-switch'),
+    pass = h.classList.contains('lit') && document.querySelector('canvas.light-pass'),
+    dark = pass ? (pass.dataset.dark === 'true') * +getComputedStyle(pass).opacity : +getComputedStyle(n).opacity;
+  return { room: h.classList.contains('iso'), dawn: h.classList.contains('dawn'), dark, busy: s.getAttribute('aria-busy'),
     striking: document.querySelector('.on-wall.neon').classList.contains('striking'), pressed: w.getAttribute('aria-pressed'), light: sessionStorage.getItem('room-light') }; })()"""
 failures = []
 
@@ -25,6 +29,13 @@ def fresh(b, base):
     """A new visit to the room: nothing remembered of its light."""
     b.nav(base + "/index.html?room", 2)
     b.js("sessionStorage.removeItem('room-light')")
+
+
+def built(b, limit=3):
+    """Waits for the room to be there: a load right after another can wait on the last one's start."""
+    t = time.time()
+    while time.time() - t < limit and not b.js("!!document.querySelector('.night')"):
+        time.sleep(0.05)
 
 
 def lit_after(b, limit=6):
@@ -47,6 +58,7 @@ try:
         fresh(b, base)
         b.call("Page.navigate", url=base + "/index.html")
         time.sleep(0.6)
+        built(b)
         s = b.js(STATE)
         check(s["room"] and s["dawn"] and s["dark"] == 1 and s["busy"] == "true" and s["striking"] and s["pressed"] == "false",
               f"{scheme}: the first load of a visit is dark, the name striking, the room busy and the switch off ({s})")
@@ -55,10 +67,12 @@ try:
               f"{scheme}: the switch clicks the light on within about 4 s ({took and round(took + 0.6, 1)} s, {s})")
         b.call("Page.navigate", url=base + "/index.html")
         time.sleep(0.6)
+        built(b)
         s = b.js(STATE)
         check(not s["dawn"] and s["dark"] == 0 and s["busy"] is None, f"{scheme}: a later load in the visit shows the room at once ({s})")
         b.js("document.querySelector('.light-switch').click()")
         b.nav(base + "/index.html", 0.6)
+        built(b)
         s = b.js(STATE)
         check(not s["dawn"] and s["dark"] == 1 and s["pressed"] == "false" and s["busy"] is None, f"{scheme}: with the light left off, it is there at once, off ({s})")
 
@@ -66,6 +80,7 @@ try:
     fresh(b, base)
     b.call("Page.navigate", url=base + "/index.html")
     time.sleep(0.6)
+    built(b)
     b.js("document.querySelector('.light-switch').click()")
     time.sleep(0.1)
     s = b.js(STATE)
@@ -78,6 +93,7 @@ try:
     fresh(b, base)
     b.call("Page.navigate", url=base + "/index.html")
     time.sleep(0.6)
+    built(b)
     s = b.js(STATE)
     check(not s["dawn"] and s["dark"] == 0 and not s["striking"] and s["busy"] is None and s["pressed"] == "true", f"under reduced motion the room is lit from the start ({s})")
 
@@ -88,11 +104,13 @@ try:
       get() { return this.__room; }, set(v) { this.__room = v; v.holdLight(new Promise(() => {})); } });""")
     b.call("Page.navigate", url=base + "/index.html")
     time.sleep(0.8)
+    built(b)
     s = b.js(STATE)
     b.call("Emulation.setScriptExecutionDisabled", value=True)
     time.sleep(4)
     b.call("Emulation.setScriptExecutionDisabled", value=False)
-    after = b.js("[document.documentElement.classList.contains('dawn'), +getComputedStyle(document.querySelector('.night')).opacity]")
+    after = b.js(STATE)
+    after = [after["dawn"], after["dark"]]
     check(s["dawn"] and after[0] and after[1] == 0, f"with scripts stopped once the room is up, the dark still ends on its own (then {s['dark']}, after 4 s {after})")
     b.call("Page.removeScriptToEvaluateOnNewDocument", identifier=hold["identifier"])
 finally:
