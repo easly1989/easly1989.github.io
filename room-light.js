@@ -127,8 +127,8 @@ async function start() {
     } else if (s.name === "screen" || s.name === "radio") {
       // forward only, out of the glass or the dial, so the case's top and back and the wall
       // behind the radio stay dark, fading out by s.reach: the screen straight out at the
-      // keyboard, the radio's halogen lamp out into the room (its face looks along -x) and down
-      // onto the desk below the shelf
+      // keyboard, the radio's lit dial a little way out into the room (its face looks along -x)
+      // and down onto the desk below the shelf
       const at = new THREE.Vector3(...s.at),
         out = new THREE.Vector3(-1, 0, -0.45).normalize();
       if (s.name === "screen") {
@@ -156,7 +156,7 @@ async function start() {
   // looks as it did when its light was painted; by night it is as dark as the night layer left
   // it, rgb(40, 46, 80), but where a source reaches.
   const DAY = { sky: 0.6, room: 0.5, window: 0.6 },
-    NIGHT = { sky: 1, window: 1, screen: 1.2, radio: 1.4 };
+    NIGHT = { sky: 1, window: 1, screen: 1.8, radio: 0.6 };
   const DARK = new THREE.Color("rgb(40, 46, 80)");
   let shadows = true;
   let was = "";
@@ -322,7 +322,7 @@ void main() {
     for (const o of list) {
       if (o.cast) continue; // (its light is one of the lamps, cast for real)
       if (o.air) {
-        inAir(o);
+        inAir(o.crt && flickers ? { ...o, air: o.air * crt(performance.now()) } : o); // (the screen's glass flickers with its light)
         continue;
       }
       u.at.value.set((o.x / W) * 2 - 1, 1 - (o.y / H) * 2, (o.w / W) * 2, (o.h / H) * 2);

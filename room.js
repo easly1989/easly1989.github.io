@@ -1106,9 +1106,23 @@
     var h = document.documentElement.classList;
     holes = [];
     if (h.contains("lights-off") || h.contains("dawn")) inTheDark();
+    // by day only the projector's beam, fainter, for the light pass (room.css hides the CSS
+    // one while the pass runs: it stands upright at the lens, short of the wall)
+    else if (cast.classList.contains("lit")) holes.push(projBeam(0.45));
     heard.forEach(function (f) {
       f();
     });
+  }
+  // the projector's beam: a hole round the CSS one, for the night layer, and its shape on
+  // screen, for the light pass, from the lens out to the corners of the words, added air strong
+  function projBeam(air) {
+    var br = ray.getBoundingClientRect();
+    var beam = hole(br, br.width * 0.4, br.height * 0.5, [["rgba(240,215,180,0.7)", 0], ["transparent", 1]], 0.6);
+    beam.air = air;
+    beam.poly = [[LAMP.x, LAMP.y, LAMP.z], [0, 0], [PROJ.w, 0], [PROJ.w, -PROJ.h], [0, -PROJ.h]].map(function (p, i) {
+      return i ? toScreen(RIGHT - 2, PROJ.along + p[0], PROJ.z + p[1]) : toScreen(p[0], p[1], p[2]);
+    });
+    return beam;
   }
   function inTheDark() {
     var n = sign.querySelector("h1").getBoundingClientRect();
@@ -1183,6 +1197,12 @@
       var screen = hole(g, sx, sy, [["rgba(200,255,210,1)", 0], ["rgba(80,140,100,0.65)", 0.45], ["transparent", 0.8]], 0.6);
       screen.own = screen.cast = true;
       holes.push(screen);
+      // and for the light pass, the glass itself glowing, a little past its bezel (the night
+      // layer's own element does that), unsteady as the light it casts
+      var phosphor = hole(g, g.width * 0.72, g.height * 0.72, [["rgba(170,255,190,1)", 0], ["rgba(90,170,110,0.5)", 0.6], ["transparent", 1]]);
+      phosphor.air = 0.4;
+      phosphor.own = phosphor.crt = true;
+      holes.push(phosphor);
     }
     // what has the keyboard's focus is lit, so its ring shows in the dark
     var f = document.activeElement;
@@ -1199,23 +1219,22 @@
       var px = pl.left + pl.width * 0.5 + (lp.left + lp.width / 2 - pl.left - pl.width * 0.5) * 0.4,
         py = pl.top + pl.height * 0.5 + (lp.top + lp.height / 2 - pl.top - pl.height * 0.5) * 0.4;
       holes.push(hole(dl, dl.width * 0.9 + 20, dl.height * 0.9 + 20, [["rgba(255,240,210,1)", 0.3], ["transparent", 1]]));
-      var halo = hole(lp, lp.width * 0.55, lp.height * 0.5, [["rgba(255,205,150,1)", 0], ["rgba(200,150,100,0.6)", 0.45], ["transparent", 0.8]]);
-      halo.air = 0.35; // (how strongly it adds)
+      // (for the light pass: only a glow round its face, the lit dial and the knobs, no lamp's)
+      var fr = face.getBoundingClientRect(),
+        halo = hole(fr, fr.width * 0.65, fr.height * 0.65, [["rgba(255,205,150,1)", 0], ["rgba(200,150,100,0.5)", 0.5], ["transparent", 1]]);
+      halo.air = 0.22; // (how strongly it adds)
+      halo.own = true; // (the night layer has its lamp's halo, below, which the pass casts)
       holes.push(halo);
+      var lampHalo = hole(lp, lp.width * 0.55, lp.height * 0.5, [["rgba(255,205,150,1)", 0], ["rgba(200,150,100,0.6)", 0.45], ["transparent", 0.8]]);
+      lampHalo.cast = true;
+      holes.push(lampHalo);
       holes.push({ x: px, y: py, w: pl.width * 0.32, h: pl.height * 0.3, stops: [["rgba(230,180,130,0.9)", 0], ["rgba(170,130,90,0.4)", 0.5], ["transparent", 0.85]], cast: true });
     }
     // what the projector throws on the wall
     if (cast.classList.contains("lit")) {
       var pr = cast.getBoundingClientRect();
       holes.push(hole(pr, pr.width * 0.6, pr.height * 0.62, [["rgba(255,236,206,1)", 0.4], ["rgba(200,170,130,0.5)", 0.7], ["transparent", 1]]));
-      var br = ray.getBoundingClientRect();
-      var beam = hole(br, br.width * 0.4, br.height * 0.5, [["rgba(240,215,180,0.7)", 0], ["transparent", 1]], 0.6);
-      // (its shape on screen, for the light pass: from the lens out to the corners of the words)
-      beam.air = 0.6;
-      beam.poly = [[LAMP.x, LAMP.y, LAMP.z], [0, 0], [PROJ.w, 0], [PROJ.w, -PROJ.h], [0, -PROJ.h]].map(function (p, i) {
-        return i ? toScreen(RIGHT - 2, PROJ.along + p[0], PROJ.z + p[1]) : toScreen(p[0], p[1], p[2]);
-      });
-      holes.push(beam);
+      holes.push(projBeam(0.6));
     }
     night.style.background =
       holes
@@ -1479,7 +1498,7 @@
       { name: "room", at: [DESK.x + 200, BACK + 250, 1600], color: "#fff1dc", power: dark ? 0 : 1, reach: 0 },
       { name: "window", at: [WIN.along + WIN.w / 2, BACK - 1000, WIN.top - WIN.h / 2 + 1000 * HIGH], color: night ? "#b9c8fa" : "#ffe4a0", power: dark ? 1 : 0.35, reach: 0 },
       { name: "screen", at: spots.screen, color: "#c8ffd2", power: pc.classList.contains("on") ? 1 : 0, reach: 700 },
-      { name: "radio", at: spots.radio, color: "#ffcd96", power: lamp.classList.contains("lit") ? 1 : 0, reach: 800 },
+      { name: "radio", at: spots.radio, color: "#ffcd96", power: lamp.classList.contains("lit") ? 1 : 0, reach: 450 },
     ];
   }
 
