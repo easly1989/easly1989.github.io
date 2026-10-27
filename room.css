@@ -2129,6 +2129,10 @@ html:not(.iso) .strip {
 .iso.lights-off .proj-beam.lit {
   opacity: 0.9;
 }
+/* the light pass draws it from the lens to the wall instead (room.js, projBeam()) */
+.iso.lit .proj-beam {
+  visibility: hidden;
+}
 /* the light on the wall: the track, its author and the wave, faint by day, bright at night */
 .iso .on-wall.projected > .projection {
   display: grid;
