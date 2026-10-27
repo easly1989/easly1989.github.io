@@ -41,9 +41,11 @@ async function start() {
   const scene = new THREE.Scene();
   const cam = new THREE.OrthographicCamera();
   cam.matrixAutoUpdate = false;
-  const { body, big, glows } = faces(stage);
+  const { body, big, glows, cut } = faces(stage);
   const lit = new THREE.MeshLambertMaterial({ color: 0xffffff, side: THREE.DoubleSide, shadowSide: THREE.DoubleSide });
-  const glowing = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
+  // (what glows hides nothing drawn after it, below: the plant's leaves reach behind the board
+  // the tubes are on, where the CSS room draws them in front)
+  const glowing = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, depthWrite: false });
   const solid = mesh(body, lit);
   solid.castShadow = solid.receiveShadow = true;
   const walls = mesh(big, lit);
@@ -51,11 +53,48 @@ async function start() {
   const glowMeshes = glows.map((f) => {
     const m = mesh([f], lit);
     m.receiveShadow = true;
+    m.renderOrder = 1;
     m.userData.e = f.e;
     return m;
   });
+  // what is cut to the shape of a drawing (the plant's leaves): the drawing, in white on
+  // nothing, is where it is solid; drawn as soon as the picture is ready
+  const cutMeshes = cut.map((f) => {
+    const corners = [0, 1, 2, 0, 2, 3],
+      g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.Float32BufferAttribute(corners.flatMap((i) => f.q[i].toArray()), 3));
+    g.setAttribute("normal", new THREE.Float32BufferAttribute(corners.flatMap(() => f.n.toArray()), 3));
+    g.setAttribute("uv", new THREE.Float32BufferAttribute(corners.flatMap((i) => f.uv[i]), 2));
+    const mat = new THREE.MeshLambertMaterial({ color: 0xffffff, side: THREE.DoubleSide, shadowSide: THREE.DoubleSide, alphaTest: 0.5 });
+    const me = new THREE.Mesh(g, mat);
+    me.castShadow = me.receiveShadow = true;
+    me.renderOrder = 2;
+    me.visible = false;
+    const svg = f.e.querySelector("svg").cloneNode(true),
+      img = new Image();
+    svg.setAttribute("fill", "#fff");
+    svg.setAttribute("width", f.e.offsetWidth);
+    svg.setAttribute("height", f.e.offsetHeight);
+    // (later, once the pass runs: a failure here takes it down as any other does)
+    img.onload = () => {
+      if (!cv.isConnected) return;
+      try {
+        const c = document.createElement("canvas");
+        c.width = 256;
+        c.height = Math.round((256 * f.e.offsetHeight) / f.e.offsetWidth);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        mat.alphaMap = new THREE.CanvasTexture(c);
+        mat.needsUpdate = me.visible = shadows = true;
+        draw();
+      } catch (e) {
+        down(e);
+      }
+    };
+    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(new XMLSerializer().serializeToString(svg));
+    return me;
+  });
   const hole = opening(stage.querySelector(".window"));
-  scene.add(solid, walls, ...glowMeshes, windowWall(hole));
+  scene.add(solid, walls, ...glowMeshes, ...cutMeshes, windowWall(hole));
 
   // The sources it casts: the room's light, and the window's sun or moon, far off, through the
   // window only, and in the dark the computer's screen and the radio's lamp. What glows in the
@@ -402,8 +441,9 @@ const SKIP = /\b(shade|anchor|burst|hit-plane|window-light|beam-corner|radio-lam
 // what may give light rather than take it, each its own face; and what does now: shown as the
 // CSS room paints it, never darkened (the boards the neon is mounted on, whole, so no edge of
 // a glow shows on them)
-const MAY = ".window .sky, .window .pane, .pc .glass, .pc .glass *, .neon h1, .plexi, .light-switch, .light-switch *";
-const GLOWS = ".window .sky, .window .pane, .pc.on .glass, .pc.on .glass *, .neon h1, .plexi, .lights-off .light-switch, .lights-off .light-switch *, .dawn .light-switch, .dawn .light-switch *";
+const MAY = ".window .sky, .window .pane, .pc .glass, .neon h1, .plexi, .light-switch, .light-switch *";
+const GLOWS = ".window .sky, .window .pane, .pc.on .glass, .neon h1, .plexi, .lights-off .light-switch, .lights-off .light-switch *, .dawn .light-switch, .dawn .light-switch *";
+const CUT = ".plant .leaves"; // cut to the shape of the drawing it holds
 const BIG = 4e6; // px², a wall or the floor: lit, and casting nothing, since nothing is behind it
 const probe = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
 const colours = new Map();
@@ -434,9 +474,19 @@ function paints(e, cs = getComputedStyle(e)) {
 function outline(e, cs) {
   const w = e.offsetWidth,
     h = e.offsetHeight;
+  const px = (v, of) => (v.endsWith("%") ? (parseFloat(v) / 100) * of : parseFloat(v) || 0);
+  // cut out by its clip-path: a polygon is its shape; an inset, what is left of it (nothing
+  // while it is all cut away, the camera's print before it comes out)
+  const clip = cs.clipPath.match(/^(polygon|inset)\((.*)\)$/);
+  if (clip && clip[1] === "polygon") return clip[2].split(",").map((pt) => pt.trim().split(/\s+/).map((v, i) => px(v, i ? h : w)));
+  let box = [0, 0, w, h];
+  if (clip) {
+    const [t, r = t, b = t, l = r] = clip[2].split(/\s+/);
+    box = [px(l, w), px(t, h), w - px(r, w), h - px(b, h)];
+    if (box[2] - box[0] < 1 || box[3] - box[1] < 1) return [];
+  }
   const r = ["TopLeft", "TopRight", "BottomRight", "BottomLeft"].map((c) => {
     const [a, b = a] = cs["border" + c + "Radius"].split(" ");
-    const px = (v, of) => (v.endsWith("%") ? (parseFloat(v) / 100) * of : parseFloat(v) || 0);
     return [px(a, w), px(b, h)];
   });
   // (as CSS does: radii that would overlap are all scaled down together)
@@ -454,7 +504,8 @@ function outline(e, cs) {
       out.push([cx + rx * Math.cos(ang), cy + ry * Math.sin(ang)]);
     }
   });
-  return out;
+  // (a convex shape clamped to the inset's box is what the box leaves of it)
+  return clip ? out.map(([x, y]) => [Math.min(Math.max(x, box[0]), box[2]), Math.min(Math.max(y, box[1]), box[3])]) : out;
 }
 // where a face is now: its outline through m, and the way it faces, towards the reader (who
 // looks from -x, +y, +z)
@@ -468,33 +519,40 @@ function place(f, m) {
     o = p(0, 0);
   f.n = new THREE.Vector3().subVectors(p(w, 0), o).cross(new THREE.Vector3().subVectors(p(0, h), o)).normalize();
   f.q = f.shape.map(([x, y]) => p(x, y));
+  f.uv = f.shape.map(([x, y]) => [x / w, 1 - y / h]); // (where each corner is on a picture of it)
   if (-f.n.x + f.n.y + f.n.z < 0) {
     f.n.negate(); // the side the reader sees, and its corners round that way
     f.q.reverse();
+    f.uv.reverse();
   }
 }
 // every element of the room that paints more than a tint, in its own shape, where it is and
 // the way it faces; the window's own faces (but its bars) let the light in; a strip of a print
 // round a curve is the face of its slice of the print
 function faces(stage) {
-  const out = { body: [], big: [], glows: [] };
+  const out = { body: [], big: [], glows: [], cut: [] };
   for (const e of stage.querySelectorAll("*")) {
     if (!(e instanceof HTMLElement) || !e.offsetWidth || !e.offsetHeight) continue;
     if (SKIP.test(e.className)) continue;
     const strip = e.closest(".strip");
     if (strip && strip !== e) continue;
+    if (e.parentElement.closest(".pc .glass")) continue; // (the glass is one face, whatever it shows: as boxes they would show past its rounded corners)
     const cs = getComputedStyle(e),
-      may = e.matches(MAY);
+      may = e.matches(MAY),
+      cut = e.matches(CUT);
     // (what may glow is kept even while it is hidden: it may come on later)
     if (!may && !shown(e, stage)) continue;
-    if (!may && !(strip ? [...e.querySelectorAll("*")].some((d) => d instanceof HTMLElement && !SKIP.test(d.className) && paints(d)) : paints(e, cs))) continue;
+    if (!may && !cut && !(strip ? [...e.querySelectorAll("*")].some((d) => d instanceof HTMLElement && !SKIP.test(d.className) && paints(d)) : paints(e, cs))) continue;
     if (!may && e.closest(".window") && !e.matches(".mullion")) continue;
-    const m = ROOM.toStage(e),
-      mover = e.closest(".thing");
+    let m = ROOM.toStage(e);
+    const mover = e.closest(".thing"),
+      drawing = cut && getComputedStyle(e.querySelector("svg")).transform;
+    if (drawing && drawing !== "none") m = m.multiply(new DOMMatrix(drawing)); // (the drawing where its own transform puts it: the leaves stand up out of their box)
     const f = { e, shape: outline(e, cs), mover, rel: mover && ROOM.toStage(mover).inverse().multiply(m) };
+    if (f.shape.length < 3) continue;
     place(f, m);
     if (!isFinite(f.n.x)) continue;
-    (may ? out.glows : !mover && e.offsetWidth * e.offsetHeight > BIG ? out.big : out.body).push(f);
+    (may ? out.glows : cut ? out.cut : !mover && e.offsetWidth * e.offsetHeight > BIG ? out.big : out.body).push(f);
   }
   return out;
 }

@@ -834,6 +834,26 @@
     for (var row = 0; row < 4; row++)
       for (var col = 0; col < 16; col++) box(kb, { x: 6 + col * 5.5, y: 4 + row * 5, w: 4, d: 4, z: 0, h: 1.4, color: "#efe9dc" });
     box(kb, { x: 30, y: 26, w: 40, d: 4, z: 0, h: 1.4, color: "#efe9dc" });
+    // and its edge runs round the keyboard's rounded corners in one piece (the bench's front
+    // and side meet square and leave the far end open): short upright faces along the
+    // outline, each as dark as the way it faces
+    var K = { x: kb.offsetLeft, y: kb.offsetTop, w: kb.offsetWidth, d: kb.offsetHeight, h: 8, r: 3 },
+      rim = [];
+    [[K.w - K.r, K.d - K.r, 90], [K.w - K.r, K.r, 0], [K.r, K.r, -90], [K.r, K.d - K.r, 180]].forEach(function (c) {
+      for (var s = 0; s <= 3; s++) {
+        var t = ((c[2] - s * 30) * Math.PI) / 180;
+        rim.push([c[0] + K.r * Math.cos(t), c[1] + K.r * Math.sin(t)]);
+      }
+    });
+    rim.forEach(function (p, i) {
+      var q = rim[(i + 1) % rim.length],
+        dx = q[0] - p[0],
+        dy = q[1] - p[1],
+        len = Math.hypot(dx, dy);
+      if (len < 0.01) return;
+      var k = 0.735 + 0.12 * (dy / len) + 0.09 * (dx / len); // (its outside is dx, dy turned a quarter: +y south, +x east)
+      el("i", "kb-rim", kb.parentNode, "left:" + (K.x + p[0]) + "px;top:" + (K.y + p[1]) + "px;width:" + (len + 0.3) + "px;height:" + K.h + "px;background:" + shade("#c9bfa4", k) + ";transform:rotateZ(" + Math.atan2(dy, dx) + "rad) translateZ(" + K.h + "px) rotateX(-90deg)");
+    });
   }
   // a broken computer smokes out of the vents on that same side
   var fumes = document.querySelector(".fumes");
