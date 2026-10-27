@@ -16,6 +16,7 @@
     return e;
   }
   function shade(color, k) {
+    if (/[?&]gl/.test(location.search)) return color; // PROTOTYPE: the light pass shades
     return "color-mix(in srgb, " + color + " " + Math.round(k * 100) + "%, black)";
   }
   // A box standing on z, w along x, d along y, h up: its top and the four sides.
@@ -1476,6 +1477,7 @@
     lights: lights,
     moonlit: moonlit,
     toScreen: toScreen,
+    toStage: toStage, // (for prototype-room-gl.js)
     before: before,
     // the layer that darkens the room with its light off, where Willy draws himself out of it
     night: night,

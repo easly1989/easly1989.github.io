@@ -82,6 +82,7 @@ export async function willy(room, stage, src = "assets/willy.glb") {
   const lowPen = low.getContext("2d");
   const show = () => {
     renderer.render(scene, cam);
+    if (window.__willyScene) window.__willyScene.drawn++; // PROTOTYPE
     const k = cv.width / W,
       top = Math.round(fold * k);
     if (low.width !== cv.width || low.height !== cv.height - top) Object.assign(low, { width: cv.width, height: cv.height - top });
@@ -121,6 +122,14 @@ export async function willy(room, stage, src = "assets/willy.glb") {
   const dark = () => !sources.some((s) => s.name === "room" && s.power);
   // each source where it is from him, as strong as it is now
   const shine = () => {
+    // PROTOTYPE (prototype-room-gl.js): his colours only, the room's light pass lights him
+    if (document.documentElement.classList.contains("gl")) {
+      lamps.forEach((l) => (l.intensity = 0));
+      sky.color.set(0xffffff);
+      sky.groundColor.set(0xffffff);
+      sky.intensity = 1;
+      return;
+    }
     const night = dark();
     lamps.forEach((l, i) => {
       const s = sources[i];
@@ -316,6 +325,7 @@ export async function willy(room, stage, src = "assets/willy.glb") {
     cutout();
     show();
   });
+  window.__willyScene = { scene, holder, skinned, here: () => here, drawn: 0 }; // PROTOTYPE
   const moments = (clip, at) => {
     const m = size[clip].moments;
     return at == null ? m : [m[Math.min(m.length - 1, Math.max(0, Math.round(at * (m.length - 1))))]];

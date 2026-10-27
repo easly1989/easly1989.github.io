@@ -74,7 +74,9 @@
           '<script type="importmap">{"imports":{"three":"./vendor/three/build/three.module.min.js",' +
             '"./vendor/three/build/three.core.js":"./vendor/three/build/three.core.min.js",' +
             '"three/addons/":"./vendor/three/examples/jsm/"}}</scr' + 'ipt>' +
-            '<script type="module" src="' + (new URLSearchParams(location.search).has("review") ? "willy-review.js" : "willy-room.js") + '"></scr' + 'ipt>',
+            '<script type="module" src="' + (new URLSearchParams(location.search).has("review") ? "willy-review.js" : "willy-room.js") + '"></scr' + 'ipt>' +
+            // PROTOTYPE: the room drawn in WebGL, with ?gl
+            (new URLSearchParams(location.search).has("gl") ? '<script type="module" src="prototype-room-gl.js"></scr' + 'ipt>' : ""),
         );
       })();
     </script>
