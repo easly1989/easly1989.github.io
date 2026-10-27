@@ -827,6 +827,14 @@
     sticky.removeAttribute("data-cat");
     el("span", "pc-note", side).appendChild(sticky);
   }
+  // the keyboard's keys stand up off it, so they catch the light and throw their own shadows:
+  // four rows of sixteen on the pitch the flat pattern on the bench draws, and the spacebar
+  var kb = document.querySelector(".pc .kb");
+  if (kb) {
+    for (var row = 0; row < 4; row++)
+      for (var col = 0; col < 16; col++) box(kb, { x: 6 + col * 5.5, y: 4 + row * 5, w: 4, d: 4, z: 0, h: 1.4, color: "#efe9dc" });
+    box(kb, { x: 30, y: 26, w: 40, d: 4, z: 0, h: 1.4, color: "#efe9dc" });
+  }
   // a broken computer smokes out of the vents on that same side
   var fumes = document.querySelector(".fumes");
   if (fumes && side) side.appendChild(fumes);

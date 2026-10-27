@@ -698,6 +698,18 @@ html:not(.iso) .strip {
 .iso .pc .floor {
   filter: blur(6px);
 }
+/* the keys are boxes here (room.js), so the flat pattern goes and the well under them shows */
+.iso .pc .kb {
+  transform-style: preserve-3d;
+}
+.iso .pc .kb::before,
+.iso .pc .kb::after {
+  content: none;
+}
+/* (pressed while it types, as the flat pattern nudges on the bench) */
+.iso .pc.typing .kb .rbox {
+  translate: 0 0 -0.5px;
+}
 /* out of the vents on the side, in the side's own axes: x runs up it, y along it */
 .iso .pc .side .fumes {
   z-index: 2;
