@@ -988,16 +988,37 @@
   });
   var navTubes = [].slice.call(nav.querySelectorAll("a"));
   var heard = []; // who hears of the lights changing (ROOM.onLights)
+  // The night's holes, where a source lights the dark (none by day): each an ellipse on screen,
+  // w and h across, at x, y, its colour falling off through stops from its middle (0) to its
+  // edge (1). The night layer paints them; the light pass (room-light.js), when it runs, does
+  // instead (ROOM.glows()), all but those it casts for real (cast): the window's, the screen's
+  // and where the radio's lands; and those that glow in the air (air), it adds rather than lets
+  // through.
+  var holes = [];
+  function hole(r, w, h, stops, dy) {
+    return { x: r.left + r.width / 2, y: r.top + r.height * (dy || 0.5), w: w, h: h, stops: stops };
+  }
+  function painted(o) {
+    return (
+      "radial-gradient(ellipse " + o.w + "px " + o.h + "px at " + o.x + "px " + o.y + "px, " +
+      o.stops
+        .map(function (s) {
+          return s[0] + " " + s[1] * 100 + "%";
+        })
+        .join(", ") +
+      ")"
+    );
+  }
   // drawn again when something it follows changes: the light, the frame, the neon, the screen
   function glow() {
+    var h = document.documentElement.classList;
+    holes = [];
+    if (h.contains("lights-off") || h.contains("dawn")) inTheDark();
     heard.forEach(function (f) {
       f();
     });
-    var h = document.documentElement.classList;
-    if (!h.contains("lights-off") && !h.contains("dawn")) return;
-    function at(r, w, h, dy) {
-      return "radial-gradient(ellipse " + w + "px " + h + "px at " + (r.left + r.width / 2) + "px " + (r.top + r.height * (dy || 0.5)) + "px, ";
-    }
+  }
+  function inTheDark() {
     var n = sign.querySelector("h1").getBoundingClientRect();
     var tint = getComputedStyle(sign).getPropertyValue("--neon").trim() || NEON[0];
     var t = (performance.now() - struck) / 1100;
@@ -1011,19 +1032,21 @@
     var w = win.getBoundingClientRect(),
       k = sw.getBoundingClientRect(),
       g = pc.querySelector(".glass").getBoundingClientRect();
-    var holes = [
+    var moon = hole(w, w.width * 0.7, w.height * 0.75, [["rgba(150,170,235,1)", 0], ["transparent", 0.8]]);
+    moon.cast = true;
+    holes = [
       // (with the tube out its light fades, rather than whitening, which in a multiply layer is brightest)
-      at(n, n.width * 0.75, n.height * 1.7) + "color-mix(in srgb, color-mix(in srgb, " + tint + " 45%, white) " + 100 * dim + "%, transparent), color-mix(in srgb, " + tint + " " + 50 * dim + "%, transparent) 55%, transparent 80%)",
-      at(w, w.width * 0.7, w.height * 0.75) + "rgba(150,170,235,1), transparent 80%)",
-      "radial-gradient(circle at " + (k.left + k.width / 2) + "px " + (k.top + k.height / 2) + "px, rgba(255,255,255,1) 0 14px, transparent 36px)",
+      hole(n, n.width * 0.75, n.height * 1.7, [["color-mix(in srgb, color-mix(in srgb, " + tint + " 45%, white) " + 100 * dim + "%, transparent)", 0], ["color-mix(in srgb, " + tint + " " + 50 * dim + "%, transparent)", 0.55], ["transparent", 0.8]]),
+      moon,
+      hole(k, 36, 36, [["rgba(255,255,255,1)", 0], ["rgba(255,255,255,1)", 14 / 36], ["transparent", 1]]),
     ];
     navTubes.forEach(function (a) {
       var r = a.getBoundingClientRect();
       if (!r.width) return;
       var c = getComputedStyle(a).color;
       // the word itself, and its light thrown wide on the wall round it
-      holes.push(at(r, r.width * 0.62, r.height * 0.62) + "color-mix(in srgb, " + c + " 55%, white), color-mix(in srgb, " + c + " 35%, transparent) 55%, transparent 85%)");
-      holes.push(at(r, r.width * 1.6 + 90, r.height * 1.4 + 120) + "color-mix(in srgb, " + c + " 70%, transparent), color-mix(in srgb, " + c + " 30%, transparent) 50%, transparent 100%)");
+      holes.push(hole(r, r.width * 0.62, r.height * 0.62, [["color-mix(in srgb, " + c + " 55%, white)", 0], ["color-mix(in srgb, " + c + " 35%, transparent)", 0.55], ["transparent", 0.85]]));
+      holes.push(hole(r, r.width * 1.6 + 90, r.height * 1.4 + 120, [["color-mix(in srgb, " + c + " 70%, transparent)", 0], ["color-mix(in srgb, " + c + " 30%, transparent)", 0.5], ["transparent", 1]]));
     });
     // the window's light: the four panes of the beam on screen (its corners mapped from the
     // beam's own 0 to 1 across and along, as its mask and clip in room.css have them), so the
@@ -1058,16 +1081,22 @@
     [["x1", from[0]], ["y1", from[1]], ["x2", to[0]], ["y2", to[1]]].forEach(function (a) {
       fall.setAttribute(a[0], a[1]);
     });
-    // the screen's: a green on the keyboard, the desk's edge and the wall, round the screen
+    // the screen's: a green on the keyboard, the desk's edge and the wall, round the screen,
+    // unsteady (the night layer's own element, with its CSS flicker; a hole for the light pass)
     nightScreen.style.display = pc.classList.contains("on") ? "block" : "none";
     var sx = g.width * 1.85,
       sy = g.height * 2.2;
     Object.assign(nightScreen.style, { left: g.left + g.width / 2 - sx + "px", top: g.top + g.height * 0.6 - sy + "px", width: 2 * sx + "px", height: 2 * sy + "px" });
+    if (pc.classList.contains("on")) {
+      var screen = hole(g, sx, sy, [["rgba(200,255,210,1)", 0], ["rgba(80,140,100,0.65)", 0.45], ["transparent", 0.8]], 0.6);
+      screen.own = screen.cast = true;
+      holes.push(screen);
+    }
     // what has the keyboard's focus is lit, so its ring shows in the dark
     var f = document.activeElement;
     if (f && f !== document.body && fit.contains(f) && f.matches(":focus-visible")) {
       var fr = f.getBoundingClientRect();
-      holes.push(at(fr, fr.width * 0.75 + 40, fr.height * 0.75 + 40) + "rgba(255,255,255,1) 60%, transparent 100%)");
+      holes.push(hole(fr, fr.width * 0.75 + 40, fr.height * 0.75 + 40, [["rgba(255,255,255,1)", 0.6], ["transparent", 1]]));
     }
     // the radio while it plays: its lit dial, its halo, and where its light lands on the desk,
     // nearer the radio than the pool's middle
@@ -1077,18 +1106,32 @@
         dl = dial.getBoundingClientRect();
       var px = pl.left + pl.width * 0.5 + (lp.left + lp.width / 2 - pl.left - pl.width * 0.5) * 0.4,
         py = pl.top + pl.height * 0.5 + (lp.top + lp.height / 2 - pl.top - pl.height * 0.5) * 0.4;
-      holes.push(at(dl, dl.width * 0.9 + 20, dl.height * 0.9 + 20) + "rgba(255,240,210,1) 30%, transparent 100%)");
-      holes.push(at(lp, lp.width * 0.55, lp.height * 0.5) + "rgba(255,205,150,1), rgba(200,150,100,0.6) 45%, transparent 80%)");
-      holes.push("radial-gradient(ellipse " + pl.width * 0.32 + "px " + pl.height * 0.3 + "px at " + px + "px " + py + "px, rgba(230,180,130,0.9), rgba(170,130,90,0.4) 50%, transparent 85%)");
+      holes.push(hole(dl, dl.width * 0.9 + 20, dl.height * 0.9 + 20, [["rgba(255,240,210,1)", 0.3], ["transparent", 1]]));
+      var halo = hole(lp, lp.width * 0.55, lp.height * 0.5, [["rgba(255,205,150,1)", 0], ["rgba(200,150,100,0.6)", 0.45], ["transparent", 0.8]]);
+      halo.air = 0.35; // (how strongly it adds)
+      holes.push(halo);
+      holes.push({ x: px, y: py, w: pl.width * 0.32, h: pl.height * 0.3, stops: [["rgba(230,180,130,0.9)", 0], ["rgba(170,130,90,0.4)", 0.5], ["transparent", 0.85]], cast: true });
     }
     // what the projector throws on the wall
     if (cast.classList.contains("lit")) {
       var pr = cast.getBoundingClientRect();
-      holes.push(at(pr, pr.width * 0.6, pr.height * 0.62) + "rgba(255,236,206,1) 40%, rgba(200,170,130,0.5) 70%, transparent 100%)");
+      holes.push(hole(pr, pr.width * 0.6, pr.height * 0.62, [["rgba(255,236,206,1)", 0.4], ["rgba(200,170,130,0.5)", 0.7], ["transparent", 1]]));
       var br = ray.getBoundingClientRect();
-      holes.push(at(br, br.width * 0.4, br.height * 0.5, 0.6) + "rgba(240,215,180,0.7), transparent 100%)");
+      var beam = hole(br, br.width * 0.4, br.height * 0.5, [["rgba(240,215,180,0.7)", 0], ["transparent", 1]], 0.6);
+      // (its shape on screen, for the light pass: from the lens out to the corners of the words)
+      beam.air = 0.6;
+      beam.poly = [[LAMP.x, LAMP.y, LAMP.z], [0, 0], [PROJ.w, 0], [PROJ.w, -PROJ.h], [0, -PROJ.h]].map(function (p, i) {
+        return i ? toScreen(RIGHT - 2, PROJ.along + p[0], PROJ.z + p[1]) : toScreen(p[0], p[1], p[2]);
+      });
+      holes.push(beam);
     }
-    night.style.background = holes.join(", ") + ", rgb(40, 46, 80)";
+    night.style.background =
+      holes
+        .filter(function (o) {
+          return !o.own;
+        })
+        .map(painted)
+        .join(", ") + ", rgb(40, 46, 80)";
   }
   var lightWas = null;
   try {
@@ -1341,7 +1384,7 @@
       dark = h.contains("lights-off") || h.contains("dawn"),
       night = dark || matchMedia("(prefers-color-scheme: dark)").matches;
     return [
-      { name: "room", at: [DESK.x + 200, BACK, 1600], color: "#fff1dc", power: dark ? 0 : 1, reach: 0 },
+      { name: "room", at: [DESK.x + 200, BACK + 250, 1600], color: "#fff1dc", power: dark ? 0 : 1, reach: 0 },
       { name: "window", at: [WIN.along + WIN.w / 2, BACK - 1000, WIN.top - WIN.h / 2 + 1000 * HIGH], color: night ? "#b9c8fa" : "#ffe4a0", power: dark ? 1 : 0.35, reach: 0 },
       { name: "screen", at: spots.screen, color: "#c8ffd2", power: pc.classList.contains("on") ? 1 : 0, reach: 700 },
       { name: "radio", at: spots.radio, color: "#ffcd96", power: lamp.classList.contains("lit") ? 1 : 0, reach: 800 },
@@ -1487,6 +1530,10 @@
     surfaces: SURFACES,
     jumps: JUMPS,
     lights: lights,
+    // the night's holes as they are now (glow())
+    glows: function () {
+      return holes;
+    },
     moonlit: moonlit,
     toScreen: toScreen,
     // the matrix from an element's own px to the room's, through every transform on the way

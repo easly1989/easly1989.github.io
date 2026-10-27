@@ -1678,6 +1678,11 @@ html:not(.iso) .strip {
   pointer-events: none;
   mix-blend-mode: multiply;
 }
+/* and what glows in the air, added over it, soft at the edges */
+.iso .light-pass.air {
+  mix-blend-mode: screen;
+  filter: blur(8px);
+}
 /* the window's light, its panes drawn by room.js (glow()), soft at the edges as moonlight is */
 .iso .night-beam {
   position: absolute;
