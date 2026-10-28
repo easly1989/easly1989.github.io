@@ -544,9 +544,11 @@ function shown(e, stage) {
   for (let a = e; a && a !== stage; a = a.parentElement) op *= +getComputedStyle(a).opacity;
   return op >= 0.3;
 }
-// whether it paints more than a tint: a colour, a gradient or a picture
+// whether it paints more than a tint: a colour, a gradient or a picture; or the mug's rim, a
+// ring of box-shadow round its coffee, which is one face here with the coffee (the inside of
+// its far wall would show through it otherwise, shadowed slice by slice)
 function paints(e, cs = getComputedStyle(e)) {
-  return cs.backgroundImage !== "none" || rgba(cs.backgroundColor)[3] >= 0.5 || e.tagName === "IMG";
+  return cs.backgroundImage !== "none" || rgba(cs.backgroundColor)[3] >= 0.5 || e.tagName === "IMG" || e.matches(".mug .cup");
 }
 // Its outline in its own px, round where its corners are (a ring is a disc, not a square).
 function outline(e, cs) {
@@ -603,6 +605,30 @@ function place(f, m) {
     f.q.reverse();
     f.uv.reverse();
   }
+  // a slice of something round faces the way the curve does at each corner, straight out from
+  // its axis, so the light runs on round it from slice to slice and does not step; turned in
+  // where f.n is (a strip seen from inside), and out for a knob's ring, which f.n is edge on to
+  if (f.axis) {
+    const [c, u] = f.axis.map((a) => {
+      const q = m.transformPoint(a);
+      return new THREE.Vector3(q.x, q.y, q.z);
+    });
+    u.sub(c).normalize();
+    f.ns = f.q.map((q) => {
+      const r = q.clone().sub(c);
+      return r.addScaledVector(u, -r.dot(u)).normalize();
+    });
+    if (f.ns.reduce((s, r) => s + r.dot(f.n), 0) < -0.5 * f.ns.length) for (const r of f.ns) r.negate();
+  }
+}
+// the axis of a slice of something round (room.js, data-round), as two points on it in the
+// face's own px
+function axis(e, m) {
+  if (e.dataset.round == null) return null;
+  const host = e.parentElement,
+    [x, y] = e.dataset.round ? e.dataset.round.split(" ").map(Number) : [host.offsetWidth / 2, host.offsetHeight / 2],
+    to = m.inverse().multiply(ROOM.toStage(host));
+  return [to.transformPoint(new DOMPoint(x, y, 0)), to.transformPoint(new DOMPoint(x, y, 1))];
 }
 // every element of the room that paints more than a tint, in its own shape, where it is and
 // the way it faces; the window's own faces (but its bars) let the light in; a strip of a print
@@ -627,7 +653,7 @@ function faces(stage) {
     const mover = e.closest(MOVERS),
       drawing = cut && getComputedStyle(e.querySelector("svg")).transform;
     if (drawing && drawing !== "none") m = m.multiply(new DOMMatrix(drawing)); // (the drawing where its own transform puts it: the leaves stand up out of their box)
-    const f = { e, shape: outline(e, cs), mover, rel: mover && ROOM.toStage(mover).inverse().multiply(m) };
+    const f = { e, shape: outline(e, cs), mover, rel: mover && ROOM.toStage(mover).inverse().multiply(m), axis: axis(e, m) };
     if (f.shape.length < 3) continue;
     place(f, m);
     if (!isFinite(f.n.x)) continue;
@@ -664,11 +690,13 @@ function write(me, fs) {
   const pos = me.geometry.attributes.position,
     nrm = me.geometry.attributes.normal;
   let v = 0;
-  for (const { q, n } of fs)
+  for (const { q, n, ns } of fs)
     for (let i = 1; i < q.length - 1; i++)
-      for (const p of [q[0], q[i], q[i + 1]]) {
+      for (const k of [0, i, i + 1]) {
+        const p = q[k],
+          d = ns ? ns[k] : n; // (round, each corner its own way: place())
         pos.setXYZ(v, p.x, p.y, p.z);
-        nrm.setXYZ(v++, n.x, n.y, n.z);
+        nrm.setXYZ(v++, d.x, d.y, d.z);
       }
   pos.needsUpdate = nrm.needsUpdate = true;
 }
