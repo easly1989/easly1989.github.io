@@ -162,12 +162,11 @@ export async function willy(room, stage, src = "assets/willy.glb") {
   model.scale.setScalar(SCALE);
   holder.add(model);
   scene.add(holder);
-  // him for the room's light pass (room-light.js): what to draw of him, where he is, and whom to
-  // tell each time he is drawn, so it draws him in the same frame
-  // what of him it lights (his body, which casts his shadow, and his fur), and whom to tell each
-  // time he is drawn, so it draws him in the same frame; again() draws him anew, as when it
-  // starts lighting him or stops
-  const body = (window.ROOM.willy = { holder, here: () => here, body: [], fur: [], drawn: null, again: null });
+  // him for the room's light pass (room-light.js), as ROOM.willy once he is first placed: what of
+  // him it lights (his body, which casts his shadow, and his fur), and whom to tell each time he
+  // is drawn, so it draws him in the same frame; again() draws him anew, as when it starts
+  // lighting him or stops
+  const body = { holder, here: () => here, body: [], fur: [], drawn: null, again: null };
   const skinned = body.body;
   model.traverse((o) => {
     if (o.isMesh) o.frustumCulled = false;
@@ -355,6 +354,7 @@ export async function willy(room, stage, src = "assets/willy.glb") {
     place(x, y, z, heading, under = null) {
       at = { x, y, z, heading, under };
       stand();
+      window.ROOM.willy ??= body; // (not before: until then he stands at the room's origin, unposed)
     },
     draw(dt) {
       unbend();

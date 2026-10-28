@@ -500,13 +500,13 @@ void main() {
   if (ROOM.mouse) ROOM.mouse.moved = guard(() => follow() && draw()); // (room-mouse.js, as it loads and as it moves)
   (function meet() {
     if (!cv.isConnected) return;
-    if (!ROOM.willy) return requestAnimationFrame(meet); // (he comes when he has loaded)
+    if (!ROOM.willy) return requestAnimationFrame(meet); // (he comes once he has loaded and been placed)
     // (each time he is drawn he may have moved, and his shadow with him)
     ROOM.willy.drawn = guard(() => {
       shadows = true;
       draw();
     });
-    ROOM.willy.again(); // (his own canvas without his own light now, and this with him)
+    ROOM.willy.again?.(); // (his own canvas without his own light now, and this with him)
   })();
 }
 
@@ -733,13 +733,18 @@ function hull(pts) {
 function down(e) {
   for (const c of document.querySelectorAll("canvas.light-pass")) c.remove();
   document.documentElement.classList.remove("lit");
-  // Willy lit by his own lights again, with his own shadow
+  console.warn("No light pass:", e);
+  // Willy lit by his own lights again, with his own shadow; whatever fails there stays here,
+  // since this may be running inside his own drawing, which it would stop
   const w = ROOM.willy;
   if (w && w.drawn) {
     w.drawn = null;
-    w.again();
+    try {
+      w.again?.();
+    } catch (err) {
+      console.warn("Willy not drawn again:", err);
+    }
   }
-  console.warn("No light pass:", e);
 }
 // (last, so everything above is there when it starts)
 try {
