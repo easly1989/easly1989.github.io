@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ASF-Notifier — Matrix alerts for ArchiSteamFarm · Carlo Ruggiero</title>
+    <meta
+      name="description"
+      content="ASF-Notifier is a free, open-source ArchiSteamFarm plugin that posts to a Matrix room when a bot is stopped, stays disconnected and reconnects, farming finishes or ASF is updated. Events are set globally and per bot, and Telegram, Discord and other apps are reached through Matrix bridges."
+    />
+    <meta name="theme-color" content="#22594b" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#12352d" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" type="image/svg+xml" href="asf-notifier.svg" />
+    <meta property="og:title" content="ASF-Notifier — Matrix alerts for ArchiSteamFarm" />
+    <meta
+      property="og:description"
+      content="A free, open-source ArchiSteamFarm plugin that tells a Matrix room when a bot stops, loses its connection, finishes farming or ASF is updated."
+    />
+    <meta property="og:type" content="website" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      /* the accent comes from the mark; white text on it clears 4.5:1 */
+      :root {
+        --asf: #0f766e;
+      }
+      .nt-feed {
+        position: relative;
+        z-index: 5;
+        width: min(46rem, calc(100% - 2rem));
+        margin: -1rem auto 2.5rem;
+        padding: 1rem 1.25rem 1.1rem;
+        background: var(--paper);
+        color: var(--paper-ink);
+        box-shadow: var(--shadow);
+        transform: rotate(0.6deg);
+      }
+      .nt-feed h2 {
+        margin: 0 0 0.6rem;
+        font: 800 1.05rem/1.2 "Bricolage Grotesque", sans-serif;
+      }
+      .nt-feed ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 0.4rem;
+      }
+      .nt-feed li {
+        padding: 0.4rem 0.7rem;
+        border-left: 4px solid var(--asf);
+        background: var(--paper-2);
+        font: 500 0.82rem/1.45 "IBM Plex Mono", ui-monospace, monospace;
+        overflow-wrap: anywhere;
+      }
+      .nt-feed p {
+        margin: 0.7rem 0 0;
+        color: var(--paper-ink-2);
+        font-size: 0.88rem;
+      }
+      .nt-grid {
+        position: relative;
+        z-index: 4;
+        width: min(70rem, calc(100% - 2rem));
+        margin: 0 auto 4rem;
+        columns: 3 20rem;
+        column-gap: 1.6rem;
+      }
+      .nt-card {
+        break-inside: avoid;
+        margin: 0 0 1.6rem;
+        padding: 1.2rem 1.25rem 1.3rem;
+        border-radius: 12px;
+        background: var(--paper);
+        color: var(--paper-ink);
+        box-shadow: var(--shadow);
+        transform: rotate(var(--r, 0deg));
+        font-size: 0.97rem;
+        line-height: 1.5;
+      }
+      .nt-card h2 {
+        margin: 0;
+        font: 800 1.2rem/1.15 "Bricolage Grotesque", sans-serif;
+      }
+      .nt-card > small {
+        display: block;
+        margin: 0.15rem 0 0.8rem;
+        color: var(--paper-ink-2);
+        font-size: 0.82rem;
+      }
+      .nt-card p {
+        margin: 0 0 0.7rem;
+      }
+      .nt-card p:last-child {
+        margin-bottom: 0;
+      }
+      .nt-card table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+      }
+      .nt-card th {
+        text-align: left;
+        padding: 0.4rem 0.6rem 0.4rem 0;
+        border-bottom: 1px solid var(--rule);
+        vertical-align: top;
+        white-space: nowrap;
+      }
+      .nt-card td {
+        padding: 0.4rem 0;
+        border-bottom: 1px solid var(--rule);
+        vertical-align: top;
+      }
+      .nt-card code {
+        font: 500 0.82em "IBM Plex Mono", ui-monospace, monospace;
+        overflow-wrap: anywhere;
+      }
+      .nt-card th code {
+        overflow-wrap: normal;
+        font-size: 0.74rem;
+      }
+      .nt-card pre {
+        margin: 0 0 0.7rem;
+        padding: 0.7rem 0.8rem;
+        background: var(--paper-2);
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        font: 500 0.8rem/1.5 "IBM Plex Mono", ui-monospace, monospace;
+      }
+      .nt-card ol {
+        margin: 0 0 0.7rem;
+        padding-left: 1.3rem;
+      }
+      .nt-card li {
+        margin-bottom: 0.45rem;
+      }
+      .nt-card .quiet {
+        color: var(--paper-ink-2);
+        font-size: 0.9rem;
+      }
+      .label-sheet {
+        view-transition-name: asf;
+      }
+    </style>
+  </head>
+  <body data-page="asf" data-cat-scale="0.85">
+    <div class="mat" data-cat-world>
+      <svg class="guides" aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 100 100">
+        <line x1="0" y1="100" x2="100" y2="0" vector-effect="non-scaling-stroke" />
+      </svg>
+      <header class="bar">
+        <a href="index.html">Projects</a>
+        <a href="about.html">About</a>
+        <a href="donate.html" data-cat="nav">Donate</a>
+        <a href="https://github.com/easly1989" rel="noopener">GitHub</a>
+      </header>
+      <a class="crumb" href="index.html">Back to the bench</a>
+
+      <main>
+        <section class="paper label-sheet" style="--c: var(--asf)" data-cat="sit">
+          <img class="mark" src="asf-notifier.svg" alt="" width="56" height="56" />
+          <p class="state">Shipping, v1.0.0.0. Open source under Apache-2.0.</p>
+          <h1>ASF-Notifier</h1>
+          <p class="lede">
+            Hear about it when a bot stops. An ArchiSteamFarm plugin that posts to a Matrix room
+            when a bot is stopped, loses its connection and comes back, finishes farming, or ASF
+            is updated.
+          </p>
+          <div class="actions" style="--c: var(--asf)">
+            <a class="btn" href="https://github.com/easly1989/ASF-Notifier/releases/latest" rel="noopener">Download</a>
+            <a class="btn quiet" href="https://github.com/easly1989/ASF-Notifier" rel="noopener">View on GitHub</a>
+            <a class="btn quiet" href="donate.html">Donate</a>
+          </div>
+        </section>
+
+        <div class="nt-feed" style="--c: var(--asf)">
+          <h2>What the room looks like</h2>
+          <ul>
+            <li>🔴 bot1 — login failed (TwoFactorCodeMismatch), ASF stopped the bot</li>
+            <li>🟠 bot1 — disconnected for 5 minutes (NoConnection)</li>
+            <li>🟢 bot1 — reconnected after 12 minutes</li>
+            <li>✅ bot2 — farming finished</li>
+          </ul>
+          <p>Example messages. Each one starts with the bot's name, so one room serves every bot.</p>
+        </div>
+
+        <div class="nt-grid">
+          <article class="nt-card" style="--r: -0.8deg">
+            <h2>What it is</h2>
+            <small>A plugin, not a service</small>
+            <p>
+              If you run ArchiSteamFarm and want to know when something needs you, this puts it in
+              a chat room. It sends a message when ASF stops a bot, when a bot stays disconnected
+              and when it logs on again, when farming finishes and when ASF is updated.
+            </p>
+            <p>
+              One plugin and one room serve every bot in the instance, including bots you add
+              later. Delivery runs on a background queue, so a slow homeserver never slows ASF
+              down, and the access token is never logged.
+            </p>
+          </article>
+
+          <article class="nt-card" id="events" style="--r: 0.7deg">
+            <h2>Events</h2>
+            <small>Each one is on or off, globally and per bot</small>
+            <table>
+              <tr><th scope="row"><code>BotStoppedByAsf</code></th><td>ASF stopped the bot: login failed, or it needs input. On.</td></tr>
+              <tr><th scope="row"><code>BotDisconnected</code></th><td>Still disconnected after a set time, 5 minutes by default. On.</td></tr>
+              <tr><th scope="row"><code>BotReconnected</code></th><td>Logged on again after a disconnect was reported. On.</td></tr>
+              <tr><th scope="row"><code>FarmingFinished</code></th><td>Farming finished and something was farmed. On.</td></tr>
+              <tr><th scope="row"><code>AsfUpdated</code></th><td>ASF is newer than at the last start. On.</td></tr>
+              <tr><th scope="row"><code>BotStopped</code></th><td>A bot stopped without an ASF error, for example the stop command. Off.</td></tr>
+              <tr><th scope="row"><code>FarmingStarted</code></th><td>Farming started. Off.</td></tr>
+              <tr><th scope="row"><code>FarmingStopped</code></th><td>Farming stopped. Off.</td></tr>
+            </table>
+          </article>
+
+          <article class="nt-card" style="--r: -0.4deg">
+            <h2>Global and per bot</h2>
+            <small>ASF's own config files</small>
+            <p>
+              The settings live in an <code>ASFNotifier</code> block in <code>ASF.json</code>.
+              A bot can have its own block in its config file to silence it or to change which
+              events it reports. A per-bot value wins over the global one, and ASF applies an edit
+              when the bot config reloads, with no restart.
+            </p>
+            <pre>{ "ASFNotifier": {
+    "Events": { "FarmingFinished": false }
+} }</pre>
+            <p class="quiet">
+              The room is global: there is no per-bot room.
+            </p>
+          </article>
+
+          <article class="nt-card" id="quick-start" style="--r: 0.9deg">
+            <h2>Quick start</h2>
+            <small>About five minutes</small>
+            <ol>
+              <li>
+                Download <code>ASFNotifier.zip</code> from the latest release and extract its
+                contents into <code>plugins/ASFNotifier/</code>. With Docker, that is the mounted
+                <code>plugins</code> directory.
+              </li>
+              <li>
+                On your Matrix homeserver, create a bot user and an <b>unencrypted</b> room,
+                invite the bot and join it. Note its access token and the room ID.
+              </li>
+              <li>Add the room to <code>ASF.json</code>:</li>
+            </ol>
+            <pre>{
+  "ASFNotifier": {
+    "Matrix": {
+      "HomeserverUrl": "https://matrix.example.org",
+      "RoomId": "!abc123:example.org"
+    }
+  }
+}</pre>
+            <ol start="4">
+              <li>
+                Put the token in the environment of the ASF process, not in <code>ASF.json</code>:
+                <code>ASF_NOTIFIER_MATRIX_ACCESS_TOKEN</code>.
+              </li>
+              <li>
+                Restart ASF, then send <code>!notifytest</code> to a bot as its Master or Owner. A
+                test message appears in the room.
+              </li>
+            </ol>
+          </article>
+
+          <article class="nt-card" style="--r: -1deg">
+            <h2>Requirements</h2>
+            <small>Matrix only, unencrypted rooms only</small>
+            <p>
+              ArchiSteamFarm 6.3.10.6 or newer. The .NET runtime is the one ASF ships with, so
+              there is nothing else to install. You need a Matrix homeserver, a dedicated bot user
+              and an unencrypted room, addressed by its room ID rather than an alias.
+            </p>
+          </article>
+
+          <article class="nt-card" style="--r: 0.5deg">
+            <h2>Telegram, Discord and the rest</h2>
+            <small>Through Matrix</small>
+            <p>
+              The plugin speaks Matrix only. To get the same alerts elsewhere, bridge the alerts
+              room to the other network, for example with the mautrix bridges for Telegram,
+              Discord, WhatsApp, Signal and Slack, or just read the room in any Matrix client with
+              push notifications on.
+            </p>
+            <p class="quiet">
+              Bridges are not tested by this project: the plugin only ever posts to the room.
+            </p>
+          </article>
+
+          <article class="nt-card" style="--r: -0.6deg">
+            <h2>Updates</h2>
+            <small>Through ASF's plugin updater</small>
+            <p>
+              Add <code>ASFNotifier</code> to <code>PluginsUpdateList</code> in
+              <code>ASF.json</code> and ASF fetches new releases from GitHub by itself, in Docker
+              too. It is opt-in: by default no plugin is updated. The README says how to turn it
+              off, update by hand or stay on one version.
+            </p>
+          </article>
+
+          <article class="nt-card" style="--r: 0.8deg">
+            <h2>Quiet by design</h2>
+            <small>Little noise, nothing lost</small>
+            <p>
+              Stop messages wait about ten seconds, so an ASF restart does not look like every bot
+              stopping. The same event for the same bot is sent at most once every ten minutes,
+              and at most twenty messages go out in an hour. A short outage that ends before the
+              threshold sends nothing.
+            </p>
+          </article>
+
+          <article class="nt-card" id="get-it" style="--r: -0.5deg">
+            <h2>Get it</h2>
+            <small>Repository, release and README</small>
+            <p>The source, the releases and the full documentation are on GitHub.</p>
+            <p class="actions" style="--c: var(--asf)">
+              <a class="btn" href="https://github.com/easly1989/ASF-Notifier/releases/latest" rel="noopener">Latest release</a>
+              <a class="btn quiet" href="https://github.com/easly1989/ASF-Notifier" rel="noopener">Repository</a>
+              <a class="btn quiet" href="https://github.com/easly1989/ASF-Notifier#readme" rel="noopener">README</a>
+            </p>
+          </article>
+
+          <article class="nt-card" style="--r: 1deg">
+            <h2>Open and free — support it</h2>
+            <small>Apache-2.0</small>
+            <p>Free and open source. If it saved you a night of wondering why nothing was farming, a donation is much appreciated.</p>
+            <p class="actions" style="--c: var(--asf)">
+              <a class="btn" href="donate.html">Donate</a>
+              <a class="btn quiet" href="https://github.com/sponsors/easly1989" rel="noopener">GitHub Sponsors</a>
+            </p>
+          </article>
+        </div>
+      </main>
+
+      <span class="loose pencil" data-cat="knock" style="left: 30px; top: 900px; --r: 84deg" aria-hidden="true"></span>
+      <span class="loose clip" data-cat="knock" style="right: 40px; top: 640px; --r: 12deg" aria-hidden="true"></span>
+    </div>
+
+    <script src="radio.js"></script>
+    <script src="site.js" defer></script>
+    <script src="cat.js" defer></script>
+  </body>
+</html>
