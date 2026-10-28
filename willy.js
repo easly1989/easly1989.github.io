@@ -20,7 +20,7 @@ const BIAS = 50; // and a little towards the viewer, so the ground under him sta
 const FOLD = 40;
 // a little long, as Willy's is; reach in model units of a cat 5.64 long, tail how much longer
 // the tail's is
-const FUR = { reach: 0.28, shells: 20, strands: 26, comb: 0.9, outline: 0.09, tail: 0.5 };
+const FUR = { reach: 0.06, shells: 20, strands: 26, comb: 0.9, outline: 0.42, tail: 0.5 }; // (outline: as thin as it was with reach 0.28)
 const LENGTH = 5.64;
 // px his root is above what he stands on as he leaves it and as he meets the next, in jump-air,
 // which the arc does not know (cat-src/build.py prints them)
@@ -120,8 +120,18 @@ export async function willy(room, stage, src = "assets/willy.glb") {
     here = [0, 0, 0],
     moon = 1; // how much of him is in the window's light
   const dark = () => !sources.some((s) => s.name === "room" && s.power);
+  // whether the room's light pass lights him (room-light.js): then his canvas draws only his
+  // colours, a white light from all round as strong as three.js takes for all of it (π)
+  const passed = () => !!body.drawn;
   // each source where it is from him, as strong as it is now
   const shine = () => {
+    if (passed()) {
+      for (const l of lamps) l.intensity = 0;
+      sky.color.set(0xffffff);
+      sky.groundColor.set(0xffffff);
+      sky.intensity = Math.PI;
+      return;
+    }
     const night = dark();
     lamps.forEach((l, i) => {
       const s = sources[i];
@@ -152,10 +162,12 @@ export async function willy(room, stage, src = "assets/willy.glb") {
   model.scale.setScalar(SCALE);
   holder.add(model);
   scene.add(holder);
-  // him for the room's light pass (room-light.js): what to draw of him, where he is, and whom to
-  // tell each time he is drawn, so it draws him in the same frame
-  const body = (window.ROOM.willy = { holder, here: () => here, drawn: null });
-  const skinned = [];
+  // him for the room's light pass (room-light.js), as ROOM.willy once he is first placed: what of
+  // him it lights (his body, which casts his shadow, and his fur), and whom to tell each time he
+  // is drawn, so it draws him in the same frame; again() draws him anew, as when it starts
+  // lighting him or stops
+  const body = { holder, here: () => here, body: [], fur: [], drawn: null, again: null };
+  const skinned = body.body;
   model.traverse((o) => {
     if (o.isMesh) o.frustumCulled = false;
     if (o.isSkinnedMesh) skinned.push(o);
@@ -163,6 +175,7 @@ export async function willy(room, stage, src = "assets/willy.glb") {
   // matte, so the coat does not shine like plastic
   for (const mesh of skinned) mesh.material = new THREE.MeshLambertMaterial({ map: mesh.material.map });
   fur(skinned);
+  model.traverse((o) => o.isSkinnedMesh && !skinned.includes(o) && body.fur.push(o));
   outline(skinned);
 
   const mixer = new THREE.AnimationMixer(model);
@@ -188,7 +201,7 @@ export async function willy(room, stage, src = "assets/willy.glb") {
     plain = new THREE.MeshBasicMaterial({ color: 0xffffff });
   let veiled = false;
   const cutout = () => {
-    if (!dark()) {
+    if (!dark() || passed()) {
       if (veiled) pen.clearRect(0, 0, veil.width, veil.height);
       veiled = false;
       return;
@@ -305,9 +318,18 @@ export async function willy(room, stage, src = "assets/willy.glb") {
     // (the surface it lies on: what he stands on, or a book on it)
     const on = window.ROOM.surfaces.filter((s) => x >= s.x0 && x <= s.x1 && y >= s.y0 && y <= s.y1 && s.z <= u.z + 0.5).sort((a, b) => b.z - a.z)[0];
     blob.on(x, y, u.z - h, u.z + 0.5, on);
-    blob.canvas.style.opacity = SHADOW * strength * Math.max(0, 1 - u.by / 300);
+    blob.canvas.style.opacity = passed() ? 0 : SHADOW * strength * Math.max(0, 1 - u.by / 300);
     shine();
   };
+  // him drawn as he is now, lit by his own lights and with his own shadow unless the light pass
+  // lights him
+  const paint = () => {
+    stand();
+    if (!passed()) blob.cast(scene);
+    cutout();
+    show();
+  };
+  body.again = paint;
   // his many shaders (one a shell of fur) compiled in the background where the browser can,
   // rather than all at once in his first frame
   await renderer.compileAsync(scene, cam);
@@ -315,10 +337,7 @@ export async function willy(room, stage, src = "assets/willy.glb") {
   sources = window.ROOM.lights();
   window.ROOM.onLights(() => {
     sources = window.ROOM.lights();
-    stand();
-    blob.cast(scene);
-    cutout();
-    show();
+    paint();
   });
   const moments = (clip, at) => {
     const m = size[clip].moments;
@@ -335,16 +354,14 @@ export async function willy(room, stage, src = "assets/willy.glb") {
     place(x, y, z, heading, under = null) {
       at = { x, y, z, heading, under };
       stand();
+      window.ROOM.willy ??= body; // (not before: until then he stands at the room's origin, unposed)
     },
     draw(dt) {
       unbend();
       life?.restore();
       mixer.update(dt);
       life?.apply(Object.keys(clips).find((n) => clips[n].isScheduled()) || "", here);
-      stand();
-      blob.cast(scene);
-      cutout();
-      show();
+      paint();
     },
     size,
     // where he looks, a point in room px, or nowhere (null): he turns his head to it while he
@@ -759,6 +776,7 @@ export function fur(skinned, options = {}) {
         tip = 0.07 * t,
         lean = f.comb * h * t;
       const m = new THREE.MeshLambertMaterial({ map: mesh.material.map });
+      m.customProgramCacheKey = () => "fur " + mesh.uuid + " " + i; // (three.js goes by onBeforeCompile's source, the same for every shell)
       m.onBeforeCompile = (sh) => {
         sh.uniforms.strands = { value: strands };
         sh.vertexShader =
@@ -786,6 +804,7 @@ export function outline(skinned, options = {}) {
     const merged = mergeVertices(g);
     merged.computeVertexNormals();
     const mat = new THREE.MeshBasicMaterial({ color: 0x262626, side: THREE.BackSide });
+    mat.customProgramCacheKey = () => "outline " + mesh.uuid; // (as for the fur's shells)
     mat.onBeforeCompile = (s) => {
       s.vertexShader = s.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\n  transformed += normal * " + grow.toFixed(4) + ";");
     };
