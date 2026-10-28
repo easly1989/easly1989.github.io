@@ -43,10 +43,12 @@ async function start() {
   cam.matrixAutoUpdate = false;
   const { body, big, glows, cut, backs } = faces(stage);
   // (past the edge of a map is in shadow, where three.js has it lit: the window's map covers the
-  // light through the window and no more, below, and a spot's covers its cone)
+  // light through the window and no more, below, and a spot's covers its cone; and past the
+  // edge of the picture a light throws, the projector's, no light either)
   const dim = (sh) => {
     const chunk = THREE.ShaderChunk.shadowmap_pars_fragment.replace(/(float getShadow\([^)]*\) \{\s*float shadow = )1\.0;/g, (_, a) => a + "0.0;");
-    sh.fragmentShader = sh.fragmentShader.replace("#include <shadowmap_pars_fragment>", chunk);
+    const thrown = THREE.ShaderChunk.lights_fragment_begin.replace("directLight.color * spotColor.rgb : directLight.color", "directLight.color * spotColor.rgb : vec3( 0.0 )");
+    sh.fragmentShader = sh.fragmentShader.replace("#include <shadowmap_pars_fragment>", chunk).replace("#include <lights_fragment_begin>", thrown);
   };
   const dimOutside = (m) => {
     m.onBeforeCompile = dim;
@@ -172,27 +174,8 @@ async function start() {
       l.shadow.mapSize.set(512, 512);
       l.shadow.radius = 3;
     } else if (s.name === "projector") {
-      // from the lens at the words on the wall, its cone round their corners and a little past
-      // them, soft at its edge as the painted pool round the words was; to the wall and no
-      // further, its map only as deep as that
-      const at = new THREE.Vector3(...s.at),
-        pic = stage.querySelector(".projection"),
-        m = ROOM.toStage(pic),
-        corners = [[0, 0], [pic.offsetWidth, 0], [pic.offsetWidth, pic.offsetHeight], [0, pic.offsetHeight]].map(([x, y]) => new THREE.Vector3().copy(m.transformPoint(new DOMPoint(x, y, 0)))),
-        mid = corners.reduce((a, c) => a.add(c), new THREE.Vector3()).divideScalar(4),
-        aim = mid.clone().sub(at).normalize(),
-        wide = Math.max(...corners.map((c) => c.clone().sub(at).angleTo(aim))),
-        far = Math.max(...corners.map((c) => c.distanceTo(at)));
-      const PENUMBRA = 0.35;
-      l = new THREE.SpotLight(s.color, 1, 0, (wide * 1.08) / (1 - PENUMBRA), PENUMBRA, 0); // (all of the words at full strength)
-      l.position.copy(at).addScaledVector(aim, 6); // (just out of the lens)
-      l.target.position.copy(mid);
+      l = projector(s, stage);
       scene.add(l.target);
-      Object.assign(l.shadow.camera, { near: 10, far: far * 1.5 });
-      l.shadow.mapSize.set(512, 512);
-      l.shadow.radius = 3;
-      l.shadow.autoUpdate = false; // (drawn again for Willy only while he is in or near its cone: draw())
-      l.userData.aim = aim;
     } else continue;
     l.shadow.bias = -0.0008;
     l.shadow.normalBias = 1.5;
@@ -203,10 +186,11 @@ async function start() {
   // face it lights when it meets it square on (three.js takes π for all of it): by day the room
   // looks as it did when its light was painted; by night it is as dark as the night layer left
   // it, rgb(40, 46, 80), but where a source reaches.
-  // The projector meets the wall nearly edge on, so it is strong where it lands: as bright as
-  // the painted pool round the words was, and fainter by day, as a projector is.
+  // The projector meets the wall nearly edge on, so it is strong: the words it throws there as
+  // bright as the painted pool left them, but not so strong that what stands in the beam, met
+  // square on, is all white and the words on it lost; fainter by day, as a projector is.
   const DAY = { sky: 0.6, room: 0.5, window: 0.6, projector: 1.2 },
-    NIGHT = { sky: 1, window: 1, screen: 1.8, radio: 0.6, projector: 3.6 };
+    NIGHT = { sky: 1, window: 1, screen: 1.8, radio: 0.6, projector: 3.4 };
   const DARK = new THREE.Color("rgb(40, 46, 80)");
   let shadows = true;
   let was = "";
@@ -223,7 +207,9 @@ async function start() {
       const l = lamps[s.name];
       l.color.set(s.color);
       l.intensity = l.userData.full = Math.PI * s.power * (k[s.name] ?? 0);
-      l.visible = l.castShadow = l.intensity > 0;
+      // (the projector always there, at nothing while the radio is off, so that it switching on
+      // by day recompiles no shader, a stall of seconds with Willy's; its map drawn only while on)
+      l.visible = l.castShadow = l.intensity > 0 || s.name === "projector";
     }
     sky.intensity = Math.PI * k.sky;
     sky.color.copy(dark ? DARK : new THREE.Color(0xffffff));
@@ -438,14 +424,16 @@ void main() {
     const screen = lamps.screen;
     flickers = !!screen && screen.visible && !still.matches;
     if (flickers) screen.intensity = screen.userData.full * crt(performance.now());
-    // the projector's map, when only Willy has moved, only while he is in or near its cone, and
-    // once more as he leaves it: on the desk he is never in it, and it would cost every frame
+    // the projector's picture as the wall shows it now; and its shadow map, when only Willy has
+    // moved, only while he is in or near its cone, and once more as he leaves it: on the desk he
+    // is never in it, and it would cost every frame
     const pj = lamps.projector;
+    if (pj && pj.intensity > 0) pj.userData.paint();
     if (pj && shadows) {
       const v = him.position.clone().sub(pj.position),
         d = v.length(),
-        near = !!w && (d < WILLY_R || (d < pj.shadow.camera.far + WILLY_R && v.angleTo(pj.userData.aim) - Math.asin(WILLY_R / d) < pj.angle));
-      pj.shadow.needsUpdate = !onlyHim || near || wasNear;
+        near = !!w && (d < WILLY_R || (d < pj.userData.reach + WILLY_R && v.angleTo(pj.userData.aim) - Math.asin(WILLY_R / d) < pj.angle));
+      pj.shadow.needsUpdate = pj.intensity > 0 && (!onlyHim || near || wasNear);
       wasNear = near;
     }
     renderer.shadowMap.needsUpdate = shadows;
@@ -762,6 +750,150 @@ function windowWall({ x0, x1, z0, z1, y }) {
   const w = mesh(panes, new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false, side: THREE.DoubleSide }));
   w.castShadow = true;
   return w;
+}
+
+// The projector's light (start()): from the lens, the words on the wall and a soft pool round
+// them as big as the painted one was (room.js, glow(): an ellipse 0.6 by 0.62 of the words' box,
+// full to 0.4 of the way out and gone by its edge), thrown as a picture (its map), so the words
+// fall on whatever stands in the beam and are gone from the wall where it throws its shadow.
+// The lens sees the pool nearly edge on, a sliver, so its frame is fitted to the pool rather
+// than to a cone round it; past the frame it lights nothing (dim()).
+function projector(s, stage) {
+  const at = new THREE.Vector3(...s.at),
+    pic = stage.querySelector(".projection"),
+    m = ROOM.toStage(pic),
+    W = pic.offsetWidth,
+    H = pic.offsetHeight,
+    p = (x, y) => new THREE.Vector3().copy(m.transformPoint(new DOMPoint(x, y, 0))),
+    mid = p(W / 2, H / 2),
+    upWall = p(W / 2, 0).sub(p(W / 2, H)).normalize(),
+    wall = new THREE.Plane().setFromCoplanarPoints(p(0, 0), p(W, 0), p(0, H)),
+    rim = [...Array(32)].map((_, i) => p(W / 2 + 0.6 * W * Math.cos((i * Math.PI) / 16), H / 2 + 0.62 * H * Math.sin((i * Math.PI) / 16))),
+    reach = Math.max(...rim.map((c) => c.distanceTo(at)));
+  const GROUND = 0.35; // (how much of it lights the pool round the words; the words at full)
+  // the frame: aimed at the middle of the pool as the lens sees it, upright as the wall is, as
+  // wide and as tall as the pool looks from there (in the tangents of its half angles)
+  const aim = mid.clone().sub(at).normalize(),
+    up = new THREE.Vector3(),
+    side = new THREE.Vector3();
+  let ext;
+  for (let k = 0; k < 2; k++) {
+    up.copy(upWall).addScaledVector(aim, -upWall.dot(aim)).normalize();
+    side.crossVectors(aim, up);
+    const t = rim.map((c) => {
+        const d = c.clone().sub(at),
+          f = d.dot(aim);
+        return [d.dot(side) / f, d.dot(up) / f];
+      }),
+      lo = [0, 1].map((i) => Math.min(...t.map((q) => q[i]))),
+      hi = [0, 1].map((i) => Math.max(...t.map((q) => q[i])));
+    if (k) ext = [0, 1].map((i) => 1.04 * Math.max(-lo[i], hi[i]));
+    else aim.addScaledVector(side, (lo[0] + hi[0]) / 2).addScaledVector(up, (lo[1] + hi[1]) / 2).normalize();
+  }
+  const angle = Math.min(Math.atan(Math.hypot(...ext)), 1.45); // (its cone round the frame: one of π/2 or more casts nothing)
+  const l = new THREE.SpotLight(s.color, 1, 0, angle, 0, 0);
+  l.position.copy(at).addScaledVector(aim, 6); // (just out of the lens)
+  l.target.position.copy(at).addScaledVector(aim, 100);
+  l.shadow.camera.up.copy(up);
+  l.shadow.focus = Math.atan(ext[1]) / angle;
+  // its shadow map in the frame's shape, a texel to about a px of the pool where it is furthest,
+  // along the wall's slope as well, which the lens sees foreshortened; deep enough that nothing
+  // in the frame is past it
+  const slant = Math.abs(aim.dot(wall.normal)),
+    px = [2 * ext[0] * reach, (2 * ext[1] * reach) / slant],
+    tall = Math.max((px[0] * ext[1]) / ext[0], px[1]),
+    f = Math.min(1, 2048 / Math.max(tall, (tall * ext[0]) / ext[1]));
+  l.shadow.mapSize.set(Math.round(((tall * ext[0]) / ext[1]) * f), Math.round(tall * f)); // (shaped as the frame is: its aspect is the map's)
+  Object.assign(l.shadow.camera, { near: 20, far: 6000 });
+  l.shadow.radius = 3;
+  l.shadow.autoUpdate = false; // (drawn again for Willy only while he is in or near it: draw())
+  l.updateMatrixWorld();
+  l.target.updateMatrixWorld();
+  l.shadow.updateMatrices(l);
+  // the picture, a texel to about a px of the wall: for each texel, where its ray lands on the
+  // wall, in the words' own px (-1 off them), and how far out in the pool that is
+  const [TW, TH] = px.map((v) => Math.min(1024, Math.ceil(v))),
+    n = TW * TH,
+    back = l.shadow.matrix.clone().invert(),
+    toPic = m.inverse(),
+    inPic = new THREE.Matrix4().fromArray(toPic.toFloat64Array()),
+    ray = new THREE.Ray(),
+    far = new THREE.Vector3(),
+    hit = new THREE.Vector3(),
+    // (the words stand 2 px off the wall, room.js, onWall(): what the light lands on is the wall,
+    // and the words it carries are where the reader sees them in front of it, along the way the
+    // room is seen, which the lens, nearly edge on, would otherwise see shifted)
+    lands = wall.clone(),
+    o = ROOM.toScreen(0, 0, 0),
+    ax = [ROOM.toScreen(1000, 0, 0), ROOM.toScreen(0, 1000, 0), ROOM.toScreen(0, 0, 1000)].map((q) => [q[0] - o[0], q[1] - o[1]]),
+    view = new THREE.Vector3(ax[0][0], ax[1][0], ax[2][0]).cross(new THREE.Vector3(ax[0][1], ax[1][1], ax[2][1])).normalize(),
+    ground = new Float32Array(n),
+    hx = new Float32Array(n).fill(-1),
+    hy = new Float32Array(n);
+  // (and three.js looks a lit point up in the picture off its face by the shadow's normal bias,
+  // the one start() gives every light)
+  l.shadow.normalBias = 1.5;
+  const toLens = wall.normal.clone().multiplyScalar(Math.sign(wall.distanceToPoint(at)));
+  lands.constant += (2 - l.shadow.normalBias) * Math.sign(wall.distanceToPoint(at));
+  for (let j = 0; j < TH; j++)
+    for (let i = 0; i < TW; i++) {
+      const u = (i + 0.5) / TW,
+        v = (j + 0.5) / TH,
+        t = j * TW + i;
+      ray.origin.set(u, v, 0.1).applyMatrix4(back);
+      ray.direction.subVectors(far.set(u, v, 0.9).applyMatrix4(back), ray.origin).normalize();
+      if (!ray.intersectPlane(lands, hit)) continue;
+      hit.addScaledVector(toLens, -l.shadow.normalBias);
+      hit.addScaledVector(view, -wall.distanceToPoint(hit) / wall.normal.dot(view)).applyMatrix4(inPic);
+      const r = Math.hypot((hit.x - W / 2) / (0.6 * W), (hit.y - H / 2) / (0.62 * H));
+      ground[t] = GROUND * (r < 0.4 ? 1 : r < 0.7 ? 1 - (0.5 * (r - 0.4)) / 0.3 : Math.max(0, (0.5 * (1 - r)) / 0.3));
+      if (hit.x >= 0 && hit.x < W && hit.y >= 0 && hit.y < H) [hx[t], hy[t]] = [hit.x, hit.y];
+    }
+  const data = new Uint8Array(4 * n);
+  l.map = new THREE.DataTexture(data, TW, TH);
+  l.map.magFilter = l.map.minFilter = THREE.LinearFilter;
+  // drawn from what the wall shows, white on nothing, a little wider than it (so the words the
+  // CSS room paints stay inside their light), when the track changes: the track, its author, and
+  // a soft band where the wave is, rather than the wave, which moves on every frame (drawing
+  // it in here that often costs a third of the frame rate, and a still one beside the moving
+  // one shows double)
+  const ink = document.createElement("canvas");
+  ink.width = 2 * W;
+  ink.height = 2 * H;
+  const ix = ink.getContext("2d", { willReadFrequently: true }),
+    wave = pic.querySelector(".wave");
+  const where = (e) => toPic.multiply(ROOM.toStage(e)).transformPoint(new DOMPoint(0, 0));
+  let was = null;
+  l.userData = {
+    aim,
+    reach,
+    paint() {
+      if (pic.textContent === was) return;
+      was = pic.textContent;
+      ix.setTransform(2, 0, 0, 2, 0, 0);
+      ix.clearRect(0, 0, W, H);
+      Object.assign(ix, { fillStyle: "#fff", shadowColor: "#fff", shadowBlur: 10, textAlign: "center", globalAlpha: 1 });
+      // shortcut: each line of words drawn as one line, as every station's track fits on one
+      for (const e of pic.querySelectorAll("b, small")) {
+        const o = where(e);
+        ix.font = getComputedStyle(e).font;
+        const t = ix.measureText(e.textContent); // (on its baseline, as CSS sets it in its line)
+        ix.fillText(e.textContent, o.x + e.offsetWidth / 2, o.y + (e.offsetHeight - t.fontBoundingBoxAscent - t.fontBoundingBoxDescent) / 2 + t.fontBoundingBoxAscent);
+      }
+      const o = where(wave);
+      Object.assign(ix, { shadowBlur: 24, globalAlpha: 0.55 });
+      ix.beginPath();
+      ix.roundRect(o.x + 6, o.y + 8, wave.offsetWidth - 12, wave.offsetHeight - 16, 14);
+      ix.fill();
+      const a = ix.getImageData(0, 0, 2 * W, 2 * H).data;
+      for (let t = 0; t < n; t++) {
+        const v = hx[t] < 0 ? 0 : a[4 * (Math.floor(2 * hy[t]) * 2 * W + Math.floor(2 * hx[t])) + 3] / 255;
+        data[4 * t] = data[4 * t + 1] = data[4 * t + 2] = 255 * (ground[t] + (1 - ground[t]) * v);
+      }
+      l.map.needsUpdate = true;
+    },
+  };
+  return l;
 }
 
 // ---- the camera: the CSS room's own projection, as ROOM.toScreen measures it --------------------

@@ -1088,9 +1088,9 @@
   // The night's holes, where a source lights the dark (none by day): each an ellipse on screen,
   // w and h across, at x, y, its colour falling off through stops from its middle (0) to its
   // edge (1). The night layer paints them; the light pass (room-light.js), when it runs, does
-  // instead (ROOM.glows()), all but those it casts for real (cast): the window's, the screen's
-  // and where the radio's lands; and those that glow in the air (air), it adds rather than lets
-  // through.
+  // instead (ROOM.glows()), all but those it casts for real (cast): the window's, the screen's,
+  // where the radio's lands and what the projector throws on the wall; and those that glow in
+  // the air (air), it adds rather than lets through.
   var holes = [];
   function hole(r, w, h, stops, dy) {
     return { x: r.left + r.width / 2, y: r.top + r.height * (dy || 0.5), w: w, h: h, stops: stops };
