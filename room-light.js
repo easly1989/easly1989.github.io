@@ -45,9 +45,11 @@ async function start() {
   // (past the edge of a map is in shadow, where three.js has it lit: the window's map covers the
   // light through the window and no more, below, and a spot's covers its cone; and past the
   // edge of the picture a light throws, the projector's, no light either)
+  const chunk = THREE.ShaderChunk.shadowmap_pars_fragment.replace(/(float getShadow\([^)]*\) \{\s*float shadow = )1\.0;/g, (_, a) => a + "0.0;"),
+    thrown = THREE.ShaderChunk.lights_fragment_begin.replace("directLight.color * spotColor.rgb : directLight.color", "directLight.color * spotColor.rgb : vec3( 0.0 )");
+  // (if three.js words them otherwise, no pass rather than one lit where it should be dark)
+  if (chunk === THREE.ShaderChunk.shadowmap_pars_fragment || thrown === THREE.ShaderChunk.lights_fragment_begin) throw new Error("three.js's shadow or spot light chunks have changed");
   const dim = (sh) => {
-    const chunk = THREE.ShaderChunk.shadowmap_pars_fragment.replace(/(float getShadow\([^)]*\) \{\s*float shadow = )1\.0;/g, (_, a) => a + "0.0;");
-    const thrown = THREE.ShaderChunk.lights_fragment_begin.replace("directLight.color * spotColor.rgb : directLight.color", "directLight.color * spotColor.rgb : vec3( 0.0 )");
     sh.fragmentShader = sh.fragmentShader.replace("#include <shadowmap_pars_fragment>", chunk).replace("#include <lights_fragment_begin>", thrown);
   };
   const dimOutside = (m) => {
@@ -99,7 +101,7 @@ async function start() {
         c.height = Math.round((256 * f.e.offsetHeight) / f.e.offsetWidth);
         c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
         mat.alphaMap = new THREE.CanvasTexture(c);
-        mat.needsUpdate = me.visible = shadows = true;
+        mat.needsUpdate = me.visible = shadows = beam = true;
         draw();
       } catch (e) {
         down(e);
@@ -192,8 +194,17 @@ async function start() {
   const DAY = { sky: 0.6, room: 0.5, window: 0.6, projector: 1.2 },
     NIGHT = { sky: 1, window: 1, screen: 1.8, radio: 0.6, projector: 3.4 };
   const DARK = new THREE.Color("rgb(40, 46, 80)");
-  let shadows = true;
+  let shadows = true,
+    beam = true; // (and the projector's map with them: draw())
   let was = "";
+  // whether a ball of r px round c is in the projector's beam, or might be
+  const inBeam = (c, r) => {
+    const pj = lamps.projector;
+    if (!pj) return false;
+    const v = c.clone().sub(pj.position),
+      d = v.length();
+    return d < r || (d < pj.userData.reach + r && v.angleTo(pj.userData.aim) - Math.asin(r / d) < pj.angle);
+  };
   function shine() {
     const all = ROOM.lights().filter((s) => lamps[s.name]),
       dark = !all.some((s) => s.name === "room" && s.power),
@@ -201,7 +212,7 @@ async function start() {
     // (the shadows are drawn again only when a light did change: the room hears of it on every
     // move of the focus too)
     const now = JSON.stringify(all);
-    if (now !== was) shadows = true;
+    if (now !== was) shadows = beam = true;
     was = now;
     for (const s of all) {
       const l = lamps[s.name];
@@ -241,6 +252,12 @@ async function start() {
       mv.key = key;
       moved = true;
       for (const f of mv.faces) place(f, m.multiply(f.rel));
+      // (in the projector's beam, or just out of it: its map too)
+      const pts = mv.faces.flatMap((f) => f.q),
+        c = pts.reduce((a, q) => a.add(q), new THREE.Vector3()).divideScalar(pts.length),
+        r = Math.max(...pts.map((q) => q.distanceTo(c)));
+      if (inBeam(c, r) || (mv.c && inBeam(mv.c, mv.r))) beam = true;
+      Object.assign(mv, { c, r });
     }
     if (moved) {
       write(solid, body);
@@ -256,8 +273,10 @@ async function start() {
       }
       const m = mb.matrix();
       if (!m.equals(mouse.matrix)) {
+        const was = new THREE.Vector3().setFromMatrixPosition(mouse.matrix);
         mouse.matrix.copy(m);
         moved = true;
+        if (inBeam(was, 40) || inBeam(new THREE.Vector3().setFromMatrixPosition(m), 40)) beam = true; // (px round it, as big as it is)
       }
     }
     return moved && (shadows = true);
@@ -393,8 +412,7 @@ void main() {
   }
 
   let flickers = false;
-  let onlyHim = false,
-    wasNear = false;
+  let wasNear = false;
   const WILLY_R = 320; // px round where he stands that he may reach, curled or stretched
   const still = matchMedia("(prefers-reduced-motion: reduce)"); // (under it the screen holds steady)
   function draw() {
@@ -424,20 +442,18 @@ void main() {
     const screen = lamps.screen;
     flickers = !!screen && screen.visible && !still.matches;
     if (flickers) screen.intensity = screen.userData.full * crt(performance.now());
-    // the projector's picture as the wall shows it now; and its shadow map, when only Willy has
-    // moved, only while he is in or near its cone, and once more as he leaves it: on the desk he
-    // is never in it, and it would cost every frame
+    // the projector's picture as the wall shows it now; and its shadow map only when what moved
+    // is in or near its cone, or has just left it (Willy here, the things on the desk in
+    // follow()): on the desk nothing is ever in it, and it would cost every frame
     const pj = lamps.projector;
     if (pj && pj.intensity > 0) pj.userData.paint();
     if (pj && shadows) {
-      const v = him.position.clone().sub(pj.position),
-        d = v.length(),
-        near = !!w && (d < WILLY_R || (d < pj.userData.reach + WILLY_R && v.angleTo(pj.userData.aim) - Math.asin(WILLY_R / d) < pj.angle));
-      pj.shadow.needsUpdate = pj.intensity > 0 && (!onlyHim || near || wasNear);
+      const near = !!w && inBeam(him.position, WILLY_R);
+      pj.shadow.needsUpdate = pj.intensity > 0 && (beam || near || wasNear);
       wasNear = near;
     }
     renderer.shadowMap.needsUpdate = shadows;
-    shadows = onlyHim = false;
+    shadows = beam = false;
     try {
       renderer.render(scene, cam);
     } finally {
@@ -479,6 +495,7 @@ void main() {
     draw();
   });
   ROOM.onLights(relight);
+  document.fonts.addEventListener("loadingdone", relight); // (for the projector's words: projector())
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change", relight);
   still.addEventListener("change", relight);
   cv.addEventListener("webglcontextlost", () => down("its GPU context was lost"));
@@ -529,7 +546,6 @@ void main() {
     if (!ROOM.willy) return requestAnimationFrame(meet); // (he comes once he has loaded and been placed)
     // (each time he is drawn he may have moved, and his shadow with him)
     ROOM.willy.drawn = guard(() => {
-      onlyHim = !shadows; // (nothing else moved since the last frame)
       shadows = true;
       draw();
     });
@@ -797,12 +813,12 @@ function projector(s, stage) {
   l.shadow.camera.up.copy(up);
   l.shadow.focus = Math.atan(ext[1]) / angle;
   // its shadow map in the frame's shape, a texel to about a px of the pool where it is furthest,
-  // along the wall's slope as well, which the lens sees foreshortened; deep enough that nothing
-  // in the frame is past it
+  // along the wall's slope as well, which the lens sees foreshortened, or as near as 1024 texels
+  // across allow; deep enough that nothing in the frame is past it
   const slant = Math.abs(aim.dot(wall.normal)),
     px = [2 * ext[0] * reach, (2 * ext[1] * reach) / slant],
     tall = Math.max((px[0] * ext[1]) / ext[0], px[1]),
-    f = Math.min(1, 2048 / Math.max(tall, (tall * ext[0]) / ext[1]));
+    f = Math.min(1, 1024 / Math.max(tall, (tall * ext[0]) / ext[1])); // (no bigger: drawn on every frame while Willy is near)
   l.shadow.mapSize.set(Math.round(((tall * ext[0]) / ext[1]) * f), Math.round(tall * f)); // (shaped as the frame is: its aspect is the map's)
   Object.assign(l.shadow.camera, { near: 20, far: 6000 });
   l.shadow.radius = 3;
@@ -864,6 +880,8 @@ function projector(s, stage) {
     wave = pic.querySelector(".wave");
   const where = (e) => toPic.multiply(ROOM.toStage(e)).transformPoint(new DOMPoint(0, 0));
   let was = null;
+  // (and again once the fonts arrive, if it was drawn in the fallback: start() draws again)
+  document.fonts.addEventListener("loadingdone", () => (was = null));
   l.userData = {
     aim,
     reach,
