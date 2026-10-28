@@ -42,7 +42,16 @@ async function start() {
   const cam = new THREE.OrthographicCamera();
   cam.matrixAutoUpdate = false;
   const { body, big, glows, cut, backs } = faces(stage);
-  const lit = new THREE.MeshLambertMaterial({ color: 0xffffff, side: THREE.DoubleSide, shadowSide: THREE.DoubleSide });
+  // (past the edge of a map is in shadow, where three.js has it lit: the window's map covers the
+  // light through the window and no more, below, and a spot's covers its cone)
+  const dimOutside = (m) => {
+    m.onBeforeCompile = (sh) => {
+      const chunk = THREE.ShaderChunk.shadowmap_pars_fragment.replace(/(float getShadow\([^)]*\) \{\s*float shadow = )1\.0;/g, (_, a) => a + "0.0;");
+      sh.fragmentShader = sh.fragmentShader.replace("#include <shadowmap_pars_fragment>", chunk);
+    };
+    return m;
+  };
+  const lit = dimOutside(new THREE.MeshLambertMaterial({ color: 0xffffff, side: THREE.DoubleSide, shadowSide: THREE.DoubleSide }));
   // (what glows hides nothing drawn after it, below: the plant's leaves reach behind the board
   // the tubes are on, where the CSS room draws them in front; and it gives way to what lies on
   // it, the window's bars on its glass)
@@ -68,7 +77,7 @@ async function start() {
     g.setAttribute("position", new THREE.Float32BufferAttribute(corners.flatMap((i) => f.q[i].toArray()), 3));
     g.setAttribute("normal", new THREE.Float32BufferAttribute(corners.flatMap(() => f.n.toArray()), 3));
     g.setAttribute("uv", new THREE.Float32BufferAttribute(corners.flatMap((i) => f.uv[i]), 2));
-    const mat = new THREE.MeshLambertMaterial({ color: 0xffffff, side: THREE.DoubleSide, shadowSide: THREE.DoubleSide, alphaTest: 0.5 });
+    const mat = dimOutside(new THREE.MeshLambertMaterial({ color: 0xffffff, side: THREE.DoubleSide, shadowSide: THREE.DoubleSide, alphaTest: 0.5 }));
     const me = new THREE.Mesh(g, mat);
     me.castShadow = me.receiveShadow = true;
     me.renderOrder = 2;
@@ -96,7 +105,7 @@ async function start() {
     img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(new XMLSerializer().serializeToString(svg));
     return me;
   });
-  const hole = opening(stage.querySelector(".window"));
+  const hole = opening(stage.querySelector(".on-wall > .window")); // (inside its frame: the frame is as solid as the wall)
   scene.add(solid, walls, hidden, ...glowMeshes, ...cutMeshes, windowWall(hole));
 
   // The sources it casts: the room's light, and the window's sun or moon, far off, through the
@@ -113,9 +122,24 @@ async function start() {
       l.position.set(...s.at);
       l.target.position.set((hole.x0 + hole.x1) / 2, hole.y, (hole.z0 + hole.z1) / 2); // (it shines from s.at through the window's middle)
       scene.add(l.target);
-      Object.assign(l.shadow.camera, { left: -1500, right: 1500, top: 1500, bottom: -1500, near: 1, far: 6000 });
-      l.shadow.mapSize.set(2048, 2048);
-      l.shadow.radius = 3;
+      // its map as tight round the opening as the light through it is, the corners as the light
+      // sees them: a map the size of the room blurs the bars' and the perch's shadows into gaps.
+      // Past its edge is the wall's shadow (dimOutside()).
+      const c = l.shadow.camera;
+      c.position.copy(l.position);
+      c.lookAt(l.target.position);
+      c.updateMatrixWorld();
+      let r = 0,
+        t = 0;
+      for (const x of [hole.x0, hole.x1])
+        for (const z of [hole.z0, hole.z1]) {
+          const p = new THREE.Vector3(x, hole.y, z).applyMatrix4(c.matrixWorldInverse);
+          r = Math.max(r, Math.abs(p.x) + 8);
+          t = Math.max(t, Math.abs(p.y) + 8);
+        }
+      Object.assign(c, { left: -r, right: r, top: t, bottom: -t, near: 1, far: 6000 });
+      l.shadow.mapSize.set(1024, 1024);
+      l.shadow.radius = 4;
     } else if (s.name === "room") {
       l = new THREE.PointLight(s.color, 1, 0, 0); // (as strong wherever it reaches, like the painted light)
       l.position.set(...s.at);
@@ -620,8 +644,7 @@ function write(me, fs) {
       }
   pos.needsUpdate = nrm.needsUpdate = true;
 }
-// The window's opening in the back wall, in the room: all that the window holds, since the
-// window itself has no size
+// The window's opening in the back wall, in the room: all that its frame holds, inside its border
 function opening(win) {
   const c = [];
   for (const e of win.querySelectorAll("*")) {
