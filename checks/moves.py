@@ -39,6 +39,8 @@ addEventListener('load', () => {
 addEventListener('pagereveal', (e) => {
   setTimeout(() => { sessionStorage.__reveal = JSON.stringify({ page: location.pathname, vt: !!e.viewTransition, names: [...document.querySelectorAll('*')].map((n) => getComputedStyle(n).viewTransitionName).filter((v) => v && v !== 'none' && v !== 'auto') }); }, 0);
 });
+// whether going back brought the page back from the back/forward cache, as for readers
+addEventListener('pageshow', (e) => { window.__restored = e.persisted; });
 addEventListener('error', (e) => { const l = JSON.parse(localStorage.__errs || '[]'); l.push(location.pathname + ': ' + e.message); localStorage.__errs = JSON.stringify(l); });
 """
 # a point on the object that the pointer actually reaches
@@ -115,10 +117,10 @@ try:
         time.sleep(2.5)
         back = json.loads(b.js("sessionStorage.__reveal || 'null'") or "null")
         state = b.js(f"""(() => {{ const t = document.querySelector('{sel}');
-          return {{ page: location.pathname, inert: document.body.inert, lifted: t.style.getPropertyValue('--lift') || '', turned: !!t.style.transform, named: [...document.querySelectorAll('.stage *')].filter((e) => e.style.viewTransitionName).length }}; }})()""")
+          return {{ page: location.pathname, restored: window.__restored === true, inert: document.body.inert, lifted: t.style.getPropertyValue('--lift') || '', turned: !!t.style.transform, named: [...document.querySelectorAll('.stage *')].filter((e) => e.style.viewTransitionName).length }}; }})()""")
         landed = page in ("donate.html", "about.html") or (back and all(n in back["names"] for n in pair))
         check(
-            state["page"].endswith("index.html") and not state["inert"] and not state["lifted"] and not state["turned"] and not state["named"] and landed,
+            state["page"].endswith("index.html") and state["restored"] and not state["inert"] and not state["lifted"] and not state["turned"] and not state["named"] and landed,
             f"{page}: back on the room, it lands and is put down, and the page answers ({state}, {back and back['names']})",
         )
     # back by a link, not the cache: the room loads fresh and is shown while it is still
