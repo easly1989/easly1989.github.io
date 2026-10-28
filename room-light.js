@@ -44,11 +44,12 @@ async function start() {
   const { body, big, glows, cut, backs } = faces(stage);
   // (past the edge of a map is in shadow, where three.js has it lit: the window's map covers the
   // light through the window and no more, below, and a spot's covers its cone)
+  const dim = (sh) => {
+    const chunk = THREE.ShaderChunk.shadowmap_pars_fragment.replace(/(float getShadow\([^)]*\) \{\s*float shadow = )1\.0;/g, (_, a) => a + "0.0;");
+    sh.fragmentShader = sh.fragmentShader.replace("#include <shadowmap_pars_fragment>", chunk);
+  };
   const dimOutside = (m) => {
-    m.onBeforeCompile = (sh) => {
-      const chunk = THREE.ShaderChunk.shadowmap_pars_fragment.replace(/(float getShadow\([^)]*\) \{\s*float shadow = )1\.0;/g, (_, a) => a + "0.0;");
-      sh.fragmentShader = sh.fragmentShader.replace("#include <shadowmap_pars_fragment>", chunk);
-    };
+    m.onBeforeCompile = dim;
     return m;
   };
   const lit = dimOutside(new THREE.MeshLambertMaterial({ color: 0xffffff, side: THREE.DoubleSide, shadowSide: THREE.DoubleSide }));
@@ -252,12 +253,28 @@ async function start() {
   }
   follow();
 
-  // Willy: his own canvas lights him for now, so the pass leaves him as he is, white where he
-  // is, in his pose
+  // Willy (willy.js), lit as the room is: his own meshes, in his pose, borrowed from his scene
+  // for each frame, his body and his fur each in white with what his material does to its shape
+  // (the fur's shells), his body casting his shadow; his outline left out. His own canvas then
+  // draws only his colours.
   const him = new THREE.Group();
   him.scale.set(1, -1, 1); // (his world's y runs the other way)
   scene.add(him);
-  const white = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  const whites = new Map();
+  const white = (m) => {
+    if (!whites.has(m)) {
+      const w = new THREE.MeshLambertMaterial({ map: m.map, side: m.side, shadowSide: THREE.DoubleSide });
+      w.onBeforeCompile = (sh, r) => {
+        m.onBeforeCompile(sh, r);
+        sh.fragmentShader = sh.fragmentShader.replace("#include <color_fragment>", "diffuseColor.rgb = vec3(1.0);");
+        dim(sh);
+      };
+      // (told apart as his own are: three.js goes by onBeforeCompile's source, the same here for all)
+      w.customProgramCacheKey = () => m.customProgramCacheKey() + "white";
+      whites.set(m, w);
+    }
+    return whites.get(m);
+  };
 
   // The night's holes, over what the room's light leaves: each brightens the dark as the night
   // layer's did, never darkens what is lit (blended by the brighter of the two).
@@ -373,12 +390,19 @@ void main() {
       him.position.set(x, y, h);
     }
     const mats = [],
+      hid = [],
       home = w && w.holder.parent;
     if (w) {
       w.holder.traverse((o) => {
-        if (o.isMesh) {
+        if (!o.isMesh) return;
+        if (w.body.includes(o) || w.fur.includes(o)) {
           mats.push([o, o.material]);
-          o.material = white;
+          o.material = white(o.material);
+          o.castShadow = w.body.includes(o);
+          o.receiveShadow = true;
+        } else if (o.visible) {
+          hid.push(o);
+          o.visible = false;
         }
       });
       him.add(w.holder);
@@ -395,6 +419,7 @@ void main() {
       if (w) {
         home.add(w.holder);
         for (const [o, m] of mats) o.material = m;
+        for (const o of hid) o.visible = true;
       }
     }
     holes(ROOM.glows());
@@ -427,7 +452,6 @@ void main() {
     project(cam); // (the room may have been fitted to the window again since: room.js, frame())
     draw();
   });
-  const redraw = guard(draw);
   ROOM.onLights(relight);
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change", relight);
   still.addEventListener("change", relight);
@@ -477,8 +501,12 @@ void main() {
   (function meet() {
     if (!cv.isConnected) return;
     if (!ROOM.willy) return requestAnimationFrame(meet); // (he comes when he has loaded)
-    ROOM.willy.drawn = redraw;
-    redraw();
+    // (each time he is drawn he may have moved, and his shadow with him)
+    ROOM.willy.drawn = guard(() => {
+      shadows = true;
+      draw();
+    });
+    ROOM.willy.again(); // (his own canvas without his own light now, and this with him)
   })();
 }
 
@@ -705,6 +733,12 @@ function hull(pts) {
 function down(e) {
   for (const c of document.querySelectorAll("canvas.light-pass")) c.remove();
   document.documentElement.classList.remove("lit");
+  // Willy lit by his own lights again, with his own shadow
+  const w = ROOM.willy;
+  if (w && w.drawn) {
+    w.drawn = null;
+    w.again();
+  }
   console.warn("No light pass:", e);
 }
 // (last, so everything above is there when it starts)
