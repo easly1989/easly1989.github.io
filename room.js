@@ -15,8 +15,13 @@
     (parent || stage).appendChild(e);
     return e;
   }
+  // A side drawn darker, k of its colour, or a face dimmed to k: the room's painted light, which
+  // the light pass (room-light.js) does instead when it runs, by setting --shading to 0
   function shade(color, k) {
-    return "color-mix(in srgb, " + color + " " + Math.round(k * 100) + "%, black)";
+    return "color-mix(in srgb, " + color + " calc(100% - " + Math.round((1 - k) * 100) + "% * var(--shading, 1)), black)";
+  }
+  function dim(k) {
+    return "brightness(calc(1 - " + +(1 - k).toFixed(3) + " * var(--shading, 1)))";
   }
   // A box standing on z, w along x, d along y, h up: its top and the four sides.
   function box(parent, o) {
@@ -28,6 +33,36 @@
     el("i", "e", b, "left:" + o.w + "px;width:" + o.h + "px;background:" + shade(c, 0.66) + ";transform:translateZ(" + o.h + "px) rotateY(90deg)");
     el("i", "w", b, "left:" + -o.h + "px;width:" + o.h + "px;background:" + (o.west || shade(c, 0.9)) + ";transform:translateZ(" + o.h + "px) rotateY(-90deg)");
     return b;
+  }
+  // The upright edge of something rounded, standing on z, w along x, d along y, h up (hb at the
+  // back, y = 0, if its top slopes), its corners r round: short faces along its outline in one
+  // piece, each as dark as the way it faces (a box's sides meet square, and show past a rounded
+  // top); a sloping face is cut to the slope
+  function rim(parent, o) {
+    var hb = o.hb == null ? o.h : o.hb,
+      at = function (y) {
+        return hb + ((o.h - hb) * y) / o.d;
+      };
+    var pts = [];
+    [[o.w - o.r, o.d - o.r, 90], [o.w - o.r, o.r, 0], [o.r, o.r, -90], [o.r, o.d - o.r, 180]].forEach(function (c) {
+      for (var s = 0; s <= 3; s++) {
+        var t = ((c[2] - s * 30) * Math.PI) / 180;
+        pts.push([c[0] + o.r * Math.cos(t), c[1] + o.r * Math.sin(t)]);
+      }
+    });
+    pts.forEach(function (p, i) {
+      var q = pts[(i + 1) % pts.length],
+        dx = q[0] - p[0],
+        dy = q[1] - p[1],
+        len = Math.hypot(dx, dy);
+      if (len < 0.01) return;
+      var k = 0.735 + 0.12 * (dy / len) + 0.09 * (dx / len), // (its outside is dx, dy turned a quarter: +y south, +x east)
+        hp = at(p[1]),
+        hq = at(q[1]),
+        H = Math.max(hp, hq),
+        cut = hp === hq ? "" : ";clip-path:polygon(0 " + (H - hp).toFixed(2) + "px, 100% " + (H - hq).toFixed(2) + "px, 100% 100%, 0 100%)";
+      el("i", "rim", parent, "left:" + (o.x + p[0]) + "px;top:" + (o.y + p[1]) + "px;width:" + (len + 0.3) + "px;height:" + H + "px;background:" + shade(o.color, k) + ";transform:rotateZ(" + Math.atan2(dy, dx) + "rad) translateZ(" + (o.z + H) + "px) rotateX(-90deg)" + cut);
+    });
   }
   // Something printed round a cylinder: cut into narrow strips, each standing on
   // the curve. The host's centre is the axis; at is the angle the middle faces
@@ -214,7 +249,7 @@
         var cover = i >= n - 1;
         s.style.inset = cover ? "0" : "2px 3px 2px 6px";
         s.style.background = cover ? sp.cover : shade(sp.page, i % 2 ? k : k - 0.06);
-        if (cover) s.style.filter = "brightness(0.8)";
+        if (cover) s.style.filter = dim(0.8);
       } else if (sp.kind === "solid") {
         s.style.inset = "0";
         s.style.background = shade(sp.color, k);
@@ -224,7 +259,7 @@
       } else if (sp.kind === "jar" && i === n) s.classList.add("base");
       host.insertBefore(s, host.firstChild);
     }
-    if (sp.kind === "book") el("span", "wall spine", t, "background:" + sp.cover + ";filter:brightness(0.85)");
+    if (sp.kind === "book") el("span", "wall spine", t, "background:" + sp.cover + ";filter:" + dim(0.85));
     if (sp.kind === "mug") {
       // Its side is upright strips all the way round, not a stack of rings: rings show
       // their gaps, in stripes, as soon as the mug is turned, and it falls over.
@@ -312,7 +347,7 @@
       look.forEach(function (f) {
         s.style[f[0]] = f[1];
       });
-      if (i < h) s.style.filter = "brightness(" + (0.7 + (0.2 * i) / h) + ")";
+      if (i < h) s.style.filter = dim(0.7 + (0.2 * i) / h);
     }
   });
 
@@ -325,7 +360,9 @@
   function localMatrix(n) {
     var cs = getComputedStyle(n);
     var o = cs.transformOrigin.split(" ").map(parseFloat);
-    var m = new DOMMatrix().translate(n.offsetLeft, n.offsetTop).translate(o[0], o[1], o[2] || 0);
+    // (its offset runs from inside its parent's border: the window's frame is one)
+    var p = n.offsetParent;
+    var m = new DOMMatrix().translate(n.offsetLeft + (p ? p.clientLeft : 0), n.offsetTop + (p ? p.clientTop : 0)).translate(o[0], o[1], o[2] || 0);
     var t = triple(cs.translate, 0);
     if (t) m = m.translate(t[0], t[1], t[2]);
     if (cs.rotate && cs.rotate !== "none") m = m.rotate(0, 0, parseFloat(cs.rotate.split(" ").pop()));
@@ -344,13 +381,14 @@
     return m;
   }
   // the room-space box round an element and everything in it (z up from the mat)
-  var BODYLESS = /\b(shade|anchor|burst|cam-out|film)\b/;
+  var BODYLESS = /\b(shade|anchor|burst|cam-out|film|pc-mouse-cord)\b/;
   function bounds(root) {
     var b = { x0: 1e9, y0: 1e9, z0: 1e9, x1: -1e9, y1: -1e9, z1: -1e9, parts: [] };
     [root].concat([].slice.call(root.querySelectorAll("*"), 0, 600)).forEach(function (e) {
       // the blurred shadow on the mat is light, not body, and so is the flash's burst; the
       // camera's print waits inside it
       if (!(e instanceof HTMLElement) || !e.offsetWidth || BODYLESS.test(e.className)) return;
+      if (e.closest(".pc-mouse")) return; // (its patch stands for it: mouse-patch)
       if (getComputedStyle(e).visibility === "hidden") return;
       var m = toStage(e);
       // each part keeps its own box and footprint, so a shape with a notch (a box with
@@ -565,17 +603,18 @@
     far = BACK + WIN.top / HIGH;
   var beam = el("span", "window-light", room, "left:" + (WIN.along - 30) + "px;top:" + near + "px;width:" + (WIN.w + 60) + "px;height:" + (far - near) + "px;transform:translateZ(0.8px)");
   beam.setAttribute("aria-hidden", "true");
-  // the cat's perch: a board hung on two chains from the top of the frame, deep enough to
+  // the cat's perch: a board hung on two chains from the wall over the frame, deep enough to
   // sleep on, with a fleece on it
   var PERCH = { x: WIN.along + 120, w: 360, d: 190, z: WIN.top - WIN.h + 24 };
   box(room, { x: PERCH.x, y: BACK, w: PERCH.w, d: PERCH.d, z: PERCH.z - 14, h: 14, color: "var(--perch)", r: 4, cls: "perch" });
   box(room, { x: PERCH.x + 18, y: BACK + 12, w: PERCH.w - 36, d: PERCH.d - 26, z: PERCH.z, h: 26, color: "var(--fleece)", r: 34, topCls: "fleece", cls: "perch-fleece" });
   [PERCH.x + 10, PERCH.x + PERCH.w - 14].forEach(function (x) {
-    // from the frame's top corner on the wall down to the board's front corner
-    var dy = PERCH.d - 8,
-      dz = PERCH.z - (WIN.top - 30);
+    // from the wall just over the frame down to the board's front corner
+    var top = WIN.top + 16,
+      dy = PERCH.d - 8,
+      dz = PERCH.z - top;
     var len = Math.hypot(dy, dz);
-    el("span", "chain", room, "left:" + x + "px;top:" + (BACK + 2) + "px;height:" + Math.round(len) + "px;transform:translateZ(" + (WIN.top - 30) + "px) rotateX(" + ((Math.atan2(dz, dy) * 180) / Math.PI).toFixed(2) + "deg)");
+    el("span", "chain", room, "left:" + x + "px;top:" + (BACK + 2) + "px;height:" + Math.round(len) + "px;transform:translateZ(" + top + "px) rotateX(" + ((Math.atan2(dz, dy) * 180) / Math.PI).toFixed(2) + "deg)");
   });
 
   function skyline(w, h) {
@@ -651,7 +690,7 @@
   var wheel = el("span", "pj-wheel", room, "left:" + (PJ.x + PJ.w / 2 - PJ.r) + "px;top:" + (PJ.y + PJ.d / 2 - PJ.r) + "px;width:" + 2 * PJ.r + "px;height:" + 2 * PJ.r + "px;transform:translateZ(" + (RAD.z + RAD.h + PJ.wheel) + "px)");
   wheel.setAttribute("aria-hidden", "true");
   // its side, in a few rings under its top, as the knobs' are
-  for (var ws = 1; ws <= 5; ws++) el("span", "pj-wheel-side", wheel, "transform:translateZ(" + -ws * 1.6 + "px);filter:brightness(" + (0.8 - ws * 0.07) + ")");
+  for (var ws = 1; ws <= 5; ws++) el("span", "pj-wheel-side", wheel, "transform:translateZ(" + -ws * 1.6 + "px);filter:" + dim(0.8 - ws * 0.07));
   var proj = el("span", "projector", room, "left:" + PJ.x + "px;top:" + PJ.y + "px;width:" + PJ.w + "px;height:" + PJ.d + "px;transform:translateZ(" + (RAD.z + RAD.h + PJ.wheel) + "px) rotateZ(" + -PJ.turn + "deg)");
   // a face w by h whose x runs along u and y along v, from o (unit vectors, in the case's frame)
   function pjFace(cls, w, h, u, v, o, css) {
@@ -822,6 +861,72 @@
     sticky.removeAttribute("data-cat");
     el("span", "pc-note", side).appendChild(sticky);
   }
+  // the keyboard's keys stand up off it, so they catch the light and throw their own shadows:
+  // four rows of sixteen on the pitch the flat pattern on the bench draws, and the spacebar
+  var kb = document.querySelector(".pc .kb");
+  if (kb) {
+    for (var row = 0; row < 4; row++)
+      for (var col = 0; col < 16; col++) box(kb, { x: 6 + col * 5.5, y: 4 + row * 5, w: 4, d: 4, z: 0, h: 1.4, color: "#efe9dc" });
+    box(kb, { x: 30, y: 26, w: 40, d: 4, z: 0, h: 1.4, color: "#efe9dc" });
+    // and its edge runs round its rounded corners in one piece (the bench's front and side
+    // meet square and leave the far end open)
+    rim(kb.parentNode, { x: kb.offsetLeft, y: kb.offsetTop, w: kb.offsetWidth, d: kb.offsetHeight, z: 0, h: 2.5, hb: 5.5, r: 3, color: "#c9bfa4" });
+  }
+  // The mouse, an old one with a ball under it, right of the keyboard, its cord running back to
+  // the computer: Willy's to knock about (willy-life.js, ROOM.mouse), in the computer's own px.
+  // It is no obstacle itself, but the patch it can be knocked about in is, so he never walks
+  // through it; it moves from where it was put by up to reach px, and turns up to 45deg. Here
+  // it is only where it is, its nose at the top; room-mouse.js draws it there.
+  var pcMouse = null;
+  if (kb) {
+    var pcBox = kb.parentNode,
+      MS = { x: 112, y: 90, w: 17, d: 22, h: 7, reach: 8 };
+    el("span", "mouse-patch", pcBox, "left:" + (MS.x - MS.reach) + "px;top:" + (MS.y - MS.reach) + "px;width:" + (MS.w + 2 * MS.reach) + "px;height:" + (MS.d + 2 * MS.reach) + "px;transform:translateZ(" + MS.h + "px)");
+    var cord = el("span", "pc-mouse-cord", pcBox, "left:0;top:0;width:150px;height:150px;transform:translateZ(0.3px)");
+    cord.setAttribute("aria-hidden", "true");
+    cord.innerHTML = '<svg viewBox="0 0 150 150"><path /></svg>';
+    var mouse = el("span", "pc-mouse", pcBox, "left:" + MS.x + "px;top:" + MS.y + "px;width:" + MS.w + "px;height:" + MS.d + "px");
+    mouse.setAttribute("aria-hidden", "true");
+    var shove = { x: 0, y: 0, a: 0 };
+    // the cord, from the mouse's nose round behind the keyboard to the computer's side, from
+    // where the mouse is now, part way along its slide (room-mouse.js lays it each frame)
+    var lay = function () {
+      var cs = getComputedStyle(mouse),
+        t = triple(cs.translate, 0) || [0, 0],
+        r = ((parseFloat(cs.rotate) || 0) * Math.PI) / 180,
+        sx = MS.x + MS.w / 2 + t[0] + (MS.d / 2) * Math.sin(r),
+        sy = MS.y + MS.d / 2 + t[1] - (MS.d / 2) * Math.cos(r);
+      cord.querySelector("path").setAttribute("d", "M" + sx.toFixed(1) + " " + sy.toFixed(1) + "C" + (sx + 10 * Math.sin(r)).toFixed(1) + " " + (sy - 10 * Math.cos(r)).toFixed(1) + " 112 52 92 36");
+    };
+    lay();
+    pcMouse = {
+      lay: lay,
+      // where it is in the room: the middle of its top
+      at: function () {
+        var p = toStage(mouse).transformPoint(new DOMPoint(MS.w / 2, MS.d / 2, MS.h));
+        return [p.x, p.y, p.z];
+      },
+      // knocked along heading (deg, as Willy's): it slides a little that way and turns
+      knock: function (heading) {
+        var r = (heading * Math.PI) / 180,
+          inv = toStage(pcBox).inverse(),
+          p = pcMouse.at(),
+          a = inv.transformPoint(new DOMPoint(p[0], p[1], 0)),
+          b = inv.transformPoint(new DOMPoint(p[0] + Math.cos(r) * 100, p[1] - Math.sin(r) * 100, 0)),
+          len = Math.hypot(b.x - a.x, b.y - a.y) || 1,
+          step = 5 + Math.random() * 6,
+          x = shove.x + ((b.x - a.x) / len) * step,
+          y = shove.y + ((b.y - a.y) / len) * step,
+          far = Math.hypot(x, y) / MS.reach;
+        shove.x = far > 1 ? x / far : x;
+        shove.y = far > 1 ? y / far : y;
+        shove.a = Math.max(-45, Math.min(45, shove.a + (Math.random() < 0.5 ? -1 : 1) * (10 + Math.random() * 20)));
+        mouse.style.translate = shove.x.toFixed(1) + "px " + shove.y.toFixed(1) + "px";
+        mouse.style.rotate = shove.a.toFixed(1) + "deg";
+        lay(); // (at once where it has nothing to slide: under reduced motion)
+      },
+    };
+  }
   // a broken computer smokes out of the vents on that same side
   var fumes = document.querySelector(".fumes");
   if (fumes && side) side.appendChild(fumes);
@@ -975,16 +1080,51 @@
   });
   var navTubes = [].slice.call(nav.querySelectorAll("a"));
   var heard = []; // who hears of the lights changing (ROOM.onLights)
+  // The night's holes, where a source lights the dark (none by day): each an ellipse on screen,
+  // w and h across, at x, y, its colour falling off through stops from its middle (0) to its
+  // edge (1). The night layer paints them; the light pass (room-light.js), when it runs, does
+  // instead (ROOM.glows()), all but those it casts for real (cast): the window's, the screen's
+  // and where the radio's lands; and those that glow in the air (air), it adds rather than lets
+  // through.
+  var holes = [];
+  function hole(r, w, h, stops, dy) {
+    return { x: r.left + r.width / 2, y: r.top + r.height * (dy || 0.5), w: w, h: h, stops: stops };
+  }
+  function painted(o) {
+    return (
+      "radial-gradient(ellipse " + o.w + "px " + o.h + "px at " + o.x + "px " + o.y + "px, " +
+      o.stops
+        .map(function (s) {
+          return s[0] + " " + s[1] * 100 + "%";
+        })
+        .join(", ") +
+      ")"
+    );
+  }
   // drawn again when something it follows changes: the light, the frame, the neon, the screen
   function glow() {
+    var h = document.documentElement.classList;
+    holes = [];
+    if (h.contains("lights-off") || h.contains("dawn")) inTheDark();
+    // by day only the projector's beam, fainter, for the light pass (room.css hides the CSS
+    // one while the pass runs: it stands upright at the lens, short of the wall)
+    else if (cast.classList.contains("lit")) holes.push(projBeam(0.45));
     heard.forEach(function (f) {
       f();
     });
-    var h = document.documentElement.classList;
-    if (!h.contains("lights-off") && !h.contains("dawn")) return;
-    function at(r, w, h, dy) {
-      return "radial-gradient(ellipse " + w + "px " + h + "px at " + (r.left + r.width / 2) + "px " + (r.top + r.height * (dy || 0.5)) + "px, ";
-    }
+  }
+  // the projector's beam: a hole round the CSS one, for the night layer, and its shape on
+  // screen, for the light pass, from the lens out to the corners of the words, added air strong
+  function projBeam(air) {
+    var br = ray.getBoundingClientRect();
+    var beam = hole(br, br.width * 0.4, br.height * 0.5, [["rgba(240,215,180,0.7)", 0], ["transparent", 1]], 0.6);
+    beam.air = air;
+    beam.poly = [[LAMP.x, LAMP.y, LAMP.z], [0, 0], [PROJ.w, 0], [PROJ.w, -PROJ.h], [0, -PROJ.h]].map(function (p, i) {
+      return i ? toScreen(RIGHT - 2, PROJ.along + p[0], PROJ.z + p[1]) : toScreen(p[0], p[1], p[2]);
+    });
+    return beam;
+  }
+  function inTheDark() {
     var n = sign.querySelector("h1").getBoundingClientRect();
     var tint = getComputedStyle(sign).getPropertyValue("--neon").trim() || NEON[0];
     var t = (performance.now() - struck) / 1100;
@@ -998,19 +1138,21 @@
     var w = win.getBoundingClientRect(),
       k = sw.getBoundingClientRect(),
       g = pc.querySelector(".glass").getBoundingClientRect();
-    var holes = [
+    var moon = hole(w, w.width * 0.7, w.height * 0.75, [["rgba(150,170,235,1)", 0], ["transparent", 0.8]]);
+    moon.cast = true;
+    holes = [
       // (with the tube out its light fades, rather than whitening, which in a multiply layer is brightest)
-      at(n, n.width * 0.75, n.height * 1.7) + "color-mix(in srgb, color-mix(in srgb, " + tint + " 45%, white) " + 100 * dim + "%, transparent), color-mix(in srgb, " + tint + " " + 50 * dim + "%, transparent) 55%, transparent 80%)",
-      at(w, w.width * 0.7, w.height * 0.75) + "rgba(150,170,235,1), transparent 80%)",
-      "radial-gradient(circle at " + (k.left + k.width / 2) + "px " + (k.top + k.height / 2) + "px, rgba(255,255,255,1) 0 14px, transparent 36px)",
+      hole(n, n.width * 0.75, n.height * 1.7, [["color-mix(in srgb, color-mix(in srgb, " + tint + " 45%, white) " + 100 * dim + "%, transparent)", 0], ["color-mix(in srgb, " + tint + " " + 50 * dim + "%, transparent)", 0.55], ["transparent", 0.8]]),
+      moon,
+      hole(k, 36, 36, [["rgba(255,255,255,1)", 0], ["rgba(255,255,255,1)", 14 / 36], ["transparent", 1]]),
     ];
     navTubes.forEach(function (a) {
       var r = a.getBoundingClientRect();
       if (!r.width) return;
       var c = getComputedStyle(a).color;
       // the word itself, and its light thrown wide on the wall round it
-      holes.push(at(r, r.width * 0.62, r.height * 0.62) + "color-mix(in srgb, " + c + " 55%, white), color-mix(in srgb, " + c + " 35%, transparent) 55%, transparent 85%)");
-      holes.push(at(r, r.width * 1.6 + 90, r.height * 1.4 + 120) + "color-mix(in srgb, " + c + " 70%, transparent), color-mix(in srgb, " + c + " 30%, transparent) 50%, transparent 100%)");
+      holes.push(hole(r, r.width * 0.62, r.height * 0.62, [["color-mix(in srgb, " + c + " 55%, white)", 0], ["color-mix(in srgb, " + c + " 35%, transparent)", 0.55], ["transparent", 0.85]]));
+      holes.push(hole(r, r.width * 1.6 + 90, r.height * 1.4 + 120, [["color-mix(in srgb, " + c + " 70%, transparent)", 0], ["color-mix(in srgb, " + c + " 30%, transparent)", 0.5], ["transparent", 1]]));
     });
     // the window's light: the four panes of the beam on screen (its corners mapped from the
     // beam's own 0 to 1 across and along, as its mask and clip in room.css have them), so the
@@ -1045,16 +1187,23 @@
     [["x1", from[0]], ["y1", from[1]], ["x2", to[0]], ["y2", to[1]]].forEach(function (a) {
       fall.setAttribute(a[0], a[1]);
     });
-    // the screen's: a green on the keyboard, the desk's edge and the wall, round the screen
+    // the screen's: a green on the keyboard, the desk's edge and the wall, round the screen,
+    // unsteady (the night layer's own element, with its CSS flicker; a hole for the light pass)
     nightScreen.style.display = pc.classList.contains("on") ? "block" : "none";
     var sx = g.width * 1.85,
       sy = g.height * 2.2;
     Object.assign(nightScreen.style, { left: g.left + g.width / 2 - sx + "px", top: g.top + g.height * 0.6 - sy + "px", width: 2 * sx + "px", height: 2 * sy + "px" });
+    if (pc.classList.contains("on")) {
+      var screen = hole(g, sx, sy, [["rgba(200,255,210,1)", 0], ["rgba(80,140,100,0.65)", 0.45], ["transparent", 0.8]], 0.6);
+      // (the light pass draws it too, flickering with the light the screen casts)
+      screen.own = screen.crt = true;
+      holes.push(screen);
+    }
     // what has the keyboard's focus is lit, so its ring shows in the dark
     var f = document.activeElement;
     if (f && f !== document.body && fit.contains(f) && f.matches(":focus-visible")) {
       var fr = f.getBoundingClientRect();
-      holes.push(at(fr, fr.width * 0.75 + 40, fr.height * 0.75 + 40) + "rgba(255,255,255,1) 60%, transparent 100%)");
+      holes.push(hole(fr, fr.width * 0.75 + 40, fr.height * 0.75 + 40, [["rgba(255,255,255,1)", 0.6], ["transparent", 1]]));
     }
     // the radio while it plays: its lit dial, its halo, and where its light lands on the desk,
     // nearer the radio than the pool's middle
@@ -1064,18 +1213,31 @@
         dl = dial.getBoundingClientRect();
       var px = pl.left + pl.width * 0.5 + (lp.left + lp.width / 2 - pl.left - pl.width * 0.5) * 0.4,
         py = pl.top + pl.height * 0.5 + (lp.top + lp.height / 2 - pl.top - pl.height * 0.5) * 0.4;
-      holes.push(at(dl, dl.width * 0.9 + 20, dl.height * 0.9 + 20) + "rgba(255,240,210,1) 30%, transparent 100%)");
-      holes.push(at(lp, lp.width * 0.55, lp.height * 0.5) + "rgba(255,205,150,1), rgba(200,150,100,0.6) 45%, transparent 80%)");
-      holes.push("radial-gradient(ellipse " + pl.width * 0.32 + "px " + pl.height * 0.3 + "px at " + px + "px " + py + "px, rgba(230,180,130,0.9), rgba(170,130,90,0.4) 50%, transparent 85%)");
+      holes.push(hole(dl, dl.width * 0.9 + 20, dl.height * 0.9 + 20, [["rgba(255,240,210,1)", 0.3], ["transparent", 1]]));
+      // (for the light pass: only a glow round its face, the lit dial and the knobs, no lamp's)
+      var fr = face.getBoundingClientRect(),
+        halo = hole(fr, fr.width * 0.65, fr.height * 0.65, [["rgba(255,205,150,1)", 0], ["rgba(200,150,100,0.5)", 0.5], ["transparent", 1]]);
+      halo.air = 0.22; // (how strongly it adds)
+      halo.own = true; // (the night layer has its lamp's halo, below, which the pass casts)
+      holes.push(halo);
+      var lampHalo = hole(lp, lp.width * 0.55, lp.height * 0.5, [["rgba(255,205,150,1)", 0], ["rgba(200,150,100,0.6)", 0.45], ["transparent", 0.8]]);
+      lampHalo.cast = true;
+      holes.push(lampHalo);
+      holes.push({ x: px, y: py, w: pl.width * 0.32, h: pl.height * 0.3, stops: [["rgba(230,180,130,0.9)", 0], ["rgba(170,130,90,0.4)", 0.5], ["transparent", 0.85]], cast: true });
     }
     // what the projector throws on the wall
     if (cast.classList.contains("lit")) {
       var pr = cast.getBoundingClientRect();
-      holes.push(at(pr, pr.width * 0.6, pr.height * 0.62) + "rgba(255,236,206,1) 40%, rgba(200,170,130,0.5) 70%, transparent 100%)");
-      var br = ray.getBoundingClientRect();
-      holes.push(at(br, br.width * 0.4, br.height * 0.5, 0.6) + "rgba(240,215,180,0.7), transparent 100%)");
+      holes.push(hole(pr, pr.width * 0.6, pr.height * 0.62, [["rgba(255,236,206,1)", 0.4], ["rgba(200,170,130,0.5)", 0.7], ["transparent", 1]]));
+      holes.push(projBeam(0.6));
     }
-    night.style.background = holes.join(", ") + ", rgb(40, 46, 80)";
+    night.style.background =
+      holes
+        .filter(function (o) {
+          return !o.own;
+        })
+        .map(painted)
+        .join(", ") + ", rgb(40, 46, 80)";
   }
   var lightWas = null;
   try {
@@ -1328,10 +1490,10 @@
       dark = h.contains("lights-off") || h.contains("dawn"),
       night = dark || matchMedia("(prefers-color-scheme: dark)").matches;
     return [
-      { name: "room", at: [DESK.x + 200, BACK, 1600], color: "#fff1dc", power: dark ? 0 : 1, reach: 0 },
+      { name: "room", at: [DESK.x + 200, BACK + 250, 1600], color: "#fff1dc", power: dark ? 0 : 1, reach: 0 },
       { name: "window", at: [WIN.along + WIN.w / 2, BACK - 1000, WIN.top - WIN.h / 2 + 1000 * HIGH], color: night ? "#b9c8fa" : "#ffe4a0", power: dark ? 1 : 0.35, reach: 0 },
       { name: "screen", at: spots.screen, color: "#c8ffd2", power: pc.classList.contains("on") ? 1 : 0, reach: 700 },
-      { name: "radio", at: spots.radio, color: "#ffcd96", power: lamp.classList.contains("lit") ? 1 : 0, reach: 800 },
+      { name: "radio", at: spots.radio, color: "#ffcd96", power: lamp.classList.contains("lit") ? 1 : 0, reach: 450 },
     ];
   }
 
@@ -1474,8 +1636,16 @@
     surfaces: SURFACES,
     jumps: JUMPS,
     lights: lights,
+    // the mouse by the keyboard, for Willy: at(), where it is; knock(heading)
+    mouse: pcMouse,
+    // the night's holes as they are now (glow())
+    glows: function () {
+      return holes;
+    },
     moonlit: moonlit,
     toScreen: toScreen,
+    // the matrix from an element's own px to the room's, through every transform on the way
+    toStage: toStage,
     before: before,
     // the layer that darkens the room with its light off, where Willy draws himself out of it
     night: night,

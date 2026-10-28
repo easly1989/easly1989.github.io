@@ -698,6 +698,59 @@ html:not(.iso) .strip {
 .iso .pc .floor {
   filter: blur(6px);
 }
+/* the keys are boxes here (room.js), so the flat pattern goes and the well under them shows;
+   and it is thinner, its back raised, as a keyboard on its feet */
+.iso .pc .kb {
+  transform-style: preserve-3d;
+  transform-origin: 50% 100%;
+  transform: translateZ(2.5px) rotateX(-5deg);
+}
+.iso .pc .kb::before,
+.iso .pc .kb::after,
+.iso .pc .kb-front,
+.iso .pc .kb-side {
+  content: none;
+  display: none;
+}
+/* an edge all round something rounded (room.js, rim()) */
+.iso .rim {
+  position: absolute;
+  display: block;
+  transform-origin: 0 0;
+}
+/* the mouse (room-mouse.js draws it) and its cord lying on the desk */
+.iso .pc .pc-mouse,
+.iso .pc .pc-mouse-cord,
+.iso .pc .mouse-patch {
+  pointer-events: none; /* (the cord's box reaches over the mat round it) */
+}
+.iso .pc .pc-mouse {
+  transform-style: preserve-3d;
+  transition:
+    translate 0.4s cubic-bezier(0.2, 0.7, 0.3, 1),
+    rotate 0.4s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+.iso .pc .pc-mouse-cord svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.iso .pc .pc-mouse-cord path {
+  fill: none;
+  stroke: #8b836c;
+  stroke-width: 1.1;
+  stroke-linecap: round;
+}
+@media (prefers-reduced-motion: reduce) {
+  .iso .pc .pc-mouse {
+    transition: none;
+  }
+}
+/* (pressed while it types, as the flat pattern nudges on the bench) */
+.iso .pc.typing .kb .rbox {
+  translate: 0 0 -0.5px;
+}
 /* out of the vents on the side, in the side's own axes: x runs up it, y along it */
 .iso .pc .side .fumes {
   z-index: 2;
@@ -1643,6 +1696,34 @@ html:not(.iso) .strip {
 .iso.lights-off .night {
   opacity: 1;
 }
+/* With the light pass running (room-light.js) the room's light is real, multiplied over it from
+   a canvas of its own, and none of it is painted: no darker sides (--shading), no shadows under
+   things, no layer for the night or patch for the window. Without it, all of those stay. */
+.iso.lit {
+  --shading: 0;
+}
+.iso.lit .night,
+.iso.lit .window-light,
+.iso.lit .shade {
+  display: none;
+}
+.iso.lit .floor-plane {
+  filter: none;
+}
+.iso .light-pass {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 11;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
+/* and what glows in the air, added over it, soft at the edges */
+.iso .light-pass.air {
+  mix-blend-mode: screen;
+  filter: blur(8px);
+}
 /* the window's light, its panes drawn by room.js (glow()), soft at the edges as moonlight is */
 .iso .night-beam {
   position: absolute;
@@ -1692,8 +1773,13 @@ html:not(.iso) .strip {
     opacity: 0.99;
   }
 }
-/* the first load of a visit is dark, and at the end lit on its own, whatever the script does */
+/* the first load of a visit is dark, and at the end lit on its own, whatever the script does:
+   the light pass, which draws that dark itself, is put away then if it is still drawing it */
 .iso.dawn .night {
+  animation: dawn 4s;
+}
+.iso.lit.dawn .light-pass {
+  opacity: 0;
   animation: dawn 4s;
 }
 @keyframes dawn {
@@ -2042,6 +2128,10 @@ html:not(.iso) .strip {
 }
 .iso.lights-off .proj-beam.lit {
   opacity: 0.9;
+}
+/* the light pass draws it from the lens to the wall instead (room.js, projBeam()) */
+.iso.lit .proj-beam {
+  visibility: hidden;
 }
 /* the light on the wall: the track, its author and the wave, faint by day, bright at night */
 .iso .on-wall.projected > .projection {

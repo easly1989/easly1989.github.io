@@ -26,8 +26,11 @@ HTTP.
 
 `python -m http.server` lets the browser cache `styles.css`, `site.js` and
 `cat.js` hard, and a stale copy will have you debugging code the page never
-loaded. Serve with `Cache-Control: no-store` while working, or check what the
-page actually loaded before believing it.
+loaded. Serve with `Cache-Control: no-cache` while working (`python checks/serve.py`
+does) and reload after an edit, rather than going back to the page, which may bring it
+back as it was; or check what the page actually loaded before believing it. Not
+`no-store`: it also keeps every page out of the back/forward cache, so going back reloads
+the page, and readers' back is never tested.
 
 Verification is manual: load the affected page, check both colour schemes
 (`prefers-color-scheme` light and dark are both styled), check phone width, and

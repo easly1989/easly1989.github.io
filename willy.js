@@ -82,6 +82,7 @@ export async function willy(room, stage, src = "assets/willy.glb") {
   const lowPen = low.getContext("2d");
   const show = () => {
     renderer.render(scene, cam);
+    if (body && body.drawn) body.drawn();
     const k = cv.width / W,
       top = Math.round(fold * k);
     if (low.width !== cv.width || low.height !== cv.height - top) Object.assign(low, { width: cv.width, height: cv.height - top });
@@ -151,6 +152,9 @@ export async function willy(room, stage, src = "assets/willy.glb") {
   model.scale.setScalar(SCALE);
   holder.add(model);
   scene.add(holder);
+  // him for the room's light pass (room-light.js): what to draw of him, where he is, and whom to
+  // tell each time he is drawn, so it draws him in the same frame
+  const body = (window.ROOM.willy = { holder, here: () => here, drawn: null });
   const skinned = [];
   model.traverse((o) => {
     if (o.isMesh) o.frustumCulled = false;
