@@ -684,7 +684,8 @@ html:not(.iso) .strip {
   display: block;
   margin-top: 4px;
   font: 400 0.82rem/1.2 "Atkinson Hyperlegible", sans-serif;
-  color: var(--paper-ink-2);
+  /* (darker than paper's second ink: round the jar, its far side turns from the lamp) */
+  color: color-mix(in srgb, var(--paper-ink-2) 60%, var(--paper-ink));
 }
 
 /* ---- the old computer, at the size of a real one, near the desk's front edge and
