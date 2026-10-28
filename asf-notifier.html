@@ -144,9 +144,6 @@
         color: var(--paper-ink-2);
         font-size: 0.9rem;
       }
-      .label-sheet {
-        view-transition-name: asf;
-      }
     </style>
   </head>
   <body data-page="asf" data-cat-scale="0.85">
@@ -179,7 +176,7 @@
           </div>
         </section>
 
-        <div class="nt-feed" style="--c: var(--asf)">
+        <div class="nt-feed" data-cat-avoid style="--c: var(--asf)">
           <h2>What the room looks like</h2>
           <ul>
             <li>🔴 bot1 — login failed (TwoFactorCodeMismatch), ASF stopped the bot</li>
@@ -187,11 +184,11 @@
             <li>🟢 bot1 — reconnected after 12 minutes</li>
             <li>✅ bot2 — farming finished</li>
           </ul>
-          <p>Example messages. Each one starts with the bot's name, so one room serves every bot.</p>
+          <p>Example messages. Each bot message names the bot, so one room serves every bot.</p>
         </div>
 
         <div class="nt-grid">
-          <article class="nt-card" style="--r: -0.8deg">
+          <article class="nt-card" data-cat-avoid style="--r: -0.8deg">
             <h2>What it is</h2>
             <small>A plugin, not a service</small>
             <p>
@@ -206,9 +203,9 @@
             </p>
           </article>
 
-          <article class="nt-card" id="events" style="--r: 0.7deg">
+          <article class="nt-card" data-cat-avoid id="events" style="--r: 0.7deg">
             <h2>Events</h2>
-            <small>Each one is on or off, globally and per bot</small>
+            <small>Each one is on or off, globally and per bot, except <code>AsfUpdated</code>, which is global</small>
             <table>
               <tr><th scope="row"><code>BotStoppedByAsf</code></th><td>ASF stopped the bot: login failed, or it needs input. On.</td></tr>
               <tr><th scope="row"><code>BotDisconnected</code></th><td>Still disconnected after a set time, 5 minutes by default. On.</td></tr>
@@ -221,7 +218,7 @@
             </table>
           </article>
 
-          <article class="nt-card" style="--r: -0.4deg">
+          <article class="nt-card" data-cat-avoid style="--r: -0.4deg">
             <h2>Global and per bot</h2>
             <small>ASF's own config files</small>
             <p>
@@ -238,9 +235,9 @@
             </p>
           </article>
 
-          <article class="nt-card" id="quick-start" style="--r: 0.9deg">
+          <article class="nt-card" data-cat-avoid id="quick-start" style="--r: 0.9deg">
             <h2>Quick start</h2>
-            <small>About five minutes</small>
+            <small>From the release zip</small>
             <ol>
               <li>
                 Download <code>ASFNotifier.zip</code> from the latest release and extract its
@@ -273,17 +270,17 @@
             </ol>
           </article>
 
-          <article class="nt-card" style="--r: -1deg">
+          <article class="nt-card" data-cat-avoid style="--r: -1deg">
             <h2>Requirements</h2>
             <small>Matrix only, unencrypted rooms only</small>
             <p>
-              ArchiSteamFarm 6.3.10.6 or newer. The .NET runtime is the one ASF ships with, so
+              Built and tested against ArchiSteamFarm 6.3.10.6. The .NET runtime is the one ASF ships with, so
               there is nothing else to install. You need a Matrix homeserver, a dedicated bot user
               and an unencrypted room, addressed by its room ID rather than an alias.
             </p>
           </article>
 
-          <article class="nt-card" style="--r: 0.5deg">
+          <article class="nt-card" data-cat-avoid style="--r: 0.5deg">
             <h2>Telegram, Discord and the rest</h2>
             <small>Through Matrix</small>
             <p>
@@ -297,29 +294,29 @@
             </p>
           </article>
 
-          <article class="nt-card" style="--r: -0.6deg">
+          <article class="nt-card" data-cat-avoid style="--r: -0.6deg">
             <h2>Updates</h2>
             <small>Through ASF's plugin updater</small>
             <p>
               Add <code>ASFNotifier</code> to <code>PluginsUpdateList</code> in
               <code>ASF.json</code> and ASF fetches new releases from GitHub by itself, in Docker
               too. It is opt-in: by default no plugin is updated. The README says how to turn it
-              off, update by hand or stay on one version.
+              off, update by hand or stay on one version. After an update ASF restarts itself, or exits in Docker, so the container needs a restart policy.
             </p>
           </article>
 
-          <article class="nt-card" style="--r: 0.8deg">
+          <article class="nt-card" data-cat-avoid style="--r: 0.8deg">
             <h2>Quiet by design</h2>
-            <small>Little noise, nothing lost</small>
+            <small>Little noise</small>
             <p>
               Stop messages wait about ten seconds, so an ASF restart does not look like every bot
               stopping. The same event for the same bot is sent at most once every ten minutes,
-              and at most twenty messages go out in an hour. A short outage that ends before the
+              and at most twenty go out in an hour, apart from stops by ASF and reconnects. A short outage that ends before the
               threshold sends nothing.
             </p>
           </article>
 
-          <article class="nt-card" id="get-it" style="--r: -0.5deg">
+          <article class="nt-card" data-cat-avoid id="get-it" style="--r: -0.5deg">
             <h2>Get it</h2>
             <small>Repository, release and README</small>
             <p>The source, the releases and the full documentation are on GitHub.</p>
@@ -330,7 +327,7 @@
             </p>
           </article>
 
-          <article class="nt-card" style="--r: 1deg">
+          <article class="nt-card" data-cat-avoid style="--r: 1deg">
             <h2>Open and free — support it</h2>
             <small>Apache-2.0</small>
             <p>Free and open source. If it saved you a night of wondering why nothing was farming, a donation is much appreciated.</p>
