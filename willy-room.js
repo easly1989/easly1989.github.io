@@ -15,6 +15,10 @@ live()
   .catch((e) => {
     room.querySelectorAll("canvas.willy, canvas.willy-low, canvas.willy-shadow").forEach((c) => c.remove());
     console.warn("No Willy:", e);
+    // nor in the room's light pass, which draws once more without him and his shadow
+    const w = ROOM.willy;
+    ROOM.willy = null;
+    if (w && w.drawn) w.drawn();
   })
   .finally(() => ready());
 
