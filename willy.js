@@ -20,7 +20,7 @@ const BIAS = 50; // and a little towards the viewer, so the ground under him sta
 const FOLD = 40;
 // a little long, as Willy's is; reach in model units of a cat 5.64 long, tail how much longer
 // the tail's is
-const FUR = { reach: 0.28, shells: 20, strands: 26, comb: 0.9, outline: 0.09, tail: 0.5 };
+const FUR = { reach: 0.06, shells: 20, strands: 26, comb: 0.9, outline: 0.42, tail: 0.5 }; // (outline: as thin as it was with reach 0.28)
 const LENGTH = 5.64;
 // px his root is above what he stands on as he leaves it and as he meets the next, in jump-air,
 // which the arc does not know (cat-src/build.py prints them)
@@ -776,6 +776,7 @@ export function fur(skinned, options = {}) {
         tip = 0.07 * t,
         lean = f.comb * h * t;
       const m = new THREE.MeshLambertMaterial({ map: mesh.material.map });
+      m.customProgramCacheKey = () => "fur " + mesh.uuid + " " + i; // (three.js goes by onBeforeCompile's source, the same for every shell)
       m.onBeforeCompile = (sh) => {
         sh.uniforms.strands = { value: strands };
         sh.vertexShader =
@@ -803,6 +804,7 @@ export function outline(skinned, options = {}) {
     const merged = mergeVertices(g);
     merged.computeVertexNormals();
     const mat = new THREE.MeshBasicMaterial({ color: 0x262626, side: THREE.BackSide });
+    mat.customProgramCacheKey = () => "outline " + mesh.uuid; // (as for the fur's shells)
     mat.onBeforeCompile = (s) => {
       s.vertexShader = s.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\n  transformed += normal * " + grow.toFixed(4) + ";");
     };
