@@ -69,5 +69,6 @@ python checks/dark.py
   once the room is up, the dark still ends on its own. A visible window.
 
 `cdp.py` is the driver (Chrome comes from `CHROME`, or the usual Windows path), and
-`serve.py` the server: no caching, byte ranges, nothing logged. `python checks/serve.py`
-serves the site on its own, for looking at it by hand.
+`serve.py` the server: fresh on every load or reload (going back may bring back the page as
+it was left), byte ranges, nothing logged.
+`python checks/serve.py` serves the site on its own, for looking at it by hand.

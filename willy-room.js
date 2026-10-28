@@ -171,6 +171,7 @@ async function live() {
       if (m.say) say(...m.say);
       if (m.blink) w.blink(m.blink);
       if (m.twitch) w.twitch();
+      if (m.act) m.act();
     }
     if (time > lookAt) {
       w.look(gaze(p));

@@ -1,4 +1,4 @@
-"""Serves the site from the repo root for a check: never cached, and with byte ranges, as
+"""Serves the site from the repo root for a check: fresh on every load, and with byte ranges, as
 GitHub Pages serves it (the radio seeks into its tracks). Run on its own to browse:
 python checks/serve.py [port]"""
 import functools
@@ -14,7 +14,11 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 
 class Handler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):
-        self.send_header("Cache-Control", "no-store")
+        # revalidated on every load or reload (going back may show the page as it was left, as
+        # on GitHub Pages); no-store would also keep every page out of the back/forward cache,
+        # which GitHub Pages (max-age=600) does not, and history.back() in a check would load
+        # the page afresh instead of bringing it back
+        self.send_header("Cache-Control", "no-cache")
         self.send_header("Accept-Ranges", "bytes")
         super().end_headers()
 
