@@ -32,7 +32,7 @@ const LYING = 20; // and lying down or asleep, his paws and tail spilling over
 // the fill from all round with the room's light on, and how strong each of the room's sources is
 // on him at full power
 const FILL = 1.7;
-const STRENGTH = { room: 1.5, window: 1.4, screen: 1.2, radio: 1.4 };
+const STRENGTH = { room: 1.5, window: 1.4, screen: 1.2, radio: 1.4, projector: 1.2 };
 // With the room's light off the room is darkened by a layer multiplied over it (room.js, glow()),
 // with holes where its sources shine; on screen, so it would light him wherever the floor behind
 // him is lit, his legs in the window's light and his back not. So he is cut out of it (cutout())
@@ -106,12 +106,12 @@ export async function willy(room, stage, src = "assets/willy.glb") {
   cam.position.copy(target).addScaledVector(new THREE.Vector3(-1, -1, 1).normalize(), 3000);
   cam.lookAt(target);
   // a soft fill from all round, and the room's own sources (ROOM.lights()) as point lights,
-  // moved with him, since his world is centred on him; all four always there, an unlit one at
+  // moved with him, since his world is centred on him; all five always there, an unlit one at
   // nothing, so that one switching on recompiles no shader
   const sky = new THREE.HemisphereLight(0xffffff, 0x5a6470, FILL);
   sky.position.set(0, 0, 1);
   scene.add(sky);
-  const lamps = [0, 1, 2, 3].map(() => {
+  const lamps = [0, 1, 2, 3, 4].map(() => {
     const l = new THREE.PointLight(0xffffff, 0, 0, 0);
     scene.add(l);
     return l;

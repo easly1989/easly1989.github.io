@@ -110,8 +110,9 @@ async function start() {
   scene.add(solid, walls, hidden, ...glowMeshes, ...cutMeshes, windowWall(hole));
 
   // The sources it casts: the room's light, and the window's sun or moon, far off, through the
-  // window only, and in the dark the computer's screen and the radio's lamp. What glows in the
-  // air (the radio's halo, the projector's beam) lights it as the night's holes do, below.
+  // window only, in the dark the computer's screen and the radio's lamp, and the projector's lens
+  // while it plays, by day too. What glows in the air (the radio's halo, the projector's beam)
+  // lights it as the night's holes do, below.
   const sky = new THREE.HemisphereLight(0xffffff, 0xffffff, 1);
   sky.position.set(0, 0, 1); // (from above: the room's up is its z)
   scene.add(sky);
@@ -170,6 +171,28 @@ async function start() {
       Object.assign(l.shadow.camera, { near: 20, far: s.reach });
       l.shadow.mapSize.set(512, 512);
       l.shadow.radius = 3;
+    } else if (s.name === "projector") {
+      // from the lens at the words on the wall, its cone round their corners and a little past
+      // them, soft at its edge as the painted pool round the words was; to the wall and no
+      // further, its map only as deep as that
+      const at = new THREE.Vector3(...s.at),
+        pic = stage.querySelector(".projection"),
+        m = ROOM.toStage(pic),
+        corners = [[0, 0], [pic.offsetWidth, 0], [pic.offsetWidth, pic.offsetHeight], [0, pic.offsetHeight]].map(([x, y]) => new THREE.Vector3().copy(m.transformPoint(new DOMPoint(x, y, 0)))),
+        mid = corners.reduce((a, c) => a.add(c), new THREE.Vector3()).divideScalar(4),
+        aim = mid.clone().sub(at).normalize(),
+        wide = Math.max(...corners.map((c) => c.clone().sub(at).angleTo(aim))),
+        far = Math.max(...corners.map((c) => c.distanceTo(at)));
+      const PENUMBRA = 0.35;
+      l = new THREE.SpotLight(s.color, 1, 0, (wide * 1.08) / (1 - PENUMBRA), PENUMBRA, 0); // (all of the words at full strength)
+      l.position.copy(at).addScaledVector(aim, 6); // (just out of the lens)
+      l.target.position.copy(mid);
+      scene.add(l.target);
+      Object.assign(l.shadow.camera, { near: 10, far: far * 1.5 });
+      l.shadow.mapSize.set(512, 512);
+      l.shadow.radius = 3;
+      l.shadow.autoUpdate = false; // (drawn again for Willy only while he is in or near its cone: draw())
+      l.userData.aim = aim;
     } else continue;
     l.shadow.bias = -0.0008;
     l.shadow.normalBias = 1.5;
@@ -180,8 +203,10 @@ async function start() {
   // face it lights when it meets it square on (three.js takes π for all of it): by day the room
   // looks as it did when its light was painted; by night it is as dark as the night layer left
   // it, rgb(40, 46, 80), but where a source reaches.
-  const DAY = { sky: 0.6, room: 0.5, window: 0.6 },
-    NIGHT = { sky: 1, window: 1, screen: 1.8, radio: 0.6 };
+  // The projector meets the wall nearly edge on, so it is strong where it lands: as bright as
+  // the painted pool round the words was, and fainter by day, as a projector is.
+  const DAY = { sky: 0.6, room: 0.5, window: 0.6, projector: 1.2 },
+    NIGHT = { sky: 1, window: 1, screen: 1.8, radio: 0.6, projector: 3.6 };
   const DARK = new THREE.Color("rgb(40, 46, 80)");
   let shadows = true;
   let was = "";
@@ -382,6 +407,9 @@ void main() {
   }
 
   let flickers = false;
+  let onlyHim = false,
+    wasNear = false;
+  const WILLY_R = 320; // px round where he stands that he may reach, curled or stretched
   const still = matchMedia("(prefers-reduced-motion: reduce)"); // (under it the screen holds steady)
   function draw() {
     const w = ROOM.willy;
@@ -410,8 +438,18 @@ void main() {
     const screen = lamps.screen;
     flickers = !!screen && screen.visible && !still.matches;
     if (flickers) screen.intensity = screen.userData.full * crt(performance.now());
+    // the projector's map, when only Willy has moved, only while he is in or near its cone, and
+    // once more as he leaves it: on the desk he is never in it, and it would cost every frame
+    const pj = lamps.projector;
+    if (pj && shadows) {
+      const v = him.position.clone().sub(pj.position),
+        d = v.length(),
+        near = !!w && (d < WILLY_R || (d < pj.shadow.camera.far + WILLY_R && v.angleTo(pj.userData.aim) - Math.asin(WILLY_R / d) < pj.angle));
+      pj.shadow.needsUpdate = !onlyHim || near || wasNear;
+      wasNear = near;
+    }
     renderer.shadowMap.needsUpdate = shadows;
-    shadows = false;
+    shadows = onlyHim = false;
     try {
       renderer.render(scene, cam);
     } finally {
@@ -503,6 +541,7 @@ void main() {
     if (!ROOM.willy) return requestAnimationFrame(meet); // (he comes once he has loaded and been placed)
     // (each time he is drawn he may have moved, and his shadow with him)
     ROOM.willy.drawn = guard(() => {
+      onlyHim = !shadows; // (nothing else moved since the last frame)
       shadows = true;
       draw();
     });
@@ -512,9 +551,10 @@ void main() {
 
 // ---- the faces ----------------------------------------------------------------------------------
 // not drawn: the painted shadows and light patches, the light painted in the air (the radio's
-// lamp and pool, the projector's beam, the steam, the shine on the jar), what only takes the
-// pointer, Willy's canvases
-const SKIP = /\b(shade|anchor|burst|hit-plane|window-light|beam-corner|radio-lamp|radio-pool|proj-beam|steam|jar-shine|willy|willy-low|willy-shadow)\b/;
+// lamp and pool, the projector's beam, the steam, the shine on the jar), the light it throws on
+// the wall (lit there by the projector's own light), what only takes the pointer, Willy's
+// canvases
+const SKIP = /\b(shade|anchor|burst|hit-plane|window-light|beam-corner|radio-lamp|radio-pool|proj-beam|projection|steam|jar-shine|willy|willy-low|willy-shadow)\b/;
 // what may give light rather than take it, each its own face; and what does now: shown as the
 // CSS room paints it, never darkened (the boards the neon is mounted on, whole, so no edge of
 // a glow shows on them)
