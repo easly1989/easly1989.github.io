@@ -64,6 +64,9 @@
       el("i", "rim", parent, "left:" + (o.x + p[0]) + "px;top:" + (o.y + p[1]) + "px;width:" + (len + 0.3) + "px;height:" + H + "px;background:" + shade(o.color, k) + ";transform:rotateZ(" + Math.atan2(dy, dx) + "rad) translateZ(" + (o.z + H) + "px) rotateX(-90deg)" + cut);
     });
   }
+  // A face marked data-round is a slice of something round: the light pass (room-light.js)
+  // shades it as the curve it is part of, round its parent's z through the parent's middle, or
+  // through the point it names ("x y", px of the parent).
   // Something printed round a cylinder: cut into narrow strips, each standing on
   // the curve. The host's centre is the axis; at is the angle the middle faces
   // (45deg faces the camera), z the height of the print's top edge.
@@ -76,6 +79,7 @@
       var a = o.at - (((x0 + o.strip / 2 - o.w / 2) / o.r) * 180) / Math.PI;
       var s = el("span", "strip", host, "width:" + (o.strip + 0.6) + "px;height:" + o.h + "px;margin-left:" + -o.strip / 2 + "px;transform:translateZ(" + o.z + "px) rotateZ(" + a + "deg) translateY(" + o.r + "px) rotateX(-90deg)");
       s.setAttribute("aria-hidden", "true");
+      s.dataset.round = "";
       var inner = el("span", "strip-in " + (o.cls || ""), s, "left:" + -x0 + "px;width:" + o.w + "px;height:" + o.h + "px");
       inner.innerHTML = html;
     }
@@ -270,7 +274,7 @@
       for (var w = 0; w < WALL; w++) {
         var a = (w * 360) / WALL;
         var lit = 0.82 + 0.13 * Math.cos(((a - 135) * Math.PI) / 180);
-        el("span", "mug-wall", host, "width:" + ww.toFixed(1) + "px;height:" + wh + "px;margin-left:" + (-ww / 2).toFixed(1) + "px;transform:rotateZ(" + a + "deg) translateY(" + wr + "px) rotateX(-90deg);background:linear-gradient(" + shade("#f4f1ea", lit) + ", " + shade("#f4f1ea", lit - 0.2) + ")");
+        el("span", "mug-wall", host, "width:" + ww.toFixed(1) + "px;height:" + wh + "px;margin-left:" + (-ww / 2).toFixed(1) + "px;transform:rotateZ(" + a + "deg) translateY(" + wr + "px) rotateX(-90deg);background:linear-gradient(" + shade("#f4f1ea", lit) + ", " + shade("#f4f1ea", lit - 0.2) + ")").dataset.round = "";
       }
       // the handle the same way: its D drawn in upright strips, outside and in, under a ring
       // at the top and one at the bottom
@@ -286,7 +290,8 @@
             ang = (Math.atan2(dy, dx) * 180) / Math.PI;
           // lit as the wall is: the outside faces away from the D, the inside into it
           var hl = 0.82 + 0.13 * Math.cos(((ang + (r === 15 ? 180 : 0) - 135) * Math.PI) / 180);
-          el("span", "mug-wall", host, "left:" + (hx + pts[p][0]).toFixed(1) + "px;top:" + (hy + pts[p][1]).toFixed(1) + "px;width:" + (Math.hypot(dx, dy) + 0.6).toFixed(1) + "px;height:78px;transform-origin:0 0;transform:translateZ(-24px) rotateZ(" + ang.toFixed(1) + "deg) rotateX(-90deg);background:linear-gradient(" + shade("#f4f1ea", hl) + ", " + shade("#f4f1ea", hl - 0.2) + ")");
+          var seg = el("span", "mug-wall", host, "left:" + (hx + pts[p][0]).toFixed(1) + "px;top:" + (hy + pts[p][1]).toFixed(1) + "px;width:" + (Math.hypot(dx, dy) + 0.6).toFixed(1) + "px;height:78px;transform-origin:0 0;transform:translateZ(-24px) rotateZ(" + ang.toFixed(1) + "deg) rotateX(-90deg);background:linear-gradient(" + shade("#f4f1ea", hl) + ", " + shade("#f4f1ea", hl - 0.2) + ")");
+          if (p > 0 && p < pts.length - 2) seg.dataset.round = hx + 29 + " " + (hy + 15); // (the D's bend, not its straight arms)
         }
       });
       [8, 34].forEach(function (j) {
@@ -672,7 +677,7 @@
   var face = radio.querySelector(".radio-face");
   // each knob stands proud of the face: its cap, and its side in a few rings behind it
   [].forEach.call(face.querySelectorAll(".knob"), function (k) {
-    for (var ks = 1; ks <= 5; ks++) el("span", "knob-side", k, "transform:translateZ(" + -ks * 1.6 + "px);background:" + shade("#3b3027", 0.95 - ks * 0.08));
+    for (var ks = 1; ks <= 5; ks++) el("span", "knob-side", k, "transform:translateZ(" + -ks * 1.6 + "px);background:" + shade("#3b3027", 0.95 - ks * 0.08)).dataset.round = "";
   });
   var power = face.querySelector(".power");
   var dial = face.querySelector(".dial");
@@ -690,7 +695,7 @@
   var wheel = el("span", "pj-wheel", room, "left:" + (PJ.x + PJ.w / 2 - PJ.r) + "px;top:" + (PJ.y + PJ.d / 2 - PJ.r) + "px;width:" + 2 * PJ.r + "px;height:" + 2 * PJ.r + "px;transform:translateZ(" + (RAD.z + RAD.h + PJ.wheel) + "px)");
   wheel.setAttribute("aria-hidden", "true");
   // its side, in a few rings under its top, as the knobs' are
-  for (var ws = 1; ws <= 5; ws++) el("span", "pj-wheel-side", wheel, "transform:translateZ(" + -ws * 1.6 + "px);filter:" + dim(0.8 - ws * 0.07));
+  for (var ws = 1; ws <= 5; ws++) el("span", "pj-wheel-side", wheel, "transform:translateZ(" + -ws * 1.6 + "px);filter:" + dim(0.8 - ws * 0.07)).dataset.round = "";
   var proj = el("span", "projector", room, "left:" + PJ.x + "px;top:" + PJ.y + "px;width:" + PJ.w + "px;height:" + PJ.d + "px;transform:translateZ(" + (RAD.z + RAD.h + PJ.wheel) + "px) rotateZ(" + -PJ.turn + "deg)");
   // a face w by h whose x runs along u and y along v, from o (unit vectors, in the case's frame)
   function pjFace(cls, w, h, u, v, o, css) {
