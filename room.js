@@ -219,7 +219,7 @@
     envelope: { h: 4, step: 1, kind: "solid", color: "#ead3d9", r: "2px" },
     mug: { h: 124, step: 6, kind: "mug", r: "50%", ground: ".label, .puddle" },
     jar: { h: 200, step: 16, kind: "jar", r: "50%" },
-    pager: { h: 16, step: 2, kind: "solid", color: "var(--asf)", r: "14px" },
+    pager: { h: 16, step: 2, kind: "solid", color: "var(--asf)", r: "11px" },
   };
   // A round thing is rings of glass or china with a label wrapped round them, and the
   // pointer falls through the gaps between them: on and off it, the thing lifts and drops
@@ -400,12 +400,12 @@
     return m;
   }
   // the room-space box round an element and everything in it (z up from the mat)
-  var BODYLESS = /\b(shade|anchor|burst|cam-out|film|pc-mouse-cord)\b/;
+  var BODYLESS = /\b(shade|anchor|burst|cam-out|film|pc-mouse-cord|pg-msg)\b/;
   function bounds(root) {
     var b = { x0: 1e9, y0: 1e9, z0: 1e9, x1: -1e9, y1: -1e9, z1: -1e9, parts: [] };
     [root].concat([].slice.call(root.querySelectorAll("*"), 0, 600)).forEach(function (e) {
       // the blurred shadow on the mat is light, not body, and so is the flash's burst; the
-      // camera's print waits inside it
+      // camera's print waits inside it; the pager's message runs on past its screen, clipped
       if (!(e instanceof HTMLElement) || !e.offsetWidth || BODYLESS.test(e.className)) return;
       if (e.closest(".pc-mouse")) return; // (its patch stands for it: mouse-patch)
       if (getComputedStyle(e).visibility === "hidden") return;

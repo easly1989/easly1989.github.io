@@ -653,7 +653,7 @@
         height: 46px;
         background: #2a2a2a;
       }
-      /* five stripes, one per product colour */
+      /* six stripes, one per product colour */
       .camera .body::after {
         content: "";
         position: absolute;
@@ -661,7 +661,7 @@
         top: 58px;
         width: 54px;
         height: 22px;
-        background: linear-gradient(var(--cloudbank) 0 20%, var(--scs) 0 40%, var(--nutreek) 0 60%, var(--planora) 0 80%, var(--cupid) 0);
+        background: linear-gradient(var(--cloudbank) 0 16.67%, var(--scs) 0 33.33%, var(--nutreek) 0 50%, var(--planora) 0 66.67%, var(--cupid) 0 83.33%, var(--asf) 0);
         border-radius: 3px;
       }
       .camera .finder,
@@ -943,6 +943,9 @@
         text-shadow: 0 0 3px color-mix(in srgb, currentColor 60%, transparent);
         animation: pg-marquee var(--dur, 6s) ease-in-out infinite alternate;
       }
+      .pager .pg-msg.fits {
+        animation: none;
+      }
       @keyframes pg-marquee {
         0%,
         20% {
@@ -964,14 +967,15 @@
         }
       }
       .pager .label {
-        left: 7px;
-        right: 7px;
+        left: 5px;
+        right: 5px;
         bottom: 6px;
-        padding: 2px 5px 3px;
+        padding: 2px 4px 3px;
         border-radius: 3px;
         background: var(--paper);
         color: var(--paper-ink);
-        font-size: 0.72rem;
+        font-size: 0.7rem;
+        text-align: center;
         white-space: nowrap;
       }
       .pager.opening .pg-body {
@@ -1990,14 +1994,18 @@ SYSTEM HALTED.</span>
           ["ASF updated since the last start", ""],
           ["test message, sent with !notifytest", ""],
         ];
-        var still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var motion = matchMedia("(prefers-reduced-motion: reduce)");
         var now = -1,
-          timer = 0;
-        // how far the line runs past the window, and how long it takes, at about 22 px/s
+          timer = 0,
+          leg = 0;
+        // how far the line runs past the window, and how long each way takes, at about 22 px/s;
+        // a line that fits stands still
         function fit() {
           var run = Math.max(0, msg.scrollWidth - (lcd.clientWidth - 10));
+          leg = run ? Math.max(4, run / 22 / 0.6) : 0;
           msg.style.setProperty("--run", run + "px");
-          msg.style.setProperty("--dur", Math.max(4, run / 22 / 0.6).toFixed(1) + "s");
+          msg.style.setProperty("--dur", leg.toFixed(1) + "s");
+          msg.classList.toggle("fits", !run);
         }
         function show() {
           var n;
@@ -2012,20 +2020,26 @@ SYSTEM HALTED.</span>
           void msg.offsetWidth;
           msg.style.animation = "";
         }
+        // the next message after 8 to 25 s, and never before this one has run there and back
         function next() {
           clearTimeout(timer);
-          if (still || document.hidden) return;
+          if (motion.matches || document.hidden) return;
           timer = setTimeout(function () {
             if (!lcd.closest(".opening")) show();
             next();
-          }, 8000 + Math.random() * 17000);
+          }, Math.max(8000 + Math.random() * 17000, 2 * leg * 1000 + 1500));
         }
         show();
         next();
         document.addEventListener("visibilitychange", next);
+        function refit() {
+          fit();
+          next();
+        }
+        motion.addEventListener("change", refit);
         // again once the room has sized it (room.js) and its fonts are in
-        addEventListener("DOMContentLoaded", fit);
-        if (document.fonts) document.fonts.ready.then(fit);
+        addEventListener("DOMContentLoaded", refit);
+        if (document.fonts) document.fonts.ready.then(refit);
       })();
     </script>
     <script src="radio.js"></script>
