@@ -103,6 +103,11 @@
         transform-origin: left bottom;
         transition: transform 0.4s var(--ease-spring);
       }
+      /* the bench: as wide as the note under it, so the subtitle wraps and stays clear of the
+         ledger (the room's sign sets its own width) */
+      html:not(.iso) .home-tape {
+        max-width: 420px;
+      }
       .home-tape.lifted {
         transform: rotate(-2deg) skewY(-3deg) rotate(-1deg);
       }
@@ -1538,7 +1543,7 @@
         <main class="stage" data-cat-world>
           <div class="tape home-tape" data-cat="tape">
             <h1>Carlo Ruggiero</h1>
-            <p>Software developer. Mostly Go, ten years and counting.</p>
+            <p>Senior Architect &amp; Software Developer, 10&nbsp;years and counting.</p>
           </div>
           <div class="paper ruled intro" data-cat="sit">
             <p>

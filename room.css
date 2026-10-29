@@ -1240,8 +1240,47 @@ html:not(.iso) .strip {
 }
 .iso .on-wall.neon p {
   margin: 22px 0 0 34px;
-  font: 700 30px/1.2 "Bricolage Grotesque", sans-serif;
+  /* 23px keeps the longer line inside the sign's own width, which sets the tape's: any wider
+     and the sign grows under the window */
+  font: 700 23px/1.2 "Bricolage Grotesque", sans-serif;
   color: var(--wall-ink);
+  /* cut into the wall, light from above: the groove's upper edge is in shadow, its lower edge
+     catches the light */
+  text-shadow:
+    0 -1px 0 rgba(30, 24, 16, 0.4),
+    0 1px 0 rgba(255, 250, 238, 0.85);
+  transition:
+    color 0.3s ease,
+    text-shadow 0.3s ease;
+}
+@media (prefers-color-scheme: dark) {
+  /* a wall this dark leaves no room for a darker groove at 4.5:1, so the letters stay pale
+     and only the edges say they are cut */
+  .iso .on-wall.neon p {
+    text-shadow:
+      0 -1px 0 rgba(0, 0, 0, 0.6),
+      0 1px 0 rgba(255, 244, 226, 0.3);
+  }
+}
+/* with the room's light off the neon is the light: it fills the groove with a tint of its
+   colour, and the lower edge reflects it, so both follow the sign when it is struck */
+.iso.lights-off .on-wall.neon p,
+.iso.dawn .on-wall.neon p {
+  text-shadow:
+    0 -1px 0 rgba(0, 0, 0, 0.65),
+    0 1px 0 color-mix(in srgb, var(--neon) 85%, white);
+}
+/* by day the wall is pale and the groove stays dark; only in the dark scheme does it take the tint */
+@media (prefers-color-scheme: dark) {
+  .iso.lights-off .on-wall.neon p,
+  .iso.dawn .on-wall.neon p {
+    color: color-mix(in srgb, var(--neon) 16%, #fff7ec);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .iso .on-wall.neon p {
+    transition: none;
+  }
 }
 
 /* ---- the note, as a poster: one column of large type --------------------------------- */
