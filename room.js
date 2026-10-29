@@ -1507,20 +1507,44 @@
     if (document.readyState === "loading") addEventListener("DOMContentLoaded", settle);
     else settle();
   });
-  // once the morph that brought the reader here has landed (the cross-document view
-  // transition), and whatever it put down with it (morph.js) has stopped moving, at most 3 s
-  // on whatever else moves meanwhile: what takes the main thread for a while (the light pass,
-  // Willy, the mouse) waits for it, or the morph would stop for them (ROOM.landed())
+  // the morph that brought the reader here, if any, as the page is revealed (pagereveal, before
+  // its first frame; this runs before then, as morph.js does). A frame's callbacks run after its
+  // reveal, so by the first one it has been revealed, if not while this was listening.
+  var inbound = new Promise(function (r) {
+    addEventListener(
+      "pagereveal",
+      function (e) {
+        r(e.viewTransition);
+      },
+      { once: true }
+    );
+    requestAnimationFrame(function () {
+      r(document.activeViewTransition || null);
+    });
+  });
+  // once that morph has landed, and whatever it put down with it (morph.js) has stopped moving:
+  // what takes the main thread for a while (the light pass, Willy, the mouse) waits for it, or
+  // the morph would stop for them (ROOM.landed()). At most 3 s from the first asking, however
+  // long they take; and at once in a tab the reader cannot see, where no frame runs
   var arrival = null;
   function arrived() {
     if (!arrival)
       arrival = new Promise(function (done) {
-        var until;
+        var over = false;
+        function land() {
+          over = true;
+          document.removeEventListener("visibilitychange", unseen);
+          done();
+        }
+        function unseen() {
+          if (document.hidden) land();
+        }
         function stopped() {
+          if (over) return;
           var moving = stage.getAnimations({ subtree: true }).filter(function (a) {
             return a instanceof CSSTransition;
           });
-          if (!moving.length || performance.now() > until) return done();
+          if (!moving.length) return land();
           Promise.allSettled(
             moving.map(function (a) {
               return a.finished;
@@ -1530,12 +1554,15 @@
           });
         }
         function go() {
-          until = performance.now() + 3000;
           requestAnimationFrame(stopped);
         }
-        var vt = document.activeViewTransition;
-        if (vt) vt.finished.then(go, go);
-        else go();
+        setTimeout(land, 3000);
+        document.addEventListener("visibilitychange", unseen);
+        unseen();
+        inbound.then(function (vt) {
+          if (vt) vt.finished.then(go, go);
+          else go();
+        });
       });
     return arrival;
   }

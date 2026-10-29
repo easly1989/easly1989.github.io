@@ -174,6 +174,12 @@ export async function willy(room, stage, src = "assets/willy.glb") {
   });
   // matte, so the coat does not shine like plastic
   for (const mesh of skinned) mesh.material = new THREE.MeshLambertMaterial({ map: mesh.material.map });
+  // his bones' numbers as floats, the same numbers: from bytes, Chrome on Direct3D builds each of
+  // his programs again at its first draw, a twentieth of a second for each of twenty-odd
+  for (const mesh of skinned) {
+    const a = mesh.geometry.getAttribute("skinIndex");
+    if (a && !(a.array instanceof Float32Array)) mesh.geometry.setAttribute("skinIndex", new THREE.BufferAttribute(Float32Array.from(a.array), a.itemSize));
+  }
   fur(skinned);
   model.traverse((o) => o.isSkinnedMesh && !skinned.includes(o) && body.fur.push(o));
   outline(skinned);
@@ -404,15 +410,25 @@ export async function willy(room, stage, src = "assets/willy.glb") {
 // over all of them. Measured on the posed mesh. A cycle (the walk, idle) is checked whole. A
 // turn turns him about where he stands: each of its moments is measured the way he faces by
 // then, and says by how much (yaw, degrees), or a cat half way round would take a square. A few
-// clips at a time, the page's frames going on in between: all at once, they stopped it for a
+// moments at a time, the page's frames going on in between: all at once, they stopped it for a
 // second.
 const MOMENTS = 8;
 async function measure(model, skinned, mixer, clips) {
   const out = {};
   const box = new THREE.Box3(),
     v = new THREE.Vector3(),
-    skins = skinned.map(skinning);
-  let since = performance.now();
+    skins = [];
+  // (8 ms of it at most before the page has its turn again; and first, after setting him up)
+  let since = -Infinity;
+  const breathe = async () => {
+    if (performance.now() - since < 8) return;
+    await new Promise((r) => setTimeout(r));
+    since = performance.now();
+  };
+  for (const mesh of skinned) {
+    await breathe();
+    skins.push(skinning(mesh));
+  }
   const plain = (b, yaw = 0) => ({ x0: b.min.x, x1: b.max.x, y0: b.min.y, y1: b.max.y, z1: b.max.z, yaw });
   const head = model.getObjectByName("Head"),
     spine = model.getObjectByName("Spine");
@@ -421,16 +437,13 @@ async function measure(model, skinned, mixer, clips) {
     return Math.atan2(d.y, d.x);
   };
   for (const [name, a] of Object.entries(clips)) {
-    if (performance.now() - since > 8) {
-      await new Promise((r) => setTimeout(r));
-      since = performance.now();
-    }
     const turn = name.startsWith("turn") && head && spine;
     const at = [],
       yaws = [];
     a.play();
     let rest = 0;
     for (let k = 0; k <= MOMENTS * 2; k++) {
+      await breathe(); // (nothing else poses him meanwhile: nothing draws him yet)
       a.time = (a.getClip().duration * k) / (MOMENTS * 2);
       mixer.update(0);
       model.updateMatrixWorld(true);

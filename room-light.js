@@ -604,8 +604,27 @@ void main() {
         o.material = m;
       }
     });
+    // and those his shadow is drawn with, as three.js's shadow map sets them up for his white
+    // materials (WebGLShadowMap's getDepthMaterial(), r186), into a target as a shadow map is
+    const was = renderer.getRenderTarget(),
+      target = new THREE.WebGLRenderTarget(1, 1);
+    renderer.setRenderTarget(target);
+    for (const o of w.body)
+      for (const d of [new THREE.MeshDepthMaterial(), new THREE.MeshDistanceMaterial()]) {
+        const m = o.material;
+        Object.assign(d, { side: white(m).shadowSide, map: white(m).map });
+        o.material = d;
+        try {
+          compiled.push(renderer.compileAsync(o, cam, scene));
+        } finally {
+          o.material = m;
+        }
+      }
+    renderer.setRenderTarget(was);
+    target.dispose();
     Promise.all(compiled).then(
       guard(() => {
+        if (ROOM.willy !== w) return; // (he failed meanwhile: willy-room.js)
         // (each time he is drawn he may have moved, and his shadow with him)
         w.drawn = guard(() => {
           shadows = true;
