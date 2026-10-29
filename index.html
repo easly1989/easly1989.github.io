@@ -103,6 +103,13 @@
         transform-origin: left bottom;
         transition: transform 0.4s var(--ease-spring);
       }
+      /* the bench only (above the column's 900px, and not the room, whose sign sets its own
+         width): 420px wraps the subtitle into two clean lines and keeps it clear of the ledger */
+      @media (min-width: 901px) {
+        html:not(.iso) .home-tape {
+          max-width: 420px;
+        }
+      }
       .home-tape.lifted {
         transform: rotate(-2deg) skewY(-3deg) rotate(-1deg);
       }
@@ -1538,7 +1545,7 @@
         <main class="stage" data-cat-world>
           <div class="tape home-tape" data-cat="tape">
             <h1>Carlo Ruggiero</h1>
-            <p>Software developer. Mostly Go, ten years and counting.</p>
+            <p>Senior Architect &amp; Software Developer, 10&nbsp;years and counting.</p>
           </div>
           <div class="paper ruled intro" data-cat="sit">
             <p>
