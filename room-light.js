@@ -340,7 +340,8 @@ varying vec2 q;
 const vec3 BASE = vec3(40.0, 46.0, 80.0) / 255.0;
 void main() {
   float d = length(p);
-  // a shaped hole (o.quad): how far past its edges, in widths of its soft edge, 0 all inside
+  // a shaped hole (o.quad): how far past its edges, in widths of its soft edge, below 0 inside
+  // (a box's distance: on a parallelogram only near enough at its corners, a few px soft)
   if (soft > 0.0) {
     vec4 e = vec4(dot(edge[0].xy, q), dot(edge[1].xy, q), dot(edge[2].xy, q), dot(edge[3].xy, q)) + vec4(edge[0].z, edge[1].z, edge[2].z, edge[3].z);
     d = (length(max(e, 0.0)) + min(max(max(e.x, e.y), max(e.z, e.w)), 0.0)) / soft;
@@ -413,6 +414,7 @@ void main() {
     ax.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
     ax.clearRect(0, 0, W, H);
     renderer.autoClear = false;
+    u.scr.value.set(W, H);
     for (const o of list) {
       if (o.cast) continue; // (its light is one of the lamps, cast for real)
       if (o.air) {
@@ -431,7 +433,6 @@ void main() {
       u.n.value = Math.min(o.stops.length, 4);
       // a shaped one: its four edges, each as a line whose value is how far out of it a px is
       u.soft.value = o.quad && o.soft > 0 ? o.soft : 0;
-      u.scr.value.set(W, H);
       if (u.soft.value) {
         const m = [0, 1].map((i) => o.quad.reduce((t, c) => t + c[i], 0) / 4);
         o.quad.forEach((a, i) => {

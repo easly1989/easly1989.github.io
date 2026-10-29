@@ -1098,6 +1098,16 @@
   addEventListener("focusout", function () {
     setTimeout(glow);
   });
+  // the pager's screen lights it where it is: lifted while pointed at or focused, put down, or
+  // done buzzing (its message's run along the screen moves none of it); at once where nothing
+  // moves, under reduced motion
+  var pager = stage.querySelector(".thing.pager");
+  if (pager)
+    ["transitionend", "animationend", "mouseenter", "mouseleave"].forEach(function (type) {
+      pager.addEventListener(type, function (ev) {
+        if (!ev.target.closest(".pg-msg")) glow();
+      });
+    });
   var navTubes = [].slice.call(nav.querySelectorAll("a"));
   var heard = []; // who hears of the lights changing (ROOM.onLights)
   // The night's holes, where a source lights the dark (none by day): each an ellipse on screen,
