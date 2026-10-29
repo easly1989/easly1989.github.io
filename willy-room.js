@@ -100,7 +100,8 @@ async function live() {
   }
   if (!at) throw new Error("no room on the desk");
   // what he looks at as he rests, now and then something else: one of the room's sources that is
-  // on (the window, the screen, the radio's lamp), the reader, out of the screen, or nothing
+  // on (the window, the screen, the radio's lamp, the projector's lens), the reader, out of the
+  // screen, or nothing
   const LOOKS = [2, 6]; // s
   let lookAt = 0;
   const gaze = (p) => {

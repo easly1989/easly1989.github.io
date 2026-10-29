@@ -1088,9 +1088,9 @@
   // The night's holes, where a source lights the dark (none by day): each an ellipse on screen,
   // w and h across, at x, y, its colour falling off through stops from its middle (0) to its
   // edge (1). The night layer paints them; the light pass (room-light.js), when it runs, does
-  // instead (ROOM.glows()), all but those it casts for real (cast): the window's, the screen's
-  // and where the radio's lands; and those that glow in the air (air), it adds rather than lets
-  // through.
+  // instead (ROOM.glows()), all but those it casts for real (cast): the window's, the screen's,
+  // where the radio's lands and what the projector throws on the wall; and those that glow in
+  // the air (air), it adds rather than lets through.
   var holes = [];
   function hole(r, w, h, stops, dy) {
     return { x: r.left + r.width / 2, y: r.top + r.height * (dy || 0.5), w: w, h: h, stops: stops };
@@ -1232,8 +1232,10 @@
     }
     // what the projector throws on the wall
     if (cast.classList.contains("lit")) {
-      var pr = cast.getBoundingClientRect();
-      holes.push(hole(pr, pr.width * 0.6, pr.height * 0.62, [["rgba(255,236,206,1)", 0.4], ["rgba(200,170,130,0.5)", 0.7], ["transparent", 1]]));
+      var pr = cast.getBoundingClientRect(),
+        thrown = hole(pr, pr.width * 0.6, pr.height * 0.62, [["rgba(255,236,206,1)", 0.4], ["rgba(200,170,130,0.5)", 0.7], ["transparent", 1]]);
+      thrown.cast = true; // (the light pass casts it from the lens, with what stands in the beam)
+      holes.push(thrown);
       holes.push(projBeam(0.6));
     }
     night.style.background =
@@ -1481,7 +1483,8 @@
   // strong it is now (0 when off) and how far it reaches (0, everywhere): the room's own light,
   // high above the back left; the window, from high outside it, the moon by night and with the
   // light off, the sun by day; the computer's screen while it is on; the radio's lamp while it
-  // plays. Whoever listens hears of every change.
+  // plays, and its projector's, from the lens, while it throws the words on the wall. Whoever
+  // listens hears of every change.
   var spots = null;
   function lights() {
     if (!spots) {
@@ -1499,6 +1502,7 @@
       { name: "window", at: [WIN.along + WIN.w / 2, BACK - 1000, WIN.top - WIN.h / 2 + 1000 * HIGH], color: night ? "#b9c8fa" : "#ffe4a0", power: dark ? 1 : 0.35, reach: 0 },
       { name: "screen", at: spots.screen, color: "#c8ffd2", power: pc.classList.contains("on") ? 1 : 0, reach: 700 },
       { name: "radio", at: spots.radio, color: "#ffcd96", power: lamp.classList.contains("lit") ? 1 : 0, reach: 450 },
+      { name: "projector", at: [LAMP.x, LAMP.y, LAMP.z], color: "#ffe6c0", power: cast.classList.contains("lit") ? 1 : 0, reach: 400 },
     ];
   }
 

@@ -135,7 +135,8 @@ from there, after the room is built (`ROOM.ready`), and the first load's dark wa
 Willy and the room is as it is. Under reduced motion he sleeps on the cushion and does not move.
 
 He is lit by the room's own sources (`ROOM.lights()`): its light, the window, the computer's
-screen while it is on and the radio's lamp while it plays, as point lights over a soft fill. The
+screen while it is on, the radio's lamp while it plays and its projector's lens while it throws
+the track on the wall, as point lights over a soft fill. The
 room's light pass (`room-light.js`), which lights and shades the room itself, leaves him as his
 own canvas lights him: it draws him white, where he is and in his pose, so what he stands in
 front of is shaded and he is not. Without it, in the dark he is cut out of the room's night layer, which is drawn flat on the screen and would
@@ -154,7 +155,7 @@ Over every clip `willy.js` adds the small motions that keep him from ever being 
 tip, and now and then flicking at its tip; now and then an ear turned back a moment, or a blink;
 and, while he rests, his head turned to whatever he looks at (`look()`), as far as a neck turns.
 `willy-room.js` has him look, every few seconds, at one of the room's sources that is on (the
-window, the screen, the radio's lamp), at the reader, or at nothing. None of it under reduced
+window, the screen, the radio's lamp, the projector's lens), at the reader, or at nothing. None of it under reduced
 motion.
 
 three.js r186 is in `vendor/three/` (see its README), behind the import map in `index.html`.
