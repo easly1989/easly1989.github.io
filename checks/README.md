@@ -43,7 +43,8 @@ python checks/dark.py
   is put down and the page answers. Ctrl-click and reduced motion play no move. A visible
   window, like `fps.py`, drawing without vsync, so the frame rate it reports is what the frames
   cost and not the display's own: on a 90 Hz display a 12 ms frame would read as 45 fps. It
-  also comes back by a link, not the cache, where the room is shown while it still loads.
+  also comes back by a link, not the cache, where the room is shown while it still loads, and
+  no frame of that morph or of the put-down after it takes over 100 ms.
 - `photos.py` — the camera takes a photo, never the same twice running, and About shows it
   developing; back in the room it lands in its place with the morph, by the cache and by a
   link; picked up it opens About on itself, developed, and lands in the same place; taken

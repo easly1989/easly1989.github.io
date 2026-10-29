@@ -58,7 +58,9 @@ try:
             b.size(w, h)
             b.media(prefers_color_scheme=scheme)
             b.nav(base + "/index.html?room", 1)
-            b.js(f"sessionStorage.setItem('room-light', '{light}'); sessionStorage.removeItem('radio'); sessionStorage.removeItem('radio-projector')")
+            # (and the computer off: it stays on from one load to the next, and the case that
+            # switches it on would leave it on for the next size's cases, and switch it off there)
+            b.js(f"sessionStorage.setItem('room-light', '{light}'); sessionStorage.removeItem('radio'); sessionStorage.removeItem('radio-projector'); sessionStorage.removeItem('pc:on')")
             b.nav(base + "/index.html", SETTLE)
             if not b.js("document.documentElement.classList.contains('iso')"):
                 failures.append(f"{w} x {h} {scheme}, light {light}: the room shows")

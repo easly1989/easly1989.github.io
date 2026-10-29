@@ -2,7 +2,9 @@
 mouse, and a second click lands elsewhere while it moves. The first click's page opens, within
 about 1.6 s and at 60 fps or more; the object and its page's counterpart carry the pair's name
 over the morph and no name is used twice on either page; coming back, the object lands, is put
-down and the page answers again. Needs a window that is actually painting, so it opens one."""
+down and the page answers again; coming back by a link, the room loading as it lands, no frame
+of the morph or the put-down takes over 100 ms. Needs a window that is actually painting, so it
+opens one."""
 import json
 import sys
 import time
@@ -39,6 +41,23 @@ addEventListener('load', () => {
 // read once every listener of the page has run
 addEventListener('pagereveal', (e) => {
   setTimeout(() => { sessionStorage.__reveal = JSON.stringify({ page: location.pathname, vt: !!e.viewTransition, names: [...document.querySelectorAll('*')].map((n) => getComputedStyle(n).viewTransitionName).filter((v) => v && v !== 'none' && v !== 'auto') }); }, 0);
+});
+// in the room, shown by a morph: every frame until what it put down has landed (morph.js), and
+// the scripts that ran in the long ones
+addEventListener('pagereveal', (e) => {
+  if (!e.viewTransition || !document.documentElement.classList.contains('iso')) return;
+  const f = (window.__rf = []), loaf = (window.__loaf = []);
+  new PerformanceObserver((l) => loaf.push(...l.getEntries().map((x) => ({ at: x.startTime, by: x.scripts.filter((s) => s.duration > 20).map((s) => (s.sourceURL || '').split('/').pop() + ' ' + (s.sourceFunctionName || s.invoker) + ' ' + Math.round(s.duration) + ' ms') })))).observe({ type: 'long-animation-frame' });
+  (function t(n) { f.push(n); if (!window.__rfEnd) requestAnimationFrame(t); })(performance.now());
+  e.viewTransition.finished.finally(async () => {
+    for (;;) {
+      await new Promise(requestAnimationFrame);
+      const m = document.querySelector('.stage').getAnimations({ subtree: true }).filter((a) => a instanceof CSSTransition);
+      if (!m.length) break;
+      await Promise.allSettled(m.map((a) => a.finished));
+    }
+    window.__rfEnd = performance.now();
+  });
 });
 // whether going back brought the page back from the back/forward cache, as for readers
 addEventListener('pageshow', (e) => { window.__restored = e.persisted; });
@@ -132,6 +151,14 @@ try:
     time.sleep(2.5)
     fresh = json.loads(b.js("sessionStorage.__reveal || 'null'") or "null")
     check(bool(fresh) and fresh["vt"] and "cloudbank" in fresh["names"], f"back to the room by a link, the ledger is named for the morph ({fresh})")
+    # and loading as it lands, nothing stops the morph or the ledger being put down
+    for _ in range(16):
+        if b.js("!!window.__rfEnd"):
+            break
+        time.sleep(0.5)
+    lag = b.js("""(() => { const f = window.__rf || [], d = f.slice(1).map((n, i) => n - f[i]), worst = Math.max(0, ...d), at = f[d.indexOf(worst)];
+      const l = (window.__loaf || []).find((x) => x.at >= at - 5 && x.at < at + worst); return { done: !!window.__rfEnd, worst: Math.round(worst), by: l ? l.by : [] }; })()""")
+    check(lag["done"] and lag["worst"] <= 100, f"back to the room by a link, no frame of the morph or the put-down takes over 100 ms (longest {lag['worst']} ms" + (f": {'; '.join(lag['by'])}" if lag["by"] else "") + ("" if lag["done"] else ", and it had not landed") + ")")
     # skipping the move: Ctrl-click is the browser's own (a new tab), and leaves the room as it is
     b.nav(base + "/index.html", 3)
     pt = b.js(POINT + "('.thing.ledger')")
