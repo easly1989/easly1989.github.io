@@ -15,6 +15,7 @@ ROOM.holdLight(new Promise((r) => (ready = r)));
 
 async function start() {
   await ROOM.ready;
+  await ROOM.landed(); // (starting takes the main thread for a while, and the morph would stop for it)
   THREE = await import("three");
   const stage = document.querySelector(".stage");
   const cv = document.createElement("canvas");
@@ -450,11 +451,14 @@ void main() {
   }
 
   let flickers = false;
+  // Willy, once his programs here are compiled (meet()): until then his own canvas lights him
+  let met = false,
+    willyAt = 0; // (when he was last drawn here)
   let wasNear = false;
   const WILLY_R = 320; // px round where he stands that he may reach, curled or stretched
   const still = matchMedia("(prefers-reduced-motion: reduce)"); // (under it the screen holds steady)
   function draw() {
-    const w = ROOM.willy;
+    const w = met && ROOM.willy;
     if (w) {
       const [x, y, h] = w.here();
       him.position.set(x, y, h);
@@ -556,8 +560,9 @@ void main() {
     const now = performance.now(),
       busy = now < until,
       s = lamps.screen;
-    // (once more as it stops, for where it came to rest)
-    if (((busy || moving) && follow()) || (flickers && Math.abs(s.userData.full * crt(now) - s.intensity) > 0.015 * s.userData.full)) draw();
+    // (once more as it stops, for where it came to rest; and the flicker not while Willy is drawn,
+    // every frame, each time with the flicker as it is then: it would draw twice in a frame)
+    if (((busy || moving) && follow()) || (flickers && now - willyAt > 50 && Math.abs(s.userData.full * crt(now) - s.intensity) > 0.015 * s.userData.full)) draw();
     moving = busy;
     ticking = busy || flickers;
     if (ticking) requestAnimationFrame(tick);
@@ -585,12 +590,51 @@ void main() {
   (function meet() {
     if (!cv.isConnected) return;
     if (!ROOM.willy) return requestAnimationFrame(meet); // (he comes once he has loaded and been placed)
-    // (each time he is drawn he may have moved, and his shadow with him)
-    ROOM.willy.drawn = guard(() => {
-      shadows = true;
-      draw();
+    // his programs here compiled in the background first, as his own are (willy.js), rather than
+    // all at once in the first frame he is drawn in: a third of a second, with his fur's shells
+    const w = ROOM.willy,
+      his = [];
+    w.holder.traverse((o) => (w.body.includes(o) || w.fur.includes(o)) && his.push(o));
+    const compiled = his.map((o) => {
+      const m = o.material;
+      o.material = white(m);
+      try {
+        return renderer.compileAsync(o, cam, scene); // (with this scene's lights, which he joins)
+      } finally {
+        o.material = m;
+      }
     });
-    ROOM.willy.again?.(); // (his own canvas without his own light now, and this with him)
+    // and those his shadow is drawn with, as three.js's shadow map sets them up for his white
+    // materials (WebGLShadowMap's getDepthMaterial(), r186), into a target as a shadow map is
+    const was = renderer.getRenderTarget(),
+      target = new THREE.WebGLRenderTarget(1, 1);
+    renderer.setRenderTarget(target);
+    for (const o of w.body)
+      for (const d of [new THREE.MeshDepthMaterial(), new THREE.MeshDistanceMaterial()]) {
+        const m = o.material;
+        Object.assign(d, { side: white(m).shadowSide, map: white(m).map });
+        o.material = d;
+        try {
+          compiled.push(renderer.compileAsync(o, cam, scene));
+        } finally {
+          o.material = m;
+        }
+      }
+    renderer.setRenderTarget(was);
+    target.dispose();
+    Promise.all(compiled).then(
+      guard(() => {
+        if (ROOM.willy !== w) return; // (he failed meanwhile: willy-room.js)
+        // (each time he is drawn he may have moved, and his shadow with him)
+        w.drawn = guard(() => {
+          shadows = true;
+          willyAt = performance.now();
+          draw();
+        });
+        met = true;
+        w.again?.(); // (his own canvas without his own light now, and this with him)
+      }),
+    );
   })();
 }
 

@@ -28,6 +28,7 @@ const LOOK_ABOUT = [3, 7];
 async function live() {
   const [{ willy }, { planner }, { moves }, { pick, everyday }] = await Promise.all([import("./willy.js"), import("./willy-paths.js"), import("./willy-moves.js"), import("./willy-life.js")]);
   await ROOM.ready;
+  await ROOM.landed(); // (setting him up takes the main thread for a while, and the morph would stop for it)
   const w = await willy(room, stage);
   const P = planner({ surfaces: ROOM.surfaces, jumps: ROOM.jumps, fits: w.fits });
   const M = moves(w, P, ROOM.surfaces);

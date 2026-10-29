@@ -130,9 +130,12 @@ on; those that need a prop or a toy come with those. A few say something in a bu
 head. The cushion is too shallow to sit or lie on where he lands in its middle: he settles a
 little to its front, as a cat flops onto its side, and gets up back where he landed. `node
 checks/willy-life.test.mjs` checks how he picks. He does not answer clicks yet. three.js and his model load only
-from there, after the room is built (`ROOM.ready`), and the first load's dark waits for him
-(`ROOM.holdLight`), no longer than it lasts. Without WebGL 2, or if anything fails, there is no
-Willy and the room is as it is. Under reduced motion he sleeps on the cushion and does not move.
+from there, after the room is built (`ROOM.ready`) and the morph that brought the reader in has
+landed and been put down (`ROOM.landed()`, a promise, at most 3 s; the room's light pass and the
+computer's mouse wait for it too, since setting up takes the main thread for a while), and the
+first load's dark waits for him (`ROOM.holdLight`), no longer than it lasts. Without WebGL 2, or
+if anything fails, there is no Willy and the room is as it is. Under reduced motion he sleeps on
+the cushion and does not move.
 
 He is lit by the room's own sources (`ROOM.lights()`): its light, the window, the computer's
 screen while it is on, the radio's lamp while it plays and its projector's lens while it throws
