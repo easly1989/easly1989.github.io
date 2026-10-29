@@ -141,9 +141,11 @@ export async function willy(room, stage, src = "assets/willy.glb") {
       l.distance = s.reach;
       l.position.set(s.at[0] - here[0], here[1] - s.at[1], s.at[2] - here[2]);
     });
-    sky.color.set(night ? NIGHT.sky : 0xffffff);
-    sky.groundColor.set(night ? NIGHT.ground : 0x5a6470);
-    sky.intensity = night ? NIGHT.power : FILL;
+    // (with the light off by day, as far towards the day's as the daylight through the window goes)
+    const f = night ? sources.find((s) => s.name === "window")?.fill || 0 : 1;
+    sky.color.set(NIGHT.sky).lerp(new THREE.Color(0xffffff), f);
+    sky.groundColor.set(NIGHT.ground).lerp(new THREE.Color(0x5a6470), f);
+    sky.intensity = NIGHT.power + (FILL - NIGHT.power) * f;
   };
 
   let gltf;

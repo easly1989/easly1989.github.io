@@ -610,13 +610,121 @@
   }
 
   // ---- the window, right of the name, above the jar -------------------------------
-  // The sky follows the colour scheme; the roofs and trees outside are drawn anew on
-  // every visit. Its sill carries the cat's cushion.
+  // The sky is Pesaro's, day or night as it really is there (below), or, without that, it
+  // follows the colour scheme; the roofs and trees outside are drawn anew on every visit. Its
+  // sill carries the cat's cushion.
   var WIN = { along: 420, top: 660, w: 600, h: 380 };
   var win = el("div", "window", onWall("back", WIN.along, WIN.top, "window"));
   win.setAttribute("aria-hidden", "true");
   win.style.cssText = "width:" + WIN.w + "px;height:" + WIN.h + "px";
   win.innerHTML = '<span class="sky"></span>' + skyline(WIN.w, WIN.h) + '<span class="pane"></span><span class="mullion v"></span><span class="mullion h"></span>';
+
+  // ---- the weather in Pesaro, outside it -----------------------------------------------
+  // One request a visit to Open-Meteo, kept for 15 minutes for the loads that follow, a failure
+  // too; until it answers, or if it never does, the window is as it always was. The state is
+  // { day, code, cloud, precip, wind, temp, rise, set } (cloud in %, wind in km/h, rise and set
+  // in ms, when known); windowLight() is what the room makes of it. ?weather=clear-day (or
+  // clear-night, overcast-day) forces one without asking, for checks.
+  var WEATHER = "https://api.open-meteo.com/v1/forecast?latitude=43.91&longitude=12.91&current=temperature_2m,weather_code,is_day,cloud_cover,precipitation,wind_speed_10m&daily=sunrise,sunset&timezone=auto&forecast_days=1";
+  var FORCE = {
+    "clear-day": { day: true, code: 0, cloud: 0, precip: 0, wind: 6, temp: 21 },
+    "clear-night": { day: false, code: 0, cloud: 0, precip: 0, wind: 6, temp: 12 },
+    "overcast-day": { day: true, code: 3, cloud: 100, precip: 0, wind: 6, temp: 15 },
+  };
+  var weather = null;
+  (function () {
+    var q = new URLSearchParams(location.search);
+    if (FORCE[q.get("weather")]) {
+      weather = Object.assign({}, FORCE[q.get("weather")], q.get("wind") === "1" ? { wind: 45 } : null);
+      return;
+    }
+    var kept = null;
+    try {
+      kept = JSON.parse(sessionStorage.getItem("weather"));
+    } catch (e) {}
+    if (kept && Date.now() - kept.at < 15 * 60000) {
+      weather = kept.w;
+      return;
+    }
+    var stop = new AbortController(),
+      late = setTimeout(function () {
+        stop.abort();
+      }, 5000);
+    fetch(WEATHER, { signal: stop.signal })
+      .then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      })
+      .then(readWeather)
+      .catch(function (e) {
+        console.debug("No weather for the window:", e && e.message);
+        return null;
+      })
+      .then(function (w) {
+        clearTimeout(late);
+        try {
+          sessionStorage.setItem("weather", JSON.stringify({ at: Date.now(), w: w }));
+        } catch (e) {}
+        if (!w) return;
+        weather = w;
+        showSky();
+        sayWeather();
+        glow();
+      });
+  })();
+  // what of Open-Meteo's answer the window uses; an answer without it throws
+  function readWeather(j) {
+    var c = j.current,
+      n = function (v) {
+        if (typeof v !== "number" || !isFinite(v)) throw new Error("not the answer asked for");
+        return v;
+      };
+    var w = { day: n(c.is_day) === 1, code: n(c.weather_code), cloud: n(c.cloud_cover), precip: n(c.precipitation), wind: n(c.wind_speed_10m), temp: n(c.temperature_2m) };
+    // (its times are Pesaro's, without their offset)
+    var at = function (s) {
+      return Date.parse(s + "Z") - n(j.utc_offset_seconds) * 1000;
+    };
+    try {
+      w.rise = n(at(j.daily.sunrise[0]));
+      w.set = n(at(j.daily.sunset[0]));
+    } catch (e) {}
+    return w;
+  }
+  // how much daylight there is, from 0 by night to 1 by day, rising through the 40 minutes
+  // round sunrise and falling through those round sunset
+  function daylight(w) {
+    if (!(w.rise < w.set)) return w.day ? 1 : 0;
+    var m = Math.min(Date.now() - w.rise, w.set - Date.now()) / 60000;
+    return Math.min(1, Math.max(0, 0.5 + m / 40));
+  }
+  // The window's light, from the weather: whether the sky is the day's, the colour of what
+  // comes in, the sun's or the moon's; how strong its beam is (none from about 85% cloud, an
+  // overcast sky, and fading out from 50%); how much daylight fills the room (0 by night); and
+  // how soft its shadows are. (Cloud leaves the daylight as it is: any less of it and the words
+  // on the desk drop below 4.5:1, which they clear by a hair with the light on.)
+  function windowLight(w) {
+    var sun = daylight(w),
+      clear = Math.min(1, Math.max(0, (85 - w.cloud) / 35));
+    return { day: w.day, colour: w.day ? "#ffe4a0" : "#b9c8fa", beam: clear * (w.day ? sun : 1 - sun), fill: sun, soft: w.cloud / 100 };
+  }
+  // the window's light now: Pesaro's, or, without it, as it always was: the moon in the dark
+  // scheme or with the room's light off, the sun otherwise, and no daylight in the room. The
+  // first load's dark has none either: it is the room before its light comes on.
+  function outside() {
+    var h = document.documentElement.classList,
+      dark = h.contains("lights-off") || h.contains("dawn");
+    var o = weather ? windowLight(weather) : { day: !(dark || matchMedia("(prefers-color-scheme: dark)").matches), beam: 1, fill: 0, soft: 0 };
+    if (!weather) o.colour = o.day ? "#ffe4a0" : "#b9c8fa";
+    if (h.contains("dawn")) o.fill = 0;
+    return o;
+  }
+  // the sky in the window and its painted beam (room.css)
+  function showSky() {
+    var o = windowLight(weather);
+    document.documentElement.dataset.sky = o.day ? "day" : "night";
+    document.documentElement.style.setProperty("--beam", +o.beam.toFixed(2));
+  }
+  if (weather) showSky();
   box(room, { x: WIN.along - 30, y: BACK, w: WIN.w + 60, d: 78, z: WIN.top - WIN.h - 20, h: 20, color: "var(--sill)", cls: "sill" });
   // its light on the desk, crossed by the mullions: the sun by day, the moon by night, from
   // high up (about 50 degrees), so the patch starts well out from the wall, where the ray
@@ -1066,13 +1174,18 @@
   for (var rs = 1; rs <= 4; rs++) el("span", "rocker-slice", rock, "transform:translateZ(" + -rs * 1.5 + "px);background:" + shade("#e8e2d6", 0.9 - rs * 0.04));
   var night = el("div", "night", document.querySelector(".mat"));
   night.setAttribute("aria-hidden", "true");
+  // (the moon's beam, or the sun's; and the room in full daylight, as the light pass's sky
+  // leaves it, room-light.js: as lit as with its own light on, where its words are readable)
+  var MOONBEAM = ["rgb(185,200,250)", "rgb(150,170,235)", "rgb(120,140,210)"],
+    SUNBEAM = ["rgb(255,246,222)", "rgb(255,236,192)", "rgb(255,226,170)"],
+    DAYLIGHT = "rgb(255, 255, 255)";
   // what of the night is not a hole in it (glow()): the window's light on the desk in its own
   // shape, crossed by the shadows of the mullions on whatever it falls on, and the screen's,
   // which flickers as an old CRT's does
   night.innerHTML =
     '<svg class="night-beam"><defs><linearGradient id="night-beam-fall" gradientUnits="userSpaceOnUse">' +
-    '<stop offset="0" stop-color="rgb(185,200,250)" /><stop offset="0.55" stop-color="rgb(150,170,235)" stop-opacity="0.85" />' +
-    '<stop offset="1" stop-color="rgb(120,140,210)" stop-opacity="0" /></linearGradient></defs><path fill="url(#night-beam-fall)" /></svg>' +
+    '<stop offset="0" stop-color="' + MOONBEAM[0] + '" /><stop offset="0.55" stop-color="' + MOONBEAM[1] + '" stop-opacity="0.85" />' +
+    '<stop offset="1" stop-color="' + MOONBEAM[2] + '" stop-opacity="0" /></linearGradient></defs><path fill="url(#night-beam-fall)" /></svg>' +
     '<svg class="night-lit"></svg><span class="night-screen"></span>';
   var nightBeam = night.querySelector(".night-beam"),
     nightLit = night.querySelector(".night-lit"),
@@ -1217,14 +1330,22 @@
     var w = win.getBoundingClientRect(),
       k = sw.getBoundingClientRect(),
       g = pc.querySelector(".glass").getBoundingClientRect();
-    var moon = hole(w, w.width * 0.7, w.height * 0.75, [["rgba(150,170,235,1)", 0], ["transparent", 0.8]]);
+    // the window's light: the moon's, or by day the sun's, none through an overcast sky; and by
+    // day the room lit by the daylight it lets in, as with its own light on, where the other
+    // sources' glow is lost (the light pass adds it only where it is the brighter, so it never
+    // darkens: here, all but the focus's are left out, and the sunbeam is the painted one)
+    var sky = outside(),
+      daylit = sky.fill >= 0.5;
+    var moon = hole(w, w.width * 0.7, w.height * 0.75, [[(sky.day ? "rgba(255,236,190," : "rgba(150,170,235,") + +sky.beam.toFixed(2) + ")", 0], ["transparent", 0.8]]);
     moon.cast = true;
     holes = [
       // (with the tube out its light fades, rather than whitening, which in a multiply layer is brightest)
       hole(n, n.width * 0.75, n.height * 1.7, [["color-mix(in srgb, color-mix(in srgb, " + tint + " 45%, white) " + 100 * dim + "%, transparent)", 0], ["color-mix(in srgb, " + tint + " " + 50 * dim + "%, transparent)", 0.55], ["transparent", 0.8]]),
       moon,
       hole(k, 36, 36, [["rgba(255,255,255,1)", 0], ["rgba(255,255,255,1)", 14 / 36], ["transparent", 1]]),
-    ];
+    ].filter(function (o) {
+      return o !== moon || sky.beam > 0;
+    });
     navTubes.forEach(function (a) {
       var r = a.getBoundingClientRect();
       if (!r.width) return;
@@ -1260,6 +1381,11 @@
       });
     });
     nightBeam.querySelector("path").setAttribute("d", panes);
+    // (in daylight the painted sunbeam under it is the window's light, as with the light on)
+    nightBeam.style.opacity = daylit ? 0 : +sky.beam.toFixed(2);
+    (sky.day ? SUNBEAM : MOONBEAM).forEach(function (c, i) {
+      nightBeam.querySelectorAll("stop")[i].setAttribute("stop-color", c);
+    });
     var fall = nightBeam.querySelector("linearGradient"),
       from = onBeam(0.5, 0),
       to = onBeam(0.5, 1);
@@ -1268,7 +1394,7 @@
     });
     // the screen's: a green on the keyboard, the desk's edge and the wall, round the screen,
     // unsteady (the night layer's own element, with its CSS flicker; a hole for the light pass)
-    nightScreen.style.display = pc.classList.contains("on") ? "block" : "none";
+    nightScreen.style.display = pc.classList.contains("on") && !daylit ? "block" : "none";
     var sx = g.width * 1.85,
       sy = g.height * 2.2;
     Object.assign(nightScreen.style, { left: g.left + g.width / 2 - sx + "px", top: g.top + g.height * 0.6 - sy + "px", width: 2 * sx + "px", height: 2 * sy + "px" });
@@ -1284,8 +1410,10 @@
     // what has the keyboard's focus is lit, so its ring shows in the dark
     var f = document.activeElement;
     if (f && f !== document.body && fit.contains(f) && f.matches(":focus-visible")) {
-      var fr = f.getBoundingClientRect();
-      holes.push(hole(fr, fr.width * 0.75 + 40, fr.height * 0.75 + 40, [["rgba(255,255,255,1)", 0.6], ["transparent", 1]]));
+      var fr = f.getBoundingClientRect(),
+        ring = hole(fr, fr.width * 0.75 + 40, fr.height * 0.75 + 40, [["rgba(255,255,255,1)", 0.6], ["transparent", 1]]);
+      ring.day = true;
+      holes.push(ring);
     }
     // the radio while it plays: its lit dial, its halo, and where its light lands on the desk,
     // nearer the radio than the pool's middle
@@ -1319,7 +1447,7 @@
     // by room.css, as the light pass's falls off)
     nightLit.innerHTML = holes
       .filter(function (o) {
-        return o.quad && !o.own;
+        return o.quad && !o.own && (o.day || !daylit);
       })
       .map(function (o) {
         var d = grow(o.quad, o.soft / 2).map(function (c) {
@@ -1331,10 +1459,10 @@
     night.style.background =
       holes
         .filter(function (o) {
-          return !o.own && !o.quad;
+          return !o.own && !o.quad && (o.day || !daylit);
         })
         .map(painted)
-        .join(", ") + ", rgb(40, 46, 80)";
+        .join(", ") + ", " + (sky.fill ? "color-mix(in srgb, " + DAYLIGHT + " " + Math.round(sky.fill * 100) + "%, rgb(40, 46, 80))" : "rgb(40, 46, 80)");
   }
   var lightWas = null;
   try {
@@ -1366,6 +1494,42 @@
       });
     });
   });
+  // The window's, once there is weather to show: the place, how warm and the sky in words, and
+  // where the data come from, as Open-Meteo's licence (CC BY 4.0) asks next to them. The window
+  // (its lower left pane, room.css) is then the link to Open-Meteo, named by what its tag says;
+  // without weather it is neither.
+  var SAID = { 0: "clear sky", 1: "mainly clear", 2: "partly cloudy", 3: "overcast", 45: "fog", 48: "freezing fog", 51: "light drizzle", 53: "drizzle", 55: "heavy drizzle", 56: "freezing drizzle", 57: "freezing drizzle", 61: "light rain", 63: "rain", 65: "heavy rain", 66: "freezing rain", 67: "freezing rain", 71: "light snow", 73: "snow", 75: "heavy snow", 77: "snow grains", 80: "light showers", 81: "showers", 82: "heavy showers", 85: "snow showers", 86: "heavy snow showers", 95: "thunderstorm", 96: "thunderstorm with hail", 99: "thunderstorm with hail" };
+  var skyLink = null,
+    skyTag = null;
+  function sayWeather() {
+    if (!skyLink) {
+      win.removeAttribute("aria-hidden");
+      [].forEach.call(win.children, function (c) {
+        c.setAttribute("aria-hidden", "true");
+      });
+      skyLink = el("a", "sky-link", win);
+      skyLink.href = "https://open-meteo.com/";
+      skyLink.rel = "noopener";
+      skyTag = el("span", "tag sky-tag", layer);
+      skyTag.setAttribute("aria-hidden", "true");
+      skyTag.innerHTML = "<b></b><small>Weather data by Open-Meteo.com</small>";
+      tags.push({ a: el("span", "anchor", skyLink), tag: skyTag });
+      ["mouseenter", "focus"].forEach(function (ev) {
+        skyLink.addEventListener(ev, function () {
+          skyTag.classList.add("on");
+        });
+      });
+      ["mouseleave", "blur"].forEach(function (ev) {
+        skyLink.addEventListener(ev, function () {
+          skyTag.classList.remove("on");
+        });
+      });
+    }
+    var words = "Pesaro, " + Math.round(weather.temp) + " °C" + (SAID[weather.code] ? ", " + SAID[weather.code] : "");
+    skyTag.querySelector("b").textContent = words;
+    skyLink.setAttribute("aria-label", words + ". Weather data by Open-Meteo.com");
+  }
+  if (weather) sayWeather();
   function place() {
     var f = fit.getBoundingClientRect();
     tags.forEach(function (o) {
@@ -1630,8 +1794,8 @@
   // ---- the room's lights, for Willy -----------------------------------------------------
   // Each source where it is, in room px, in the colour the dark's holes give it (glow()), how
   // strong it is now (0 when off) and how far it reaches (0, everywhere): the room's own light,
-  // high above the back left; the window, from high outside it, the moon by night and with the
-  // light off, the sun by day; the computer's screen while it is on; the radio's lamp while it
+  // high above the back left; the window, from high outside it, the sun or the moon as its sky
+  // has it (outside()); the computer's screen while it is on; the radio's lamp while it
   // plays, and its projector's, from the lens, while it throws the words on the wall. Whoever
   // listens hears of every change.
   var spots = null;
@@ -1645,10 +1809,11 @@
     }
     var h = document.documentElement.classList,
       dark = h.contains("lights-off") || h.contains("dawn"),
-      night = dark || matchMedia("(prefers-color-scheme: dark)").matches;
+      sky = outside();
     return [
       { name: "room", at: [DESK.x + 200, BACK + 250, 1600], color: "#fff1dc", power: dark ? 0 : 1, reach: 0 },
-      { name: "window", at: [WIN.along + WIN.w / 2, BACK - 1000, WIN.top - WIN.h / 2 + 1000 * HIGH], color: night ? "#b9c8fa" : "#ffe4a0", power: dark ? 1 : 0.35, reach: 0 },
+      // (and the daylight it lets in, fill, and how soft its shadows are: windowLight())
+      { name: "window", at: [WIN.along + WIN.w / 2, BACK - 1000, WIN.top - WIN.h / 2 + 1000 * HIGH], color: sky.colour, power: (dark ? 1 : 0.35) * sky.beam, reach: 0, fill: sky.fill, soft: sky.soft },
       { name: "screen", at: spots.screen, color: "#c8ffd2", power: pc.classList.contains("on") ? 1 : 0, reach: 700 },
       { name: "radio", at: spots.radio, color: "#ffcd96", power: lamp.classList.contains("lit") ? 1 : 0, reach: 450 },
       { name: "projector", at: [LAMP.x, LAMP.y, LAMP.z], color: "#ffe6c0", power: cast.classList.contains("lit") ? 1 : 0, reach: 400 },
