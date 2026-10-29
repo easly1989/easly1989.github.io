@@ -147,6 +147,7 @@
 .iso .thing.cards,
 .iso .thing.jar,
 .iso .thing.envelope,
+.iso .thing.pager,
 .iso .mug .cup,
 .iso .mug .puddle,
 .iso .camera .film,
@@ -205,6 +206,24 @@ html:not(.iso) .strip {
 }
 .iso .camera .label {
   display: none;
+}
+/* the pager's clip and buttons are boxes of their own in the room (room.js) */
+.iso .pager .pg-clip,
+.iso .pager .pg-key {
+  display: none;
+}
+.iso .pager .pg-lcd {
+  left: 9px;
+  right: 9px;
+  top: 8px;
+  height: 28px;
+  font-size: 0.72rem;
+}
+.iso .pager .label {
+  left: 7px;
+  right: 7px;
+  bottom: 8px;
+  font-size: 0.95rem;
 }
 .iso .thing .label small {
   font-size: 1.05rem;
@@ -333,7 +352,7 @@ html:not(.iso) .strip {
   top: 68px;
   width: 16px;
   bottom: 0;
-  background: linear-gradient(90deg, var(--cloudbank) 0 20%, var(--scs) 0 40%, var(--nutreek) 0 60%, var(--planora) 0 80%, var(--cupid) 0);
+  background: linear-gradient(90deg, var(--cloudbank) 0 16.67%, var(--scs) 0 33.33%, var(--nutreek) 0 50%, var(--planora) 0 66.67%, var(--cupid) 0 83.33%, var(--asf) 0);
 }
 .iso .pl-shutter {
   left: 14px;
@@ -1247,7 +1266,7 @@ html:not(.iso) .strip {
   right: 0;
   bottom: 0;
   height: 10px;
-  background: linear-gradient(90deg, var(--cloudbank) 0 20%, var(--scs) 0 40%, var(--nutreek) 0 60%, var(--planora) 0 80%, var(--cupid) 0);
+  background: linear-gradient(90deg, var(--cloudbank) 0 16.67%, var(--scs) 0 33.33%, var(--nutreek) 0 50%, var(--planora) 0 66.67%, var(--cupid) 0 83.33%, var(--asf) 0);
 }
 /* tape at its top corners */
 .iso .on-wall.poster > .intro::before,
