@@ -390,26 +390,30 @@
     if (cs.transform !== "none") m = m.multiply(new DOMMatrix(cs.transform));
     return m.translate(-o[0], -o[1], -(o[2] || 0));
   }
-  function toStage(e) {
+  // (memo, within one measuring pass: each element's matrix found so far, for those inside it
+  // to start from, rather than every ancestor's again for each; the same steps, the same matrix)
+  function toStage(e, memo) {
     var chain = [];
-    for (var n = e; n && n !== stage; n = n.offsetParent) chain.unshift(n);
-    var m = new DOMMatrix();
+    for (var n = e; n && n !== stage && !(memo && memo.has(n)); n = n.offsetParent) chain.unshift(n);
+    var m = memo && memo.has(n) ? memo.get(n) : new DOMMatrix();
     chain.forEach(function (n) {
       m = m.multiply(localMatrix(n));
+      if (memo) memo.set(n, m);
     });
     return m;
   }
   // the room-space box round an element and everything in it (z up from the mat)
   var BODYLESS = /\b(shade|anchor|burst|cam-out|film|pc-mouse-cord|pg-msg)\b/;
   function bounds(root) {
-    var b = { x0: 1e9, y0: 1e9, z0: 1e9, x1: -1e9, y1: -1e9, z1: -1e9, parts: [] };
+    var b = { x0: 1e9, y0: 1e9, z0: 1e9, x1: -1e9, y1: -1e9, z1: -1e9, parts: [] },
+      memo = new Map();
     [root].concat([].slice.call(root.querySelectorAll("*"), 0, 600)).forEach(function (e) {
       // the blurred shadow on the mat is light, not body, and so is the flash's burst; the
       // camera's print waits inside it; the pager's message runs on past its screen, clipped
       if (!(e instanceof HTMLElement) || !e.offsetWidth || BODYLESS.test(e.className)) return;
       if (e.closest(".pc-mouse")) return; // (its patch stands for it: mouse-patch)
       if (getComputedStyle(e).visibility === "hidden") return;
-      var m = toStage(e);
+      var m = toStage(e, memo);
       // each part keeps its own box and footprint, so a shape with a notch (a box with
       // its flaps open) is not judged as if the notch were filled
       var part = { x0: 1e9, y0: 1e9, z0: 1e9, x1: -1e9, y1: -1e9, z1: -1e9, q: [] };
@@ -1503,6 +1507,38 @@
     if (document.readyState === "loading") addEventListener("DOMContentLoaded", settle);
     else settle();
   });
+  // once the morph that brought the reader here has landed (the cross-document view
+  // transition), and whatever it put down with it (morph.js) has stopped moving, at most 3 s
+  // on whatever else moves meanwhile: what takes the main thread for a while (the light pass,
+  // Willy, the mouse) waits for it, or the morph would stop for them (ROOM.landed())
+  var arrival = null;
+  function arrived() {
+    if (!arrival)
+      arrival = new Promise(function (done) {
+        var until;
+        function stopped() {
+          var moving = stage.getAnimations({ subtree: true }).filter(function (a) {
+            return a instanceof CSSTransition;
+          });
+          if (!moving.length || performance.now() > until) return done();
+          Promise.allSettled(
+            moving.map(function (a) {
+              return a.finished;
+            })
+          ).then(function () {
+            requestAnimationFrame(stopped);
+          });
+        }
+        function go() {
+          until = performance.now() + 3000;
+          requestAnimationFrame(stopped);
+        }
+        var vt = document.activeViewTransition;
+        if (vt) vt.finished.then(go, go);
+        else go();
+      });
+    return arrival;
+  }
   // ---- what Willy stands on, and what he keeps out of ---------------------------------
   // The desk (the mat on it is 4 px proud, too little to matter), the fleece on the perch and
   // the shelf, in room px; the jumps between them, landing along the perch and the shelf, since
@@ -1728,6 +1764,8 @@
     },
     // settles once the room is where it stays: its loose things placed, its words measured
     ready: ready,
+    // a promise that settles once the morph that brought the reader here has landed (arrived())
+    landed: arrived,
     surfaces: SURFACES,
     jumps: JUMPS,
     lights: lights,

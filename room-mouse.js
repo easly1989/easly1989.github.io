@@ -18,6 +18,7 @@ ROOM.holdLight(new Promise((r) => (ready = r)));
 
 async function start() {
   await ROOM.ready;
+  await ROOM.landed(); // (setting it up takes the main thread for a moment, and the morph would stop for it)
   const anchor = document.querySelector(".pc .pc-mouse");
   if (!anchor || !ROOM.mouse) return;
   let GLTFLoader;

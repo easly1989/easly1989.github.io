@@ -15,9 +15,9 @@ ROOM.holdLight(new Promise((r) => (ready = r)));
 
 async function start() {
   await ROOM.ready;
-  const stage = document.querySelector(".stage");
-  await landed(stage);
+  await ROOM.landed(); // (starting takes the main thread for a while, and the morph would stop for it)
   THREE = await import("three");
+  const stage = document.querySelector(".stage");
   const cv = document.createElement("canvas");
   cv.className = "light-pass";
   cv.setAttribute("aria-hidden", "true");
@@ -617,19 +617,6 @@ void main() {
       }),
     );
   })();
-}
-
-// Once the morph that brought the reader here has landed, and whatever it put down with it
-// (morph.js): starting takes the main thread for a while, and they would stop for it. At most a
-// few seconds, whatever moves on the desk meanwhile.
-async function landed(stage) {
-  await document.activeViewTransition?.finished;
-  for (const until = performance.now() + 3000; performance.now() < until; ) {
-    await new Promise(requestAnimationFrame);
-    const moving = stage.getAnimations({ subtree: true }).filter((a) => a instanceof CSSTransition);
-    if (!moving.length) return;
-    await Promise.allSettled(moving.map((a) => a.finished));
-  }
 }
 
 // ---- the faces ----------------------------------------------------------------------------------
