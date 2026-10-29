@@ -311,17 +311,40 @@ async function start() {
   const glow = new THREE.Mesh(
     new THREE.PlaneGeometry(2, 2),
     new THREE.ShaderMaterial({
-      uniforms: { at: { value: new THREE.Vector4() }, col: { value: [0, 1, 2, 3].map(() => new THREE.Vector4()) }, pos: { value: new THREE.Vector4() }, n: { value: 0 } },
+      uniforms: {
+        at: { value: new THREE.Vector4() },
+        col: { value: [0, 1, 2, 3].map(() => new THREE.Vector4()) },
+        pos: { value: new THREE.Vector4() },
+        n: { value: 0 },
+        edge: { value: [0, 1, 2, 3].map(() => new THREE.Vector3()) },
+        soft: { value: 0 },
+        scr: { value: new THREE.Vector2() },
+      },
       vertexShader: `uniform vec4 at;
+uniform vec2 scr;
 varying vec2 p;
-void main() { p = position.xy; gl_Position = vec4(at.xy + position.xy * at.zw, 0.0, 1.0); }`,
+varying vec2 q;
+void main() {
+  p = position.xy;
+  vec2 c = at.xy + position.xy * at.zw;
+  q = vec2(c.x + 1.0, 1.0 - c.y) * 0.5 * scr; // (on screen, in px, for a shaped hole)
+  gl_Position = vec4(c, 0.0, 1.0);
+}`,
       fragmentShader: `uniform vec4 col[4];
 uniform vec4 pos;
 uniform int n;
+uniform vec3 edge[4];
+uniform float soft;
 varying vec2 p;
+varying vec2 q;
 const vec3 BASE = vec3(40.0, 46.0, 80.0) / 255.0;
 void main() {
   float d = length(p);
+  // a shaped hole (o.quad): how far past its edges, in widths of its soft edge, 0 all inside
+  if (soft > 0.0) {
+    vec4 e = vec4(dot(edge[0].xy, q), dot(edge[1].xy, q), dot(edge[2].xy, q), dot(edge[3].xy, q)) + vec4(edge[0].z, edge[1].z, edge[2].z, edge[3].z);
+    d = (length(max(e, 0.0)) + min(max(max(e.x, e.y), max(e.z, e.w)), 0.0)) / soft;
+  }
   vec4 c = col[0];
   for (int i = 1; i < 4; i++) {
     if (i >= n) break;
@@ -370,6 +393,10 @@ void main() {
       fill = ax.createLinearGradient(...apex, ...mid);
       ax.beginPath();
       for (const [x, y] of hull(o.poly)) ax.lineTo(x, y);
+    } else if (o.quad) {
+      fill = stops[0][1]; // (in its own shape, one colour: the layer's blur is its soft edge)
+      ax.beginPath();
+      for (const [x, y] of o.quad) ax.lineTo(x, y);
     } else {
       ax.translate(o.x, o.y);
       ax.scale(o.w, o.h);
@@ -377,7 +404,7 @@ void main() {
       ax.beginPath();
       ax.rect(-1, -1, 2, 2);
     }
-    for (const [at, c] of stops) fill.addColorStop(at, c);
+    if (fill.addColorStop) for (const [at, c] of stops) fill.addColorStop(at, c);
     ax.fillStyle = fill;
     ax.fill();
     ax.restore();
@@ -406,6 +433,20 @@ void main() {
         u.pos.value.setComponent(i, at);
       });
       u.n.value = Math.min(o.stops.length, 4);
+      // a shaped one: its four edges, each as a line whose value is how far out of it a px is
+      u.soft.value = o.quad && o.soft > 0 ? o.soft : 0;
+      u.scr.value.set(W, H);
+      if (u.soft.value) {
+        const m = [0, 1].map((i) => o.quad.reduce((t, c) => t + c[i], 0) / 4);
+        o.quad.forEach((a, i) => {
+          const b = o.quad[(i + 1) % 4],
+            l = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+          let nx = (b[1] - a[1]) / l,
+            ny = (a[0] - b[0]) / l;
+          if ((m[0] - a[0]) * nx + (m[1] - a[1]) * ny > 0) [nx, ny] = [-nx, -ny]; // (outwards)
+          u.edge.value[i].set(nx, ny, -(nx * a[0] + ny * a[1]));
+        });
+      }
       renderer.render(front, flat);
     }
     renderer.autoClear = true;

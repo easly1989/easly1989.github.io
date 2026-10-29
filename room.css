@@ -219,6 +219,10 @@ html:not(.iso) .strip {
   height: 28px;
   font-size: 0.72rem;
 }
+/* its letters glow a touch more here, where its backlight is what lights them in the dark */
+.iso .pager:not(.opening) .pg-msg {
+  text-shadow: 0 0 4px color-mix(in srgb, currentColor 75%, transparent);
+}
 .iso .pager .label {
   left: 7px;
   right: 7px;
@@ -1752,6 +1756,16 @@ html:not(.iso) .strip {
   height: 100%;
   overflow: visible;
   filter: blur(3px);
+}
+/* and what is backlit, the pager's screen and the radio's dial, in its own shape (glow()), soft
+   only just past its edges */
+.iso .night-lit {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: blur(1px);
 }
 /* the screen's light, a little unsteady, as an old CRT's is */
 .iso .night-screen {
