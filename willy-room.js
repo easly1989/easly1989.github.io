@@ -25,9 +25,24 @@ live()
 // how long he looks about where he is when there is nothing else he can do, s
 const LOOK_ABOUT = [3, 7];
 
+// Once the morph that brought the reader here has landed, and whatever it put down with it
+// (morph.js), as the room's light waits for it (room-light.js): his setting up takes the main
+// thread for a while, and they would stop for it. At most a few seconds, whatever moves on the
+// desk meanwhile.
+async function landed() {
+  await document.activeViewTransition?.finished;
+  for (const until = performance.now() + 3000; performance.now() < until; ) {
+    await new Promise(requestAnimationFrame);
+    const moving = stage.getAnimations({ subtree: true }).filter((a) => a instanceof CSSTransition);
+    if (!moving.length) return;
+    await Promise.allSettled(moving.map((a) => a.finished));
+  }
+}
+
 async function live() {
   const [{ willy }, { planner }, { moves }, { pick, everyday }] = await Promise.all([import("./willy.js"), import("./willy-paths.js"), import("./willy-moves.js"), import("./willy-life.js")]);
   await ROOM.ready;
+  await landed();
   const w = await willy(room, stage);
   const P = planner({ surfaces: ROOM.surfaces, jumps: ROOM.jumps, fits: w.fits });
   const M = moves(w, P, ROOM.surfaces);

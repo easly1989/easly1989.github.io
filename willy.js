@@ -180,7 +180,7 @@ export async function willy(room, stage, src = "assets/willy.glb") {
 
   const mixer = new THREE.AnimationMixer(model);
   const clips = Object.fromEntries(gltf.animations.map((c) => [c.name, mixer.clipAction(c)]));
-  const size = measure(model, skinned, mixer, clips);
+  const size = await measure(model, skinned, mixer, clips);
   // (his body only: neither its fur nor its outline casts a shadow of its own)
   for (const mesh of skinned) mesh.layers.enable(SHADE.layer);
   const blob = shadow(renderer);
@@ -403,12 +403,16 @@ export async function willy(room, stage, src = "assets/willy.glb") {
 // a clip that changes his shape (from standing to curled up) takes less at any one moment than
 // over all of them. Measured on the posed mesh. A cycle (the walk, idle) is checked whole. A
 // turn turns him about where he stands: each of its moments is measured the way he faces by
-// then, and says by how much (yaw, degrees), or a cat half way round would take a square.
+// then, and says by how much (yaw, degrees), or a cat half way round would take a square. A few
+// clips at a time, the page's frames going on in between: all at once, they stopped it for a
+// second.
 const MOMENTS = 8;
-function measure(model, skinned, mixer, clips) {
+async function measure(model, skinned, mixer, clips) {
   const out = {};
   const box = new THREE.Box3(),
-    v = new THREE.Vector3();
+    v = new THREE.Vector3(),
+    skins = skinned.map(skinning);
+  let since = performance.now();
   const plain = (b, yaw = 0) => ({ x0: b.min.x, x1: b.max.x, y0: b.min.y, y1: b.max.y, z1: b.max.z, yaw });
   const head = model.getObjectByName("Head"),
     spine = model.getObjectByName("Spine");
@@ -417,6 +421,10 @@ function measure(model, skinned, mixer, clips) {
     return Math.atan2(d.y, d.x);
   };
   for (const [name, a] of Object.entries(clips)) {
+    if (performance.now() - since > 8) {
+      await new Promise((r) => setTimeout(r));
+      since = performance.now();
+    }
     const turn = name.startsWith("turn") && head && spine;
     const at = [],
       yaws = [];
@@ -426,23 +434,22 @@ function measure(model, skinned, mixer, clips) {
       a.time = (a.getClip().duration * k) / (MOMENTS * 2);
       mixer.update(0);
       model.updateMatrixWorld(true);
+      for (const s of skins) s.pose();
       const here = new THREE.Box3();
       if (turn) {
         if (k === 0) rest = facing();
         const yaw = facing() - rest,
           c = Math.cos(-yaw),
           s = Math.sin(-yaw);
-        for (const m of skinned)
-          for (let i = 0; i < m.geometry.attributes.position.count; i++) {
-            m.getVertexPosition(i, v).applyMatrix4(m.matrixWorld);
+        skinned.forEach((m, j) => {
+          for (let i = 0; i < skins[j].count; i++) {
+            skins[j].at(i, v).applyMatrix4(m.matrixWorld);
             here.expandByPoint(v.set(v.x * c - v.y * s, v.x * s + v.y * c, v.z));
           }
+        });
         yaws.push((yaw * 180) / Math.PI);
       } else {
-        for (const m of skinned) {
-          m.computeBoundingBox();
-          here.union(box.copy(m.boundingBox).applyMatrix4(m.matrixWorld));
-        }
+        skinned.forEach((m, j) => here.union(skins[j].box(box).applyMatrix4(m.matrixWorld)));
         yaws.push(0);
       }
       at.push(here);
@@ -462,6 +469,46 @@ function measure(model, skinned, mixer, clips) {
     out.turn = { ...all, moments: [all] };
   }
   return out;
+}
+
+// Each vertex of a skinned mesh where its pose puts it, as three.js's getVertexPosition() has it,
+// by the same steps in the same order, to the last bit; but what is the same for every pose is
+// worked out once (each vertex at rest, bound, and its bones and their weights), and what is the
+// same for every vertex once a pose (each bone's matrix: pose()). He has no morph targets, which
+// would move him at rest from one pose to the next.
+function skinning(mesh) {
+  const g = mesh.geometry,
+    count = g.attributes.position.count,
+    rest = [],
+    bones = [],
+    weights = [];
+  const p = new THREE.Vector3(),
+    q = new THREE.Vector4();
+  for (let i = 0; i < count; i++) {
+    p.fromBufferAttribute(g.attributes.position, i);
+    rest.push(new THREE.Vector4(p.x, p.y, p.z, 1).applyMatrix4(mesh.bindMatrix));
+    bones.push(q.fromBufferAttribute(g.attributes.skinIndex, i).toArray());
+    weights.push(q.fromBufferAttribute(g.attributes.skinWeight, i).toArray());
+  }
+  const { skeleton } = mesh,
+    m = skeleton.bones.map(() => new THREE.Matrix4()),
+    t = new THREE.Vector4();
+  const at = (i, v) => {
+    v.set(0, 0, 0);
+    for (let k = 0; k < 4; k++) if (weights[i][k] !== 0) v.addScaledVector(t.copy(rest[i]).applyMatrix4(m[bones[i][k]]), weights[i][k]);
+    return v.applyMatrix4(mesh.bindMatrixInverse);
+  };
+  return {
+    count,
+    pose: () => skeleton.bones.forEach((b, i) => m[i].multiplyMatrices(b.matrixWorld, skeleton.boneInverses[i])),
+    at,
+    // (computeBoundingBox()'s)
+    box(b) {
+      b.makeEmpty();
+      for (let i = 0; i < count; i++) b.expandByPoint(at(i, p));
+      return b;
+    },
+  };
 }
 
 // how high he is at z in that clip: the arc holds him up in the air, his root above it
