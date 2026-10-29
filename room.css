@@ -1757,8 +1757,8 @@ html:not(.iso) .strip {
   overflow: visible;
   filter: blur(3px);
 }
-/* and what is backlit, the pager's screen and the radio's dial, in its own shape (glow()), soft
-   only just past its edges */
+/* and what is backlit, the pager's screen, in its own shape (glow()), soft only just past its
+   edges */
 .iso .night-lit {
   position: absolute;
   inset: 0;

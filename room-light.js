@@ -393,10 +393,6 @@ void main() {
       fill = ax.createLinearGradient(...apex, ...mid);
       ax.beginPath();
       for (const [x, y] of hull(o.poly)) ax.lineTo(x, y);
-    } else if (o.quad) {
-      fill = stops[0][1]; // (in its own shape, one colour: the layer's blur is its soft edge)
-      ax.beginPath();
-      for (const [x, y] of o.quad) ax.lineTo(x, y);
     } else {
       ax.translate(o.x, o.y);
       ax.scale(o.w, o.h);
@@ -404,7 +400,7 @@ void main() {
       ax.beginPath();
       ax.rect(-1, -1, 2, 2);
     }
-    if (fill.addColorStop) for (const [at, c] of stops) fill.addColorStop(at, c);
+    for (const [at, c] of stops) fill.addColorStop(at, c);
     ax.fillStyle = fill;
     ax.fill();
     ax.restore();

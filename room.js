@@ -1149,18 +1149,15 @@
       y1 = Math.max.apply(null, ys);
     return { x: (x0 + x1) / 2, y: (y0 + y1) / 2, w: (x1 - x0) / 2 + soft, h: (y1 - y0) / 2 + soft, stops: stops, quad: q, soft: soft };
   }
-  // where points of an element (in its own px) are on screen, through every transform on the way
-  function onScreen(e, pts) {
-    var m = toStage(e);
-    return pts.map(function (c) {
+  // where an element's four corners are on screen, through every transform on the way
+  function cornersOf(e) {
+    var m = toStage(e),
+      w = e.offsetWidth,
+      h = e.offsetHeight;
+    return [[0, 0], [w, 0], [w, h], [0, h]].map(function (c) {
       var p = m.transformPoint(new DOMPoint(c[0], c[1], 0));
       return toScreen(p.x, p.y, p.z);
     });
-  }
-  function cornersOf(e) {
-    var w = e.offsetWidth,
-      h = e.offsetHeight;
-    return onScreen(e, [[0, 0], [w, 0], [w, h], [0, h]]);
   }
   // a convex outline pushed out by s px on every side, each corner along the two edges' normals
   function grow(q, s) {
@@ -1180,19 +1177,6 @@
         k = s / (1 + n1[0] * n2[0] + n1[1] * n2[1]);
       return [c[0] + (n1[0] + n2[0]) * k, c[1] + (n1[1] + n2[1]) * k];
     });
-  }
-  // a round thing's hole, a knob's: at its middle on screen, w and h the reach of its rim across
-  // and down (a circle on a slanted face is an ellipse; its own turn changes none of it)
-  function roundHole(e, size, stops) {
-    var r = e.offsetWidth / 2,
-      c = onScreen(e, [[r, r], [2 * r, r], [r, 2 * r]]);
-    return {
-      x: c[0][0],
-      y: c[0][1],
-      w: Math.hypot(c[1][0] - c[0][0], c[2][0] - c[0][0]) * size,
-      h: Math.hypot(c[1][1] - c[0][1], c[2][1] - c[0][1]) * size,
-      stops: stops,
-    };
   }
   // the projector's beam: a hole round the CSS one, for the night layer, and its shape on
   // screen, for the light pass, from the lens out to the corners of the words, added air strong
@@ -1289,31 +1273,21 @@
       var fr = f.getBoundingClientRect();
       holes.push(hole(fr, fr.width * 0.75 + 40, fr.height * 0.75 + 40, [["rgba(255,255,255,1)", 0.6], ["transparent", 1]]));
     }
-    // the radio while it plays: its lit dial and its knobs, and where its light lands on the
-    // desk, nearer the radio than the pool's middle
+    // the radio while it plays: its lit dial, its halo, and where its light lands on the desk,
+    // nearer the radio than the pool's middle
     if (lamp.classList.contains("lit")) {
       var lp = lamp.getBoundingClientRect(),
-        pl = pool.getBoundingClientRect();
+        pl = pool.getBoundingClientRect(),
+        dl = dial.getBoundingClientRect();
       var px = pl.left + pl.width * 0.5 + (lp.left + lp.width / 2 - pl.left - pl.width * 0.5) * 0.4,
         py = pl.top + pl.height * 0.5 + (lp.top + lp.height / 2 - pl.top - pl.height * 0.5) * 0.4;
-      var DIAL = [["rgba(255,240,210,1)", 0], ["transparent", 1]],
-        WARM = [["rgba(255,205,150,1)", 0], ["rgba(200,150,100,0.5)", 0.5], ["transparent", 1]];
-      var dq = cornersOf(dial);
-      holes.push(shaped(dq, 4, DIAL));
-      // (for the light pass: a little glow in the air round the dial and each knob, so it comes
-      // from them, rather than from the whole radio; the night layer has its lamp's halo, below,
-      // which the pass casts)
-      var spill = shaped(grow(dq, 3), 0, WARM);
-      spill.air = 0.3; // (how strongly it adds)
-      spill.own = true;
-      holes.push(spill);
-      [].forEach.call(face.querySelectorAll(".knob"), function (kn) {
-        holes.push(roundHole(kn, 1.2, [["rgba(255,240,210,1)", 0.75], ["transparent", 1]]));
-        var round = roundHole(kn, 1.8, WARM);
-        round.air = 0.22;
-        round.own = true;
-        holes.push(round);
-      });
+      holes.push(hole(dl, dl.width * 0.9 + 20, dl.height * 0.9 + 20, [["rgba(255,240,210,1)", 0.3], ["transparent", 1]]));
+      // (for the light pass: only a glow round its face, the lit dial and the knobs, no lamp's)
+      var fr = face.getBoundingClientRect(),
+        halo = hole(fr, fr.width * 0.65, fr.height * 0.65, [["rgba(255,205,150,1)", 0], ["rgba(200,150,100,0.5)", 0.5], ["transparent", 1]]);
+      halo.air = 0.22; // (how strongly it adds)
+      halo.own = true; // (the night layer has its lamp's halo, below, which the pass casts)
+      holes.push(halo);
       var lampHalo = hole(lp, lp.width * 0.55, lp.height * 0.5, [["rgba(255,205,150,1)", 0], ["rgba(200,150,100,0.6)", 0.45], ["transparent", 0.8]]);
       lampHalo.cast = true;
       holes.push(lampHalo);
