@@ -449,7 +449,9 @@ void main() {
     if (pj && pj.intensity > 0) pj.userData.paint();
     if (pj && shadows) {
       const near = !!w && inBeam(him.position, WILLY_R);
-      pj.shadow.needsUpdate = pj.intensity > 0 && (beam || near || wasNear);
+      // (and once at the start, while it is off: a light that casts with no map drawn reads
+      // garbage, NaN on some GPUs, and turns every face white even at nothing)
+      pj.shadow.needsUpdate = !pj.shadow.map || (pj.intensity > 0 && (beam || near || wasNear));
       wasNear = near;
     }
     renderer.shadowMap.needsUpdate = shadows;
@@ -807,7 +809,7 @@ function projector(s, stage) {
     else aim.addScaledVector(side, (lo[0] + hi[0]) / 2).addScaledVector(up, (lo[1] + hi[1]) / 2).normalize();
   }
   const angle = Math.min(Math.atan(Math.hypot(...ext)), 1.45); // (its cone round the frame: one of π/2 or more casts nothing)
-  const l = new THREE.SpotLight(s.color, 1, 0, angle, 0, 0);
+  const l = new THREE.SpotLight(s.color, 1, 0, angle, 0.02, 0); // (a hair of penumbra: with none, GLSL's smoothstep is undefined)
   l.position.copy(at).addScaledVector(aim, 6); // (just out of the lens)
   l.target.position.copy(at).addScaledVector(aim, 100);
   l.shadow.camera.up.copy(up);
