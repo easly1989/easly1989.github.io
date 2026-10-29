@@ -15,8 +15,9 @@ ROOM.holdLight(new Promise((r) => (ready = r)));
 
 async function start() {
   await ROOM.ready;
-  THREE = await import("three");
   const stage = document.querySelector(".stage");
+  await landed(stage);
+  THREE = await import("three");
   const cv = document.createElement("canvas");
   cv.className = "light-pass";
   cv.setAttribute("aria-hidden", "true");
@@ -450,11 +451,14 @@ void main() {
   }
 
   let flickers = false;
+  // Willy, once his programs here are compiled (meet()): until then his own canvas lights him
+  let met = false,
+    willyAt = 0; // (when he was last drawn here)
   let wasNear = false;
   const WILLY_R = 320; // px round where he stands that he may reach, curled or stretched
   const still = matchMedia("(prefers-reduced-motion: reduce)"); // (under it the screen holds steady)
   function draw() {
-    const w = ROOM.willy;
+    const w = met && ROOM.willy;
     if (w) {
       const [x, y, h] = w.here();
       him.position.set(x, y, h);
@@ -556,8 +560,9 @@ void main() {
     const now = performance.now(),
       busy = now < until,
       s = lamps.screen;
-    // (once more as it stops, for where it came to rest)
-    if (((busy || moving) && follow()) || (flickers && Math.abs(s.userData.full * crt(now) - s.intensity) > 0.015 * s.userData.full)) draw();
+    // (once more as it stops, for where it came to rest; and the flicker not while Willy is drawn,
+    // every frame, each time with the flicker as it is then: it would draw twice in a frame)
+    if (((busy || moving) && follow()) || (flickers && now - willyAt > 50 && Math.abs(s.userData.full * crt(now) - s.intensity) > 0.015 * s.userData.full)) draw();
     moving = busy;
     ticking = busy || flickers;
     if (ticking) requestAnimationFrame(tick);
@@ -585,13 +590,46 @@ void main() {
   (function meet() {
     if (!cv.isConnected) return;
     if (!ROOM.willy) return requestAnimationFrame(meet); // (he comes once he has loaded and been placed)
-    // (each time he is drawn he may have moved, and his shadow with him)
-    ROOM.willy.drawn = guard(() => {
-      shadows = true;
-      draw();
+    // his programs here compiled in the background first, as his own are (willy.js), rather than
+    // all at once in the first frame he is drawn in: a third of a second, with his fur's shells
+    const w = ROOM.willy,
+      his = [];
+    w.holder.traverse((o) => (w.body.includes(o) || w.fur.includes(o)) && his.push(o));
+    const compiled = his.map((o) => {
+      const m = o.material;
+      o.material = white(m);
+      try {
+        return renderer.compileAsync(o, cam, scene); // (with this scene's lights, which he joins)
+      } finally {
+        o.material = m;
+      }
     });
-    ROOM.willy.again?.(); // (his own canvas without his own light now, and this with him)
+    Promise.all(compiled).then(
+      guard(() => {
+        // (each time he is drawn he may have moved, and his shadow with him)
+        w.drawn = guard(() => {
+          shadows = true;
+          willyAt = performance.now();
+          draw();
+        });
+        met = true;
+        w.again?.(); // (his own canvas without his own light now, and this with him)
+      }),
+    );
   })();
+}
+
+// Once the morph that brought the reader here has landed, and whatever it put down with it
+// (morph.js): starting takes the main thread for a while, and they would stop for it. At most a
+// few seconds, whatever moves on the desk meanwhile.
+async function landed(stage) {
+  await document.activeViewTransition?.finished;
+  for (const until = performance.now() + 3000; performance.now() < until; ) {
+    await new Promise(requestAnimationFrame);
+    const moving = stage.getAnimations({ subtree: true }).filter((a) => a instanceof CSSTransition);
+    if (!moving.length) return;
+    await Promise.allSettled(moving.map((a) => a.finished));
+  }
 }
 
 // ---- the faces ----------------------------------------------------------------------------------
