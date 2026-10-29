@@ -1069,8 +1069,9 @@
     '<svg class="night-beam"><defs><linearGradient id="night-beam-fall" gradientUnits="userSpaceOnUse">' +
     '<stop offset="0" stop-color="rgb(185,200,250)" /><stop offset="0.55" stop-color="rgb(150,170,235)" stop-opacity="0.85" />' +
     '<stop offset="1" stop-color="rgb(120,140,210)" stop-opacity="0" /></linearGradient></defs><path fill="url(#night-beam-fall)" /></svg>' +
-    '<span class="night-screen"></span>';
+    '<svg class="night-lit"></svg><span class="night-screen"></span>';
   var nightBeam = night.querySelector(".night-beam"),
+    nightLit = night.querySelector(".night-lit"),
     nightScreen = night.querySelector(".night-screen");
   // where three of the beam's corners are on screen, for its shape there
   var beamCorners = ["left:0;top:0", "left:100%;top:0", "left:0;top:100%"].map(function (at) {
@@ -1097,6 +1098,16 @@
   addEventListener("focusout", function () {
     setTimeout(glow);
   });
+  // the pager's screen lights it where it is: lifted while pointed at or focused, put down, or
+  // done buzzing (its message's run along the screen moves none of it); at once where nothing
+  // moves, under reduced motion
+  var pager = stage.querySelector(".thing.pager");
+  if (pager)
+    ["transitionend", "animationend", "mouseenter", "mouseleave"].forEach(function (type) {
+      pager.addEventListener(type, function (ev) {
+        if (!ev.target.closest(".pg-msg")) glow();
+      });
+    });
   var navTubes = [].slice.call(nav.querySelectorAll("a"));
   var heard = []; // who hears of the lights changing (ROOM.onLights)
   // The night's holes, where a source lights the dark (none by day): each an ellipse on screen,
@@ -1130,6 +1141,51 @@
     else if (cast.classList.contains("lit")) holes.push(projBeam(0.45));
     heard.forEach(function (f) {
       f();
+    });
+  }
+  // A hole in the shape of something backlit, q its four corners on screen (it lies at a slant
+  // there): its light full inside and gone soft px past its edges. The night layer draws it in
+  // nightLit, the light pass in its glow shader; x, y, w and h are the box round it.
+  function shaped(q, soft, stops) {
+    var xs = q.map(function (c) {
+        return c[0];
+      }),
+      ys = q.map(function (c) {
+        return c[1];
+      });
+    var x0 = Math.min.apply(null, xs),
+      x1 = Math.max.apply(null, xs),
+      y0 = Math.min.apply(null, ys),
+      y1 = Math.max.apply(null, ys);
+    return { x: (x0 + x1) / 2, y: (y0 + y1) / 2, w: (x1 - x0) / 2 + soft, h: (y1 - y0) / 2 + soft, stops: stops, quad: q, soft: soft };
+  }
+  // where an element's four corners are on screen, through every transform on the way
+  function cornersOf(e) {
+    var m = toStage(e),
+      w = e.offsetWidth,
+      h = e.offsetHeight;
+    return [[0, 0], [w, 0], [w, h], [0, h]].map(function (c) {
+      var p = m.transformPoint(new DOMPoint(c[0], c[1], 0));
+      return toScreen(p.x, p.y, p.z);
+    });
+  }
+  // a convex outline pushed out by s px on every side, each corner along the two edges' normals
+  function grow(q, s) {
+    var m = [0, 1].map(function (i) {
+      return (q[0][i] + q[1][i] + q[2][i] + q[3][i]) / 4;
+    });
+    var out = function (a, b) {
+      var dx = b[0] - a[0],
+        dy = b[1] - a[1],
+        l = Math.hypot(dx, dy) || 1,
+        n = [dy / l, -dx / l];
+      return (m[0] - a[0]) * n[0] + (m[1] - a[1]) * n[1] > 0 ? [-n[0], -n[1]] : n;
+    };
+    return q.map(function (c, i) {
+      var n1 = out(q[(i + 3) % 4], c),
+        n2 = out(c, q[(i + 1) % 4]),
+        k = s / (1 + n1[0] * n2[0] + n1[1] * n2[1]);
+      return [c[0] + (n1[0] + n2[0]) * k, c[1] + (n1[1] + n2[1]) * k];
     });
   }
   // the projector's beam: a hole round the CSS one, for the night layer, and its shape on
@@ -1218,12 +1274,9 @@
       screen.own = screen.crt = true;
       holes.push(screen);
     }
-    // the faint glow of the pager's letters
+    // the pager's backlight, faint as a battery's: its screen, and just onto the pager round it
     var lcd = stage.querySelector(".pager .pg-lcd");
-    if (lcd) {
-      var lr = lcd.getBoundingClientRect();
-      holes.push(hole(lr, lr.width * 0.45, lr.height * 0.4, [["rgba(190,225,190,0.5)", 0], ["transparent", 1]]));
-    }
+    if (lcd && lcd.offsetWidth) holes.push(shaped(cornersOf(lcd), 3.5, [["rgba(190,225,190,0.65)", 0], ["transparent", 1]]));
     // what has the keyboard's focus is lit, so its ring shows in the dark
     var f = document.activeElement;
     if (f && f !== document.body && fit.contains(f) && f.matches(":focus-visible")) {
@@ -1258,10 +1311,23 @@
       holes.push(thrown);
       holes.push(projBeam(0.6));
     }
+    // (what is backlit in its own shape: grown by half its soft edge, and blurred over the rest
+    // by room.css, as the light pass's falls off)
+    nightLit.innerHTML = holes
+      .filter(function (o) {
+        return o.quad && !o.own;
+      })
+      .map(function (o) {
+        var d = grow(o.quad, o.soft / 2).map(function (c) {
+          return c[0].toFixed(1) + " " + c[1].toFixed(1);
+        });
+        return '<path d="M' + d.join("L") + 'Z" style="fill:' + o.stops[0][0] + '" />';
+      })
+      .join("");
     night.style.background =
       holes
         .filter(function (o) {
-          return !o.own;
+          return !o.own && !o.quad;
         })
         .map(painted)
         .join(", ") + ", rgb(40, 46, 80)";
