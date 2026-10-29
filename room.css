@@ -1270,7 +1270,8 @@ html:not(.iso) .strip {
     0 -1px 0 rgba(0, 0, 0, 0.65),
     0 1px 0 color-mix(in srgb, var(--neon) 85%, white);
 }
-/* by day the wall is pale and the groove stays dark; only in the dark scheme does it take the tint */
+/* in the light scheme the wall stays pale even with the light off, so the groove stays dark and
+   only its lower edge takes the neon; only the dark scheme tints the fill */
 @media (prefers-color-scheme: dark) {
   .iso.lights-off .on-wall.neon p,
   .iso.dawn .on-wall.neon p {
