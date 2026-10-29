@@ -219,6 +219,7 @@
     envelope: { h: 4, step: 1, kind: "solid", color: "#ead3d9", r: "2px" },
     mug: { h: 124, step: 6, kind: "mug", r: "50%", ground: ".label, .puddle" },
     jar: { h: 200, step: 16, kind: "jar", r: "50%" },
+    pager: { h: 16, step: 2, kind: "solid", color: "var(--asf)", r: "14px" },
   };
   // A round thing is rings of glass or china with a label wrapped round them, and the
   // pointer falls through the gaps between them: on and off it, the thing lifts and drops
@@ -328,6 +329,19 @@
         '<span class="fold b"><span class="front">An idea for the group</span><span class="back"></span></span></span>';
     }
   });
+  // the pager, a little larger than on the bench so its name reads from here; its belt clip
+  // runs down its side, from just over the mat to under its face
+  var pager = stage.querySelector(".thing.pager");
+  if (pager) {
+    pager.style.setProperty("--w", "120px");
+    pager.style.setProperty("--h", "78px");
+    pager.style.setProperty("--x", "1130px");
+    pager.style.setProperty("--y", "380px");
+    box(pager, { x: -5, y: 16, w: 7, d: pager.offsetHeight - 32, z: -13, h: 10, color: "#2b2f2e" });
+    [18, 36].forEach(function (y) {
+      box(pager, { x: pager.offsetWidth - 3, y: y, w: 6, d: 12, z: -11, h: 7, color: "#0a524c" });
+    });
+  }
   // the camera's lens stands proud of its face
   var lens = stage.querySelector(".camera .lens");
   if (lens)
@@ -1203,6 +1217,12 @@
       // (the light pass draws it too, flickering with the light the screen casts)
       screen.own = screen.crt = true;
       holes.push(screen);
+    }
+    // the faint glow of the pager's letters
+    var lcd = stage.querySelector(".pager .pg-lcd");
+    if (lcd) {
+      var lr = lcd.getBoundingClientRect();
+      holes.push(hole(lr, lr.width * 0.45, lr.height * 0.4, [["rgba(190,225,190,0.5)", 0], ["transparent", 1]]));
     }
     // what has the keyboard's focus is lit, so its ring shows in the dark
     var f = document.activeElement;

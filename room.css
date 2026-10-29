@@ -147,6 +147,7 @@
 .iso .thing.cards,
 .iso .thing.jar,
 .iso .thing.envelope,
+.iso .thing.pager,
 .iso .mug .cup,
 .iso .mug .puddle,
 .iso .camera .film,
@@ -205,6 +206,24 @@ html:not(.iso) .strip {
 }
 .iso .camera .label {
   display: none;
+}
+/* the pager's clip and buttons are boxes of their own in the room (room.js) */
+.iso .pager .pg-clip,
+.iso .pager .pg-key {
+  display: none;
+}
+.iso .pager .pg-lcd {
+  left: 9px;
+  right: 9px;
+  top: 8px;
+  height: 28px;
+  font-size: 0.72rem;
+}
+.iso .pager .label {
+  left: 9px;
+  right: 9px;
+  bottom: 8px;
+  font-size: 0.95rem;
 }
 .iso .thing .label small {
   font-size: 1.05rem;

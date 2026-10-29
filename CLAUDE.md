@@ -87,9 +87,10 @@ Each project is one object on the home bench, and picking it up plays a move
 that says what it is before its page opens: CloudBank's ledger loses its band
 and opens, the Social Contacts Sync cards are dealt and get faces, Planora's jar
 unfolds an idea, Nutreek's agenda flips to today, Cupid's envelope breaks its
-seal, the mug tips over and spills (the way to Donate), and the instant camera
-fires its flash and ejects a print (the way to About). The sticky note opens the
-Write to me sheet.
+seal, ASF-Notifier's pager buzzes twice while its screen brightens and a message
+scrolls in, the mug tips over and spills (the way to Donate), and the instant
+camera fires its flash and ejects a print (the way to About). The sticky note
+opens the Write to me sheet.
 
 A home object is `<a class="thing">` with `data-open="<move>"` and
 `data-open-ms`, the time the move takes before the page opens. Shift, Ctrl or
@@ -147,6 +148,7 @@ The pairs are made by `view-transition-name`, one per page and unique on it:
 | `.thing.cards` | `social-contacts-sync.html` `.label-sheet` | `scs` |
 | `.thing.jar` | `planora.html` `.label-sheet` | `planora` |
 | `.thing.envelope` | `cupid.html` `.env` | `cupid` |
+| `.thing.pager` | `asf-notifier.html` `.label-sheet` | `asf` |
 | `.mug .cup`, `.mug .puddle` | `donate.html` `.spill .cup`, `.spill .puddle` | `mug`, `puddle` |
 | `.camera .film` | `about.html` `.instant` | `photo` |
 | `.pc .glass` | `terminal.html` `.crt` | `crt` |
@@ -244,7 +246,9 @@ runs.
 
 Non-user-triggered motion is the cat, the opening moves and the page
 transitions. Decoration does not loop forever: the mug's steam puffs three times
-and stops.
+and stops. The one exception, asked for: the pager's screen on the home changes its
+message every 8 to 25 s and runs a long one to its end and back; under reduced
+motion it shows one message, still, and in a hidden tab it waits.
 
 ## Money and attribution
 
@@ -330,9 +334,9 @@ appended to button text.
 ## The things that are coupled
 
 **The product accents live once**, in `:root` in `styles.css` (`--cloudbank`,
-`--scs`, `--planora`, `--nutreek`, `--cupid`); a page or a button takes one as
-`--c`. Light accents are chosen to clear 4.5:1 against white, because a `.btn`
-puts white text on `--c`.
+`--scs`, `--planora`, `--nutreek`, `--cupid`, `--asf`); a page or a button takes
+one as `--c`. Light accents are chosen to clear 4.5:1 against white, because a
+`.btn` puts white text on `--c`.
 
 **The home page describes each product twice over.** Its object (a name and a
 short line) and the page's label sheet. A release or a status change usually

@@ -525,7 +525,8 @@ void main() {
     if (ticking) requestAnimationFrame(tick);
   });
   const wake = (ms) => (ev) => {
-    if (!ev.target.closest || !ev.target.closest(MOVERS)) return;
+    // (the pager's message runs along its screen and moves nothing that takes the light)
+    if (!ev.target.closest || !ev.target.closest(MOVERS) || ev.target.closest(".pg-msg")) return;
     until = Math.max(until, performance.now() + ms);
     if (!ticking) {
       ticking = true;
