@@ -699,13 +699,13 @@
   }
   // The window's light, from the weather: whether the sky is the day's, the colour of what
   // comes in, the sun's or the moon's; how strong its beam is (none from about 85% cloud, an
-  // overcast sky, and fading out from 50%); how much daylight fills the room (0 by night); and
-  // how soft its shadows are. (Cloud leaves the daylight as it is: any less of it and the words
-  // on the desk drop below 4.5:1, which they clear by a hair with the light on.)
+  // overcast sky, and fading out from 50%); how much daylight fills the room (0 by night, and
+  // under a sky all cloud less, as far as the words on the desk still read at 4.5:1); and how
+  // soft its shadows are
   function windowLight(w) {
     var sun = daylight(w),
       clear = Math.min(1, Math.max(0, (85 - w.cloud) / 35));
-    return { day: w.day, colour: w.day ? "#ffe4a0" : "#b9c8fa", beam: clear * (w.day ? sun : 1 - sun), fill: sun, soft: w.cloud / 100 };
+    return { day: w.day, colour: w.day ? "#ffe4a0" : "#b9c8fa", beam: clear * (w.day ? sun : 1 - sun), fill: sun * (1 - (0.28 * w.cloud) / 100), soft: w.cloud / 100 };
   }
   // the window's light now: Pesaro's, or, without it, as it always was: the moon in the dark
   // scheme or with the room's light off, the sun otherwise, and no daylight in the room. The
@@ -1174,11 +1174,26 @@
   for (var rs = 1; rs <= 4; rs++) el("span", "rocker-slice", rock, "transform:translateZ(" + -rs * 1.5 + "px);background:" + shade("#e8e2d6", 0.9 - rs * 0.04));
   var night = el("div", "night", document.querySelector(".mat"));
   night.setAttribute("aria-hidden", "true");
-  // (the moon's beam, or the sun's; and the room in full daylight, as the light pass's sky
-  // leaves it, room-light.js: as lit as with its own light on, where its words are readable)
+  // (the moon's beam, or the sun's)
   var MOONBEAM = ["rgb(185,200,250)", "rgb(150,170,235)", "rgb(120,140,210)"],
-    SUNBEAM = ["rgb(255,246,222)", "rgb(255,236,192)", "rgb(255,226,170)"],
-    DAYLIGHT = "rgb(255, 255, 255)";
+    SUNBEAM = ["rgb(255,246,222)", "rgb(255,236,192)", "rgb(255,226,170)"];
+  // The dark as the daylight through the window leaves it, fill from 0 (the night's) to 1: the
+  // light pass's sky (room-light.js, shine(), DAYLIT 0.68), worked out the same way in linear
+  // light, but a third lighter, since the painted room is already darker where it is shaded
+  // and its words have to keep 4.5:1
+  function veil(fill) {
+    var k = 1 - (1 - 0.68) * fill;
+    return (
+      "rgb(" +
+      [40, 46, 80]
+        .map(function (c) {
+          var v = Math.min(1, 1.35 * k * ((1 - fill) * Math.pow(c / 255, 2.2) + fill));
+          return Math.round(255 * Math.pow(v, 1 / 2.2));
+        })
+        .join(", ") +
+      ")"
+    );
+  }
   // what of the night is not a hole in it (glow()): the window's light on the desk in its own
   // shape, crossed by the shadows of the mullions on whatever it falls on, and the screen's,
   // which flickers as an old CRT's does
@@ -1331,9 +1346,9 @@
       k = sw.getBoundingClientRect(),
       g = pc.querySelector(".glass").getBoundingClientRect();
     // the window's light: the moon's, or by day the sun's, none through an overcast sky; and by
-    // day the room lit by the daylight it lets in, as with its own light on, where the other
-    // sources' glow is lost (the light pass adds it only where it is the brighter, so it never
-    // darkens: here, all but the focus's are left out, and the sunbeam is the painted one)
+    // day the room lit by the daylight it lets in, where the other sources' glow is lost (the
+    // light pass adds it only where it is the brighter, so it never darkens: here, all but the
+    // focus's are left out, and the window's light is its beam on the desk)
     var sky = outside(),
       daylit = sky.fill >= 0.5;
     var moon = hole(w, w.width * 0.7, w.height * 0.75, [[(sky.day ? "rgba(255,236,190," : "rgba(150,170,235,") + +sky.beam.toFixed(2) + ")", 0], ["transparent", 0.8]]);
@@ -1381,8 +1396,7 @@
       });
     });
     nightBeam.querySelector("path").setAttribute("d", panes);
-    // (in daylight the painted sunbeam under it is the window's light, as with the light on)
-    nightBeam.style.opacity = daylit ? 0 : +sky.beam.toFixed(2);
+    nightBeam.style.opacity = +sky.beam.toFixed(2);
     (sky.day ? SUNBEAM : MOONBEAM).forEach(function (c, i) {
       nightBeam.querySelectorAll("stop")[i].setAttribute("stop-color", c);
     });
@@ -1456,13 +1470,14 @@
         return '<path d="M' + d.join("L") + 'Z" style="fill:' + o.stops[0][0] + '" />';
       })
       .join("");
-    night.style.background =
-      holes
-        .filter(function (o) {
-          return !o.own && !o.quad && (o.day || !daylit);
-        })
-        .map(painted)
-        .join(", ") + ", " + (sky.fill ? "color-mix(in srgb, " + DAYLIGHT + " " + Math.round(sky.fill * 100) + "%, rgb(40, 46, 80))" : "rgb(40, 46, 80)");
+    // (with nothing over it, by day, the veil alone)
+    night.style.background = holes
+      .filter(function (o) {
+        return !o.own && !o.quad && (o.day || !daylit);
+      })
+      .map(painted)
+      .concat(sky.fill ? veil(sky.fill) : "rgb(40, 46, 80)")
+      .join(", ");
   }
   var lightWas = null;
   try {

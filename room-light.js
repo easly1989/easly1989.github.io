@@ -193,13 +193,13 @@ async function start() {
   // bright as the painted pool left them, but not so strong that what stands in the beam, met
   // square on, is all white and the words on it lost; fainter by day, as a projector is.
   // With the light off by day, the daylight the window lets in (its fill, room.js, windowLight())
-  // lights the room from DARK towards DAYLIT: the sky's light from all round, as bright as the
-  // room with its light on (any dimmer and the words on the desk drop below 4.5:1), the sun's
-  // beam on top, and the screen's and the radio's lost in it; with the light on, the daylight
-  // adds a little to it (DAYFILL).
+  // lights the room from DARK towards DAYLIT: the sky's light from all round, dimmer than the
+  // room's own, so the sun's beam shows on top of it with the mullions' shadows, and the
+  // screen's and the radio's lost in it; with the light on, the daylight adds a little to it
+  // (DAYFILL).
   const DAY = { sky: 0.6, room: 0.5, window: 0.6, projector: 1.2 },
     NIGHT = { sky: 1, window: 1, screen: 1.8, radio: 0.6, projector: 3.4 },
-    DAYLIT = { sky: 1, window: 1, projector: 1.2 },
+    DAYLIT = { sky: 0.68, window: 1, projector: 1.2 },
     DAYFILL = 0.15;
   const DARK = new THREE.Color("rgb(40, 46, 80)"),
     WHITE = new THREE.Color(0xffffff);
