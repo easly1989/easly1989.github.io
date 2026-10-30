@@ -21,10 +21,12 @@
 }
 
 /* ---- the room's colours ------------------------------------------------------- */
-/* the covers a shade deeper in the room only, so their white words hold 4.5:1 by an overcast
-   day with the light off; the accents elsewhere stay the logos' own */
-.iso {
+/* the ledger and the agenda a shade deeper in the room only, so the white words on their covers
+   hold 4.5:1 by an overcast day with the light off; the accents elsewhere stay the logos' own */
+.iso .thing.ledger {
   --cloudbank: #2b67c1;
+}
+.iso .thing.agenda {
   --nutreek: #2c772f;
 }
 :root {

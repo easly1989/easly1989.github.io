@@ -230,8 +230,11 @@ async function start() {
       l.intensity = l.userData.full = Math.PI * s.power * k(s.name);
       // (the projector always there, at nothing while the radio is off, so that it switching on
       // by day recompiles no shader, a stall of seconds with Willy's; its map drawn only while on;
-      // and the window, at nothing through an overcast sky, for the same reason)
-      l.visible = l.castShadow = l.intensity > 0 || s.name === "projector" || s.name === "window";
+      // and for the same reason the window, at nothing through an overcast sky, and the screen
+      // and the radio, at nothing while off or lost in the daylight, their maps then drawn once;
+      // not the room's, whose map would be drawn on every move of Willy's for nothing)
+      l.visible = l.castShadow = l.intensity > 0 || s.name !== "room";
+      if (s.name === "screen" || s.name === "radio") l.shadow.autoUpdate = l.intensity > 0;
       if (s.name === "window") l.shadow.radius = 4 + 8 * (s.soft || 0); // (softer under cloud)
     }
     sky.intensity = Math.PI * (dark ? k("sky") : DAY.sky + DAYFILL * fill);
@@ -507,6 +510,8 @@ void main() {
       pj.shadow.needsUpdate = !pj.shadow.map || (pj.intensity > 0 && (beam || near || wasNear));
       wasNear = near;
     }
+    // (a light that casts with no map drawn reads garbage: one drawn, at least, for each)
+    for (const l of [lamps.screen, lamps.radio]) if (l && !l.shadow.autoUpdate) l.shadow.needsUpdate = !l.shadow.map;
     renderer.shadowMap.needsUpdate = shadows;
     shadows = beam = false;
     try {

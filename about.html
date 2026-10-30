@@ -464,14 +464,18 @@
         // In a visit to the room (index.html?room) the print is the photo the room's camera took
         // last, or the one picked up there; the room pins it in its place when the reader goes
         // back. Elsewhere it stays Carlo's usual one, as it was.
-        var room = false;
+        var room = false,
+          unknown = false;
         try {
           room = sessionStorage.getItem("room") === "1";
-        } catch (e) {}
+        } catch (e) {
+          unknown = true;
+        }
         var shot = room && window.PHOTOS ? PHOTOS.current() : null;
         // the music the room's radio plays, and the weather its window shows, are credited here,
-        // in a visit to the room
-        if (room) document.getElementById("radio-credits").hidden = document.getElementById("weather-credits").hidden = false;
+        // in a visit to the room; and what the window sends where, also when that cannot be told
+        if (room) document.getElementById("radio-credits").hidden = false;
+        if (room || unknown) document.getElementById("weather-credits").hidden = false;
         if (shot) {
           var img = print.querySelector("img");
           img.src = shot.src;
