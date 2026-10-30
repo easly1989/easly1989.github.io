@@ -21,6 +21,12 @@
 }
 
 /* ---- the room's colours ------------------------------------------------------- */
+/* the covers a shade deeper in the room only, so their white words hold 4.5:1 by an overcast
+   day with the light off; the accents elsewhere stay the logos' own */
+.iso {
+  --cloudbank: #2b67c1;
+  --nutreek: #2c772f;
+}
 :root {
   --desk: #a9774b;
   --desk-leg: #8d6340;
