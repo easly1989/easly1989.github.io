@@ -69,6 +69,13 @@ python checks/dark.py
   start; and with whatever holds the light never letting go and the page's scripts stopped
   once the room is up, the dark still ends on its own. A visible window.
 
+The room's window shows Pesaro's weather from Open-Meteo, asked once and kept for 15 minutes
+in `sessionStorage` (`weather`). For a check or a screenshot, `?weather=` forces a state without
+asking: `clear-day`, `clear-night` or `overcast-day`, with `&wind=1` for a windy one. It holds
+for that load only and is never stored; any other value is ignored and the window asks as usual.
+To see the window without weather, as when the service fails, block
+`api.open-meteo.com` (`Network.setBlockedURLs`).
+
 `cdp.py` is the driver (Chrome comes from `CHROME`, or the usual Windows path), and
 `serve.py` the server: fresh on every load or reload (going back may bring back the page as
 it was left), byte ranges, nothing logged.

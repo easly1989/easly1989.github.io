@@ -21,6 +21,14 @@
 }
 
 /* ---- the room's colours ------------------------------------------------------- */
+/* the ledger and the agenda a shade deeper in the room only, so the white words on their covers
+   hold 4.5:1 by an overcast day with the light off; the accents elsewhere stay the logos' own */
+.iso .thing.ledger {
+  --cloudbank: #2b67c1;
+}
+.iso .thing.agenda {
+  --nutreek: #2c772f;
+}
 :root {
   --desk: #a9774b;
   --desk-leg: #8d6340;
@@ -1460,7 +1468,7 @@ html:not(.iso) .strip {
 .iso .env-to {
   left: 2rem;
   bottom: 1.6rem;
-  color: #200a10;
+  color: #060203;
 }
 .iso .env-stamp {
   right: 1.5rem;
@@ -1564,13 +1572,16 @@ html:not(.iso) .strip {
       linear-gradient(var(--sky-top), var(--sky-low));
   }
 }
-/* with the room's light off it is night outside too, in either scheme */
-.iso.lights-off .window {
+/* with the room's light off it is night outside too, in either scheme; with Pesaro's weather
+   (room.js, data-sky) it is day or night as it is there, whatever the scheme and the switch */
+.iso.lights-off .window,
+.iso[data-sky="night"] .window {
   --sky-top: #0b1433;
   --sky-low: #2a3863;
   --roofs: #10172b;
 }
-.iso.lights-off .window .sky {
+.iso.lights-off .window .sky,
+.iso[data-sky="night"] .window .sky {
   background:
     radial-gradient(circle at 18% 22%, #fff 0 1.5px, transparent 2px),
     radial-gradient(circle at 63% 14%, #fff 0 1px, transparent 1.6px),
@@ -1578,6 +1589,31 @@ html:not(.iso) .strip {
     radial-gradient(circle at 40% 40%, #fff 0 1px, transparent 1.5px),
     radial-gradient(circle at 76% 18%, #f6f1d0 0 18px, transparent 19px),
     linear-gradient(var(--sky-top), var(--sky-low));
+}
+.iso[data-sky="day"] .window {
+  --sky-top: #8fc8ec;
+  --sky-low: #e4f3fb;
+  --roofs: #7f97a8;
+}
+.iso[data-sky="day"] .window .sky {
+  background: linear-gradient(var(--sky-top), var(--sky-low));
+}
+/* the window is a link to where its weather comes from, while it shows any (room.js): its lower
+   left pane, the one the room is framed round already at every size (room.js, frame()) */
+.iso .window .sky-link {
+  top: calc(45% + 7px);
+  right: calc(50% + 7px);
+  pointer-events: auto;
+}
+/* inside the frame, which clips it; thick, as the wall foreshortens it, and edged dark, so it
+   shows on the day's sky as on the night's */
+.iso .window .sky-link:focus-visible {
+  outline: 6px solid var(--focus);
+  outline-offset: -6px;
+  box-shadow: inset 0 0 0 9px #1d211f;
+}
+.iso .sky-tag small {
+  text-decoration: underline;
 }
 .iso .window .skyline {
   width: 100%;
@@ -1893,6 +1929,23 @@ html:not(.iso) .strip {
   .iso.lights-off .window-light {
     opacity: 1;
   }
+}
+/* with Pesaro's weather (room.js), the sun's by its day and the moon's by its night, in either
+   scheme, and as strong as its sky lets it be (--beam: none when overcast) */
+.iso[data-sky] .window-light {
+  filter: opacity(var(--beam));
+}
+.iso[data-sky="day"] .window-light {
+  opacity: 1;
+  background: linear-gradient(rgba(255, 228, 160, 0.34), rgba(255, 228, 160, 0.12) 70%, transparent);
+}
+.iso[data-sky="night"] .window-light {
+  opacity: 0.35;
+  background: linear-gradient(rgba(178, 198, 255, 0.26), rgba(178, 198, 255, 0.1) 70%, transparent);
+}
+.iso.lights-off[data-sky="night"] .window-light {
+  opacity: 1;
+  background: linear-gradient(rgba(196, 212, 255, 0.5), rgba(196, 212, 255, 0.2) 70%, transparent);
 }
 @media (prefers-reduced-motion: reduce) {
   .iso .night,

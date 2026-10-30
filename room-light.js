@@ -192,9 +192,17 @@ async function start() {
   // The projector meets the wall nearly edge on, so it is strong: the words it throws there as
   // bright as the painted pool left them, but not so strong that what stands in the beam, met
   // square on, is all white and the words on it lost; fainter by day, as a projector is.
+  // With the light off by day, the daylight the window lets in (its fill, room.js, windowLight())
+  // lights the room from DARK towards DAYLIT: the sky's light from all round, dimmer than the
+  // room's own, so the sun's beam shows on top of it with the mullions' shadows, and the
+  // screen's and the radio's lost in it; with the light on, the daylight adds a little to it
+  // (DAYFILL).
   const DAY = { sky: 0.6, room: 0.5, window: 0.6, projector: 1.2 },
-    NIGHT = { sky: 1, window: 1, screen: 1.8, radio: 0.6, projector: 3.4 };
-  const DARK = new THREE.Color("rgb(40, 46, 80)");
+    NIGHT = { sky: 1, window: 1, screen: 1.8, radio: 0.6, projector: 3.4 },
+    DAYLIT = { sky: 0.68, window: 1, projector: 1.2 },
+    DAYFILL = 0.15;
+  const DARK = new THREE.Color("rgb(40, 46, 80)"),
+    WHITE = new THREE.Color(0xffffff);
   let shadows = true,
     beam = true; // (and the projector's map with them: draw())
   let was = "";
@@ -209,7 +217,8 @@ async function start() {
   function shine() {
     const all = ROOM.lights().filter((s) => lamps[s.name]),
       dark = !all.some((s) => s.name === "room" && s.power),
-      k = dark ? NIGHT : DAY;
+      fill = all.find((s) => s.name === "window")?.fill || 0,
+      k = (name) => (dark ? (NIGHT[name] ?? 0) * (1 - fill) + (DAYLIT[name] ?? 0) * fill : (DAY[name] ?? 0));
     // (the shadows are drawn again only when a light did change: the room hears of it on every
     // move of the focus too)
     const now = JSON.stringify(all);
@@ -218,14 +227,19 @@ async function start() {
     for (const s of all) {
       const l = lamps[s.name];
       l.color.set(s.color);
-      l.intensity = l.userData.full = Math.PI * s.power * (k[s.name] ?? 0);
+      l.intensity = l.userData.full = Math.PI * s.power * k(s.name);
       // (the projector always there, at nothing while the radio is off, so that it switching on
-      // by day recompiles no shader, a stall of seconds with Willy's; its map drawn only while on)
-      l.visible = l.castShadow = l.intensity > 0 || s.name === "projector";
+      // by day recompiles no shader, a stall of seconds with Willy's; its map drawn only while on;
+      // and for the same reason the window, at nothing through an overcast sky, and the screen
+      // and the radio, at nothing while off or lost in the daylight, their maps then drawn once;
+      // not the room's, whose map would be drawn on every move of Willy's for nothing)
+      l.visible = l.castShadow = l.intensity > 0 || s.name !== "room";
+      if (s.name === "screen" || s.name === "radio") l.shadow.autoUpdate = l.intensity > 0;
+      if (s.name === "window") l.shadow.radius = 4 + 8 * (s.soft || 0); // (softer under cloud)
     }
-    sky.intensity = Math.PI * k.sky;
-    sky.color.copy(dark ? DARK : new THREE.Color(0xffffff));
-    sky.groundColor.copy(dark ? DARK : new THREE.Color(0xffffff));
+    sky.intensity = Math.PI * (dark ? k("sky") : DAY.sky + DAYFILL * fill);
+    sky.color.copy(dark ? DARK.clone().lerp(WHITE, fill) : WHITE);
+    sky.groundColor.copy(sky.color);
     for (const m of glowMeshes) {
       const on = m.userData.e.matches(GLOWS);
       m.material = on ? glowing : lit;
@@ -496,6 +510,8 @@ void main() {
       pj.shadow.needsUpdate = !pj.shadow.map || (pj.intensity > 0 && (beam || near || wasNear));
       wasNear = near;
     }
+    // (a light that casts with no map drawn reads garbage: one drawn, at least, for each)
+    for (const l of [lamps.screen, lamps.radio]) if (l && !l.shadow.autoUpdate) l.shadow.needsUpdate = !l.shadow.map;
     renderer.shadowMap.needsUpdate = shadows;
     shadows = beam = false;
     try {

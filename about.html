@@ -439,6 +439,16 @@
             </ul>
             <p><a href="https://pixabay.com/service/license-summary/" rel="noopener">The Pixabay Content License</a></p>
           </section>
+
+          <section class="paper card wide credits" id="weather-credits" aria-labelledby="weather-h" style="--r: -0.3deg; max-width: 40rem" hidden>
+            <h2 id="weather-h">The weather in the window</h2>
+            <p>
+              The window in my room shows the weather in Pesaro as it is now. Your browser asks
+              Open-Meteo for it, which sends Open-Meteo your IP address (it deletes its logs after
+              90 days); your own location is never asked for or sent.
+            </p>
+            <p><a href="https://open-meteo.com/" rel="noopener">Weather data by Open-Meteo.com</a></p>
+          </section>
         </div>
       </main>
 
@@ -454,13 +464,18 @@
         // In a visit to the room (index.html?room) the print is the photo the room's camera took
         // last, or the one picked up there; the room pins it in its place when the reader goes
         // back. Elsewhere it stays Carlo's usual one, as it was.
-        var room = false;
+        var room = false,
+          unknown = false;
         try {
           room = sessionStorage.getItem("room") === "1";
-        } catch (e) {}
+        } catch (e) {
+          unknown = true;
+        }
         var shot = room && window.PHOTOS ? PHOTOS.current() : null;
-        // the music the room's radio plays is credited here, in a visit to the room
+        // the music the room's radio plays, and the weather its window shows, are credited here,
+        // in a visit to the room; and what the window sends where, also when that cannot be told
         if (room) document.getElementById("radio-credits").hidden = false;
+        if (room || unknown) document.getElementById("weather-credits").hidden = false;
         if (shot) {
           var img = print.querySelector("img");
           img.src = shot.src;
