@@ -755,7 +755,7 @@
     var d = document.documentElement.dataset;
     d.sky = o.day ? "day" : "night";
     d.weather = look(weather);
-    d.wind = weather.wind >= 25 ? "high" : "low"; // (about a fresh breeze: the trees lean, the clouds drift)
+    if (weather.wind >= 25) d.wind = "high"; // (about a fresh breeze: the trees lean, the clouds drift)
     document.documentElement.style.setProperty("--beam", +o.beam.toFixed(2));
   }
   if (weather) showSky();

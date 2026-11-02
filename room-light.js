@@ -850,6 +850,7 @@ function opening(win) {
   const c = [];
   for (const e of win.querySelectorAll("*")) {
     if (!(e instanceof HTMLElement) || !e.offsetWidth) continue; // (the skyline's svg has no box to go by)
+    if (/^wx-/.test(e.className)) continue; // (the weather's layers run past it, clipped)
     const m = ROOM.toStage(e);
     for (const [x, y] of [[0, 0], [e.offsetWidth, e.offsetHeight]]) c.push(m.transformPoint(new DOMPoint(x, y, 0)));
   }

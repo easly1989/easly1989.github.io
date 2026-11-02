@@ -1657,7 +1657,7 @@ html:not(.iso) .strip {
   background: linear-gradient(transparent, var(--fog) 42%, var(--fog));
 }
 .iso .window .wx-fall {
-  inset: -40px;
+  inset: -70px; /* (so even the wind's slant covers the corners) */
   transform: skewX(-6deg);
 }
 .iso:is([data-weather="rain"], [data-weather="storm"]) .window .wx-fall {
@@ -1667,7 +1667,7 @@ html:not(.iso) .strip {
 }
 .iso[data-weather="snow"] .window .wx-fall {
   display: block;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' fill='%23fff'%3E%3Ccircle cx='8' cy='9' r='2'/%3E%3Ccircle cx='33' cy='24' r='1.6'/%3E%3Ccircle cx='52' cy='7' r='2.3'/%3E%3Ccircle cx='20' cy='43' r='1.8'/%3E%3Ccircle cx='45' cy='49' r='2'/%3E%3C/svg%3E") 0 0 / 60px 60px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' fill='%23fff' stroke='%238e9ca8' stroke-width='.7'%3E%3Ccircle cx='8' cy='9' r='2'/%3E%3Ccircle cx='33' cy='24' r='1.6'/%3E%3Ccircle cx='52' cy='7' r='2.3'/%3E%3Ccircle cx='20' cy='43' r='1.8'/%3E%3Ccircle cx='45' cy='49' r='2'/%3E%3C/svg%3E") 0 0 / 60px 60px;
   animation: wx-fall 3s linear 2;
 }
 /* (one tile down, so each round ends where it began, and the last holds still) */
@@ -1680,7 +1680,7 @@ html:not(.iso) .strip {
   display: block;
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='46' height='120'%3E%3Cpath d='M30 0L8 58h14L10 120 40 46H25L36 0Z' fill='%23fff6cf'/%3E%3C/svg%3E") 44% 30% / 46px 120px no-repeat;
 }
-/* the storm's one soft brightening of the window, once a visit, never the room's */
+/* the storm's one soft brightening of the window, once a load, never the room's */
 .iso[data-weather="storm"] .window .sky {
   animation: wx-flash 0.7s ease-out 1.5s both;
 }
@@ -1706,10 +1706,9 @@ html:not(.iso) .strip {
     transform: translateX(40px);
   }
 }
+/* (as specific as the rules that start them, and after them) */
 @media (prefers-reduced-motion: reduce) {
-  .iso .window .wx-fall,
-  .iso .window .wx-clouds,
-  .iso[data-weather="storm"] .window .sky {
+  .iso[data-weather] .window :is(.wx-fall, .wx-clouds, .sky) {
     animation: none;
   }
 }
