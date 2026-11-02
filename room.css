@@ -1598,6 +1598,121 @@ html:not(.iso) .strip {
 .iso[data-sky="day"] .window .sky {
   background: linear-gradient(var(--sky-top), var(--sky-low));
 }
+/* ---- Pesaro's weather in it (room.js, data-weather and data-wind) ----------------------
+   Clouds behind the roofs; fog, rain or snow, and a storm's bolt, in front of them. What falls
+   moves for a few seconds and then holds still, a storm brightens the window once, and under
+   reduced motion all of it is still from the start. */
+.iso .window {
+  --cloud: #f6f8fa;
+  --fog: rgba(226, 231, 235, 0.9);
+  --drops: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cpath d='M9 3l-2 11M31 21l-2 11M51 6l-2 11M19 39l-2 11M43 43l-2 11' stroke='%235f707e' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+.iso[data-sky="night"] .window {
+  --cloud: #3b4563;
+  --fog: rgba(58, 64, 82, 0.9);
+  --drops: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cpath d='M9 3l-2 11M31 21l-2 11M51 6l-2 11M19 39l-2 11M43 43l-2 11' stroke='%2399a7c4' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+.iso .window .wx-clouds,
+.iso .window .wx-haze,
+.iso .window .wx-fall,
+.iso .window .wx-bolt {
+  display: none;
+}
+/* a sky all cloud: grey by day, without its stars and moon by night */
+.iso[data-sky="day"]:is([data-weather="overcast"], [data-weather="fog"], [data-weather="rain"], [data-weather="snow"]) .window {
+  --sky-top: #a9b3bc;
+  --sky-low: #d6dce1;
+  --roofs: #8796a1;
+  --cloud: #c3cad1;
+}
+.iso[data-sky="day"][data-weather="storm"] .window {
+  --sky-top: #4c5662;
+  --sky-low: #7c8692;
+  --roofs: #4a5763;
+  --cloud: #616b77;
+}
+.iso[data-sky="night"]:is([data-weather="overcast"], [data-weather="fog"], [data-weather="rain"], [data-weather="snow"], [data-weather="storm"]) .window {
+  --sky-top: #141924;
+  --sky-low: #252c3b;
+  --cloud: #2c3445;
+}
+.iso[data-sky]:is([data-weather="overcast"], [data-weather="fog"], [data-weather="rain"], [data-weather="snow"], [data-weather="storm"]) .window .sky {
+  background: linear-gradient(var(--sky-top), var(--sky-low));
+}
+.iso:is([data-weather="partly"], [data-weather="overcast"], [data-weather="rain"], [data-weather="snow"], [data-weather="storm"]) .window .wx-clouds {
+  display: block;
+  /* (two clouds, each a few round lobes on a flat foot) */
+  background:
+    radial-gradient(circle 26px at 17% 33%, var(--cloud) 96%, transparent),
+    radial-gradient(circle 36px at 24% 27%, var(--cloud) 96%, transparent),
+    radial-gradient(circle 24px at 31% 33%, var(--cloud) 96%, transparent),
+    radial-gradient(ellipse 78px 16px at 24% 37%, var(--cloud) 96%, transparent),
+    radial-gradient(circle 32px at 62% 41%, var(--cloud) 96%, transparent),
+    radial-gradient(circle 44px at 70% 34%, var(--cloud) 96%, transparent),
+    radial-gradient(circle 28px at 78% 41%, var(--cloud) 96%, transparent),
+    radial-gradient(ellipse 96px 18px at 70% 46%, var(--cloud) 96%, transparent);
+}
+.iso[data-weather="fog"] .window .wx-haze {
+  display: block;
+  background: linear-gradient(transparent, var(--fog) 42%, var(--fog));
+}
+.iso .window .wx-fall {
+  inset: -40px;
+  transform: skewX(-6deg);
+}
+.iso:is([data-weather="rain"], [data-weather="storm"]) .window .wx-fall {
+  display: block;
+  background: var(--drops) 0 0 / 60px 60px;
+  animation: wx-fall 0.45s linear 9;
+}
+.iso[data-weather="snow"] .window .wx-fall {
+  display: block;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' fill='%23fff'%3E%3Ccircle cx='8' cy='9' r='2'/%3E%3Ccircle cx='33' cy='24' r='1.6'/%3E%3Ccircle cx='52' cy='7' r='2.3'/%3E%3Ccircle cx='20' cy='43' r='1.8'/%3E%3Ccircle cx='45' cy='49' r='2'/%3E%3C/svg%3E") 0 0 / 60px 60px;
+  animation: wx-fall 3s linear 2;
+}
+/* (one tile down, so each round ends where it began, and the last holds still) */
+@keyframes wx-fall {
+  to {
+    background-position: 0 60px;
+  }
+}
+.iso[data-weather="storm"] .window .wx-bolt {
+  display: block;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='46' height='120'%3E%3Cpath d='M30 0L8 58h14L10 120 40 46H25L36 0Z' fill='%23fff6cf'/%3E%3C/svg%3E") 44% 30% / 46px 120px no-repeat;
+}
+/* the storm's one soft brightening of the window, once a visit, never the room's */
+.iso[data-weather="storm"] .window .sky {
+  animation: wx-flash 0.7s ease-out 1.5s both;
+}
+@keyframes wx-flash {
+  30% {
+    filter: brightness(1.5);
+  }
+}
+/* the wind: the trees lean, and the clouds and what falls go with it */
+.iso[data-wind="high"] .window .wx-trees {
+  transform: skewX(-7deg);
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+.iso[data-wind="high"] .window .wx-fall {
+  transform: skewX(-18deg);
+}
+.iso[data-wind="high"] .window .wx-clouds {
+  animation: wx-drift 6s ease-out both;
+}
+@keyframes wx-drift {
+  from {
+    transform: translateX(40px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .iso .window .wx-fall,
+  .iso .window .wx-clouds,
+  .iso[data-weather="storm"] .window .sky {
+    animation: none;
+  }
+}
 /* the window is a link to where its weather comes from, while it shows any (room.js): its lower
    left pane, the one the room is framed round already at every size (room.js, frame()) */
 .iso .window .sky-link {
