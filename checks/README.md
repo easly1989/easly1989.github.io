@@ -71,7 +71,8 @@ python checks/dark.py
 
 The room's window shows Pesaro's weather from Open-Meteo, asked once and kept for 15 minutes
 in `sessionStorage` (`weather`). For a check or a screenshot, `?weather=` forces a state without
-asking: `clear-day`, `clear-night` or `overcast-day`, with `&wind=1` for a windy one. It holds
+asking: `<look>-day` or `<look>-night`, the look one of `clear`, `partly`, `overcast`, `fog`,
+`rain`, `snow` and `storm` (e.g. `rain-night`), with `&wind=1` for a windy one. It holds
 for that load only and is never stored; any other value is ignored and the window asks as usual.
 To see the window without weather, as when the service fails, block
 `api.open-meteo.com` (`Network.setBlockedURLs`).

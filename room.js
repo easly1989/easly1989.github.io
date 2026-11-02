@@ -617,20 +617,23 @@
   var win = el("div", "window", onWall("back", WIN.along, WIN.top, "window"));
   win.setAttribute("aria-hidden", "true");
   win.style.cssText = "width:" + WIN.w + "px;height:" + WIN.h + "px";
-  win.innerHTML = '<span class="sky"></span>' + skyline(WIN.w, WIN.h) + '<span class="pane"></span><span class="mullion v"></span><span class="mullion h"></span>';
+  // (the weather's layers, room.css: clouds behind the roofs, fog, rain or snow and a storm's
+  // bolt in front of them)
+  win.innerHTML = '<span class="sky"></span><span class="wx-clouds"></span>' + skyline(WIN.w, WIN.h) + '<span class="wx-haze"></span><span class="wx-fall"></span><span class="wx-bolt"></span><span class="pane"></span><span class="mullion v"></span><span class="mullion h"></span>';
 
   // ---- the weather in Pesaro, outside it -----------------------------------------------
   // One request a visit to Open-Meteo, kept for 15 minutes for the loads that follow (a failure
   // for one); until it answers, or if it never does, the window is as it always was. The state
   // is { day, code, cloud, precip, wind, temp, rise, set } (cloud in %, wind in km/h, rise and
-  // set in ms, when known); windowLight() is what the room makes of it. ?weather=clear-day (or
-  // clear-night, overcast-day) forces one without asking, for checks.
+  // set in ms, when known); windowLight() is what the room makes of it. ?weather=<look>-day or
+  // <look>-night (clear, partly, overcast, fog, rain, snow, storm), and &wind=1, forces one
+  // without asking, for checks.
   var WEATHER = "https://api.open-meteo.com/v1/forecast?latitude=43.91&longitude=12.91&current=temperature_2m,weather_code,is_day,cloud_cover,precipitation,wind_speed_10m&daily=sunrise,sunset&timezone=auto&forecast_days=1";
-  var FORCE = {
-    "clear-day": { day: true, code: 0, cloud: 0, precip: 0, wind: 6, temp: 21 },
-    "clear-night": { day: false, code: 0, cloud: 0, precip: 0, wind: 6, temp: 12 },
-    "overcast-day": { day: true, code: 3, cloud: 100, precip: 0, wind: 6, temp: 15 },
-  };
+  var FORCE = {};
+  [["clear", 0, 0, 0], ["partly", 2, 50, 0], ["overcast", 3, 100, 0], ["fog", 45, 100, 0], ["rain", 63, 100, 2], ["snow", 73, 100, 1], ["storm", 95, 100, 6]].forEach(function (l) {
+    FORCE[l[0] + "-day"] = { day: true, code: l[1], cloud: l[2], precip: l[3], wind: 6, temp: l[0] === "snow" ? -1 : 18 };
+    FORCE[l[0] + "-night"] = { day: false, code: l[1], cloud: l[2], precip: l[3], wind: 6, temp: l[0] === "snow" ? -3 : 11 };
+  });
   var KEPT = 1; // (the shape of what is kept: a new one is never read back as the old)
   var weather = null;
   (function () {
@@ -712,11 +715,28 @@
   // overcast sky, and fading out from 50%); how much daylight fills the room (0 by night, and
   // under a sky all cloud less, as far as the words on the desk still read at 4.5:1); and how
   // soft its shadows are
+  // (fog, rain, snow and a storm let no beam through and leave it all diffuse; snow brightens
+  // what comes in a little. None goes below an overcast sky's: a storm's dark is the window's,
+  // the words on the desk would not read at 4.5:1 in a room any darker)
   function windowLight(w) {
     var sun = daylight(w),
       up = sunUp(w),
-      clear = Math.min(1, Math.max(0, (85 - w.cloud) / 35));
-    return { day: up, colour: up ? "#ffe4a0" : "#b9c8fa", beam: clear * (up ? sun : 1 - sun), fill: sun * (1 - (0.28 * w.cloud) / 100), soft: w.cloud / 100 };
+      l = look(w),
+      wet = l !== "clear" && l !== "partly" && l !== "overcast",
+      clear = wet ? 0 : Math.min(1, Math.max(0, (85 - w.cloud) / 35));
+    var fill = sun * Math.min(1, (1 - (0.28 * Math.max(w.cloud, wet ? 100 : 0)) / 100) * (l === "snow" ? 1.05 : 1));
+    return { day: up, colour: up ? "#ffe4a0" : "#b9c8fa", beam: clear * (up ? sun : 1 - sun), fill: fill, soft: wet ? 1 : w.cloud / 100 };
+  }
+  // what the window shows of it, from the WMO weather code (an unknown one is a clear sky)
+  function look(w) {
+    var c = w.code;
+    if (c === 2) return "partly";
+    if (c === 3) return "overcast";
+    if (c === 45 || c === 48) return "fog";
+    if ((c >= 51 && c <= 67) || (c >= 80 && c <= 82)) return "rain";
+    if ((c >= 71 && c <= 77) || c === 85 || c === 86) return "snow";
+    if (c >= 95 && c <= 99) return "storm";
+    return "clear";
   }
   // the window's light now: Pesaro's, or, without it, as it always was: the moon in the dark
   // scheme or with the room's light off, the sun otherwise, and no daylight in the room. The
@@ -732,7 +752,10 @@
   // the sky in the window and its painted beam (room.css)
   function showSky() {
     var o = windowLight(weather);
-    document.documentElement.dataset.sky = o.day ? "day" : "night";
+    var d = document.documentElement.dataset;
+    d.sky = o.day ? "day" : "night";
+    d.weather = look(weather);
+    if (weather.wind >= 25) d.wind = "high"; // (about a fresh breeze: the trees lean, the clouds drift)
     document.documentElement.style.setProperty("--beam", +o.beam.toFixed(2));
   }
   if (weather) showSky();
@@ -762,6 +785,7 @@
   function skyline(w, h) {
     var r = Math.random,
       d = "",
+      t = "", // (the trees apart, so the wind can lean them, room.css)
       x = -10;
     while (x < w + 10) {
       var bw = 40 + r() * 90;
@@ -770,8 +794,8 @@
         var th = 60 + r() * 70,
           cr = 22 + r() * 26,
           tx = x + bw / 2;
-        d += "M" + (tx - 4) + " " + h + "V" + (h - th) + "h8V" + h + "Z";
-        d += "M" + (tx - cr) + " " + (h - th) + "a" + cr + " " + cr + " 0 1 0 " + 2 * cr + " 0a" + cr + " " + cr + " 0 1 0 " + -2 * cr + " 0Z";
+        t += "M" + (tx - 4) + " " + h + "V" + (h - th) + "h8V" + h + "Z";
+        t += "M" + (tx - cr) + " " + (h - th) + "a" + cr + " " + cr + " 0 1 0 " + 2 * cr + " 0a" + cr + " " + cr + " 0 1 0 " + -2 * cr + " 0Z";
       } else {
         // a house or a block: a gable or a flat roof, sometimes a chimney
         var top = h - (50 + r() * (r() < 0.25 ? 200 : 110));
@@ -781,7 +805,7 @@
       }
       x += bw + r() * 18;
     }
-    return '<svg class="skyline" viewBox="0 0 ' + w + " " + h + '" preserveAspectRatio="none"><path d="' + d + '" /></svg>';
+    return '<svg class="skyline" viewBox="0 0 ' + w + " " + h + '" preserveAspectRatio="none"><path d="' + d + '" /><path class="wx-trees" d="' + t + '" /></svg>';
   }
 
   // ---- the shelf on the right wall, with the plant (and room for the radio) ---------
