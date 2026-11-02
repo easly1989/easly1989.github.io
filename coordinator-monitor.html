@@ -108,7 +108,7 @@
         overflow-wrap: anywhere;
         font: 500 0.8rem/1.5 "IBM Plex Mono", ui-monospace, monospace;
       }
-      .cm-card .quiet {
+      .cm-card p.quiet {
         color: var(--paper-ink-2);
         font-size: 0.9rem;
       }
@@ -138,7 +138,7 @@
       <main>
         <section class="paper label-sheet" style="--c: var(--coordinator-monitor)" data-cat="sit">
           <img class="mark" src="coordinator-monitor.svg" alt="" width="56" height="56" />
-          <p class="state">Version 0.2.0, early. Open source under AGPL-3.0.</p>
+          <p class="state">Version 0.2.0, early. Open source under AGPL-3.0-or-later.</p>
           <h1>coordinator-monitor</h1>
           <p class="lede">
             One pane for every local Claude Code session: what each one is doing, its subagents,
@@ -210,7 +210,8 @@
             <ul>
               <li>
                 <b>Protected commands.</b> Merges, pushes to <code>main</code>, deploys and service
-                restarts never run without your approval, whatever the session's permission mode.
+                restarts that match the rules never run without your approval, whatever the session's
+                permission mode.
                 Approve once, for the session, or deny.
               </li>
               <li>
@@ -310,12 +311,11 @@
           </article>
 
           <article class="cm-card" data-cat-avoid style="--r: -0.5deg">
-            <h2>Open and free — support it</h2>
-            <small>AGPL-3.0</small>
+            <h2>Free and open source</h2>
+            <small>AGPL-3.0-or-later</small>
             <p>Free and open source. If it is useful to you, a donation is much appreciated.</p>
             <p class="actions" style="--c: var(--coordinator-monitor)">
               <a class="btn" href="donate.html">Donate</a>
-              <a class="btn quiet" href="https://github.com/sponsors/easly1989" rel="noopener">GitHub Sponsors</a>
             </p>
           </article>
         </div>
