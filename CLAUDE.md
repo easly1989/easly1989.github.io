@@ -66,8 +66,8 @@ committed, so they had to be rebuilt by hand.
   buttons, the label sheet, taped screenshots and the lightbox, the sheet
   dialog, loose desk items, the cat and its toys, the book, and the page
   transitions.
-- `about.html`, `asf-notifier.html`, `cloudbank.html`, `cupid.html`, `donate.html`,
-  `nutreek.html`, `planora.html`, `social-contacts-sync.html` — the pages. Each links
+- `about.html`, `asf-notifier.html`, `cloudbank.html`, `coordinator-monitor.html`,
+  `cupid.html`, `donate.html`, `nutreek.html`, `planora.html`, `social-contacts-sync.html` — the pages. Each links
   `styles.css` and keeps its own layout in a small inline `<style>`, and any
   behaviour that only it has in one inline script.
 - `site.js` — shared behaviour, loaded `defer`: the ruler, scaling the bench,
@@ -77,7 +77,7 @@ committed, so they had to be rebuilt by hand.
 - `terminal.html` and `crt.js` — the console behind the old computer on the
   bench, and the sounds both make. See The computer.
 - `logo.svg` (CloudBank, and the favicon of the pages about the person),
-  `asf-notifier.svg`, `cupid.svg`, `nutreek.svg`, `planora.svg`,
+  `asf-notifier.svg`, `coordinator-monitor.svg`, `cupid.svg`, `nutreek.svg`, `planora.svg`,
   `social-contacts-sync.svg` — the
   project marks. `assets/` holds the screenshots and `carlo.jpg`.
 
@@ -334,7 +334,7 @@ appended to button text.
 ## The things that are coupled
 
 **The product accents live once**, in `:root` in `styles.css` (`--cloudbank`,
-`--scs`, `--planora`, `--nutreek`, `--cupid`, `--asf`); a page or a button takes
+`--scs`, `--planora`, `--nutreek`, `--cupid`, `--asf`, `--coordinator-monitor`); a page or a button takes
 one as `--c`. Light accents are chosen to clear 4.5:1 against white, because a
 `.btn` puts white text on `--c`.
 
