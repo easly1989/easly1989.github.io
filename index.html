@@ -1829,7 +1829,8 @@ SYSTEM HALTED.</span>
         </label>
         <label class="ask">
           <span>Project</span>
-          <select name="project">
+          <select name="project" required>
+            <option value="" selected disabled>Choose one</option>
             <option>CloudBank</option>
             <option>Social Contacts Sync</option>
             <option>Planora</option>
@@ -1865,7 +1866,7 @@ SYSTEM HALTED.</span>
           var who = f.elements.who.value.trim();
           var project = f.elements.project.value;
           var subject = "[" + project + "] Inquiry from " + who;
-          var body = f.elements.message.value.trim() + "\n\n— " + who;
+          var body = f.elements.message.value.trim();
           location.href = "mailto:" + email + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
           var d = f.closest("dialog");
           if (d) d.close();
