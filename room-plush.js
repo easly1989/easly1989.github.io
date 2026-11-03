@@ -195,8 +195,11 @@ async function start() {
   addEventListener(
     "click",
     (e) => {
-      const power = e.target.closest && e.target.closest(".pc .power");
-      if (!power && !(e.target.closest && e.target.closest("a.thing[href]"))) return;
+      if (!e.target.closest) return;
+      const pc = e.target.closest(".pc");
+      // (only switching it on boots it: off, or broken, it does nothing for long)
+      const power = e.target.closest(".pc .power") && !pc.classList.contains("on") && !pc.classList.contains("broken");
+      if (!power && !e.target.closest("a.thing[href], .pc .use, .snap.out")) return;
       if (!power && (e.button || e.metaKey || e.ctrlKey || e.shiftKey)) return; // (a new tab: no move)
       heldTo = performance.now() + (power ? 3700 : Infinity); // (the computer boots in 3.7 s; a page leaves)
       calm();

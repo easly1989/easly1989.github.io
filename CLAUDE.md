@@ -114,10 +114,11 @@ and a margin, to 44 px square at every size, are `.plush-hit`, which is not
 framed. Its tag, high on the wall, comes out under it rather than above.
 
 The crab is named "Claude stuff", a home for the Claude things, and leads to
-`coordinator-monitor.html` for now: its target is written only in its `href` in
-`index.html`. Pointed at a hub page later, that is the one line to change; its
-morph then follows the new page's own entries (`morph.js` PAIRS and POSE, the
-page's `view-transition-name: crab`, `checks/moves.py`).
+`coordinator-monitor.html` for now. Pointing it at a hub page later means its
+`href` in `index.html`, the words that describe where it leads (its `aria-label`
+and small line there, and the contact sheet's option), and the new page's morph
+entries (`morph.js` PAIRS and POSE, the page's `view-transition-name: crab`,
+`checks/moves.py`).
 
 A home object is `<a class="thing">` with `data-open="<move>"` and
 `data-open-ms`, the time the move takes before the page opens. Shift, Ctrl or
