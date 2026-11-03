@@ -26,7 +26,7 @@
     // an idea comes out of the jar and unfolds: that slip, not the round jar, becomes the label
     "planora.html": [[".jar .jar-idea", "planora"]],
     "cupid.html": [[".thing.envelope", "cupid"]],
-    "asf-notifier.html": [[".thing.pager", "asf"]],
+    "asf-plugins.html": [[".thing.pager", "asf"]],
     "coordinator-monitor.html": [[".thing.plush", "crab"]],
     "donate.html": [[".mug .cup", "mug"], [".mug .puddle", "puddle"]],
     "about.html": [[".camera .film", "photo"]],
@@ -34,7 +34,7 @@
     "terminal.html": [[".pc .glass", "crt"]],
   };
   // what rises to face the reader (the mug spills instead, the computer works as it does)
-  var POSE = { "cloudbank.html": 1, "nutreek.html": 1, "social-contacts-sync.html": 1, "planora.html": 1, "cupid.html": 1, "asf-notifier.html": 1, "coordinator-monitor.html": 1, "about.html": 1 };
+  var POSE = { "cloudbank.html": 1, "nutreek.html": 1, "social-contacts-sync.html": 1, "planora.html": 1, "cupid.html": 1, "asf-plugins.html": 1, "coordinator-monitor.html": 1, "about.html": 1 };
   function file(url) {
     return new URL(url, location.href).pathname.split("/").pop() || "index.html";
   }

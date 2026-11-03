@@ -66,8 +66,9 @@ committed, so they had to be rebuilt by hand.
   buttons, the label sheet, taped screenshots and the lightbox, the sheet
   dialog, loose desk items, the cat and its toys, the book, and the page
   transitions.
-- `about.html`, `asf-notifier.html`, `cloudbank.html`, `coordinator-monitor.html`,
-  `cupid.html`, `donate.html`, `nutreek.html`, `planora.html`, `social-contacts-sync.html` — the pages. Each links
+- `about.html`, `asf-plugins.html`, `cloudbank.html`, `coordinator-monitor.html`,
+  `cupid.html`, `donate.html`, `nutreek.html`, `planora.html`, `social-contacts-sync.html` — the pages. `asf-notifier.html` is only a redirect to
+  `asf-plugins.html#asf-notifier`. Each links
   `styles.css` and keeps its own layout in a small inline `<style>`, and any
   behaviour that only it has in one inline script.
 - `site.js` — shared behaviour, loaded `defer`: the ruler, scaling the bench,
@@ -77,7 +78,7 @@ committed, so they had to be rebuilt by hand.
 - `terminal.html` and `crt.js` — the console behind the old computer on the
   bench, and the sounds both make. See The computer.
 - `logo.svg` (CloudBank, and the favicon of the pages about the person),
-  `asf-notifier.svg`, `coordinator-monitor.svg`, `cupid.svg`, `nutreek.svg`, `planora.svg`,
+  `asf-notifier.svg`, `asf-pluginconfig.svg`, `coordinator-monitor.svg`, `cupid.svg`, `nutreek.svg`, `planora.svg`,
   `social-contacts-sync.svg` — the
   project marks. `assets/` holds the screenshots and `carlo.jpg`.
 - `assets/plush/` — coordinator-monitor's crab: `plush.js`, its one model
@@ -91,7 +92,7 @@ Each project is one object on the home bench, and picking it up plays a move
 that says what it is before its page opens: CloudBank's ledger loses its band
 and opens, the Social Contacts Sync cards are dealt and get faces, Planora's jar
 unfolds an idea, Nutreek's agenda flips to today, Cupid's envelope breaks its
-seal, ASF-Notifier's pager buzzes twice while its screen brightens and a message
+seal, ASF Plugins' pager buzzes twice while its screen brightens and a message
 scrolls in, the felt crab (Claude stuff) is tugged by its cord and bounces,
 the mug tips over and spills (the way to Donate), and the instant camera fires
 its flash and ejects a print (the way to About). The sticky note opens the
@@ -176,7 +177,7 @@ The pairs are made by `view-transition-name`, one per page and unique on it:
 | `.thing.cards` | `social-contacts-sync.html` `.label-sheet` | `scs` |
 | `.thing.jar` | `planora.html` `.label-sheet` | `planora` |
 | `.thing.envelope` | `cupid.html` `.env` | `cupid` |
-| `.thing.pager` | `asf-notifier.html` `.label-sheet` | `asf` |
+| `.thing.pager` | `asf-plugins.html` `.label-sheet` | `asf` |
 | `.thing.plush` | `coordinator-monitor.html` `.label-sheet` | `crab` |
 | `.mug .cup`, `.mug .puddle` | `donate.html` `.spill .cup`, `.spill .puddle` | `mug`, `puddle` |
 | `.camera .film` | `about.html` `.instant` | `photo` |
@@ -188,6 +189,28 @@ name cancels the transition silently, so a new name needs a check on both pages.
 The ledger and the agenda open on their own pages, so where pages morph they only
 lift on the bench (`data-vt-ms`, `.lift`) and the opening happens once, after the
 morph lands. The other objects play their move on the bench and morph after it.
+
+## A family page
+
+`asf-plugins.html` is the page for several pieces of one platform: a label sheet for the
+family, then one kraft folder (`.fam-folder[data-tabs]`) with a tab per piece. Another family
+page is markup only: copy its structure.
+
+- `.fam-tabs` holds one `a.fam-tab` per piece, `href="#<sheet id>"`, `style="--c: <accent>"`,
+  with `<b>` the name and `<small>` the status. Each sheet is `section.fam-sheet#<id>` with
+  `aria-labelledby` on its `h2`, `header.fam-head` (mark, `.state`, name, `.lede`,
+  `.actions`), then `.fam-feed` and `.fam-grid` of `article.fam-card` (`h3`). The sheet's own
+  `--c` colours its buttons. `.fam-card.fam-shared` is the card above the folder.
+- `site.js` makes `[data-tabs]` a real tablist: roving tabindex, arrows, Home and End,
+  `hidden` on inactive sheets, `replaceState` when a tab is chosen. A hash that names an
+  element inside a sheet (`#events`) opens that sheet and scrolls to it, smoothly unless
+  reduced motion. Without the script every sheet shows, stacked, and the tabs are links.
+- The cat knows tabbed folders: `busyRects()` measures every sheet of a `[data-tabs]` folder as
+  if it were showing, so toys and the cat's start avoid all of them whichever tab is open, and
+  `fam-tab` (fired on a tab change) pulls any toy back onto a shorter page. Mark a sheet's
+  head, feed and cards `data-cat-avoid`.
+- The new product accent goes into `:root` (6:1 against white). A new family page also needs
+  its pager-like object on the home, its `morph.js` entry and its `checks/moves.py` row.
 
 ## The cat
 
@@ -368,7 +391,7 @@ appended to button text.
 ## The things that are coupled
 
 **The product accents live once**, in `:root` in `styles.css` (`--cloudbank`,
-`--scs`, `--planora`, `--nutreek`, `--cupid`, `--asf`, `--coordinator-monitor`); a page or a button takes
+`--scs`, `--planora`, `--nutreek`, `--cupid`, `--asf`, `--asf-pc`, `--coordinator-monitor`); a page or a button takes
 one as `--c`. Light accents are chosen to clear 4.5:1 against white, because a
 `.btn` puts white text on `--c`.
 
