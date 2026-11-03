@@ -1,4 +1,4 @@
-// Willy in the room: the home with ?room, in a window wide enough for it. He keeps the room's
+// Willy in the room: the home, in a window wide enough for the room. He keeps the room's
 // light off until he is ready, at most as long as the dark lasts (about 4 s), and then lives
 // on the desk, the cushion under the window and the shelf, doing one of his everyday actions
 // after another (willy-life.js), and saying so in a bubble now and then. three.js and his

@@ -120,7 +120,7 @@ him with the room's own code (`willy-moves.js`), so what it shows is what the re
 
 ## In the room
 
-`willy-room.js` is Willy's life in the room (`index.html?room`): one everyday action after
+`willy-room.js` is Willy's life in the room (`index.html`): one everyday action after
 another, from `willy-life.js`, picked at random, weighted, among those he can do where he is
 (the desk, the cushion under the window, the shelf), never the same twice running and none again
 before its cooldown. They are the 2D cat's (`cat.js`), with its weights, remapped to the room:

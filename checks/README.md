@@ -21,10 +21,10 @@ python checks/dark.py
 
 `contrast.py` also needs `pip install pillow numpy`.
 
-- `framing.py` — with `?room`, every link, button and word in the room is inside the window at
-  1280×720, 1366×768, 1440×900, 1920×1080 and 2560×1080, and the walls and floor fill it to the
-  corners; a window too small for the room, a phone, and the home without `?room` get the bench
-  as before; `?room` is remembered for the session and `?room=0` turns it off; nothing on the
+- `framing.py` — a first visit to the home gets the room; every link, button and word in it is
+  inside the window at 1280×720, 1366×768, 1440×900, 1920×1080 and 2560×1080, and the walls and
+  floor fill it to the corners; a window too small for the room and a phone get the bench;
+  `?room=0` turns the room off for the session and `?room` back on; nothing on the
   desk moves when the fonts arrive after the first frame. Headless.
 - `fps.py` — the room keeps pace with a 60 Hz display while Willy walks, in both schemes, with
   its light on and off, with the radio playing and with the computer on; he rests between walks, so a sample is taken

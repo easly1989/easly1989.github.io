@@ -1,7 +1,7 @@
-"""The room's frame: with ?room, every link and button in the room, and the name and the note
-on the wall, are inside the window at every size the room shows at, and the walls and the floor
-fill it to the corners; below its smallest scale, and without ?room, the home is the flat bench
-as before."""
+"""The room's frame: the home is the room, and every link and button in it, and the name and
+the note on the wall, are inside the window at every size the room shows at, and the walls and
+the floor fill it to the corners; below its smallest scale, and with ?room=0, the home is the flat
+bench."""
 import sys
 import time
 
@@ -79,7 +79,7 @@ try:
     b.media(prefers_reduced_motion="reduce")
     b.size(1440, 900)
     b.nav(base + "/index.html", 3)
-    check(not b.js("document.documentElement.classList.contains('iso')"), "without ?room the home is the bench")
+    check(b.js("document.documentElement.classList.contains('iso')"), "a first visit to the home, with no ?room, gets the room")
     for w, h in ROOM_SIZES:
         b.size(w, h)
         b.nav(base + "/index.html?room", 3)
@@ -109,8 +109,10 @@ try:
     b.size(390, 844, mobile=True)
     b.nav(base + "/index.html?room", 3)
     check(not b.js("document.documentElement.classList.contains('iso')"), "on a phone the column shows")
-    # remembered for the session: the plain address keeps the room
+    # remembered for the session: after ?room=0 and then ?room, the plain address keeps the room
     b.size(1440, 900)
+    b.nav(base + "/index.html?room=0", 2)
+    b.nav(base + "/index.html?room", 3)
     b.nav(base + "/index.html", 3)
     check(b.js("document.documentElement.classList.contains('iso')"), "?room is remembered for the session")
     # the window changing size under the room: narrower than the room's layout, then wide again

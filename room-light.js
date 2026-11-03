@@ -1,4 +1,4 @@
-// The room's light (index.html?room): real light and shadow over the CSS room. The CSS room
+// The room's light (index.html): real light and shadow over the CSS room. The CSS room
 // draws itself as it always has, in its plain colours; this draws the same room again in WebGL,
 // every element a face where the CSS room puts it (ROOM.toStage), in its own shape, all of it
 // white, lit by the room's light and the window with shadow maps. What comes out is how much
