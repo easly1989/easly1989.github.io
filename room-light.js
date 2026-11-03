@@ -283,6 +283,7 @@ async function start() {
       write(solid, body);
       write(hidden, backs);
     }
+    let cast = moved;
     for (const o of MODELS) {
       const mb = o.body;
       let me = models.get(o);
@@ -290,7 +291,7 @@ async function start() {
         scene.remove(me);
         models.delete(o);
         me = null;
-        moved = true;
+        moved = cast = true;
       }
       if (!mb) continue;
       if (!me) {
@@ -308,10 +309,14 @@ async function start() {
           was = at(me.matrix);
         me.matrix.copy(m);
         moved = true;
+        // (only swinging, the plush: a hair either way, its shadows left as they were until it rests)
+        if (mb.swinging) continue;
+        cast = true;
         if (inBeam(was, r) || inBeam(at(m), r)) beam = true;
       }
     }
-    return moved && (shadows = true);
+    if (cast) shadows = true;
+    return moved;
   }
   follow();
 

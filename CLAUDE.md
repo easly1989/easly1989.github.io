@@ -271,8 +271,11 @@ transitions. Decoration does not loop forever: the mug's steam puffs three times
 and stops. The one exception, asked for: the pager's screen on the home changes its
 message every 8 to 25 s and runs a long one to its end and back; under reduced
 motion it shows one message, still, and in a hidden tab it waits. The crab on the
-room's wall swings a few times as the room arrives and when it is pointed at,
-and comes to rest; under reduced motion it never moves.
+room's wall swings a few times as the room arrives (about 2.5 s) and when it is
+pointed at, and comes to rest; once any object's move starts, or the computer is
+switched on, it settles in a few frames and stays still until the move is over,
+and the light pass leaves its shadows as they were while it only swings. Under
+reduced motion it never moves.
 
 ## Money and attribution
 

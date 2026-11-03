@@ -17,12 +17,15 @@ ROOM.holdLight(settled);
 if (ROOM.plush) ROOM.plush.settled = settled;
 const still = matchMedia("(prefers-reduced-motion: reduce)");
 
-// a swing: up to SWING radians each way, a full one every PERIOD s, dying away over DECAY s, done
-// once less than a hair is left; a tug: the toy pulled DROP model units down its cord and bouncing
+// a swing: up to SWING radians each way, a full one every PERIOD s, dying away over DECAY s (over
+// ARRIVE s as the room arrives, about 2.5 s in all; over CALM s when a move starts), done once
+// less than a hair is left; a tug: the toy pulled DROP model units down its cord and bouncing
 // back, a bounce every BOUNCE s, dying away over SPRING s
 const SWING = 0.12,
   PERIOD = 1.15,
   DECAY = 1,
+  ARRIVE = 0.6,
+  CALM = 0.03,
   DROP = 0.28,
   BOUNCE = 0.22,
   SPRING = 0.15;
@@ -119,70 +122,108 @@ async function start() {
   // drawn again when the window changes
   addEventListener("resize", () => requestAnimationFrame(draw));
 
-  // moving: each frame until what moves it is over, the light pass told. A swing is
-  // e^(-s/DECAY) (a sin ws + b cos ws), s from when it was last pushed: pushed again, it carries on
-  // from where it is and as fast, with a more added (swing())
+  // moving: each frame until what moves it is over, the light pass told (and told when only its
+  // swing moves it, which the room's shadows need not follow). A swing is
+  // e^(-s/d) (a sin ws + b cos ws), s from when it was last pushed: pushed again, it carries on
+  // from where it is and as fast, with a more added (push())
   const W = (2 * Math.PI) / PERIOD;
   let swingAt = -1e9,
     a = 0,
     b = 0,
+    d = DECAY,
+    swingTo = 0,
     tugAt = -1e9,
-    until = 0,
+    tugTo = 0,
+    turnTo = 0,
+    heldTo = 0,
     running = false;
   const swung = (now) => {
+    if (now >= swingTo) return { angle: 0, speed: 0, size: 0 };
     const s = (now - swingAt) / 1000,
-      e = Math.exp(-s / DECAY),
+      e = Math.exp(-s / d),
       sin = Math.sin(W * s),
       cos = Math.cos(W * s);
-    return { angle: e * (a * sin + b * cos), speed: e * ((a * W - b / DECAY) * cos - (b * W + a / DECAY) * sin), size: e * Math.hypot(a, b) };
+    return { angle: e * (a * sin + b * cos), speed: e * ((a * W - b / d) * cos - (b * W + a / d) * sin), size: e * Math.hypot(a, b) };
   };
   const frame = () => {
     if (!cv.isConnected) return (running = false);
     const now = performance.now(),
       t = (now - tugAt) / 1000,
-      drop = t * 1000 < P.ms ? DROP * Math.exp(-t / SPRING) * Math.sin((2 * Math.PI * t) / BOUNCE) : 0;
-    toy.pose(now < until ? swung(now).angle : 0, drop);
+      drop = now < tugTo ? DROP * Math.exp(-t / SPRING) * Math.sin((2 * Math.PI * t) / BOUNCE) : 0;
+    toy.pose(swung(now).angle, drop);
+    running = now < Math.max(swingTo, tugTo, turnTo);
+    P.body.swinging = running && now >= tugTo && now >= turnTo;
     draw();
     if (P.moved) P.moved();
-    running = now < until;
     if (running) requestAnimationFrame(frame);
   };
-  const run = (ms) => {
-    until = Math.max(until, performance.now() + ms);
+  const loop = () => {
     if (!running) {
       running = true;
       requestAnimationFrame(frame);
     }
   };
-  // (pointed at again while it still swings hard, it carries on as it was; never more than SWING)
-  const swing = (by = SWING) => {
-    if (still.matches) return;
+  // from where it is and as fast, by more (or by nothing, and dying away over decay s)
+  const push = (by, decay) => {
     const now = performance.now(),
-      was = now < until ? swung(now) : { angle: 0, speed: 0, size: 0 };
-    if (was.size > by / 2) return;
+      was = swung(now);
+    d = decay;
     b = was.angle;
-    a = (was.speed + b / DECAY) / W;
-    a += a < 0 ? -by : by;
-    const k = Math.min(1, SWING / Math.hypot(a, b));
-    a *= k;
-    b *= k;
+    a = (was.speed + b / d) / W;
+    if (by) {
+      a += a < 0 ? -by : by;
+      const k = Math.min(1, SWING / Math.hypot(a, b)); // (as it stands: settling, it may not jump)
+      a *= k;
+      b *= k;
+    }
     swingAt = now;
-    run(1000 * DECAY * Math.log(Math.hypot(a, b) / 0.002));
+    swingTo = now + Math.max(0, 1000 * d * Math.log(Math.hypot(a, b) / 0.002));
+    loop();
   };
+  // (pointed at again while it still swings hard, it carries on as it was; never more than SWING;
+  // and never while a move plays)
+  const swing = (by = SWING, decay = DECAY) => {
+    const now = performance.now();
+    if (still.matches || now < heldTo || swung(now).size > by / 2) return;
+    push(by, decay);
+  };
+  // a move starting (any object picked up, or the old computer switched on): it comes to rest in
+  // a few frames, as fast as it was going, and stays still until the move is over
+  const calm = () => {
+    if (performance.now() < swingTo) push(0, CALM);
+  };
+  addEventListener(
+    "click",
+    (e) => {
+      const power = e.target.closest && e.target.closest(".pc .power");
+      if (!power && !(e.target.closest && e.target.closest("a.thing[href]"))) return;
+      if (!power && (e.button || e.metaKey || e.ctrlKey || e.shiftKey)) return; // (a new tab: no move)
+      heldTo = performance.now() + (power ? 3700 : Infinity); // (the computer boots in 3.7 s; a page leaves)
+      calm();
+    },
+    true
+  );
+  addEventListener("pageshow", () => (heldTo = 0));
   ["mouseenter", "focus"].forEach((ev) => el.addEventListener(ev, () => swing()));
   const pictures = P.tug; // (room.js: its picture's bounce)
   P.tug = (done) => {
     if (!cv.isConnected) return pictures(done);
     tugAt = performance.now();
-    swing(SWING / 2);
-    run(P.ms);
-    setTimeout(done, P.ms);
+    tugTo = tugAt + P.ms;
+    if (!still.matches && swung(tugAt).size <= SWING / 4) push(SWING / 2, DECAY);
+    loop();
+    setTimeout(() => {
+      calm();
+      done();
+    }, P.ms);
   };
   // and while it turns to face the reader, or back (morph.js)
   el.addEventListener("transitionrun", (e) => {
-    if (e.target === el) run(800);
+    if (e.target !== el) return;
+    turnTo = Math.max(turnTo, performance.now() + 800);
+    loop();
   });
-  swing();
+  swing(SWING, ARRIVE);
 }
 
 // no model: its canvases gone, the light pass told, its picture back
