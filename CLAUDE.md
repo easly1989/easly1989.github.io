@@ -12,6 +12,14 @@ root are exactly what ships. A push to `main` is a deploy.
 The whole site is one scene: a cutting mat seen from above — "the bench" — with
 one object on it per project, and a cat that lives there and does what it likes.
 
+On a window wide enough for it, the home is that bench as an isometric room:
+the mat on a desk between two walls, lit by a WebGL light pass, with Willy, a 3D
+cat, in place of the SVG one (`room.js`, `room.css`, `room-light.js` and
+`willy*.js`). The switch is the first script in `index.html`'s head. The room
+needs a window over 900px wide that it fits at a scale of 0.7 or more; narrower,
+on a phone, or with `?room=0` in the address (remembered for the session, `?room`
+undoes it), the home is the flat bench.
+
 ## Working on it
 
 Preview locally with any static server from the repo root, e.g.:
