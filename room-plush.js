@@ -9,11 +9,15 @@
 // and bounces on its cord when tugged (morph.js), drawn again only while it moves; it only ever
 // turns and drops in the wall's plane, its back on the wall. Under reduced motion it never moves
 // on its own. Without WebGL 2, or if anything here fails, the room keeps its picture (room.js).
+// (the room's light waits for it, and so does the light pass for its faces: its picture is one
+// only where it is not drawn)
 let ready;
-ROOM.holdLight(new Promise((r) => (ready = r)));
+const settled = new Promise((r) => (ready = r));
+ROOM.holdLight(settled);
+if (ROOM.plush) ROOM.plush.settled = settled;
 const still = matchMedia("(prefers-reduced-motion: reduce)");
 
-// a swing: from SWING radians each way, a full one every PERIOD s, dying away over DECAY s, done
+// a swing: up to SWING radians each way, a full one every PERIOD s, dying away over DECAY s, done
 // once less than a hair is left; a tug: the toy pulled DROP model units down its cord and bouncing
 // back, a bounce every BOUNCE s, dying away over SPRING s
 const SWING = 0.12,
@@ -67,12 +71,15 @@ async function start() {
   // faces round, and light their backs; so mirrored again across its own middle, where it is the
   // same either way)
   const across = new THREE.Matrix4().makeScale(-1, 1, 1);
-  P.body = { geometry: toy.body(), matrix: () => mat(ROOM.toStage(el)).multiply(M.UP).multiply(hang()).multiply(across) };
+  const geometry = toy.body();
+  geometry.computeBoundingSphere();
 
   // Where each point of it meets the wall along the way the reader looks (plush.js, flat()), from
   // how the link's own axes show on screen now
-  let sharp = 0;
+  let sharp = 0,
+    out = false;
   function draw() {
+    if (out && !cv.isConnected) return; // (gone: its GPU lost, below)
     const m = ROOM.toStage(el),
       at = (x, y, z) => {
         const q = m.transformPoint(new DOMPoint(x, y, z));
@@ -98,25 +105,43 @@ async function start() {
   await renderer.compileAsync(scene, cam, scene); // (its shells' programs in the background, not in its first frame)
   draw();
   el.append(dark, cv);
+  out = true;
   const pic = el.querySelector(".plush-pic");
   if (pic) pic.hidden = true;
+  // the light pass lights it from now on (its own place in the beam: its middle and its size)
+  P.body = { geometry, sphere: geometry.boundingSphere, matrix: () => mat(ROOM.toStage(el)).multiply(M.UP).multiply(hang()).multiply(across) };
   if (P.moved) P.moved(); // (the light pass may have started without it)
+  // a GPU that resets takes it with it: the picture again
+  cv.addEventListener("webglcontextlost", () => {
+    gone("its GPU context was lost");
+    if (P.moved) P.moved();
+  });
   // drawn again when the window changes
   addEventListener("resize", () => requestAnimationFrame(draw));
 
-  // moving: each frame until what moves it is over, the light pass told
+  // moving: each frame until what moves it is over, the light pass told. A swing is
+  // e^(-s/DECAY) (a sin ws + b cos ws), s from when it was last pushed: pushed again, it carries on
+  // from where it is and as fast, with a more added (swing())
+  const W = (2 * Math.PI) / PERIOD;
   let swingAt = -1e9,
-    swingBy = 0,
+    a = 0,
+    b = 0,
     tugAt = -1e9,
     until = 0,
     running = false;
+  const swung = (now) => {
+    const s = (now - swingAt) / 1000,
+      e = Math.exp(-s / DECAY),
+      sin = Math.sin(W * s),
+      cos = Math.cos(W * s);
+    return { angle: e * (a * sin + b * cos), speed: e * ((a * W - b / DECAY) * cos - (b * W + a / DECAY) * sin), size: e * Math.hypot(a, b) };
+  };
   const frame = () => {
+    if (!cv.isConnected) return (running = false);
     const now = performance.now(),
-      s = (now - swingAt) / 1000,
       t = (now - tugAt) / 1000,
-      angle = s * 1000 < swingFor ? swingBy * Math.exp(-s / DECAY) * Math.sin((2 * Math.PI * s) / PERIOD) : 0,
       drop = t * 1000 < P.ms ? DROP * Math.exp(-t / SPRING) * Math.sin((2 * Math.PI * t) / BOUNCE) : 0;
-    toy.pose(angle, drop);
+    toy.pose(now < until ? swung(now).angle : 0, drop);
     draw();
     if (P.moved) P.moved();
     running = now < until;
@@ -129,18 +154,25 @@ async function start() {
       requestAnimationFrame(frame);
     }
   };
-  const swingFor = 1000 * DECAY * Math.log(SWING / 0.002);
-  // (pointed at again while it still swings hard, it carries on as it was)
+  // (pointed at again while it still swings hard, it carries on as it was; never more than SWING)
   const swing = (by = SWING) => {
     if (still.matches) return;
-    const s = (performance.now() - swingAt) / 1000;
-    if (s * 1000 < swingFor && swingBy * Math.exp(-s / DECAY) > by / 2) return;
-    swingAt = performance.now();
-    swingBy = by;
-    run(swingFor);
+    const now = performance.now(),
+      was = now < until ? swung(now) : { angle: 0, speed: 0, size: 0 };
+    if (was.size > by / 2) return;
+    b = was.angle;
+    a = (was.speed + b / DECAY) / W;
+    a += a < 0 ? -by : by;
+    const k = Math.min(1, SWING / Math.hypot(a, b));
+    a *= k;
+    b *= k;
+    swingAt = now;
+    run(1000 * DECAY * Math.log(Math.hypot(a, b) / 0.002));
   };
   ["mouseenter", "focus"].forEach((ev) => el.addEventListener(ev, () => swing()));
+  const pictures = P.tug; // (room.js: its picture's bounce)
   P.tug = (done) => {
+    if (!cv.isConnected) return pictures(done);
     tugAt = performance.now();
     swing(SWING / 2);
     run(P.ms);
@@ -153,15 +185,17 @@ async function start() {
   swing();
 }
 
+// no model: its canvases gone, the light pass told, its picture back
+function gone(e) {
+  document.querySelectorAll("canvas.plush-model").forEach((c) => c.remove());
+  const P = ROOM.plush;
+  if (P) {
+    delete P.body;
+    const pic = P.el.querySelector(".plush-pic");
+    if (pic) pic.hidden = false;
+  }
+  console.warn("No plush:", e);
+}
 start()
-  .catch((e) => {
-    document.querySelectorAll("canvas.plush-model").forEach((c) => c.remove());
-    const P = ROOM.plush;
-    if (P) {
-      delete P.body;
-      const pic = P.el.querySelector(".plush-pic");
-      if (pic) pic.hidden = false;
-    }
-    console.warn("No plush:", e);
-  })
+  .catch(gone)
   .finally(() => ready());

@@ -1038,11 +1038,15 @@
 
       /* coordinator-monitor: an orange felt crab, lying on its back by the name, its cord trailing
          loose with the suction cup at its end; a picture of its model (assets/plush/). Opening:
-         a tug on the cord, and it bounces. */
+         a tug on the cord, and it bounces. The picture is a background, so the room, which shows
+         its own (room.css), never fetches this one. */
       .plush .plush-pic {
         position: absolute;
         left: 0;
         top: 0;
+        width: 193px;
+        height: 101px;
+        background: url("assets/plush/plush-bench.png") 0 0 / 100% 100% no-repeat;
       }
       .plush .label {
         left: 142px;
@@ -1742,7 +1746,7 @@
             style="--x: 158px; --y: 18px; --w: 193px; --h: 101px"
             aria-label="coordinator-monitor, one pane for every local Claude Code session"
           >
-            <img class="plush-pic" src="assets/plush/plush-bench.png" width="193" height="101" alt="" />
+            <span class="plush-pic" aria-hidden="true"></span>
             <span class="label">coordinator-monitor<small>One pane for every local Claude Code session</small></span>
           </a>
 

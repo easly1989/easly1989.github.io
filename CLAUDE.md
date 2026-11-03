@@ -101,7 +101,9 @@ The crab (`.thing.plush`) lies on its back on the mat by the name, a picture of
 its model. In the room it hangs high on the back wall by its suction cup,
 between the window and the corner: `room.js` moves its link there and
 `room-plush.js` draws the model in a canvas flat on the wall, lit again by the
-room's light pass, with a soft shadow behind it. It swings a few times on its
+room's light pass, with a soft shadow behind it; its cup and cord keep the
+model's own fixed light and are not shaded by the light pass, which has no shape
+of them and only dims them as it does the wall behind. It swings a few times on its
 cord as the room arrives and when it is pointed at or has the focus, and is
 tugged before its page opens (`ROOM.plush.tug`, from `morph.js`); it is drawn
 again only while it moves. Without WebGL 2 the room shows its picture in the

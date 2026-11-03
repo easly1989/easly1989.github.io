@@ -187,13 +187,18 @@ export function look(renderer, scene, { up, left, front }) {
 // Its soft shadow on the wall behind it, as approved: what the reader sees of it, blurred and
 // a little down and to the right, in the plane's px; drawn from the canvas src it is drawn in,
 // k canvas px to a px of the plane, into pen. (The room's light pass lights it, but the room's
-// lamp only grazes the back wall, and throws next to no shadow on it.)
+// lamp only grazes the back wall, and throws next to no shadow on it.) It is the shadow of the
+// picture drawn well off the canvas, which every browser draws (Safari has no filter on a
+// canvas); its blur is twice the deviation of the blur it is.
 export function shadow(pen, src, k) {
+  const far = pen.canvas.width + src.width + 64 * k;
   pen.clearRect(0, 0, pen.canvas.width, pen.canvas.height);
   pen.save();
-  pen.filter = "blur(" + (4 * k).toFixed(1) + "px) brightness(0)";
-  pen.globalAlpha = 0.28;
-  pen.drawImage(src, 9 * k, 14 * k);
+  pen.setTransform(1, 0, 0, 1, 0, 0);
+  pen.shadowColor = "rgba(0, 0, 0, 0.28)";
+  pen.shadowBlur = 8 * k;
+  pen.shadowOffsetX = far;
+  pen.drawImage(src, 9 * k - far, 14 * k);
   pen.restore();
 }
 

@@ -625,13 +625,9 @@
     // margin round it so it is at least 44 px square to the pointer at every size, is a part of
     // it of its own, which is not framed)
     el("span", "plush-hit", plushEl).setAttribute("aria-hidden", "true");
-    // its picture on the wall, where the model's canvas goes (plush.js, ON_WALL)
+    // its picture on the wall (room.css), where the model's canvas goes (plush.js, ON_WALL)
     var pic = plushEl.querySelector(".plush-pic");
-    if (pic) {
-      pic.src = "assets/plush/plush-wall.png";
-      pic.width = pic.height = 216;
-      pic.style.cssText = "left:" + (CUP.x - 82) + "px;top:" + (CUP.y - 18) + "px";
-    }
+    if (pic) pic.style.cssText = "left:" + (CUP.x - 82) + "px;top:" + (CUP.y - 18) + "px";
     plush = {
       el: plushEl,
       cup: [CUP.x, CUP.y],

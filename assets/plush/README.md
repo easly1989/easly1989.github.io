@@ -17,6 +17,7 @@ model, draw them again from the repo root:
 python assets/plush/render.py
 ```
 
-It prints each picture's size: the bench picture's `width` and `height` are written on its `<img>`
-in `index.html`, and its `--w` and `--h`. `python assets/plush/render.py look.png` also saves the
+It prints each picture's size: the bench picture's is written in `index.html` (`.plush .plush-pic`,
+and the object's `--w` and `--h`), the wall picture's in `room.css`. Both are CSS backgrounds, so
+the bench and the room each fetch only their own. `python assets/plush/render.py look.png` also saves the
 view it was approved in. The felt's fibres are random noise, so each drawing differs a little.

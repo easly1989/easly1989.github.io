@@ -1045,8 +1045,11 @@ html:not(.iso) .strip {
   width: 175px;
   height: 170px;
 }
+/* its picture on the wall, where the model's canvas goes (assets/plush/plush.js, ON_WALL) */
 .iso .thing.plush .plush-pic {
-  position: absolute;
+  width: 216px;
+  height: 216px;
+  background-image: url("assets/plush/plush-wall.png");
   pointer-events: none;
 }
 /* tugged, the picture bounces on its cord: pulled down and back, twice, smaller */
