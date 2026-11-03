@@ -156,6 +156,7 @@
 .iso .thing.jar,
 .iso .thing.envelope,
 .iso .thing.pager,
+.iso .thing.plush,
 .iso .mug .cup,
 .iso .mug .puddle,
 .iso .camera .film,
@@ -1019,6 +1020,59 @@ html:not(.iso) .strip {
 .iso .on-wall.pinned > .thing:focus-visible {
   translate: 0 0 14px;
   transform: scale(1.5) rotate(-3deg);
+}
+/* coordinator-monitor's crab, hung high on the back wall by its cup (room.js): its link is the
+   box round the toy below the cup, a hair off the wall; pointed at, it swings rather than lifting
+   (room-plush.js), and its name is on its tag */
+.iso .on-wall.hung > .thing.plush,
+.iso .on-wall.hung > .thing.plush:hover,
+.iso .on-wall.hung > .thing.plush:focus-visible {
+  position: absolute;
+  left: 0;
+  top: 56px;
+  width: 95px;
+  height: 110px;
+  translate: 0 0 2px;
+  transform: none;
+}
+.iso .thing.plush .label {
+  display: none;
+}
+.iso .thing.plush .plush-hit {
+  position: absolute;
+  left: -10px;
+  top: -16px;
+  width: 175px;
+  height: 170px;
+}
+/* its picture on the wall, where the model's canvas goes (assets/plush/plush.js, ON_WALL) */
+.iso .thing.plush .plush-pic {
+  width: 216px;
+  height: 216px;
+  background-image: url("assets/plush/plush-wall.png");
+  pointer-events: none;
+}
+/* tugged, the picture bounces on its cord: pulled down and back, twice, smaller */
+.iso .thing.plush.tugged .plush-pic {
+  animation: plush-tug 0.48s linear;
+}
+@keyframes plush-tug {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  12% {
+    translate: 0 7px;
+  }
+  34% {
+    translate: 0 -3px;
+  }
+  56% {
+    translate: 0 3px;
+  }
+  78% {
+    translate: 0 -1px;
+  }
 }
 
 /* ---- the photos the camera took: on the wall, or stuck on the computer ---------------- */

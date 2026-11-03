@@ -608,6 +608,39 @@
     el("span", "tape-strip one", pin);
     el("span", "tape-strip two", pin);
   }
+  // coordinator-monitor's crab, hung by its suction cup on the back wall, between the window and
+  // the corner, where the wall rises towards the top of the view: the cup's middle at along, z;
+  // the link the box round the toy below it, seen out from the wall. Its picture here is the
+  // model's, drawn without WebGL (assets/plush/); room-plush.js draws the model itself over it,
+  // swings it and has it tugged (ROOM.plush). Until then, or without it, a tug is the picture's
+  // own bounce (room.css). It hangs short of the desk's back edge, out of Willy's way.
+  var plushEl = stage.querySelector(".thing.plush");
+  var plush = null;
+  if (plushEl) {
+    var CUP = { along: 1187, z: 305, x: 60, y: -56 }; // (x, y: the cup's middle from the link's corner)
+    onWall("back", CUP.along - CUP.x, CUP.z, "hung").appendChild(plushEl);
+    // (the link is the box round its body as it hangs on the wall, short of its front's far edge,
+    // which comes out from the wall to the right and down: there the box would reach higher on
+    // screen than the toy, and frame() would make the whole room smaller. The rest of it, and a
+    // margin round it so it is at least 44 px square to the pointer at every size, is a part of
+    // it of its own, which is not framed)
+    el("span", "plush-hit", plushEl).setAttribute("aria-hidden", "true");
+    // its picture on the wall (room.css), where the model's canvas goes (plush.js, ON_WALL)
+    var pic = plushEl.querySelector(".plush-pic");
+    if (pic) pic.style.cssText = "left:" + (CUP.x - 82) + "px;top:" + (CUP.y - 18) + "px";
+    plush = {
+      el: plushEl,
+      cup: [CUP.x, CUP.y],
+      ms: 480, // (how long a tug takes, before the page opens)
+      tug: function (done) {
+        plushEl.classList.add("tugged");
+        setTimeout(function () {
+          plushEl.classList.remove("tugged");
+          done();
+        }, plush.ms);
+      },
+    };
+  }
 
   // ---- the window, right of the name, above the jar -------------------------------
   // The sky is Pesaro's, day or night as it really is there (below), or, without that, it
@@ -1543,7 +1576,7 @@
     tag.innerHTML = "<b></b><small></small>";
     tag.querySelector("b").textContent = name;
     tag.querySelector("small").textContent = small ? small.textContent : "";
-    tags.push({ a: anchor, tag: tag });
+    tags.push({ a: anchor, tag: tag, t: t });
     // out while the object is pointed at or has the focus
     ["mouseenter", "focus"].forEach(function (ev) {
       t.addEventListener(ev, function () {
@@ -1600,8 +1633,11 @@
     var f = fit.getBoundingClientRect();
     tags.forEach(function (o) {
       if (!o.tag.classList.contains("on")) return;
-      var r = o.a.getBoundingClientRect();
-      o.tag.style.transform = "translate(" + Math.round(r.left - f.left - 18) + "px," + Math.round(r.top - f.top - 86) + "px)";
+      var r = o.a.getBoundingClientRect(),
+        y = r.top - 86;
+      // (above it, unless that is off the window, as for the crab high on the wall: then under it)
+      if (y < 8 && o.t) y = o.t.getBoundingClientRect().bottom + 10;
+      o.tag.style.transform = "translate(" + Math.round(r.left - f.left - 18) + "px," + Math.round(y - f.top) + "px)";
     });
     requestAnimationFrame(place);
   }
@@ -2029,6 +2065,8 @@
     lights: lights,
     // the mouse by the keyboard, for Willy: at(), where it is; knock(heading)
     mouse: pcMouse,
+    // the plush on the back wall: its link (el), where its cup is in it (cup), and tug(done)
+    plush: plush,
     // the night's holes as they are now (glow())
     glows: function () {
       return holes;

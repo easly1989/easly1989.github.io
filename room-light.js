@@ -16,6 +16,7 @@ ROOM.holdLight(new Promise((r) => (ready = r)));
 async function start() {
   await ROOM.ready;
   await ROOM.landed(); // (starting takes the main thread for a while, and the morph would stop for it)
+  await ROOM.plush?.settled; // (its picture is one of the room's faces only where its model is not drawn)
   THREE = await import("three");
   const stage = document.querySelector(".stage");
   const cv = document.createElement("canvas");
@@ -256,8 +257,12 @@ async function start() {
       if (!movers.has(f.mover)) movers.set(f.mover, { key: "", faces: [] });
       movers.get(f.mover).faces.push(f);
     }
-  // and the mouse (room-mouse.js), once it is there, as solid as they are, where it is now
-  let mouse = null;
+  // and the models drawn in canvases of their own, the mouse (room-mouse.js) and the plush
+  // (room-plush.js), each while it is there (its body), as solid as they are, where it is now;
+  // and gone again with its body. Each is in the projector's beam by its sphere (its middle and
+  // its size), or, without one, by 40 px round its origin (the mouse's)
+  const MODELS = [ROOM.mouse, ROOM.plush].filter(Boolean),
+    models = new Map();
   function follow() {
     let moved = false;
     for (const [e, mv] of movers) {
@@ -278,23 +283,40 @@ async function start() {
       write(solid, body);
       write(hidden, backs);
     }
-    const mb = ROOM.mouse && ROOM.mouse.body;
-    if (mb) {
-      if (!mouse) {
-        mouse = new THREE.Mesh(mb.geometry, lit);
-        mouse.matrixAutoUpdate = false;
-        mouse.castShadow = mouse.receiveShadow = true;
-        scene.add(mouse);
+    let cast = moved;
+    for (const o of MODELS) {
+      const mb = o.body;
+      let me = models.get(o);
+      if (me && (!mb || me.geometry !== mb.geometry)) {
+        scene.remove(me);
+        models.delete(o);
+        me = null;
+        moved = cast = true;
+      }
+      if (!mb) continue;
+      if (!me) {
+        me = new THREE.Mesh(mb.geometry, lit);
+        me.matrixAutoUpdate = false;
+        me.castShadow = me.receiveShadow = true;
+        models.set(o, me);
+        scene.add(me);
       }
       const m = mb.matrix();
-      if (!m.equals(mouse.matrix)) {
-        const was = new THREE.Vector3().setFromMatrixPosition(mouse.matrix);
-        mouse.matrix.copy(m);
+      if (!m.equals(me.matrix)) {
+        const s = mb.sphere,
+          at = (mx) => (s ? s.center.clone().applyMatrix4(mx) : new THREE.Vector3().setFromMatrixPosition(mx)),
+          r = s ? s.radius * m.getMaxScaleOnAxis() : 40,
+          was = at(me.matrix);
+        me.matrix.copy(m);
         moved = true;
-        if (inBeam(was, 40) || inBeam(new THREE.Vector3().setFromMatrixPosition(m), 40)) beam = true; // (px round it, as big as it is)
+        // (only swinging, the plush: a hair either way, its shadows left as they were until it rests)
+        if (mb.swinging) continue;
+        cast = true;
+        if (inBeam(was, r) || inBeam(at(m), r)) beam = true;
       }
     }
-    return moved && (shadows = true);
+    if (cast) shadows = true;
+    return moved;
   }
   follow();
 
@@ -602,7 +624,7 @@ void main() {
   };
   ROOM.onLights(flicker);
   flicker(); // (the computer may be on already)
-  if (ROOM.mouse) ROOM.mouse.moved = guard(() => follow() && draw()); // (room-mouse.js, as it loads and as it moves)
+  for (const o of MODELS) o.moved = guard(() => follow() && draw()); // (as each loads and as it moves)
   (function meet() {
     if (!cv.isConnected) return;
     if (!ROOM.willy) return requestAnimationFrame(meet); // (he comes once he has loaded and been placed)
