@@ -1,4 +1,4 @@
-// The computer's mouse in the room (index.html?room), assets/mouse/mouse.glb, where room.js
+// The computer's mouse in the room (index.html), assets/mouse/mouse.glb, where room.js
 // keeps it (ROOM.mouse: an empty .pc-mouse it slides and turns when Willy knocks it). It is
 // drawn lying on the desk: a canvas flat in .pc-mouse, so it goes wherever that goes, holding
 // what the reader sees of the model at each point of the desk under it, the model squashed down

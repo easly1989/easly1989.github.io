@@ -66,7 +66,8 @@ committed, so they had to be rebuilt by hand.
 
 ## Structure
 
-- `index.html` — the bench. A 1280×880 stage, `.stage` inside `.fit`, scaled to
+- `index.html` — the home: the room on a wide window (its head's first script
+  decides), otherwise the bench. A 1280×880 stage, `.stage` inside `.fit`, scaled to
   the window by `site.js` through `--s`; under 900px it becomes a column. Its
   inline `<style>` draws the objects (`.thing`), its templates hold the Write to
   me sheet, and one inline script turns that sheet into a `mailto:` URL.

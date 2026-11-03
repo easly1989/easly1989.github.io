@@ -1,6 +1,6 @@
 /* The home as an isometric room, drawn by room.js. Everything here is scoped to html.iso,
-   which the home sets only when the room is shown; the phone's column, and the bench without
-   ?room, stay as they are. */
+   which the home sets only when the room is shown; the phone's column, and the bench (a window
+   too small for the room, or ?room=0), stay as they are. */
 /* one screen, no scrolling: the camera frames the desk */
 .iso .mat {
   height: 100vh;

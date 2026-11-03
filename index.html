@@ -41,14 +41,17 @@
       // end of the body).
       window.ROOM_FIT = { min: 0.7, margin: 16 };
       (function () {
-        var on = true,
+        // (without storage the room could not size itself or be turned off: the bench)
+        var on = false,
           box = null;
         try {
           var q = new URLSearchParams(location.search).get("room");
           if (q !== null) sessionStorage.setItem("room", q === "0" ? "0" : "1");
           on = sessionStorage.getItem("room") !== "0";
           box = JSON.parse(localStorage.getItem("room-box"));
-        } catch (e) {}
+        } catch (e) {
+          on = false;
+        }
         if (!on) return;
         // a box that is not four sizes is ignored: the room measures it again
         if (!box || !["w", "h", "dw", "dh"].every(function (k) { return box[k] > 0 || box[k] === 0; })) box = null;

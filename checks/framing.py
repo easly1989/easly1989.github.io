@@ -109,8 +109,10 @@ try:
     b.size(390, 844, mobile=True)
     b.nav(base + "/index.html?room", 3)
     check(not b.js("document.documentElement.classList.contains('iso')"), "on a phone the column shows")
-    # remembered for the session: the plain address keeps the room
+    # remembered for the session: after ?room=0 and then ?room, the plain address keeps the room
     b.size(1440, 900)
+    b.nav(base + "/index.html?room=0", 2)
+    b.nav(base + "/index.html?room", 3)
     b.nav(base + "/index.html", 3)
     check(b.js("document.documentElement.classList.contains('iso')"), "?room is remembered for the session")
     # the window changing size under the room: narrower than the room's layout, then wide again

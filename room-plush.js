@@ -1,4 +1,4 @@
-// coordinator-monitor's crab in the room (index.html?room): the plush of assets/plush/plush.js,
+// coordinator-monitor's crab in the room (index.html): the plush of assets/plush/plush.js,
 // hung by its suction cup on the back wall where room.js puts its link (ROOM.plush). It is drawn
 // flat on the wall, a canvas in the link's own plane holding what the reader sees of the model at
 // each point of the wall behind it, as room-mouse.js draws the mouse on the desk; so the browser

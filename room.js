@@ -1704,11 +1704,12 @@
     stage.style.removeProperty("transition");
     glow();
   }
-  // the head shows the bench at this size from now on; it reloads once, never in a loop
+  // the head shows the bench at this size from now on; it reloads once, never in a loop. The
+  // visit is no longer one to the room (About and the radio read "room"), until it shows again.
   function tooSmall() {
     // narrower than the room's layout: always the bench, which never comes back here
     if (!matchMedia("(min-width: 901px)").matches) {
-      location.reload();
+      toBench();
       return true;
     }
     try {
@@ -1718,8 +1719,14 @@
     } catch (e) {
       return false;
     }
-    location.reload();
+    toBench();
     return true;
+  }
+  function toBench() {
+    try {
+      if (sessionStorage.getItem("room") === "1") sessionStorage.removeItem("room");
+    } catch (e) {}
+    location.reload();
   }
   var pending = 0;
   addEventListener("resize", function () {
