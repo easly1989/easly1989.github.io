@@ -191,15 +191,13 @@
       .letter-sheet .state {
         margin: 0 0 0.3rem;
         color: var(--paper-ink-2);
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
       }
       .letter-sheet .state::before {
         content: "";
+        display: inline-block;
         width: 9px;
         height: 9px;
-        flex: none;
+        margin-right: 0.5rem;
         background: var(--cupid);
       }
       .letter-sheet .mark {
