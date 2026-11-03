@@ -281,16 +281,25 @@
         return -1;
       },
       show: function (i, focus) {
+        // the sheet that has the focus is about to be hidden: the focus goes to its tab
+        var held = sheets.some(function (sh) { return sh.contains(document.activeElement); });
         tabs.forEach(function (t, j) {
           t.setAttribute("aria-selected", i === j ? "true" : "false");
           t.tabIndex = i === j ? 0 : -1;
           sheets[j].hidden = i !== j;
         });
-        if (focus) tabs[i].focus();
+        if (focus || held) tabs[i].focus();
+        folder.dispatchEvent(new Event("fam-tab", { bubbles: true })); // cat.js keeps its toys on the page
       },
     };
     tabs.forEach(function (t, i) {
       t.addEventListener("keydown", function (e) {
+        if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return; // back, forward, Ctrl+Home...
+        if (e.key === " ") {
+          e.preventDefault(); // a tab answers Space as Enter, and the page does not scroll
+          t.click();
+          return;
+        }
         var step = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
         var to = e.key === "Home" ? 0 : e.key === "End" ? tabs.length - 1 : step ? (i + step + tabs.length) % tabs.length : -1;
         if (to < 0) return;
@@ -303,8 +312,15 @@
     return f;
   });
   // the element a hash names, and the folder that holds it
+  function target(hash) {
+    try {
+      return hash.length > 1 ? document.getElementById(decodeURIComponent(hash.slice(1))) : null;
+    } catch (e) {
+      return null; // a malformed hash names nothing
+    }
+  }
   function inFolder(hash) {
-    var el = hash.length > 1 && document.getElementById(decodeURIComponent(hash.slice(1)));
+    var el = target(hash);
     for (var i = 0; el && i < folders.length; i++) {
       var n = folders[i].indexOf(el);
       if (n >= 0) return { el: el, folder: folders[i], n: n };
@@ -313,7 +329,12 @@
   }
   function openHash(smooth) {
     var h = inFolder(location.hash);
-    if (!h) return;
+    if (!h) {
+      // no hash, or one that names nothing: the first tab; an element elsewhere on the page
+      // leaves the tabs alone, and the browser scrolls to it
+      if (!target(location.hash)) folders.forEach(function (f) { f.show(0); });
+      return;
+    }
     h.folder.show(h.n);
     // a sheet itself brings its folder into view, with its tabs
     var to = h.el.classList.contains("fam-sheet") ? h.folder.folder : h.el;

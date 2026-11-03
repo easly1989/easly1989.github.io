@@ -205,6 +205,10 @@ page is markup only: copy its structure.
   `hidden` on inactive sheets, `replaceState` when a tab is chosen. A hash that names an
   element inside a sheet (`#events`) opens that sheet and scrolls to it, smoothly unless
   reduced motion. Without the script every sheet shows, stacked, and the tabs are links.
+- The cat knows tabbed folders: `busyRects()` measures every sheet of a `[data-tabs]` folder as
+  if it were showing, so toys and the cat's start avoid all of them whichever tab is open, and
+  `fam-tab` (fired on a tab change) pulls any toy back onto a shorter page. Mark a sheet's
+  head, feed and cards `data-cat-avoid`.
 - The new product accent goes into `:root` (6:1 against white). A new family page also needs
   its pager-like object on the home, its `morph.js` entry and its `checks/moves.py` row.
 

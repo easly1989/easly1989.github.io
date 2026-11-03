@@ -196,8 +196,21 @@
       return r.width > 0 && r.height > 0;
     });
   }
+  var BUSY = "a, button:not(.cat), .paper, .tape, .book, .thing, .letter-sheet, .card-grid > *, .shot, .slip, .ideajar, .syncbar, .tray, .env, .env .flap, [data-cat]:not(.loose), main h2, main .lead, [data-cat-avoid]";
   function busyRects() {
-    return [].map.call(world.querySelectorAll("a, button:not(.cat), .paper, .tape, .book, .thing, .letter-sheet, .card-grid > *, .shot, .slip, .ideajar, .syncbar, .tray, .env, .env .flap, [data-cat]:not(.loose), main h2, main .lead, [data-cat-avoid]"), rectOf);
+    var rects = [].map.call(world.querySelectorAll(BUSY), rectOf);
+    // a tabbed folder: every sheet counts, each measured as if it were the one showing
+    [].forEach.call(world.querySelectorAll("[data-tabs]"), function (folder) {
+      var sheets = [].slice.call(folder.querySelectorAll(".fam-sheet"));
+      var was = sheets.map(function (sh) { return sh.hidden; });
+      sheets.forEach(function (sh, i) {
+        if (!was[i]) return;
+        sheets.forEach(function (o, j) { o.hidden = j !== i; });
+        rects.push.apply(rects, [].map.call(sh.querySelectorAll(BUSY), rectOf));
+      });
+      sheets.forEach(function (o, j) { o.hidden = was[j]; });
+    });
+    return rects;
   }
   function freeSpot(opts) {
     opts = opts || {};
@@ -726,6 +739,13 @@
       world.insertBefore(sun, world.firstChild);
     }
   }
+  // a shorter tab makes the page shorter: no toy is left below its end
+  addEventListener("fam-tab", function () {
+    [].forEach.call(world.querySelectorAll(".cat-toy"), function (el) {
+      var at = toyAt(el);
+      moveToy(el, at.x, at.y);
+    });
+  });
   function toyAt(el) {
     return { x: parseFloat(el.style.left), y: parseFloat(el.style.top) };
   }
