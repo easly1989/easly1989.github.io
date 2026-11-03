@@ -351,6 +351,12 @@ header.bar .page-radio {
 .label-sheet:has(> .mark) .state {
   padding-right: 4rem;
 }
+/* on a phone a long name reaches the mark too */
+@media (max-width: 40rem) {
+  .label-sheet:has(> .mark) h1 {
+    padding-right: 4rem;
+  }
+}
 .label-sheet .state::before {
   content: "";
   display: inline-block;

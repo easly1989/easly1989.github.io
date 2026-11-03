@@ -1867,6 +1867,13 @@ SYSTEM HALTED.</span>
           var project = f.elements.project.value;
           var subject = "[" + project + "] Inquiry from " + who;
           var body = f.elements.message.value.trim();
+          // (spaces alone pass required: the field is asked for again, as the browser asks)
+          var blank = !who ? f.elements.who : !body ? f.elements.message : null;
+          if (blank) {
+            blank.value = "";
+            blank.reportValidity();
+            return;
+          }
           location.href = "mailto:" + email + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
           var d = f.closest("dialog");
           if (d) d.close();
