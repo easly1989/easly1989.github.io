@@ -92,7 +92,7 @@ that says what it is before its page opens: CloudBank's ledger loses its band
 and opens, the Social Contacts Sync cards are dealt and get faces, Planora's jar
 unfolds an idea, Nutreek's agenda flips to today, Cupid's envelope breaks its
 seal, ASF-Notifier's pager buzzes twice while its screen brightens and a message
-scrolls in, coordinator-monitor's felt crab is tugged by its cord and bounces,
+scrolls in, the felt crab (Claude stuff) is tugged by its cord and bounces,
 the mug tips over and spills (the way to Donate), and the instant camera fires
 its flash and ejects a print (the way to About). The sticky note opens the
 Write to me sheet.
@@ -111,7 +111,13 @@ same place. Its canvas must stay short of the room's corner: what goes past it
 is hidden by the other wall. Its link is the box round the toy but for the top
 of its far edge, which would make the room frame smaller (`frame()`); that part
 and a margin, to 44 px square at every size, are `.plush-hit`, which is not
-framed.
+framed. Its tag, high on the wall, comes out under it rather than above.
+
+The crab is named "Claude stuff", a home for the Claude things, and leads to
+`coordinator-monitor.html` for now: its target is written only in its `href` in
+`index.html`. Pointed at a hub page later, that is the one line to change; its
+morph then follows the new page's own entries (`morph.js` PAIRS and POSE, the
+page's `view-transition-name: crab`, `checks/moves.py`).
 
 A home object is `<a class="thing">` with `data-open="<move>"` and
 `data-open-ms`, the time the move takes before the page opens. Shift, Ctrl or

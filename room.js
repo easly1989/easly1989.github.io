@@ -1576,7 +1576,7 @@
     tag.innerHTML = "<b></b><small></small>";
     tag.querySelector("b").textContent = name;
     tag.querySelector("small").textContent = small ? small.textContent : "";
-    tags.push({ a: anchor, tag: tag });
+    tags.push({ a: anchor, tag: tag, t: t });
     // out while the object is pointed at or has the focus
     ["mouseenter", "focus"].forEach(function (ev) {
       t.addEventListener(ev, function () {
@@ -1633,8 +1633,11 @@
     var f = fit.getBoundingClientRect();
     tags.forEach(function (o) {
       if (!o.tag.classList.contains("on")) return;
-      var r = o.a.getBoundingClientRect();
-      o.tag.style.transform = "translate(" + Math.round(r.left - f.left - 18) + "px," + Math.round(r.top - f.top - 86) + "px)";
+      var r = o.a.getBoundingClientRect(),
+        y = r.top - 86;
+      // (above it, unless that is off the window, as for the crab high on the wall: then under it)
+      if (y < 8 && o.t) y = o.t.getBoundingClientRect().bottom + 10;
+      o.tag.style.transform = "translate(" + Math.round(r.left - f.left - 18) + "px," + Math.round(y - f.top) + "px)";
     });
     requestAnimationFrame(place);
   }
