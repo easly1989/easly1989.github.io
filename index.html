@@ -70,14 +70,16 @@
         );
         // Willy (willy-room.js), with three.js r186 from vendor/three, which he loads only once the
         // room is up; or, with ?review, the page for checking his clips (willy-review.js); the
-        // room's light (room-light.js), and the computer's mouse (room-mouse.js)
+        // room's light (room-light.js), the computer's mouse (room-mouse.js) and the plush on the
+        // wall (room-plush.js)
         document.write(
           '<script type="importmap">{"imports":{"three":"./vendor/three/build/three.module.min.js",' +
             '"./vendor/three/build/three.core.js":"./vendor/three/build/three.core.min.js",' +
             '"three/addons/":"./vendor/three/examples/jsm/"}}</scr' + 'ipt>' +
             '<script type="module" src="' + (new URLSearchParams(location.search).has("review") ? "willy-review.js" : "willy-room.js") + '"></scr' + 'ipt>' +
             '<script type="module" src="room-light.js"></scr' + 'ipt>' +
-            '<script type="module" src="room-mouse.js"></scr' + 'ipt>',
+            '<script type="module" src="room-mouse.js"></scr' + 'ipt>' +
+            '<script type="module" src="room-plush.js"></scr' + 'ipt>',
         );
       })();
     </script>
@@ -179,6 +181,9 @@
       }
       .thing.pager {
         view-transition-name: asf;
+      }
+      .thing.plush {
+        view-transition-name: crab;
       }
       .thing:hover,
       .thing:focus-visible {
@@ -1031,6 +1036,42 @@
         }
       }
 
+      /* coordinator-monitor: an orange felt crab, lying on its back by the name, its cord trailing
+         loose with the suction cup at its end; a picture of its model (assets/plush/). Opening:
+         a tug on the cord, and it bounces. */
+      .plush .plush-pic {
+        position: absolute;
+        left: 0;
+        top: 0;
+      }
+      .plush .label {
+        left: 142px;
+        top: 30px;
+        width: 160px;
+        color: var(--ruler);
+      }
+      .plush.opening .plush-pic {
+        animation: plush-pull 0.6s linear;
+      }
+      @keyframes plush-pull {
+        0%,
+        100% {
+          translate: 0 0;
+        }
+        14% {
+          translate: 12px -2px;
+        }
+        36% {
+          translate: -4px 1px;
+        }
+        58% {
+          translate: 5px -1px;
+        }
+        80% {
+          translate: -2px 0;
+        }
+      }
+
       /* The old computer, pushed into the corner: the one thing on the bench that
          stands up off it. Only its power switch does anything until it has booted;
          then the screen and the keyboard open the terminal. Only on the bench,
@@ -1521,6 +1562,17 @@
         .mug {
           margin: 0 30px 3rem 0;
         }
+        .plush {
+          margin-bottom: 4rem;
+        }
+        .plush .label {
+          left: 50%;
+          top: calc(100% + 0.6rem);
+          width: max-content;
+          max-width: 86vw;
+          transform: translateX(-50%);
+          text-align: center;
+        }
         .loose,
         .pc {
           display: none;
@@ -1680,6 +1732,18 @@
               <span class="pg-lcd" aria-hidden="true"><span class="pg-msg">bot2 farming finished</span></span>
               <span class="label">ASF-Notifier</span>
             </span>
+          </a>
+
+          <a
+            class="thing plush"
+            href="coordinator-monitor.html"
+            data-open="plush"
+            data-open-ms="700"
+            style="--x: 158px; --y: 18px; --w: 193px; --h: 101px"
+            aria-label="coordinator-monitor, one pane for every local Claude Code session"
+          >
+            <img class="plush-pic" src="assets/plush/plush-bench.png" width="193" height="101" alt="" />
+            <span class="label">coordinator-monitor<small>One pane for every local Claude Code session</small></span>
           </a>
 
           <button

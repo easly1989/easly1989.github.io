@@ -4,7 +4,8 @@
    what stands beside it, turns to face the reader, and morphs into its page's counterpart
    through a cross-document view transition. Coming back is the reverse. The mug falls and
    its coffee floods the view instead; the camera flashes and ejects its print first; the
-   sticky note peels off into the Write to me sheet. The camera takes one of the photos
+   sticky note peels off into the Write to me sheet; the plush on the wall is tugged and bounces
+   on its cord first. The camera takes one of the photos
    (photos.js) each time; back from About the photo lands in its place in the room, from where
    it can be picked up again. The objects are named only for the trip,
    and from the click that starts a move the page is inert until it has gone. It has no
@@ -26,13 +27,14 @@
     "planora.html": [[".jar .jar-idea", "planora"]],
     "cupid.html": [[".thing.envelope", "cupid"]],
     "asf-notifier.html": [[".thing.pager", "asf"]],
+    "coordinator-monitor.html": [[".thing.plush", "crab"]],
     "donate.html": [[".mug .cup", "mug"], [".mug .puddle", "puddle"]],
     "about.html": [[".camera .film", "photo"]],
     // named only on the way to the console: left on, it would ride over every other morph
     "terminal.html": [[".pc .glass", "crt"]],
   };
   // what rises to face the reader (the mug spills instead, the computer works as it does)
-  var POSE = { "cloudbank.html": 1, "nutreek.html": 1, "social-contacts-sync.html": 1, "planora.html": 1, "cupid.html": 1, "asf-notifier.html": 1, "about.html": 1 };
+  var POSE = { "cloudbank.html": 1, "nutreek.html": 1, "social-contacts-sync.html": 1, "planora.html": 1, "cupid.html": 1, "asf-notifier.html": 1, "coordinator-monitor.html": 1, "about.html": 1 };
   function file(url) {
     return new URL(url, location.href).pathname.split("/").pop() || "index.html";
   }
@@ -263,6 +265,8 @@
         });
       }
       if (shot) shoot(a, shot, lift);
+      // the plush is tugged first, and bounces on its cord (room.js, room-plush.js)
+      else if (a.classList.contains("plush") && ROOM.plush) ROOM.plush.tug(lift);
       else lift();
     },
     true

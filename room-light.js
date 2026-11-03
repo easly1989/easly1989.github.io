@@ -256,8 +256,10 @@ async function start() {
       if (!movers.has(f.mover)) movers.set(f.mover, { key: "", faces: [] });
       movers.get(f.mover).faces.push(f);
     }
-  // and the mouse (room-mouse.js), once it is there, as solid as they are, where it is now
-  let mouse = null;
+  // and the models drawn in canvases of their own, the mouse (room-mouse.js) and the plush
+  // (room-plush.js), each once it is there (its body), as solid as they are, where it is now
+  const MODELS = [ROOM.mouse, ROOM.plush].filter(Boolean),
+    models = new Map();
   function follow() {
     let moved = false;
     for (const [e, mv] of movers) {
@@ -278,20 +280,25 @@ async function start() {
       write(solid, body);
       write(hidden, backs);
     }
-    const mb = ROOM.mouse && ROOM.mouse.body;
-    if (mb) {
-      if (!mouse) {
-        mouse = new THREE.Mesh(mb.geometry, lit);
-        mouse.matrixAutoUpdate = false;
-        mouse.castShadow = mouse.receiveShadow = true;
-        scene.add(mouse);
+    for (const o of MODELS) {
+      const mb = o.body;
+      if (!mb) continue;
+      let me = models.get(o);
+      if (!me) {
+        me = new THREE.Mesh(mb.geometry, lit);
+        me.matrixAutoUpdate = false;
+        me.castShadow = me.receiveShadow = true;
+        mb.geometry.computeBoundingSphere();
+        models.set(o, me);
+        scene.add(me);
       }
       const m = mb.matrix();
-      if (!m.equals(mouse.matrix)) {
-        const was = new THREE.Vector3().setFromMatrixPosition(mouse.matrix);
-        mouse.matrix.copy(m);
+      if (!m.equals(me.matrix)) {
+        const was = new THREE.Vector3().setFromMatrixPosition(me.matrix),
+          r = mb.geometry.boundingSphere.radius * m.getMaxScaleOnAxis(); // (px round it, as big as it is)
+        me.matrix.copy(m);
         moved = true;
-        if (inBeam(was, 40) || inBeam(new THREE.Vector3().setFromMatrixPosition(m), 40)) beam = true; // (px round it, as big as it is)
+        if (inBeam(was, r) || inBeam(new THREE.Vector3().setFromMatrixPosition(m), r)) beam = true;
       }
     }
     return moved && (shadows = true);
@@ -602,7 +609,7 @@ void main() {
   };
   ROOM.onLights(flicker);
   flicker(); // (the computer may be on already)
-  if (ROOM.mouse) ROOM.mouse.moved = guard(() => follow() && draw()); // (room-mouse.js, as it loads and as it moves)
+  for (const o of MODELS) o.moved = guard(() => follow() && draw()); // (as each loads and as it moves)
   (function meet() {
     if (!cv.isConnected) return;
     if (!ROOM.willy) return requestAnimationFrame(meet); // (he comes once he has loaded and been placed)
@@ -658,8 +665,8 @@ void main() {
 // not drawn: the painted shadows and light patches, the light painted in the air (the radio's
 // lamp and pool, the projector's beam, the steam, the shine on the jar), the light it throws on
 // the wall (lit there by the projector's own light), what only takes the pointer, Willy's
-// canvases
-const SKIP = /\b(shade|anchor|burst|hit-plane|window-light|beam-corner|radio-lamp|radio-pool|proj-beam|projection|steam|jar-shine|willy|willy-low|willy-shadow)\b/;
+// canvases, the plush's picture (its model takes the light instead: room-plush.js)
+const SKIP = /\b(shade|anchor|burst|hit-plane|window-light|beam-corner|radio-lamp|radio-pool|proj-beam|projection|steam|jar-shine|willy|willy-low|willy-shadow|plush-pic)\b/;
 // what may give light rather than take it, each its own face; and what does now: shown as the
 // CSS room paints it, never darkened (the boards the neon is mounted on, whole, so no edge of
 // a glow shows on them)

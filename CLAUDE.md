@@ -80,6 +80,10 @@ committed, so they had to be rebuilt by hand.
   `asf-notifier.svg`, `coordinator-monitor.svg`, `cupid.svg`, `nutreek.svg`, `planora.svg`,
   `social-contacts-sync.svg` — the
   project marks. `assets/` holds the screenshots and `carlo.jpg`.
+- `assets/plush/` — coordinator-monitor's crab: `plush.js`, its one model
+  (three.js), the bench's picture of it and the room's picture without WebGL,
+  and `render.html`/`render.py`, which draw those pictures from the model (its
+  `README.md`). `room-plush.js` draws the model live on the room's back wall.
 
 ## The bench and its objects
 
@@ -88,9 +92,24 @@ that says what it is before its page opens: CloudBank's ledger loses its band
 and opens, the Social Contacts Sync cards are dealt and get faces, Planora's jar
 unfolds an idea, Nutreek's agenda flips to today, Cupid's envelope breaks its
 seal, ASF-Notifier's pager buzzes twice while its screen brightens and a message
-scrolls in, the mug tips over and spills (the way to Donate), and the instant
-camera fires its flash and ejects a print (the way to About). The sticky note
-opens the Write to me sheet.
+scrolls in, coordinator-monitor's felt crab is tugged by its cord and bounces,
+the mug tips over and spills (the way to Donate), and the instant camera fires
+its flash and ejects a print (the way to About). The sticky note opens the
+Write to me sheet.
+
+The crab (`.thing.plush`) lies on its back on the mat by the name, a picture of
+its model. In the room it hangs high on the back wall by its suction cup,
+between the window and the corner: `room.js` moves its link there and
+`room-plush.js` draws the model in a canvas flat on the wall, lit again by the
+room's light pass, with a soft shadow behind it. It swings a few times on its
+cord as the room arrives and when it is pointed at or has the focus, and is
+tugged before its page opens (`ROOM.plush.tug`, from `morph.js`); it is drawn
+again only while it moves. Without WebGL 2 the room shows its picture in the
+same place. Its canvas must stay short of the room's corner: what goes past it
+is hidden by the other wall. Its link is the box round the toy but for the top
+of its far edge, which would make the room frame smaller (`frame()`); that part
+and a margin, to 44 px square at every size, are `.plush-hit`, which is not
+framed.
 
 A home object is `<a class="thing">` with `data-open="<move>"` and
 `data-open-ms`, the time the move takes before the page opens. Shift, Ctrl or
@@ -149,6 +168,7 @@ The pairs are made by `view-transition-name`, one per page and unique on it:
 | `.thing.jar` | `planora.html` `.label-sheet` | `planora` |
 | `.thing.envelope` | `cupid.html` `.env` | `cupid` |
 | `.thing.pager` | `asf-notifier.html` `.label-sheet` | `asf` |
+| `.thing.plush` | `coordinator-monitor.html` `.label-sheet` | `crab` |
 | `.mug .cup`, `.mug .puddle` | `donate.html` `.spill .cup`, `.spill .puddle` | `mug`, `puddle` |
 | `.camera .film` | `about.html` `.instant` | `photo` |
 | `.pc .glass` | `terminal.html` `.crt` | `crt` |
@@ -248,7 +268,9 @@ Non-user-triggered motion is the cat, the opening moves and the page
 transitions. Decoration does not loop forever: the mug's steam puffs three times
 and stops. The one exception, asked for: the pager's screen on the home changes its
 message every 8 to 25 s and runs a long one to its end and back; under reduced
-motion it shows one message, still, and in a hidden tab it waits.
+motion it shows one message, still, and in a hidden tab it waits. The crab on the
+room's wall swings a few times as the room arrives and when it is pointed at,
+and comes to rest; under reduced motion it never moves.
 
 ## Money and attribution
 
