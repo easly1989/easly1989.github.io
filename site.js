@@ -1,6 +1,6 @@
 /* What every page of the bench shares: the ruler, scaling the home bench to
    the window, books you can leaf through, screenshots that open full size,
-   the Write to me sheet, and the home objects' opening moves. */
+   the Write to me sheet, tabbed folders, and the home objects' opening moves. */
 (function () {
   "use strict";
   var reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -254,6 +254,89 @@
       day.querySelector("b").textContent = d.toLocaleDateString("en-GB", { weekday: "long" });
       day.querySelector("span").textContent = d.toLocaleDateString("en-GB", { day: "numeric", month: "long" });
     }
+  }
+
+  // ---- folders with a tab per sheet ---------------------------------------
+  // [data-tabs] holds a .fam-tabs list of links (.fam-tab, href="#sheet-id") and the .fam-sheet
+  // sections they name. Without this every sheet shows, one under the other. A hash that
+  // points inside a sheet opens that sheet and scrolls to the element.
+  var folders = [].map.call(document.querySelectorAll("[data-tabs]"), function (folder) {
+    var list = folder.querySelector(".fam-tabs");
+    var tabs = [].slice.call(list.querySelectorAll(".fam-tab"));
+    var sheets = tabs.map(function (t) { return document.getElementById(t.hash.slice(1)); });
+    folder.classList.add("fam-tabbed");
+    list.setAttribute("role", "tablist");
+    tabs.forEach(function (t, i) {
+      t.setAttribute("role", "tab");
+      t.id = "tab-" + sheets[i].id;
+      t.setAttribute("aria-controls", sheets[i].id);
+      sheets[i].setAttribute("role", "tabpanel");
+      sheets[i].setAttribute("aria-labelledby", t.id);
+      sheets[i].tabIndex = 0;
+    });
+    var f = {
+      folder: folder,
+      indexOf: function (el) {
+        for (var i = 0; i < sheets.length; i++) if (sheets[i].contains(el)) return i;
+        return -1;
+      },
+      show: function (i, focus) {
+        tabs.forEach(function (t, j) {
+          t.setAttribute("aria-selected", i === j ? "true" : "false");
+          t.tabIndex = i === j ? 0 : -1;
+          sheets[j].hidden = i !== j;
+        });
+        if (focus) tabs[i].focus();
+      },
+    };
+    tabs.forEach(function (t, i) {
+      t.addEventListener("keydown", function (e) {
+        var step = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+        var to = e.key === "Home" ? 0 : e.key === "End" ? tabs.length - 1 : step ? (i + step + tabs.length) % tabs.length : -1;
+        if (to < 0) return;
+        e.preventDefault();
+        history.replaceState(null, "", tabs[to].hash);
+        f.show(to, true);
+      });
+    });
+    f.show(0);
+    return f;
+  });
+  // the element a hash names, and the folder that holds it
+  function inFolder(hash) {
+    var el = hash.length > 1 && document.getElementById(decodeURIComponent(hash.slice(1)));
+    for (var i = 0; el && i < folders.length; i++) {
+      var n = folders[i].indexOf(el);
+      if (n >= 0) return { el: el, folder: folders[i], n: n };
+    }
+    return null;
+  }
+  function openHash(smooth) {
+    var h = inFolder(location.hash);
+    if (!h) return;
+    h.folder.show(h.n);
+    // a sheet itself brings its folder into view, with its tabs
+    var to = h.el.classList.contains("fam-sheet") ? h.folder.folder : h.el;
+    to.scrollIntoView({ behavior: smooth && !reduced ? "smooth" : "auto", block: "start" });
+  }
+  if (folders.length) {
+    openHash(false);
+    addEventListener("hashchange", function () { openHash(true); });
+    document.addEventListener("click", function (e) {
+      var a = e.target.closest && e.target.closest("a[href^='#']");
+      if (!a || e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;
+      var h = inFolder(a.hash);
+      if (!h) return;
+      e.preventDefault();
+      if (a.getAttribute("role") === "tab") {
+        // choosing a tab is not a place to go back to
+        history.replaceState(null, "", a.hash);
+        h.folder.show(h.n);
+      } else {
+        history.pushState(null, "", a.hash);
+        openHash(true);
+      }
+    });
   }
 
   // ---- CloudBank's published versions ------------------------------------
