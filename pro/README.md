@@ -15,7 +15,7 @@ A page has, in order:
 - "All projects", back to the home;
 - the head: the mark, the status line (its square in the project's accent), the name, the lede,
   and the buttons: the label sheet's links of kind `demo`, `release`, `repo`, `docs`, `spec` or
-  `contact`, and the `changelog` link wherever its playful page carries it, the primary one
+  `contact`, and the `changelog` link always, on the label sheet or not, the primary one
   filled with the accent; a family's links to its members' sections;
 - "What it is": `description`;
 - "At a glance": `stack`, then `facts` (an optional list of `{label, value}`, each a fact its

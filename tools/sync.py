@@ -16,6 +16,7 @@ data file is an error: nothing is written and the exit code is 2. See tools/READ
 """
 
 import functools
+import http.client
 import json
 import re
 import sys
@@ -470,7 +471,7 @@ def latest(release):
         with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "easly1989.github.io"}), timeout=20) as r:
             got = json.load(r)
         version, pre = (got["version"], False) if file else (got[0]["tag_name"], got[0]["prerelease"])
-    except (urllib.error.URLError, OSError, ValueError, KeyError, IndexError, TypeError) as e:
+    except (urllib.error.URLError, http.client.HTTPException, OSError, ValueError, KeyError, IndexError, TypeError) as e:
         raise Problem(f"{url}: no version read ({e})")
     if not isinstance(version, str) or not VERSION.fullmatch(version) or not isinstance(pre, bool):
         raise Problem(f"{url}: {version!r} does not look like a version")
@@ -486,23 +487,31 @@ def pull():
         load()
         for path in sorted(DATA.glob("*.json")):
             old = path.read_bytes().decode("utf-8")
-            d, text = json.loads(old), old
+            try:
+                d, text = json.loads(old), old
+            except ValueError as e:
+                raise Problem(f"{path.name} is not JSON: {e}")
             for p in [d] + d.get("members", []):
                 if not isinstance(p.get("release"), dict):
                     continue
                 version, pre = latest(p["release"])
-                at = text.index(f'"id": "{p["id"]}"') if p is not d else 0  # a member's own fields follow its id
+                who = p.get("id", path.stem)
+                at = text.find(f'"id": "{p["id"]}"') if p is not d else 0  # a member's own fields follow its id
+                if at < 0:
+                    raise Problem(f'{path.name}: no "id": "{who}" written so, to find its version by')
                 for key, value in (("version", version), ("prerelease", pre)):
                     if key not in p:
                         continue
                     was = f'"{key}": {json.dumps(p[key])}'
-                    i = text.index(was, at)
+                    i = text.find(was, at)
+                    if i < 0:
+                        raise Problem(f"{path.name}: {who} has no {was} written so, after its id")
                     text = text[:i] + f'"{key}": {json.dumps(value)}' + text[i + len(was):]
                     if value != p[key]:
-                        print(f"{path.name}: {p.get('id', path.stem)} {key} {p[key]} -> {value}")
+                        print(f"{path.name}: {who} {key} {p[key]} -> {value}")
             if text != old:
                 writes.append((path, text))
-    except (Problem, ValueError) as e:  # ValueError: a value not written as `"key": value`
+    except Problem as e:
         print(f"error {e}")
         print("nothing written")
         return 2
@@ -513,6 +522,9 @@ def pull():
 
 if __name__ == "__main__":
     args = sys.argv[1:]
+    if "--versions" in args and "--check" in args:
+        print("error --versions writes the data files and --check writes nothing: use one")
+        sys.exit(2)
     if "--versions" in args and pull():
         sys.exit(2)
     sys.exit(run("--check" in args))

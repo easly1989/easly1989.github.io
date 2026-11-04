@@ -420,8 +420,11 @@ data file, and its status line says `{release}`: the page is written with the fa
 1.1.2.0" (or "Pre-release, …" with `prerelease`), and `site.js` replaces it with the newest
 release on GitHub, pre-release flag included, once a visit per repo (anonymous API: 60 requests
 an hour). coordinator-monitor publishes no releases, so its source is the `version` in its
-`.claude-plugin/plugin.json`. A release is a run of `python tools/sync.py --versions`, which moves
-every fallback (CloudBank's too) to what GitHub publishes. Planora and Cupid are private, so no
+`.claude-plugin/plugin.json`. After a release, `python tools/sync.py --versions` moves `version`
+and `prerelease` in every data file with a `release` (CloudBank's `version` too) to what GitHub
+publishes, and writes the pages from them. It does not touch the hand copies outside the
+markers: in CloudBank's Run it table `checks/data.py` holds the version to the data, but the
+publish date beside it is moved by hand and not checked. Planora and Cupid are private, so no
 visitor can read theirs. Each such product links its changelog (a link of kind `changelog`).
 
 **A morph is a pair.** Renaming or removing a room object, or the element its page shows first,

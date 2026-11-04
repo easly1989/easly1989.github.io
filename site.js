@@ -390,9 +390,12 @@
   // fallback), data-version the tag alone. A source with a path after the repo
   // reads the version field of that JSON file on the default branch, for a repo
   // that publishes no releases. Anonymous GitHub API use is 60 requests an hour
-  // per address, so each source is asked once a visit (sessionStorage, a
-  // failure too); anything that goes wrong leaves the written fallback. Only
-  // text that looks like a version is shown, and only as text.
+  // per address, so each source is asked once a visit (sessionStorage, and a
+  // refusal or an odd answer too, but not a fetch cut short by leaving the
+  // page); anything that goes wrong leaves the written fallback. Only text that
+  // looks like a version is shown, and only as text. A pre-release also moves
+  // the repo's Download links (/releases/latest, which skips pre-releases) to
+  // that release's own page, so the button gets what the status line names.
   var sources = {};
   [].forEach.call(document.querySelectorAll("[data-release], [data-version]"), function (el) {
     var src = el.dataset.release || el.dataset.version;
@@ -407,6 +410,11 @@
       if (!v || typeof v.v !== "string" || !/^v?\d[0-9A-Za-z.+-]{0,30}$/.test(v.v)) return;
       sources[src].forEach(function (el) {
         el.textContent = el.dataset.release ? (v.pre ? "Pre-release, " : "Shipping, ") + v.v : v.v;
+      });
+      var home = ("https://github.com/" + repo + "/releases/").toLowerCase();
+      if (!v.pre || typeof v.url !== "string" || v.url.toLowerCase().indexOf(home + "tag/") !== 0) return;
+      [].forEach.call(document.querySelectorAll('a[href$="/releases/latest"]'), function (a) {
+        if (a.getAttribute("href").toLowerCase() === home + "latest") a.href = v.url;
       });
     }
     function keep(v) {
@@ -425,15 +433,17 @@
         ? "https://raw.githubusercontent.com/" + repo + "/HEAD/" + file
         : "https://api.github.com/repos/" + repo + "/releases?per_page=1"
     )
-      .then(function (r) {
-        return r.ok ? r.json() : null;
-      })
-      .then(function (d) {
-        if (file) return keep(d && { v: d.version, pre: false });
-        keep(d && d[0] && { v: d[0].tag_name, pre: d[0].prerelease === true });
-      })
-      .catch(function () {
-        keep(null);
-      });
+      .then(
+        function (r) {
+          // a refusal (403 rate limit, 404) or an answer that is not JSON is kept
+          var d = r.ok ? r.json().catch(function () {}) : null;
+          return Promise.resolve(d).then(function (d) {
+            if (file) return keep(d && { v: d.version, pre: false });
+            keep(d && d[0] && { v: d[0].tag_name, pre: d[0].prerelease === true, url: d[0].html_url });
+          });
+        },
+        // no answer at all (offline, or aborted by leaving the page): ask again next page
+        function () {}
+      );
   });
 })();

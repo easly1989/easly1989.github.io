@@ -58,7 +58,11 @@ becomes `<span data-release="<source>">` and `{version}` `<span data-version="<s
 (unless `version_live` says CloudBank's), and `site.js` fills them from GitHub, the stage too,
 once a visit per source; `version` and `prerelease` are the fallback the page is written with.
 `--versions` moves them to what GitHub publishes (anonymous: a request per source of the API's 60
-an hour), editing only those values in the data files, and then writes the pages. A project
+an hour), editing only those values in the data files, and then writes the pages; if any source
+cannot be read, or a value is not written as `"key": value` after its id, it writes nothing and
+exits 2. With `--check` it is refused (exit 2), since `--check` writes nothing. It leaves the
+hand copies outside the markers alone: CloudBank's Run it table, whose version `checks/data.py`
+holds to the data and whose publish date nothing checks. A project
 with a `release` has one link of kind `changelog`, which its professional page always carries.
 
 **Links.** A link's `kind` (demo, release, repo, docs, changelog, spec, donate, contact, nav, credit) says
