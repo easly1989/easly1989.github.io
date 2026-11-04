@@ -604,7 +604,7 @@ nav.foot {
 }
 .svc {
   display: grid;
-  grid-template-columns: 48px 1fr;
+  grid-template-columns: 48px minmax(0, 1fr);
   gap: 1rem;
   align-items: start;
   height: 100%;
@@ -637,13 +637,14 @@ nav.foot {
 }
 .svc code {
   display: block;
+  overflow-wrap: anywhere;
   margin-top: 0.35rem;
   font-size: 0.85rem;
   color: var(--ink-2);
 }
 .svc:hover b {
   text-decoration: underline;
-  text-decoration-color: var(--bg);
+  text-decoration-color: currentColor;
   text-decoration-thickness: 3px;
   text-underline-offset: 4px;
 }
@@ -686,6 +687,15 @@ nav.foot {
   max-width: 40rem;
 }
 
+/* About's rows: under this the name goes above the line, which would be too narrow beside it */
+@media (max-width: 56rem) {
+  .pg .row a {
+    grid-template-columns: 44px 1fr;
+  }
+  .pg .row p {
+    grid-column: 2;
+  }
+}
 @media (max-width: 46rem) {
   .pro > .top {
     padding-top: 1.5rem;

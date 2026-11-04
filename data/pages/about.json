@@ -6,9 +6,9 @@
   "name": "Carlo Ruggiero",
   "lede": "I'm a passionate software developer with more than a decade of experience. I build self-hosted web apps and cross-platform mobile apps, mostly in Go.",
   "photo": {
-    "file": "assets/photos/crossed-arms.jpg",
-    "width": 800,
-    "height": 800,
+    "file": "assets/photos/crossed-arms-400.jpg",
+    "width": 400,
+    "height": 400,
     "alt": "Carlo Ruggiero standing in a square with his arms crossed, smiling and looking to one side"
   },
   "links": [

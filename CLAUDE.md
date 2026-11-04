@@ -362,7 +362,7 @@ Never invent biography. LinkedIn (HTTP 999) and Instagram (login wall) cannot
 be read programmatically, so anything personal on the About page came from
 Carlo directly and the next fact should too. The professional About says nothing of him that
 the playful About does not (`checks/data.py`); its photo is a different one,
-`assets/photos/crossed-arms.jpg`, Carlo's choice.
+`assets/photos/crossed-arms-400.jpg` (a 400px copy of `crossed-arms.jpg`), Carlo's choice.
 
 ## The design system
 

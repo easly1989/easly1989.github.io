@@ -243,11 +243,22 @@ about = people.get("about", {})
 claims = [about.get("status", ""), about.get("lede", "")] + [t for s in about.get("sections", []) for t in s.get("text", [])]
 claims += [i["text"] for s in about.get("sections", []) for i in s.get("items", [])]
 claims += [i["text"] for s in about.get("sections", []) for i in s.get("contacts", []) if not i["href"].startswith("mailto:")]
+# and every label and heading it shows: an item's, a contact's, a section's and a button's
+claims += [i["label"] for s in about.get("sections", []) for k in ("items", "contacts") for i in s.get(k, [])]
+claims += [s["heading"] for s in about.get("sections", [])] + [l["label"] for l in about.get("links", [])]
 unsaid = [text_of(c) for c in claims if text_of(c).lower() not in said]
-check(not unsaid, "every sentence the professional About says of me is on the playful About", unsaid)
-# and Donate names no project
-named = [p["name"] for p in data.values() if p["name"].lower() in json.dumps(people.get("donate", {})).lower()]
-check(not named, "the professional Donate names no project", named)
+# the photo's alt is the one the room's camera gives that photo (photos.js)
+photo = about.get("photo") or {}
+shown = re.search(r'id: "%s", alt: "([^"]*)"' % re.escape(re.sub(r"-\d+$", "", Path(photo.get("file", "")).stem)),
+                  (ROOT / "photos.js").read_text(encoding="utf-8"))
+if not shown or shown.group(1) != photo.get("alt"):
+    unsaid.append(f"the photo's alt, which is not photos.js's for {photo.get('file')}")
+check(not unsaid, "every sentence, label and heading the professional About shows is the playful About's", unsaid)
+# and Donate names no project, nothing it is built on, and nothing as paid for or closed for good
+words = {p[k] for p in projects.values() for k in ("name", "id")} | {"ASF", "Claude", "HomeBank", "ledger", "paid", "permanently"}
+copy = " ".join(v for _, v in strings(people.get("donate", {}), []))
+named = sorted(w for w in words if re.search(r"\b%s\b" % re.escape(w), copy, re.I))
+check(not named, "the professional Donate names no project and never says paid or permanently", named)
 
 # where each project shows: its own page, or its family's
 PAGE = {pid: f"{pid}.html" for pid in data}

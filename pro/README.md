@@ -14,7 +14,8 @@ missing, or has no data file. About and Donate are written from `data/pages/abou
 Every page here, and the professional home, opens with a quiet nav row at the top right: Projects,
 About, Donate, the current page marked `aria-current="page"` (none on a project's page), with "All
 projects" at its left here. The footer is the name and About, Donate and GitHub. Every link is 44px
-tall at least.
+tall at least, except a link inside running text (Donate's "GitHub" in a sentence), which WCAG
+2.5.8 lets be the line's height.
 
 A page has, in order:
 
@@ -37,7 +38,7 @@ from `:root` in `styles.css`, where the accents live, and written into the page 
 ## About and Donate
 
 Pages about the person, in the same frame, with the ink as their accent (`.pg`). About has the
-photo (`assets/photos/crossed-arms.jpg`, a different one from the playful About's), the status line,
+photo (`assets/photos/crossed-arms-400.jpg`, a 400px copy of `crossed-arms.jpg`, a different one from the playful About's), the status line,
 the name, the lede and the buttons, then What I do, How I build, What I've built (a row per
 project, from its `about`, leading to its professional page) and Get in touch. Everything it says
 of the person is on the playful About, which `checks/data.py` holds it to: never invent biography.
