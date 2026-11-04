@@ -1646,6 +1646,12 @@
       location.href = tieLink.href;
     }, 650);
   });
+  // Space picks it up too, as it would a button
+  tieLink.addEventListener("keydown", function (e) {
+    if (e.key !== " " || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    e.preventDefault();
+    tieLink.click();
+  });
   // back through the back/forward cache: the tie hangs on the chair again
   addEventListener("pageshow", function (e) {
     if (!e.persisted) return;
