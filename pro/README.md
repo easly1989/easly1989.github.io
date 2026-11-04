@@ -2,17 +2,24 @@
 
 One page per project, `pro/<id>.html`, in the professional home's style (`../pro.css`). The
 professional home (`../index.html`, when the reader has not chosen the room) has one row per
-project, and each row leads here. These pages never link to the playful project pages.
+project, and each row leads here. Beside them are the professional About and Donate,
+`about.html` and `donate.html`. These pages never link to the playful pages.
 
 **Every page here is generated.** `python tools/sync.py` writes each one whole from
 `data/projects/<id>.json`; do not edit them by hand, since the next run puts them back.
 `python tools/sync.py --check` (and `checks/data.py`) fails when a page differs from its data, is
-missing, or has no data file.
+missing, or has no data file. About and Donate are written from `data/pages/about.json` and
+`data/pages/donate.json` (see `tools/README.md`).
+
+Every page here, and the professional home, opens with a quiet nav row at the top right: Projects,
+About, Donate, the current page marked `aria-current="page"` (none on a project's page), with "All
+projects" at its left here. The footer is the name and About, Donate and GitHub. Every link is 44px
+tall at least.
 
 A page has, in order:
 
 - `<title>`, the description and Open Graph tags (`name`, `tagline`, `description`, `summary`);
-- "All projects", back to the home;
+- "All projects", back to the home, and the nav row;
 - the head: the mark, the status line (its square in the project's accent), the name, the lede,
   and the buttons: the label sheet's links of kind `demo`, `release`, `repo`, `docs`, `spec` or
   `contact`, the primary one filled with the accent; a family's links to its members' sections;
@@ -26,6 +33,19 @@ A page has, in order:
 
 A section the data has nothing for is left out rather than written by hand. The accent is read
 from `:root` in `styles.css`, where the accents live, and written into the page as `--c`.
+
+## About and Donate
+
+Pages about the person, in the same frame, with the ink as their accent (`.pg`). About has the
+photo (`assets/photos/crossed-arms.jpg`, a different one from the playful About's), the status line,
+the name, the lede and the buttons, then What I do, How I build, What I've built (a row per
+project, from its `about`, leading to its professional page) and Get in touch. Everything it says
+of the person is on the playful About, which `checks/data.py` holds it to: never invent biography.
+
+Donate keeps the playful Donate's rules (`CLAUDE.md`, Money and attribution): it names no
+project, closed projects are never called closed for good, and each of the four services is a
+plain bordered link with its own colour and the icon drawn in this repo, handing the reader to
+that service. Nothing is collected here, and there is no form.
 
 ## Willy on the home
 

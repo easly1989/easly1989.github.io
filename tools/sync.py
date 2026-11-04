@@ -9,7 +9,8 @@ A generated block is the text between `<!-- data:<id>.<block> -->` and `<!-- /da
 in a page at the repo root. Everything outside those markers is left byte for byte. A block
 whose opening marker ends its line is written as lines at that marker's indent; one that
 goes on along the line is written on that line. Each project's professional page,
-pro/<id>.html, is written whole from its data file. A marker that does not pair into a known
+pro/<id>.html, is written whole from its data file, and so are the professional About and
+Donate, pro/<name>.html, from data/pages/<name>.json. A marker that does not pair into a known
 block, a page with CR line endings, a data file that does not load, or a page in pro/ with no
 data file is an error: nothing is written and the exit code is 2. See tools/README.md.
 """
@@ -282,14 +283,183 @@ def pro_page(p):
         "  </head>",
         "  <body>",
         f'    <div class="wrap" style="--c: {colour(p)}">',
-        '      <a class="back" href="../index.html">All projects</a>',
+        *[f"      {x}" for x in bar()],
         '      <header class="ph">',
         *[f"        {x}" for x in head(p, "h1", members, 64, w)],
         "      </header>",
         "      <main>",
         *[f"        {x}" for x in body],
         "      </main>",
-        f'      <footer>{esc(p["name"])} is one of {SITE}\'s projects. <a href="../index.html">All projects</a></footer>',
+        *[f"      {x}" for x in foot()],
+        "    </div>",
+        '    <script src="../site.js" defer></script>',
+        "  </body>",
+        "</html>",
+    ]
+    return "".join(x.rstrip() + "\n" for x in lines)
+
+
+# ---- the professional About and Donate (#132), from data/pages/<page>.json ------------------
+PAGES = ROOT / "data" / "pages"
+GITHUB = "https://github.com/easly1989"
+CURRENT = ' aria-current="page"'
+
+
+def load_pages():
+    """The pages about the person, by name: each data/pages/<name>.json is pro/<name>.html."""
+    out = {}
+    for path in sorted(PAGES.glob("*.json")):
+        try:
+            out[path.stem] = json.loads(path.read_text(encoding="utf-8"))
+        except ValueError as e:
+            raise Problem(f"pages/{path.name} is not JSON: {e}")
+    return out
+
+
+def bar(current=None):
+    """'All projects' and the site's nav, at the top of every professional page."""
+    nav = [("Projects", "../index.html", None), ("About", "about.html", "about"), ("Donate", "donate.html", "donate")]
+    return [
+        '<div class="bar">',
+        '  <a class="back" href="../index.html">All projects</a>',
+        '  <nav class="site" aria-label="Site">',
+        *[f'    <a href="{h}"{CURRENT if k and k == current else ""}>{n}</a>' for n, h, k in nav],
+        "  </nav>",
+        "</div>",
+    ]
+
+
+def foot():
+    return [
+        "<footer>",
+        f"  <span>{SITE}.</span>",
+        '  <nav class="foot" aria-label="More">',
+        '    <a href="about.html">About</a>',
+        '    <a href="donate.html">Donate</a>',
+        f'    <a href="{GITHUB}" rel="noopener">GitHub</a>',
+        "  </nav>",
+        "</footer>",
+    ]
+
+
+def out_link(l, cls=""):
+    """A link from a page about the person: only ever out of the site, never to a playful page."""
+    if not re.match(r"(https?:|mailto:)", l["href"]):
+        raise Problem(f"link {l['href']} would lead to the playful site")
+    rel = ' rel="noopener"' if l["href"].startswith("http") else ""
+    return f'<a{cls} href="{esc(l["href"])}"{rel}>{esc(l["label"])}</a>'
+
+
+def about_row(pid, projects):
+    """A project in About's list, leading to its professional page."""
+    if pid not in TOP:
+        raise Problem(f"lists {pid}, which is not a project with a data file")
+    p = projects[pid]
+    unlinked(p, "about")
+    return [
+        f'<li class="row" style="--c: {colour(p)}">',
+        f'  <a href="{pid}.html">',
+        f'    <img src="../{esc(p["mark"])}" alt="" width="44" height="44" />',
+        f'    <span><b>{esc(p["name"])}</b></span>',
+        f'    <p>{markup(p["about"], p)}</p>',
+        "  </a>",
+        "</li>",
+    ]
+
+
+# what a section of About or Donate may list after its paragraphs, in this order: each the list's
+# opening and closing tags and the lines of one entry
+LISTS = {
+    "items": ('<ul class="how wide">', "</ul>", lambda i, _: [f'<li><b>{esc(i["label"])}</b><span>{i["text"]}</span></li>']),
+    "terms": ('<dl class="def">', "</dl>", lambda i, _: [f'<dt>{esc(i["label"])}</dt>', f'<dd>{i["text"]}</dd>']),
+    "facts": ('<dl class="facts">', "</dl>", lambda i, _: [f'<dt>{esc(i["label"])}</dt><dd>{esc(i["value"])}</dd>']),
+    "contacts": ('<dl class="facts">', "</dl>", lambda i, _: [f'<dt>{out_link(i)}</dt><dd>{esc(i["text"])}</dd>']),
+    "projects": ('<ul class="list">', "</ul>", about_row),
+}
+
+
+def section(s, projects, w):
+    """One section of About or Donate: its paragraphs, then what it lists. The fields text, an
+    item's or a term's text, and note hold the inline-HTML subset; every other one is plain."""
+    hid = f'{s["id"]}-h'
+    if "services" in s:  # the ways to give, each handing the reader to its service
+        out = [f'<section class="give" aria-labelledby="{hid}">', f'  <h2 class="sec" id="{hid}">{esc(s["heading"])}</h2>']
+        out.append('  <ul class="svcs">')
+        for v in s["services"]:
+            if not v["href"].startswith("https:"):
+                raise Problem(f"service {v['href']} is not a web address")
+            paths = "".join(f'<path d="{esc(d)}" />' for d in v["icon"])
+            out += [
+                "    <li>",
+                f'      <a class="svc {esc(v["id"])}" href="{esc(v["href"])}" rel="noopener">',
+                f'        <span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true">{paths}</svg></span>',
+                f'        <span><b>{esc(v["name"])}</b><span class="d">{esc(v["text"])}</span><code>{esc(v["address"])}</code></span>',
+                "      </a>",
+                "    </li>",
+            ]
+        return out + ["  </ul>", f'  <p class="note">{s["note"]}</p>', "</section>"]
+    body = []
+    for t in s.get("text", []):
+        body += ["<p>", *[f"  {x}" for x in wrap(t, w - 6)], "</p>"]
+    for key, (open_, close, one) in LISTS.items():
+        if key in s:
+            body += [open_] + [f"  {x}" for i in s[key] for x in one(i, projects)] + [close]
+    return [
+        f'<section class="about" aria-labelledby="{hid}">',
+        f'  <h2 id="{hid}">{esc(s["heading"])}</h2>',
+        "  <div>",
+        *[f"    {x}" for x in body],
+        "  </div>",
+        "</section>",
+    ]
+
+
+def person_page(name, d, projects):
+    """About or Donate, whole: the head (the photo, if any, the status line, the name, the lede
+    and the buttons), then each section, in the professional pages' frame."""
+    w = WIDTH - 8
+    photo = d.get("photo")
+    top = [f'<header class="ph {"who" if photo else "plain"}">']
+    if photo:  # at the top of the page, so never lazy
+        top.append(f'  <img class="photo" src="../{esc(photo["file"])}" alt="{esc(photo["alt"])}" width="{photo["width"]}" height="{photo["height"]}" />')
+    top += ["  <div>", f'    <p class="st">{esc(d["status"])}</p>', f'    <h1>{esc(d["name"])}</h1>', '    <p class="lede">']
+    top += [f"      {x}" for x in wrap(esc(d["lede"]), w - 6)] + ["    </p>"]
+    if d.get("links"):
+        top += ['    <div class="acts">'] + [f'      {out_link(l, " class=\"go\"" if l.get("primary") else "")}' for l in d["links"]] + ["    </div>"]
+    top += ["  </div>", "</header>"]
+    lines = [
+        "<!doctype html>",
+        '<html lang="en">',
+        "  <head>",
+        '    <meta charset="UTF-8" />',
+        '    <meta name="viewport" content="width=device-width, initial-scale=1" />',
+        f'    <title>{esc(d["title"])}</title>',
+        *[f"    {x}" for x in meta("name", "description", esc(d["description"]), WIDTH - 4)],
+        '    <meta name="theme-color" content="#f4f6f5" media="(prefers-color-scheme: light)" />',
+        '    <meta name="theme-color" content="#0f1512" media="(prefers-color-scheme: dark)" />',
+        '    <link rel="icon" type="image/svg+xml" href="../logo.svg" />',
+        *[f"    {x}" for x in meta("property", "og:title", esc(d["title"]), WIDTH - 4)],
+        *[f"    {x}" for x in meta("property", "og:description", esc(d["summary"]), WIDTH - 4)],
+        '    <meta property="og:type" content="website" />',
+        "",
+        '    <link rel="preconnect" href="https://fonts.googleapis.com" />',
+        '    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />',
+        "    <link",
+        f'      href="{FONTS}"',
+        '      rel="stylesheet"',
+        "    />",
+        '    <link rel="stylesheet" href="../pro.css" />',
+        "  </head>",
+        "  <body>",
+        # the ink is these pages' accent: they are about the person, not a product
+        '    <div class="wrap pg" style="--c: var(--ink)">',
+        '      <a class="skip" href="#main">Skip to the content</a>',
+        *[f"      {x}" for x in bar(name)],
+        *[f"      {x}" for x in top],
+        '      <main id="main" tabindex="-1">',
+        *[f"        {x}" for s in d["sections"] for x in section(s, projects, w)],
+        "      </main>",
+        *[f"      {x}" for x in foot()],
         "    </div>",
         '    <script src="../site.js" defer></script>',
         "  </body>",
@@ -405,11 +575,17 @@ def run(check):
         if text != old:
             writes.append((page, text))
 
-    # the professional pages, written whole
-    for pid in TOP:
+    # the professional pages, written whole: a project's, and About's and Donate's
+    try:
+        people = load_pages()
+    except Problem as e:
+        errors.append(str(e))
+        people = {}
+    errors += [f"data/pages/{n}.json: has the name of a project" for n in people if n in TOP]
+    for pid in TOP + [n for n in people if n not in TOP]:
         page = PRO / f"{pid}.html"
         try:
-            text = pro_page(projects[pid])
+            text = pro_page(projects[pid]) if pid in TOP else person_page(pid, people[pid], projects)
         except Problem as e:
             errors.append(f"pro/{pid}.html: {e}")
             continue
@@ -421,8 +597,8 @@ def run(check):
             stale.append(f"pro/{pid}.html" + ("" if old is not None else " (missing)"))
             writes.append((page, text))
     for page in sorted(PRO.glob("*.html")):
-        if page.stem not in TOP:
-            errors.append(f"pro/{page.name}: has no data file in data/projects/; delete it, or add its data")
+        if page.stem not in TOP and page.stem not in people:
+            errors.append(f"pro/{page.name}: has no data file in data/projects/ or data/pages/; delete it, or add its data")
 
     for line in errors:
         print(f"error {line}")

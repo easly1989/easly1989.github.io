@@ -165,11 +165,14 @@ try:
                 failures.append(what)
             print(("ok    " if not bad else "FAIL  ") + what)
             # a button's accent border against the ground: 3:1 for what is not text (WCAG 1.4.11)
-            edges = b.js("""[...document.querySelectorAll('.acts a:not(.go)')].map((a) => [a.textContent.trim(),
-              getComputedStyle(a).borderTopColor, getComputedStyle(document.body).backgroundColor])""")
+            # (and Donate's ways to give, and each one's icon against its service's colour)
+            edges = b.js("""[...document.querySelectorAll('.acts a:not(.go), .svc')].map((a) => [a.textContent.trim().slice(0, 28),
+              getComputedStyle(a).borderTopColor, getComputedStyle(document.body).backgroundColor]).concat(
+              [...document.querySelectorAll('.svc .ico')].map((i) => [i.parentNode.textContent.trim().slice(0, 16) + ' icon',
+              getComputedStyle(i).color, getComputedStyle(i).backgroundColor]))""")
             weak = [(n, r) for n, fg, bg in edges if (r := rgb_ratio(fg, bg)) < 3]
             if edges:
-                what = f"{page}, {scheme}: the buttons' borders at 3:1 or better ({len(edges)}, the lowest {min(rgb_ratio(f, g) for _, f, g in edges):.1f})"
+                what = f"{page}, {scheme}: the buttons' borders and the services' icons at 3:1 or better ({len(edges)}, the lowest {min(rgb_ratio(f, g) for _, f, g in edges):.1f})"
                 if weak:
                     what += " (" + "; ".join(f"{n} {r:.1f}" for n, r in weak) + ")"
                     failures.append(what)

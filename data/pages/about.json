@@ -1,0 +1,59 @@
+{
+  "title": "About — Carlo Ruggiero",
+  "description": "Carlo Ruggiero is a software developer with more than a decade of experience, currently a Full Stack Software Developer at TeamSystem. He builds self-hosted web apps and cross-platform mobile apps, mostly in Go.",
+  "summary": "A software developer. CloudBank, Social Contacts Sync, the ASF plugins, Planora, Nutreek, Cupid and coordinator-monitor.",
+  "status": "Full Stack Software Developer at TeamSystem.",
+  "name": "Carlo Ruggiero",
+  "lede": "I'm a passionate software developer with more than a decade of experience. I build self-hosted web apps and cross-platform mobile apps, mostly in Go.",
+  "photo": {
+    "file": "assets/photos/crossed-arms.jpg",
+    "width": 800,
+    "height": 800,
+    "alt": "Carlo Ruggiero standing in a square with his arms crossed, smiling and looking to one side"
+  },
+  "links": [
+    { "label": "Email me", "href": "mailto:caesar.themaster@gmail.com?subject=Hello", "primary": true },
+    { "label": "GitHub", "href": "https://github.com/easly1989" },
+    { "label": "LinkedIn", "href": "https://www.linkedin.com/in/cruggiero89/" }
+  ],
+  "sections": [
+    {
+      "id": "do",
+      "heading": "What I do",
+      "text": [
+        "By day I'm a Full Stack Software Developer at <strong>TeamSystem</strong>. Either way the work is the same shape: the database, the API, and the interface on top of it, for the web and for phones. I like finishing things — an app someone can actually run and keep running, rather than a proof of concept.",
+        "The projects on this site are the ones I keep going on my own time. Some are open source, some are licensed, and some I host."
+      ]
+    },
+    {
+      "id": "build",
+      "heading": "How I build",
+      "items": [
+        { "label": "Go backends", "text": "Small, dependency-light services in Go, with a clear REST API and a layout that is simple to operate." },
+        { "label": "Embedded SQLite", "text": "Pure-Go SQLite means no separate database server to run or back up — the data is a single file you control." },
+        { "label": "One-container deploys", "text": "Each product ships as a single Docker container, often distroless, so it is cheap to run and straightforward to self-host." },
+        { "label": "The right front end", "text": "Server-rendered HTMX, a React SPA, or Flutter for web, Android and iOS — whichever fits the product best." },
+        { "label": "Privacy by default", "text": "Self-hostable, no unnecessary tracking, and GDPR tooling where personal data is involved. Your data stays yours." },
+        { "label": "Shipped and maintained", "text": "CI, tagged releases, backups and health checks — the unglamorous parts that decide whether something keeps working." }
+      ]
+    },
+    {
+      "id": "built",
+      "heading": "What I've built",
+      "projects": ["cloudbank", "social-contacts-sync", "asf-plugins", "planora", "nutreek", "cupid", "coordinator-monitor"]
+    },
+    {
+      "id": "touch",
+      "heading": "Get in touch",
+      "text": [
+        "Interested in one of the projects, a licence, or just want to talk shop? Email is the fastest way to reach me."
+      ],
+      "contacts": [
+        { "label": "Email", "href": "mailto:caesar.themaster@gmail.com?subject=Hello", "text": "The fastest way." },
+        { "label": "GitHub", "href": "https://github.com/easly1989", "text": "The code, the issues and the releases." },
+        { "label": "LinkedIn", "href": "https://www.linkedin.com/in/cruggiero89/", "text": "Work history, and the place to reach me about professional things." },
+        { "label": "Instagram", "href": "https://www.instagram.com/easly1989/", "text": "Life outside the editor." }
+      ]
+    }
+  ]
+}

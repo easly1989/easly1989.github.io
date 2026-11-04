@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>About — Carlo Ruggiero</title>
+    <meta
+      name="description"
+      content="Carlo Ruggiero is a software developer with more than a decade of experience, currently a Full Stack Software Developer at TeamSystem. He builds self-hosted web apps and cross-platform mobile apps, mostly in Go."
+    />
+    <meta name="theme-color" content="#f4f6f5" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0f1512" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" type="image/svg+xml" href="../logo.svg" />
+    <meta property="og:title" content="About — Carlo Ruggiero" />
+    <meta
+      property="og:description"
+      content="A software developer. CloudBank, Social Contacts Sync, the ASF plugins, Planora, Nutreek, Cupid and coordinator-monitor."
+    />
+    <meta property="og:type" content="website" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../pro.css" />
+  </head>
+  <body>
+    <div class="wrap pg" style="--c: var(--ink)">
+      <a class="skip" href="#main">Skip to the content</a>
+      <div class="bar">
+        <a class="back" href="../index.html">All projects</a>
+        <nav class="site" aria-label="Site">
+          <a href="../index.html">Projects</a>
+          <a href="about.html" aria-current="page">About</a>
+          <a href="donate.html">Donate</a>
+        </nav>
+      </div>
+      <header class="ph who">
+        <img class="photo" src="../assets/photos/crossed-arms.jpg" alt="Carlo Ruggiero standing in a square with his arms crossed, smiling and looking to one side" width="800" height="800" />
+        <div>
+          <p class="st">Full Stack Software Developer at TeamSystem.</p>
+          <h1>Carlo Ruggiero</h1>
+          <p class="lede">
+            I'm a passionate software developer with more than a decade of experience. I build
+            self-hosted web apps and cross-platform mobile apps, mostly in Go.
+          </p>
+          <div class="acts">
+            <a class="go" href="mailto:caesar.themaster@gmail.com?subject=Hello">Email me</a>
+            <a href="https://github.com/easly1989" rel="noopener">GitHub</a>
+            <a href="https://www.linkedin.com/in/cruggiero89/" rel="noopener">LinkedIn</a>
+          </div>
+        </div>
+      </header>
+      <main id="main" tabindex="-1">
+        <section class="about" aria-labelledby="do-h">
+          <h2 id="do-h">What I do</h2>
+          <div>
+            <p>
+              By day I'm a Full Stack Software Developer at <strong>TeamSystem</strong>. Either way
+              the work is the same shape: the database, the API, and the interface on top of it, for
+              the web and for phones. I like finishing things — an app someone can actually run and
+              keep running, rather than a proof of concept.
+            </p>
+            <p>
+              The projects on this site are the ones I keep going on my own time. Some are open
+              source, some are licensed, and some I host.
+            </p>
+          </div>
+        </section>
+        <section class="about" aria-labelledby="build-h">
+          <h2 id="build-h">How I build</h2>
+          <div>
+            <ul class="how wide">
+              <li><b>Go backends</b><span>Small, dependency-light services in Go, with a clear REST API and a layout that is simple to operate.</span></li>
+              <li><b>Embedded SQLite</b><span>Pure-Go SQLite means no separate database server to run or back up — the data is a single file you control.</span></li>
+              <li><b>One-container deploys</b><span>Each product ships as a single Docker container, often distroless, so it is cheap to run and straightforward to self-host.</span></li>
+              <li><b>The right front end</b><span>Server-rendered HTMX, a React SPA, or Flutter for web, Android and iOS — whichever fits the product best.</span></li>
+              <li><b>Privacy by default</b><span>Self-hostable, no unnecessary tracking, and GDPR tooling where personal data is involved. Your data stays yours.</span></li>
+              <li><b>Shipped and maintained</b><span>CI, tagged releases, backups and health checks — the unglamorous parts that decide whether something keeps working.</span></li>
+            </ul>
+          </div>
+        </section>
+        <section class="about" aria-labelledby="built-h">
+          <h2 id="built-h">What I've built</h2>
+          <div>
+            <ul class="list">
+              <li class="row" style="--c: #2f6fd0">
+                <a href="cloudbank.html">
+                  <img src="../logo.svg" alt="" width="44" height="44" />
+                  <span><b>CloudBank</b></span>
+                  <p>A free, open-source, self-hosted personal finance manager — a web port of HomeBank. Shipping at <span data-cloudbank="stable">v3.12.0</span>.</p>
+                </a>
+              </li>
+              <li class="row" style="--c: #5b4cf0">
+                <a href="social-contacts-sync.html">
+                  <img src="../social-contacts-sync.svg" alt="" width="44" height="44" />
+                  <span><b>Social Contacts Sync</b></span>
+                  <p>A free, open-source desktop app that fills Google Contacts with profile photos from WhatsApp, Telegram and Gravatar and cleans up duplicates.</p>
+                </a>
+              </li>
+              <li class="row" style="--c: #0f766e">
+                <a href="asf-plugins.html">
+                  <img src="../asf-notifier.svg" alt="" width="44" height="44" />
+                  <span><b>ASF Plugins</b></span>
+                  <p>Plugins for ArchiSteamFarm: ASF-Notifier tells a Matrix room when a bot stops, loses its connection, finishes farming or ASF is updated, and ASF-PluginConfig, a pre-release, gives one page to edit other plugins' settings.</p>
+                </a>
+              </li>
+              <li class="row" style="--c: #6d59ad">
+                <a href="planora.html">
+                  <img src="../planora.svg" alt="" width="44" height="44" />
+                  <span><b>Planora</b></span>
+                  <p>A shared activity planner for groups, for web, Android and iOS. Free, and in internal testing.</p>
+                </a>
+              </li>
+              <li class="row" style="--c: #2f7d32">
+                <a href="nutreek.html">
+                  <img src="../nutreek.svg" alt="" width="44" height="44" />
+                  <span><b>Nutreek</b></span>
+                  <p>A self-hosted weekly nutrition planner with macros, adaptive TDEE and a coach mode.</p>
+                </a>
+              </li>
+              <li class="row" style="--c: #c4356a">
+                <a href="cupid.html">
+                  <img src="../cupid.svg" alt="" width="44" height="44" />
+                  <span><b>Cupid</b></span>
+                  <p>A web management system for matchmaking and dating agencies.</p>
+                </a>
+              </li>
+              <li class="row" style="--c: #b0573a">
+                <a href="coordinator-monitor.html">
+                  <img src="../coordinator-monitor.svg" alt="" width="44" height="44" />
+                  <span><b>coordinator-monitor</b></span>
+                  <p>A Claude Code mod: one pane for every local session, its subagents, and the permissions and questions that wait for you.</p>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="about" aria-labelledby="touch-h">
+          <h2 id="touch-h">Get in touch</h2>
+          <div>
+            <p>
+              Interested in one of the projects, a licence, or just want to talk shop? Email is the
+              fastest way to reach me.
+            </p>
+            <dl class="facts">
+              <dt><a href="mailto:caesar.themaster@gmail.com?subject=Hello">Email</a></dt><dd>The fastest way.</dd>
+              <dt><a href="https://github.com/easly1989" rel="noopener">GitHub</a></dt><dd>The code, the issues and the releases.</dd>
+              <dt><a href="https://www.linkedin.com/in/cruggiero89/" rel="noopener">LinkedIn</a></dt><dd>Work history, and the place to reach me about professional things.</dd>
+              <dt><a href="https://www.instagram.com/easly1989/" rel="noopener">Instagram</a></dt><dd>Life outside the editor.</dd>
+            </dl>
+          </div>
+        </section>
+      </main>
+      <footer>
+        <span>Carlo Ruggiero.</span>
+        <nav class="foot" aria-label="More">
+          <a href="about.html">About</a>
+          <a href="donate.html">Donate</a>
+          <a href="https://github.com/easly1989" rel="noopener">GitHub</a>
+        </nav>
+      </footer>
+    </div>
+    <script src="../site.js" defer></script>
+  </body>
+</html>

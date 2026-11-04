@@ -4,7 +4,9 @@ block it is meant to have, and the facts still written by hand on a page (the li
 prose, the stack table, captions, screenshots' alt and size, CloudBank's fallback version, the
 room's jar label, the links beyond the label sheet) agree with the data. Each project has its
 professional page, pro/<id>.html, with a title of its own, and neither those pages nor the
-professional home link to a playful page. No browser."""
+professional home link to a playful page. data/pages/ holds the professional About and Donate:
+About says nothing of the person the playful About does not, and Donate names no project. No
+browser."""
 import html
 import importlib.util
 import json
@@ -172,6 +174,81 @@ for path in sorted((ROOT / "data" / "projects").glob("*.json")):
     data[path.stem] = d
 check(len(data) >= 7, f"a data file per project ({len(data)})")
 
+
+# ---- the pages about the person: data/pages/<name>.json, each pro/<name>.html ------------------
+def jpeg_size(path):
+    b = path.read_bytes()
+    i = 2
+    while b[:2] == b"\xff\xd8" and i + 9 < len(b) and b[i] == 0xFF:
+        m, n = b[i + 1], struct.unpack(">H", b[i + 2 : i + 4])[0]
+        if 0xC0 <= m <= 0xCF and m not in (0xC4, 0xC8, 0xCC):  # a start of frame: height, then width
+            h, w = struct.unpack(">HH", b[i + 5 : i + 9])
+            return w, h
+        i += 2 + n
+    return None
+
+
+PAGE_FIELDS = {"title", "description", "summary", "status", "name", "lede", "photo", "links", "sections"}
+SECTION_FIELDS = {"id", "heading", "text", "items", "terms", "facts", "contacts", "projects", "services", "note"}
+PAGE_INLINE = {"strong", "b", "em", "code", "a"}
+
+
+def page_problems(d, where):
+    out = [f"{where}: unknown field {k}" for k in sorted(set(d) - PAGE_FIELDS)]
+    out += [f"{where}: no {k}" for k in sorted(PAGE_FIELDS - set(d) - {"photo", "links"})]
+    for path, v in strings(d, []):
+        name = ".".join(path)
+        # a paragraph, an item's or a term's text and a note hold the inline subset; the rest is plain
+        html_ = path[-1] == "note" or path[-2:-1] == ["text"] or (path[-1] == "text" and path[-3:-2] in (["items"], ["terms"]))
+        if not html_ and ("<" in v or ENTITY.search(v)):
+            out.append(f"{where}.{name}: plain text, so no tags and no entities (the generator escapes it)")
+        for tag in sorted(set(re.findall(r"</?([a-zA-Z][a-zA-Z0-9]*)", v)) - PAGE_INLINE if html_ else ()):
+            out.append(f"{where}.{name}: <{tag}> is not one of the inline tags {sorted(PAGE_INLINE)}")
+        for a in re.findall(r"<a\b[^>]*>", v) if html_ else ():
+            if not re.search(r'href="https://[^"]+"', a) or 'rel="noopener"' not in a:
+                out.append(f"{where}.{name}: a link here goes out of the site, with rel=\"noopener\"")
+    photo = d.get("photo")
+    if photo is not None:
+        if set(photo) != {"file", "width", "height", "alt"} or not photo.get("alt"):
+            out.append(f"{where}.photo: needs file, width, height and alt")
+        elif not (ROOT / photo["file"]).is_file():
+            out.append(f"{where}.photo: no file {photo['file']}")
+        elif jpeg_size(ROOT / photo["file"]) != (photo["width"], photo["height"]):
+            out.append(f"{where}.photo: {photo['file']} is not {photo['width']}x{photo['height']}")
+    for i, s in enumerate(d.get("sections", [])):
+        w = f"{where}.sections[{i}]"
+        out += [f"{w}: unknown field {k}" for k in sorted(set(s) - SECTION_FIELDS)]
+        if not (s.get("id") and s.get("heading")) or len(set(s) - {"id", "heading"}) == 0:
+            out.append(f"{w}: needs id, heading and something to show")
+        if ("services" in s) != ("note" in s):
+            out.append(f"{w}: the ways to give come with their note, which says nothing is taken here")
+    ids = [s.get("id") for s in d.get("sections", [])]
+    if len(set(ids)) != len(ids):
+        out.append(f"{where}: two sections share an id")
+    return out
+
+
+people = {}
+for path in sorted((ROOT / "data" / "pages").glob("*.json")):
+    d = json.loads(path.read_text(encoding="utf-8"))
+    check(not page_problems(d, f"pages/{path.stem}"), f"pages/{path.name} has every field, well formed", page_problems(d, f"pages/{path.stem}"))
+    people[path.stem] = d
+check(set(people) == {"about", "donate"}, f"a data file for the professional About and Donate ({', '.join(people)})")
+listed = [pid for s in people.get("about", {}).get("sections", []) for pid in s.get("projects", [])]
+check(sorted(listed) == sorted(data), "the professional About lists every project, once",
+      [f"lists {listed}"] if sorted(listed) != sorted(data) else [])
+# never invent biography: what the professional About says of the person is what the playful one says
+said = text_of((ROOT / "about.html").read_text(encoding="utf-8")).lower()
+about = people.get("about", {})
+claims = [about.get("status", ""), about.get("lede", "")] + [t for s in about.get("sections", []) for t in s.get("text", [])]
+claims += [i["text"] for s in about.get("sections", []) for i in s.get("items", [])]
+claims += [i["text"] for s in about.get("sections", []) for i in s.get("contacts", []) if not i["href"].startswith("mailto:")]
+unsaid = [text_of(c) for c in claims if text_of(c).lower() not in said]
+check(not unsaid, "every sentence the professional About says of me is on the playful About", unsaid)
+# and Donate names no project
+named = [p["name"] for p in data.values() if p["name"].lower() in json.dumps(people.get("donate", {})).lower()]
+check(not named, "the professional Donate names no project", named)
+
 # where each project shows: its own page, or its family's
 PAGE = {pid: f"{pid}.html" for pid in data}
 PAGE.update({m["id"]: f"{pid}.html" for pid, d in data.items() for m in d.get("members", [])})
@@ -254,18 +331,33 @@ for pid, p in projects.items():
 
 # ---- the professional pages: one per project, and never a way into the playful pages -------
 pro = {p.stem: p.read_text(encoding="utf-8") for p in sorted((ROOT / "pro").glob("*.html"))}
-check(set(pro) == set(data), f"a professional page per project, pro/<id>.html, and no other ({len(pro)})",
-      [f"no pro/{i}.html" for i in sorted(set(data) - set(pro))] + [f"extra pro/{i}.html" for i in sorted(set(pro) - set(data))])
+every = set(data) | set(people)
+check(set(pro) == every, f"a professional page per project, About and Donate, pro/<name>.html, and no other ({len(pro)})",
+      [f"no pro/{i}.html" for i in sorted(every - set(pro))] + [f"extra pro/{i}.html" for i in sorted(set(pro) - every)])
 titles = Counter(re.search(r"<title>(.*?)</title>", t).group(1) for t in pro.values())
 check(all(n == 1 for n in titles.values()), "every professional page has a title of its own")
 home = pages["index.html"]
 home_pro = home[home.index('<div class="pro">') : home.index('<div class="mat"')]
 LINK = r'<a[^>]*?href="(?!https?:|mailto:|#)([^"]*)"'  # a link to a page of this site
-leads = {f"pro/{i}": sorted(set(re.findall(LINK, t)) - {"../index.html"}) for i, t in pro.items()}
+leads = {f"pro/{i}": sorted(set(re.findall(LINK, t)) - {"../index.html"} - {f"{n}.html" for n in pro}) for i, t in pro.items()}
 leads["index.html (the professional home)"] = sorted(set(re.findall(LINK, home_pro))
-                                                    - {f"pro/{i}.html" for i in data} - {"?room"})
+                                                    - {f"pro/{i}.html" for i in pro} - {"?room", "index.html"})
 wrong = [f"{page}: {h}" for page, hrefs in leads.items() for h in hrefs]
 check(not wrong, "the professional pages lead only to each other, the room's switch and elsewhere on the web", wrong)
+loose = [f"{page}: {a}" for page, t in list(pro.items()) + [("index.html", home_pro)]
+         for a in re.findall(r'<a\b[^>]*href="https?:[^>]*>', t) if 'rel="noopener"' not in a]
+check(not loose, 'every link from them out of the site carries rel="noopener"', loose)
+# the site's nav on each: Projects, About, Donate, the page itself marked (none on a project's)
+NAV = re.compile(r'<nav class="site" aria-label="Site">(.*?)</nav>', re.S)
+navs = {f"pro/{i}.html": (t, f"{i}.html" if i in people else None) for i, t in pro.items()}
+navs["index.html"] = (home_pro, "index.html")
+off = []
+for page, (t, me) in navs.items():
+    m = NAV.findall(t)
+    items = re.findall(r'<a href="([^"]*)"( aria-current="page")?>([^<]*)</a>', m[0]) if len(m) == 1 else []
+    if [n for _, _, n in items] != ["Projects", "About", "Donate"] or [h for h, c, _ in items if c] != ([me] if me else []):
+        off.append(page)
+check(not off, "every professional page, and the home, has the site's nav, its own page marked", off)
 unshown = [f"pro/{pid}.html: {s['file']}" for pid, d in data.items()
            for s in [s for m in [d] + d.get("members", []) for s in m.get("screenshots", [])]
            if f'src="../{s["file"]}"' not in pro.get(pid, "")]
