@@ -8,7 +8,9 @@ Run from anywhere, after editing data/projects/:
 A generated block is the text between `<!-- data:<id>.<block> -->` and `<!-- /data -->`
 in a page at the repo root. Everything outside those markers is left byte for byte. A block
 whose opening marker ends its line is written as lines at that marker's indent; one that
-goes on along the line is written on that line. See tools/README.md for the blocks.
+goes on along the line is written on that line. A marker that does not pair into a known
+block, a page with CR line endings, or a data file that does not load is an error: nothing
+is written and the exit code is 2. See tools/README.md for the blocks.
 """
 
 import json
@@ -20,35 +22,68 @@ ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data" / "projects"
 WIDTH = 100  # the markup's wrap column
 SITE = "Carlo Ruggiero"
-BLOCK = re.compile(r"<!-- data:([a-z0-9-]+)\.([a-z-]+) -->(.*?)<!-- /data -->", re.S)
+# anything that looks like a marker, so a mistyped one is caught rather than skipped
+LOOSE = re.compile(r"<!--\s*(?:/\s*data\b|data\s*:)[^>]*-->")
+OPEN = re.compile(r"<!-- data:([a-z0-9-]+)\.([a-z-]+) -->")
+CLOSE = "<!-- /data -->"
+PLACEHOLDER = re.compile(r"\{(name|version|licence)\}")
+
+
+class Problem(Exception):
+    pass
 
 
 def load():
     """Every project, and every member of a family, by id."""
     out = {}
     for path in sorted(DATA.glob("*.json")):
-        project = json.loads(path.read_text(encoding="utf-8"))
-        out[path.stem] = project
+        try:
+            out[path.stem] = json.loads(path.read_text(encoding="utf-8"))
+        except ValueError as e:
+            raise Problem(f"{path.name} is not JSON: {e}")
+    for pid, project in list(out.items()):
         for member in project.get("members", []):
-            out[member["id"]] = member
+            mid = member.get("id")
+            if not isinstance(mid, str) or not mid:
+                raise Problem(f"{pid}.json: a member has no id")
+            if mid in out:
+                raise Problem(f"{pid}.json: member id {mid} is already a project or member")
+            out[mid] = member
+    for pid, p in out.items():
+        if "version" in p and not isinstance(p["version"], str):
+            raise Problem(f"{pid}: version is not a string")
     return out
 
 
-def attr(text):
-    return text.replace("&", "&amp;").replace('"', "&quot;").replace("<", "&lt;")
+def esc(text):
+    """Plain text into markup, text or attribute alike."""
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
 
 
-def fill(text, p, html=True):
-    """Expand {name} and {version}; in markup, a live CloudBank version is its span."""
+def fill(text, p, html):
+    """Expand {name}, {version} and {licence}. In markup (html) the values are escaped, and a
+    live CloudBank version becomes the span site.js fills; plain text comes back raw."""
 
     def one(m):
-        if m.group(1) == "name":
-            return p["name"]
-        if html and p.get("version_live"):
-            return f'<span data-cloudbank="{p["version_live"]}">{p["version"]}</span>'
-        return p["version"]
+        key = m.group(1)
+        if not isinstance(p.get(key), str):
+            raise Problem(f"says {{{key}}} but has no {key}")
+        value = esc(p[key]) if html else p[key]
+        if key == "version" and html and p.get("version_live"):
+            return f'<span data-cloudbank="{esc(p["version_live"])}">{value}</span>'
+        return value
 
-    return re.sub(r"\{(name|version)\}", one, text)
+    return PLACEHOLDER.sub(one, text)
+
+
+def markup(text, p):
+    """A field that holds the inline-HTML subset."""
+    return fill(text, p, True)
+
+
+def plain(text, p):
+    """A plain-text field, escaped."""
+    return esc(fill(text, p, False))
 
 
 def wrap(text, width):
@@ -67,114 +102,150 @@ def wrap(text, width):
 
 
 def meta(key, name, value, width):
-    one = f'<meta {key}="{name}" content="{attr(value)}" />'
-    if len(one) <= width:
+    one = f'<meta {key}="{name}" content="{value}" />'
+    if width is None or len(one) <= width:
         return [one]
-    return ["<meta", f'  {key}="{name}"', f'  content="{attr(value)}"', "/>"]
+    return ["<meta", f'  {key}="{name}"', f'  content="{value}"', "/>"]
 
 
 def link(item):
     cls = "btn" if item.get("primary") else "btn quiet"
     tab = ' target="_blank"' if item.get("new_tab") else ""
     rel = ' rel="noopener"' if item["href"].startswith("http") else ""
-    return f'<a class="{cls}" href="{attr(item["href"])}"{tab}{rel}>{item["label"]}</a>'
+    return f'<a class="{cls}" href="{esc(item["href"])}"{tab}{rel}>{esc(item["label"])}</a>'
 
 
 def label(p, apart):
     home = p["home"]
-    name = f'<span class="label">{home.get("label", p["name"])}'
-    line = home.get("line")
-    if line is None:
+    name = f'<span class="label">{esc(home.get("label", p["name"]))}'
+    if home.get("line") is None:
         return [name + "</span>"]
-    small = f"<small>{fill(line, p)}</small>"
+    small = f'<small>{plain(home["line"], p)}</small>'
     return [name + "</span>" + small] if apart else [name + small + "</span>"]
 
 
 def title(p):
-    return f'{p["name"]} — {p["tagline"]}'
+    return esc(f'{p["name"]} — {p["tagline"]}')
 
 
 RENDER = {
     # the label sheet, or its equivalent
-    "state": lambda p, w: [fill(p["status"], p)],
-    "name": lambda p, w: [p["name"]],
-    "lede": lambda p, w: wrap(fill(p["lede"], p), w),
+    "state": lambda p, w: [markup(p["status"], p)],
+    "name": lambda p, w: [esc(p["name"])],
+    "lede": lambda p, w: wrap(markup(p["lede"], p), w),
     "actions": lambda p, w: [link(i) for i in p["links"] if i.get("label_sheet", True)],
     # the page's head
-    "title": lambda p, w: [f"<title>{attr(title(p))} · {SITE}</title>"]
-    + meta("name", "description", p["description"], w),
+    "title": lambda p, w: [f"<title>{title(p)} · {SITE}</title>"]
+    + meta("name", "description", plain(p["description"], p), w),
     "og": lambda p, w: meta("property", "og:title", title(p), w)
-    + meta("property", "og:description", p["summary"], w),
+    + meta("property", "og:description", plain(p["summary"], p), w),
     # a family member's tab
-    "tab": lambda p, w: [f'<b>{p["name"]}</b><small>{fill(p["status_short"], p)}</small>'],
+    "tab": lambda p, w: [f'<b>{esc(p["name"])}</b><small>{markup(p["status_short"], p)}</small>'],
     # the home's objects: the label, or the label and its line side by side
     "object": lambda p, w: label(p, False),
     "object-apart": lambda p, w: label(p, True),
     # About's list of projects
-    "about": lambda p, w: [f'<img src="{p["mark"]}" alt="" /><span><b>{p["name"]}</b>{fill(p["about"], p)}</span>'],
+    "about": lambda p, w: [f'<img src="{esc(p["mark"])}" alt="" /><span><b>{esc(p["name"])}</b>{markup(p["about"], p)}</span>'],
 }
+KINDS = set(RENDER) | {"aria"}
 
 
-def aria(p, body):
-    """An aria block keeps its markup and only sets the aria-label in it."""
-    value = attr(fill(p["home"]["aria"], p, html=False))
-    new, n = re.subn(r'aria-label="[^"]*"', lambda m: f'aria-label="{value}"', body)
-    return new if n == 1 else None
+def parse(text):
+    """A page's blocks, each (id, block, marker start, body start, body end, line), and its
+    problems: every marker must pair into a block, and a block holds no other marker."""
+    blocks, problems, open_ = [], [], None
+    for m in LOOSE.finditer(text):
+        line = text.count("\n", 0, m.start()) + 1
+        o = OPEN.fullmatch(m.group(0))
+        if o:
+            if open_:
+                problems.append(f"line {open_[5]}: {open_[0]}.{open_[1]} has no {CLOSE} before the next block at line {line}")
+            if o.group(2) not in KINDS:
+                problems.append(f"line {line}: no such block {o.group(1)}.{o.group(2)}")
+            open_ = [o.group(1), o.group(2), m.start(), m.end(), None, line]
+        elif m.group(0) == CLOSE:
+            if not open_:
+                problems.append(f"line {line}: {CLOSE} closes no block (its opening marker is missing)")
+                continue
+            open_[4] = m.start()
+            blocks.append(tuple(open_))
+            open_ = None
+        else:
+            problems.append(f"line {line}: a malformed marker {m.group(0)!r}")
+    if open_:
+        problems.append(f"line {open_[5]}: {open_[0]}.{open_[1]} is never closed with {CLOSE}")
+    return blocks, problems
+
+
+def render(text, block, p):
+    pid, kind, mark, a, b, line = block
+    body = text[a:b]
+    if kind == "aria":
+        value = plain(p["home"]["aria"], p)
+        new, n = re.subn(r'aria-label="[^"]*"', lambda m: f'aria-label="{value}"', body)
+        if n != 1:
+            raise Problem("needs exactly one aria-label in it")
+        return new
+    if re.match(r"[ \t]*\n", body):  # on its own lines; spaces after the marker are dropped
+        indent = text[text.rfind("\n", 0, mark) + 1 : mark]
+        if indent.strip():
+            raise Problem("is written on its own lines, so its opening marker must be alone on its line")
+        lines = RENDER[kind](p, WIDTH - len(indent))
+        return "\n" + "".join(f"{indent}{x}\n" for x in lines) + indent
+    return "".join(RENDER[kind](p, None))
 
 
 def run(check):
-    projects = load()
-    stale, errors, changed = [], [], []
+    try:
+        projects = load()
+    except Problem as e:
+        print(f"error {e}")
+        return 2
+    stale, errors, writes = [], [], []
     for page in sorted(ROOT.glob("*.html")):
         old = page.read_bytes().decode("utf-8")  # read whole before anything is written
-
-        def block(m):
-            pid, kind, body = m.groups()
-            where = f"{page.name}: {pid}.{kind}"
+        blocks, problems = parse(old)
+        if "\r" in old and blocks:
+            problems.append("has CR line endings; the pages are LF (see .gitattributes)")
+        if problems:
+            errors += [f"{page.name}: {x}" for x in problems]
+            continue
+        out, at = [], 0
+        for block in blocks:
+            pid, kind, mark, a, b, line = block
+            where = f"{page.name}:{line}: {pid}.{kind}"
             p = projects.get(pid)
-            if p is None or (kind not in RENDER and kind != "aria"):
-                errors.append(f"{where}: no such project or block")
-                return m.group(0)
             try:
-                if kind == "aria":
-                    new = aria(p, body)
-                    if new is None:
-                        errors.append(f"{where}: needs exactly one aria-label")
-                        return m.group(0)
-                elif body.startswith("\n"):
-                    start = old.rfind("\n", 0, m.start()) + 1
-                    indent = old[start : m.start()]
-                    if indent.strip():
-                        errors.append(f"{where}: a block on its own lines needs its marker alone")
-                        return m.group(0)
-                    lines = RENDER[kind](p, WIDTH - len(indent))
-                    new = "\n" + "".join(f"{indent}{line}\n" for line in lines) + indent
-                else:
-                    new = "".join(RENDER[kind](p, None))
+                if p is None:
+                    raise Problem("has no data file or member of that id")
+                new = render(old, block, p)
+            except Problem as e:
+                errors.append(f"{where} {e}")
+                continue
             except KeyError as e:
                 errors.append(f"{where}: the data has no {e}")
-                return m.group(0)
-            if new != body:
+                continue
+            if new != old[a:b]:
                 stale.append(where)
-            return f"<!-- data:{pid}.{kind} -->{new}<!-- /data -->"
-
-        text = BLOCK.sub(block, old)
+            out += [old[at:a], new]
+            at = b
+        text = "".join(out) + old[at:]
         if text != old:
-            changed.append(page)
-            if not check:
-                page.write_bytes(text.encode("utf-8"))
+            writes.append((page, text))
 
     for line in errors:
         print(f"error {line}")
+    if errors:
+        print("fix the markers or the data first" if check else "nothing written: fix the markers or the data first")
+        return 2
     if check:
         for line in stale:
             print(f"differs {line}")
-    else:
-        for page in changed:
-            print(f"wrote {page.name}")
-    if errors:
-        return 2
-    return 1 if check and stale else 0
+        return 1 if stale else 0
+    for page, text in writes:
+        page.write_bytes(text.encode("utf-8"))
+        print(f"wrote {page.name}")
+    return 0
 
 
 if __name__ == "__main__":
