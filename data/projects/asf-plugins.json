@@ -50,7 +50,7 @@
       "name": "ASF-Notifier",
       "status": "Shipping, {version}. Open source under {licence}.",
       "status_short": "Shipping, {version}",
-      "version": "v1.0.0.0",
+      "version": "1.1.2.0",
       "lede": "Hear about it when a bot stops. An ArchiSteamFarm plugin that posts to a Matrix room when a bot is stopped, loses its connection and comes back, finishes farming, or ASF is updated.",
       "licence": "Apache-2.0",
       "accent": "--asf",

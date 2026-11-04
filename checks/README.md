@@ -46,7 +46,8 @@ of motion that forgets it measures a room in which Willy only sleeps.
   what is really behind it, in both schemes; with the light off, the night is a view the reader
   chose and only the neon navigation has to. It measures pixels, drawing each text with and
   without its ink at four times the density. Then the professional home and every page in
-  `pro/`, whole, in both schemes. Headless; about four minutes.
+  `pro/`, whole, in both schemes, failing a page that shows nothing to measure, and each page's
+  accent-bordered buttons at 3:1 against the ground. Headless; about four minutes.
 
 - `moves.py` — each project object is clicked with the mouse, and a second click lands
   elsewhere mid-move: the first click's page opens within about 1.6 s and at 60 fps or more,
@@ -84,7 +85,8 @@ of motion that forgets it measures a room in which Willy only sleeps.
   to his face or onto "Step into the room" he swats once, then not for 5 s and not again while
   the mouse stays; a click through the raised paw still opens the room; the keyboard focus on the
   link gets one swat and no eye-following; under reduced motion, for a touch and on a phone
-  nothing of him moves; at 960 wide he still shows. Headless; about half a minute.
+  nothing of him moves; at 1120×740, the smallest window that holds the room, he shows, and
+  at 960×800 and on a phone in landscape (915×412, touch) he does not. Headless; about half a minute.
 
 - `data.py` — no browser, and run it after any change to `data/projects/` or to a page's
   facts: every page is what `python tools/sync.py` would write from the data, every data file

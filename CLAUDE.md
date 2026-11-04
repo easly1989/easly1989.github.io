@@ -40,8 +40,10 @@ pen he stays still (`pro/README.md`, `checks/peek.py`).
 ## The room, and choosing it
 
 The first script in `index.html`'s head decides. The room shows only when `localStorage`
-`site:room` is `"1"` and the window holds it: wider than 900px, at a scale of 0.7 or more
-(`ROOM_FIT`; `room.js` keeps the box it needs in `localStorage` `room-box`). Then it adds
+`site:room` is `"1"` and the window holds it: wider than 900px, with a mouse or a trackpad
+(`any-pointer: fine`, so a phone in landscape never qualifies), at a scale of 0.7 or more
+(`ROOM_FIT`; `room.js` keeps the box it needs in `localStorage` `room-box`, and before it has
+measured one the head assumes the room's usual box). Willy's peek shows on the same terms. Then it adds
 `html.iso`, takes `pro.css` away and writes `styles.css`, the room's fonts, `room.css` and the
 room's modules into the head; a script after the mat un-hides it and hides the professional
 page; the end of the body writes `crt.js`, `radio.js`, `photos.js`, `room.js` and `morph.js`.
@@ -56,7 +58,8 @@ whatever was chosen: a phone never gets the room.
   opens: `room.js` sets `site:room` to `"0"`, removes `sessionStorage` `room` and goes to
   `index.html`, with no query. Under reduced motion, and on Shift, Ctrl or Cmd-click, there is
   no move. The room's first focusable thing, "Plain version of this site", shown only while it
-  has the focus, does the same.
+  has the focus, does the same. Coming back to the room by Back (the back/forward cache), the room
+  is chosen again.
 
 The room is built by `room.js` from the bench's markup in `<div class="mat" hidden>`, before the
 first frame (`#room-ready` holds it), and framed to the window: it scales until every link and

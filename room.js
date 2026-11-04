@@ -1657,6 +1657,11 @@
     if (!e.persisted) return;
     tie.classList.remove("worn");
     document.body.inert = false;
+    // back in the room the reader left by the tie or the skip link: the room is chosen again
+    try {
+      localStorage.setItem("site:room", "1");
+      sessionStorage.setItem("room", "1");
+    } catch (err) {}
   });
   // The window's, once there is weather to show: the place, how warm and the sky in words, and
   // where the data come from, as Open-Meteo's licence (CC BY 4.0) asks next to them. The window
@@ -1715,8 +1720,8 @@
   // ---- framing: the room fits the window ------------------------------------------------
   // It scales until every link and button in it fits with a margin, and is centred on them
   // rather than on the whole room; it grows on big screens, up to 1.15 (see "Frame the room
-  // to the window's width"). Below 0.7 its words no longer read, so the home shows the bench
-  // instead. The box the room needs is kept, so that the head can make that call before the
+  // to the window's width"). Below 0.7 its words no longer read, so the home shows the
+  // professional page instead. The box the room needs is kept, so that the head can make that call before the
   // next load draws anything.
   var MARGIN = ROOM_FIT.margin, // shared with the head, which decides on the next load
     MAX = 1.15,
@@ -1773,12 +1778,13 @@
     stage.style.removeProperty("transition");
     glow();
   }
-  // the head shows the bench at this size from now on; it reloads once, never in a loop. The
+  // the head shows the professional page at this size from now on; it reloads once, never in
+  // a loop. The
   // visit is no longer one to the room (About and the radio read "room"), until it shows again.
   function tooSmall() {
-    // narrower than the room's layout: always the bench, which never comes back here
+    // narrower than the room's layout: always the professional page, which never comes back here
     if (!matchMedia("(min-width: 901px)").matches) {
-      toBench();
+      toProfessional();
       return true;
     }
     try {
@@ -1788,10 +1794,10 @@
     } catch (e) {
       return false;
     }
-    toBench();
+    toProfessional();
     return true;
   }
-  function toBench() {
+  function toProfessional() {
     try {
       if (sessionStorage.getItem("room") === "1") sessionStorage.removeItem("room");
     } catch (e) {}

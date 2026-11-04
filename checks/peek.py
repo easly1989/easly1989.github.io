@@ -1,4 +1,4 @@
-"""Willy peeking in on the professional home: a mouse moved about the page turns his eyes, and
+"""Willy peeking in on the professional home, only where the room would fit: a mouse moved about the page turns his eyes, and
 coming close to his face or onto "Step into the room" gets one swat of a paw, then none for 5 s,
 and three at most; a click through the raised paw still opens the room; the keyboard focus on the
 link gets the same swat. Under reduced motion, on a phone and for touch nothing of him moves."""
@@ -123,15 +123,24 @@ try:
     check(not st["swats"] and st["pupils"] == st0["pupils"] and not b.js("document.documentElement.classList.contains('iso')"),
           "a touch close to his face: no reaction")
 
-    # a narrow window that holds the room: he shows and follows (the room's size, kept from the
-    # visit to it above, would not fit at 960, so it is forgotten as on a first visit)
+    # the smallest window that holds the room (a first visit: the room's usual size): he shows and
+    # follows; narrower, where the room would not fit, he is not shown
     b.js("localStorage.removeItem('room-box'); localStorage.setItem('site:room', '0')")
-    load(b, base, 960, 800)
+    load(b, base, 1120, 740)
     w = b.js(WHERE)
     shown = b.js("getComputedStyle(document.querySelector('.peek')).display !== 'none'")
     mouse(b, w["fx"] - 300, w["fy"] + 200)
     time.sleep(0.5)
-    check(shown and b.js(STATE)["pupils"], "at 960 wide he shows, and follows the mouse")
+    check(shown and b.js(STATE)["pupils"], "at 1120 x 740 he shows, and follows the mouse")
+    load(b, base, 960, 800)
+    check(b.js("getComputedStyle(document.querySelector('.peek')).display") == "none",
+          "at 960 x 800, too small for the room, he is not shown")
+
+    # a phone in landscape, wide but touch only: no peek
+    b.call("Emulation.setTouchEmulationEnabled", enabled=True, maxTouchPoints=5)
+    load(b, base, 915, 412, mobile=True)
+    check(b.js("getComputedStyle(document.querySelector('.peek')).display") == "none",
+          "on a phone in landscape, 915 x 412, he is not shown")
 
     # a phone: no peek, and nothing listens
     load(b, base, 390, 844, mobile=True)

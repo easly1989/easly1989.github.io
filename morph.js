@@ -238,7 +238,7 @@
       if (!POSE[page] && page !== "donate.html") return;
       var shot = a.classList.contains("camera") && window.PHOTOS ? PHOTOS.shoot() : null;
       // under reduced motion, or with no morphs to land in, the link just opens its page,
-      // without the flat bench's moves (site.js)
+      // without any move
       if (still.matches || !morphs) {
         unpin(shot);
         return ev.stopImmediatePropagation();

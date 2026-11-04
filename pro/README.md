@@ -30,7 +30,8 @@ from `:root` in `styles.css`, where the accents live, and written into the page 
 ## Willy on the home
 
 The professional home's one playful thing is Willy peeking over the top rule of the project list,
-next to "Step into the room", on a window that can hold the room (`html.room-fits`). He is an
+next to "Step into the room", on a window that can hold the room and has a mouse or a
+trackpad (`html.room-fits`). He is an
 inline SVG in `../index.html`, the same in both schemes, and the home's own inline script (never
 `site.js`, never anything of the room) moves him:
 

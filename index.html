@@ -64,12 +64,14 @@
           // without storage the room could not be chosen or size itself: the professional page
           return;
         }
-        // a box that is not four sizes is ignored: the room measures it again
-        if (!box || !["w", "h", "dw", "dh"].every(function (k) { return box[k] > 0 || box[k] === 0; })) box = null;
+        // a box that is not four sizes is ignored, and before the room has measured itself here it
+        // is the box it usually needs (room.js keeps the real one)
+        if (!box || !["w", "h", "dw", "dh"].every(function (k) { return box[k] > 0 || box[k] === 0; })) box = { w: 1545, h: 885, dw: 0, dh: 64 };
+        // and never on a phone, in landscape too: a mouse or a trackpad, and a wide window
         function fits() {
-          if (!matchMedia("(min-width: 901px)").matches) return false;
+          if (!matchMedia("(min-width: 901px) and (any-pointer: fine)").matches) return false;
           var m = 2 * ROOM_FIT.margin;
-          return !box || Math.min((innerWidth - box.dw - m) / box.w, (innerHeight - box.dh - m) / box.h) >= ROOM_FIT.min;
+          return Math.min((innerWidth - box.dw - m) / box.w, (innerHeight - box.dh - m) / box.h) >= ROOM_FIT.min;
         }
         if (!on || !fits()) {
           root.classList.toggle("room-fits", fits());
@@ -85,6 +87,10 @@
         } catch (e) {}
         // the room has the bench's styles, not the professional page's
         document.querySelector('link[href="pro.css"]').remove();
+        // and its colours in the browser's bar, the bench's as on the playful pages
+        var bar = document.querySelectorAll('meta[name="theme-color"]');
+        bar[0].content = "#22594b";
+        bar[1].content = "#12352d";
         document.write(
           '<link rel="stylesheet" href="styles.css" />' +
             '<link rel="expect" href="#room-ready" blocking="render" />' +
