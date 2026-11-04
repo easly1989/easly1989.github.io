@@ -415,6 +415,15 @@ publish. The text in the markup is only the fallback shown if that fetch fails: 
 `data/projects/cloudbank.json`; the span in the ledger's Run it table is a hand copy, which
 `checks/data.py` holds to the same version.
 
+**The other versions come from GitHub too.** A product whose repo is public has `release` in its
+data file, and its status line says `{release}`: the page is written with the fallback, "Shipping,
+1.1.2.0" (or "Pre-release, …" with `prerelease`), and `site.js` replaces it with the newest
+release on GitHub, pre-release flag included, once a visit per repo (anonymous API: 60 requests
+an hour). coordinator-monitor publishes no releases, so its source is the `version` in its
+`.claude-plugin/plugin.json`. A release is a run of `python tools/sync.py --versions`, which moves
+every fallback (CloudBank's too) to what GitHub publishes. Planora and Cupid are private, so no
+visitor can read theirs. Each such product links its changelog (a link of kind `changelog`).
+
 **A morph is a pair.** Renaming or removing a room object, or the element its page shows first,
 breaks its page transition: see the table under Between pages.
 

@@ -383,4 +383,57 @@
       })
       .catch(function () {});
   }
+
+  // ---- every other product's version, from GitHub --------------------------
+  // data-release="<owner>/<repo>" shows its newest release as "Shipping, <tag>"
+  // or "Pre-release, <tag>" (tools/sync.py writes the same words as the
+  // fallback), data-version the tag alone. A source with a path after the repo
+  // reads the version field of that JSON file on the default branch, for a repo
+  // that publishes no releases. Anonymous GitHub API use is 60 requests an hour
+  // per address, so each source is asked once a visit (sessionStorage, a
+  // failure too); anything that goes wrong leaves the written fallback. Only
+  // text that looks like a version is shown, and only as text.
+  var sources = {};
+  [].forEach.call(document.querySelectorAll("[data-release], [data-version]"), function (el) {
+    var src = el.dataset.release || el.dataset.version;
+    (sources[src] = sources[src] || []).push(el);
+  });
+  Object.keys(sources).forEach(function (src) {
+    var key = "gh:" + src;
+    var parts = src.split("/");
+    var repo = parts.slice(0, 2).join("/");
+    var file = parts.slice(2).join("/");
+    function show(v) {
+      if (!v || typeof v.v !== "string" || !/^v?\d[0-9A-Za-z.+-]{0,30}$/.test(v.v)) return;
+      sources[src].forEach(function (el) {
+        el.textContent = el.dataset.release ? (v.pre ? "Pre-release, " : "Shipping, ") + v.v : v.v;
+      });
+    }
+    function keep(v) {
+      try {
+        sessionStorage.setItem(key, JSON.stringify(v || {}));
+      } catch (e) {}
+      show(v);
+    }
+    try {
+      var kept = sessionStorage.getItem(key);
+      if (kept) return show(JSON.parse(kept));
+    } catch (e) {}
+    if (!window.fetch) return;
+    fetch(
+      file
+        ? "https://raw.githubusercontent.com/" + repo + "/HEAD/" + file
+        : "https://api.github.com/repos/" + repo + "/releases?per_page=1"
+    )
+      .then(function (r) {
+        return r.ok ? r.json() : null;
+      })
+      .then(function (d) {
+        if (file) return keep(d && { v: d.version, pre: false });
+        keep(d && d[0] && { v: d[0].tag_name, pre: d[0].prerelease === true });
+      })
+      .catch(function () {
+        keep(null);
+      });
+  });
 })();

@@ -7,6 +7,7 @@ stays plain static HTML that reads in full with scripts off.
 ```bash
 python tools/sync.py           # after editing data/projects/: rewrite every generated block
 python tools/sync.py --check   # write nothing; exit 1 listing every block that differs
+python tools/sync.py --versions  # first move each fallback version to what GitHub publishes
 ```
 
 A generated block sits between `<!-- data:<id>.<block> -->` and `<!-- /data -->` in a page at
@@ -45,10 +46,22 @@ in `pro/` with no data file is an error. Text that goes inside a link there (a r
 `<em>` and `<a>`. Every other string is plain text, with no tags and no entities: write `&`,
 not `&amp;`, and the generator escapes it wherever it writes it. In `status`, `status_short`,
 `lede`, `about`, `description`, `summary`, `home.line` and `home.aria`, `{name}`, `{version}`
-and `{licence}` are the project's own; with `version_live` (CloudBank), `{version}` in markup
-becomes `<span data-cloudbank="stable">` around it, which `site.js` fills from `versions.json`.
+and `{licence}` are the project's own, and `{release}` is the stage and the version, "Shipping,
+1.1.2.0" or, with `"prerelease": true`, "Pre-release, 1.0.0.0"; with `version_live` (CloudBank),
+`{version}` in markup becomes `<span data-cloudbank="stable">` around it, which `site.js` fills
+from `versions.json`.
 
-**Links.** A link's `kind` (demo, release, repo, docs, spec, donate, contact, nav, credit) says
+**Versions from GitHub.** `release` says where GitHub publishes a project's version:
+`{"repo": "owner/name"}`, its newest release, or with `"file": "path.json"` the `version` field of
+that file on the default branch, for a repo that publishes no releases. In markup, `{release}`
+becomes `<span data-release="<source>">` and `{version}` `<span data-version="<source>">`
+(unless `version_live` says CloudBank's), and `site.js` fills them from GitHub, the stage too,
+once a visit per source; `version` and `prerelease` are the fallback the page is written with.
+`--versions` moves them to what GitHub publishes (anonymous: a request per source of the API's 60
+an hour), editing only those values in the data files, and then writes the pages. A project
+with a `release` has one link of kind `changelog`, which its professional page always carries.
+
+**Links.** A link's `kind` (demo, release, repo, docs, changelog, spec, donate, contact, nav, credit) says
 what it is to a page that picks links. Those with `"label_sheet": false` are not on the label
 sheet but elsewhere on the page, which must still carry them.
 

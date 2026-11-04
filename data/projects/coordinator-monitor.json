@@ -2,7 +2,8 @@
   "name": "coordinator-monitor",
   "tagline": "one pane for your Claude Code sessions",
   "status": "Version {version}, early. Open source under {licence}.",
-  "version": "0.2.0",
+  "version": "0.6.5",
+  "release": { "repo": "easly1989/coordinator-monitor", "file": ".claude-plugin/plugin.json" },
   "lede": "One pane for every local Claude Code session: what each one is doing, its subagents, and everything that waits for you, answerable in place.",
   "about": "A Claude Code mod: one pane for every local session, its subagents, and the permissions and questions that wait for you.",
   "description": "coordinator-monitor is an open-source Claude Code mod: one pane for every local session, with its subagents and everything that waits for you, permissions and questions, answerable in place.",
@@ -36,7 +37,7 @@
     {
       "label": "Changelog",
       "href": "https://github.com/easly1989/coordinator-monitor/blob/main/CHANGELOG.md",
-      "kind": "docs",
+      "kind": "changelog",
       "label_sheet": false
     },
     {
