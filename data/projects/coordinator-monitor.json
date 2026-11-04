@@ -1,7 +1,7 @@
 {
   "name": "coordinator-monitor",
   "tagline": "one pane for your Claude Code sessions",
-  "status": "Version {version}, early. Open source under AGPL-3.0-or-later.",
+  "status": "Version {version}, early. Open source under {licence}.",
   "version": "0.2.0",
   "lede": "One pane for every local Claude Code session: what each one is doing, its subagents, and everything that waits for you, answerable in place.",
   "about": "A Claude Code mod: one pane for every local session, its subagents, and the permissions and questions that wait for you.",
@@ -43,6 +43,18 @@
       "label": "README",
       "href": "https://github.com/easly1989/coordinator-monitor#readme",
       "kind": "docs",
+      "label_sheet": false
+    },
+    {
+      "label": "savvy-progress",
+      "href": "https://github.com/johnnyvizz/claude-kit/tree/main/plugins/savvy-progress",
+      "kind": "credit",
+      "label_sheet": false
+    },
+    {
+      "label": "savvy-flow",
+      "href": "https://github.com/johnnyvizz/claude-kit/tree/main/plugins/savvy-flow",
+      "kind": "credit",
       "label_sheet": false
     }
   ],

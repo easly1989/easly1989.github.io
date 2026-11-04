@@ -1,7 +1,7 @@
 {
   "name": "CloudBank",
   "tagline": "Self-hosted personal finance manager",
-  "status": "Shipping, {version}. Open source under AGPL-3.0.",
+  "status": "Shipping, {version}. Open source under {licence}.",
   "version": "v3.12.0",
   "version_live": "stable",
   "lede": "Your money, self-hosted. A free personal finance manager — a from-scratch web port of HomeBank, built for the browser and the cloud.",
@@ -38,6 +38,42 @@
       "label": "Donate",
       "href": "donate.html",
       "kind": "donate"
+    },
+    {
+      "label": "What the demo is",
+      "href": "https://github.com/easly1989/cloudbank/blob/main/docs/demo.md",
+      "kind": "docs",
+      "label_sheet": false
+    },
+    {
+      "label": "The bank mails guide",
+      "href": "https://github.com/easly1989/cloudbank/blob/main/docs/bank-mails.md",
+      "kind": "docs",
+      "label_sheet": false
+    },
+    {
+      "label": "The notifications guide",
+      "href": "https://github.com/easly1989/cloudbank/blob/main/docs/notifications.md",
+      "kind": "docs",
+      "label_sheet": false
+    },
+    {
+      "label": "The AI guide",
+      "href": "https://github.com/easly1989/cloudbank/blob/main/docs/ai.md",
+      "kind": "docs",
+      "label_sheet": false
+    },
+    {
+      "label": "The Home Assistant guide",
+      "href": "https://github.com/easly1989/cloudbank/blob/main/docs/home-assistant.md",
+      "kind": "docs",
+      "label_sheet": false
+    },
+    {
+      "label": "GitHub Sponsors",
+      "href": "https://github.com/sponsors/easly1989",
+      "kind": "donate",
+      "label_sheet": false
     }
   ],
   "screenshots": [

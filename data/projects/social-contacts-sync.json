@@ -7,7 +7,7 @@
   "about": "A free, open-source desktop app that fills Google Contacts with profile photos from WhatsApp, Telegram and Gravatar and cleans up duplicates.",
   "description": "Social Contacts Sync is a free, open-source desktop app that fills Google Contacts with your contacts' profile photos from WhatsApp, Telegram, Gravatar and their social profiles, finds those profiles for you, and cleans up duplicates, shared numbers and missing country codes. For Windows, Linux and macOS.",
   "summary": "A free, open-source desktop app that gives every Google contact a face, with photos from WhatsApp, Telegram, Gravatar and their social profiles, and tidies up duplicates on the way.",
-  "licence": "Apache-2.0 with the Commons Clause",
+  "licence": "Apache 2.0 with the Commons Clause",
   "accent": "--scs",
   "mark": "social-contacts-sync.svg",
   "stack": [],
@@ -31,6 +31,24 @@
       "label": "Donate",
       "href": "donate.html",
       "kind": "donate"
+    },
+    {
+      "label": "README",
+      "href": "https://github.com/easly1989/social-contacts-sync#download",
+      "kind": "docs",
+      "label_sheet": false
+    },
+    {
+      "label": "WhatsApp Contact Sync",
+      "href": "https://github.com/guyzyl/whatsapp-contact-sync",
+      "kind": "credit",
+      "label_sheet": false
+    },
+    {
+      "label": "GitHub Sponsors",
+      "href": "https://github.com/sponsors/easly1989",
+      "kind": "donate",
+      "label_sheet": false
     }
   ],
   "screenshots": [

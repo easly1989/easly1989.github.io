@@ -21,6 +21,14 @@
     {
       "label": "Frontend",
       "value": "Flutter, Material Design 3, light/dark, responsive — one codebase for Web (PWA), Android and iOS"
+    },
+    {
+      "label": "Auth",
+      "value": "Email + password (Argon2id), JWT access + refresh; optional Google / Apple"
+    },
+    {
+      "label": "Delivery",
+      "value": "A single multi-arch container (amd64/arm64); the apps point at one backend"
     }
   ],
   "home": {

@@ -1,12 +1,12 @@
 {
   "name": "Cupid",
   "tagline": "Management system for matchmaking agencies",
-  "status": "Available to license. Closed source, self-hosted or hosted.",
+  "status": "Available to license. {licence}, self-hosted or hosted.",
   "lede": "A web management system for matchmaking and dating agencies — a cloud-ready rewrite of the classic <em>Cuore</em> desktop application.",
   "about": "A web management system for matchmaking and dating agencies.",
   "description": "Cupid is a web management system for matchmaking and dating agencies: client records, partner requests, affinity matching, meetings, contracts, printing, GDPR tooling and encrypted backups.",
   "summary": "A cloud-ready rewrite of the classic Cuore desktop application, delivered as a single container an agency can run itself.",
-  "licence": "Proprietary",
+  "licence": "Closed source",
   "accent": "--cupid",
   "mark": "cupid.svg",
   "stack": [
