@@ -8,8 +8,8 @@
       name="description"
       content="Seven projects by Carlo Ruggiero, a software developer: CloudBank, a free open-source self-hosted personal finance manager, Social Contacts Sync, ASF Plugins, coordinator-monitor, plus Planora, Nutreek and Cupid."
     />
-    <meta name="theme-color" content="#22594b" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#12352d" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f4f6f5" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0f1512" media="(prefers-color-scheme: dark)" />
     <link rel="icon" type="image/svg+xml" href="logo.svg" />
     <meta property="og:title" content="Carlo Ruggiero — Projects" />
     <meta
@@ -21,10 +21,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&family=VT323&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css" />
+    <!-- the professional home's; the room takes it away and brings its own (below) -->
+    <link rel="stylesheet" href="pro.css" />
 
     <!-- ===== Site config =====================================================
          CONTACT_EMAIL: where the "Write to me" sheet sends people (mailto). -->
@@ -32,47 +33,68 @@
       window.CONTACT_EMAIL = "caesar.themaster@gmail.com";
     </script>
     <script>
-      // The home is the room, unless ?room=0 in the address turned it off for the session (?room
-      // turns it on again). It needs a wide window it fits at a scale of ROOM_FIT.min or more,
-      // within ROOM_FIT.margin of the edges, as room.js frames it: room.js measures the box it
-      // needs and keeps it, so this decides before anything is drawn. Otherwise the home is the
-      // bench. sessionStorage "room" is "1" once the room has shown in this visit (About and the
-      // radio read it). The room holds the first frame until it is built (#room-ready, at the
-      // end of the body).
+      // The home is the professional page, unless the reader chose the room: localStorage
+      // "site:room" is "1" (the professional page's "Step into the room", or ?room in the
+      // address; ?room=0 sets it to "0"). The room needs a wide window it fits at a scale of
+      // ROOM_FIT.min or more, within ROOM_FIT.margin of the edges, as room.js frames it: room.js
+      // measures the box it needs and keeps it, so this decides before anything is drawn.
+      // Otherwise the home is the professional page, which shows the way in (html.room-fits)
+      // only where the room would fit. sessionStorage "room" is "1" once the room has shown in
+      // this visit (About and the radio read it). The room holds the first frame until it is
+      // built (#room-ready, at the end of the body).
       window.ROOM_FIT = { min: 0.7, margin: 16 };
       (function () {
-        // (without storage the room could not size itself or be turned off: the bench)
         var on = false,
-          box = null;
+          box = null,
+          root = document.documentElement;
         try {
           var q = new URLSearchParams(location.search).get("room");
-          if (q !== null) sessionStorage.setItem("room", q === "0" ? "0" : "1");
-          on = sessionStorage.getItem("room") !== "0";
+          if (q !== null) {
+            sessionStorage.setItem("room", q === "0" ? "0" : "1");
+            localStorage.setItem("site:room", q === "0" ? "0" : "1");
+            // the choice is kept: from here the address is a clean one, so that a reload, or a
+            // copy of it, never chooses again over a later choice (the tie)
+            var clean = new URL(location.href);
+            clean.searchParams.delete("room");
+            history.replaceState(history.state, "", clean.pathname + clean.search + clean.hash);
+          }
+          on = localStorage.getItem("site:room") === "1";
           box = JSON.parse(localStorage.getItem("room-box"));
         } catch (e) {
-          on = false;
+          // without storage the room could not be chosen or size itself: the professional page
+          return;
         }
-        if (!on) return;
-        // a box that is not four sizes is ignored: the room measures it again
-        if (!box || !["w", "h", "dw", "dh"].every(function (k) { return box[k] > 0 || box[k] === 0; })) box = null;
+        // a box that is not four sizes is ignored, and before the room has measured itself here it
+        // is the box it usually needs (room.js keeps the real one)
+        if (!box || !["w", "h", "dw", "dh"].every(function (k) { return box[k] > 0 || box[k] === 0; })) box = { w: 1545, h: 885, dw: 0, dh: 64 };
+        // and never on a phone, in landscape too: a mouse or a trackpad, and a wide window
         function fits() {
-          if (!matchMedia("(min-width: 901px)").matches) return false;
+          if (!matchMedia("(min-width: 901px) and (any-pointer: fine)").matches) return false;
           var m = 2 * ROOM_FIT.margin;
-          return !box || Math.min((innerWidth - box.dw - m) / box.w, (innerHeight - box.dh - m) / box.h) >= ROOM_FIT.min;
+          return Math.min((innerWidth - box.dw - m) / box.w, (innerHeight - box.dh - m) / box.h) >= ROOM_FIT.min;
         }
-        if (!fits()) {
+        if (!on || !fits()) {
+          root.classList.toggle("room-fits", fits());
           addEventListener("resize", function () {
-            if (fits()) location.reload();
+            if (on && fits()) location.reload();
+            root.classList.toggle("room-fits", fits());
           });
           return;
         }
-        document.documentElement.classList.add("iso");
+        root.classList.add("iso");
         try {
           sessionStorage.setItem("room", "1");
         } catch (e) {}
+        // the room has the bench's styles, not the professional page's
+        document.querySelector('link[href="pro.css"]').remove();
+        // and its colours in the browser's bar, the bench's as on the playful pages
+        var bar = document.querySelectorAll('meta[name="theme-color"]');
+        bar[0].content = "#22594b";
+        bar[1].content = "#12352d";
         document.write(
-          '<link rel="expect" href="#room-ready" blocking="render" />' +
-            '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tilt+Neon&family=Caveat:wght@500&family=Nanum+Pen+Script&family=Reenie+Beanie&display=swap" />' +
+          '<link rel="stylesheet" href="styles.css" />' +
+            '<link rel="expect" href="#room-ready" blocking="render" />' +
+            '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tilt+Neon&family=Caveat:wght@500&family=Nanum+Pen+Script&family=Reenie+Beanie&family=VT323&display=swap" />' +
             '<link rel="stylesheet" href="room.css" />',
         );
         // Willy (willy-room.js), with three.js r186 from vendor/three, which he loads only once the
@@ -91,9 +113,14 @@
       })();
     </script>
     <style>
+      /* the professional page and the room share this page: the room is the bench's objects,
+         which room.js sets out in 3D, and the professional page is not shown with it */
+      html.iso .pro {
+        display: none;
+      }
+      /* the room's 1280 x 880 mat, which room.css turns and room.js frames */
       .fit {
         position: relative;
-        height: calc(880px * var(--s, 1));
       }
       .stage {
         position: absolute;
@@ -101,8 +128,6 @@
         top: 0;
         width: 1280px;
         height: 880px;
-        transform: translateX(-50%) scale(var(--s, 1));
-        transform-origin: top center;
       }
       .home-tape {
         position: absolute;
@@ -111,13 +136,6 @@
         transform: rotate(-2deg);
         transform-origin: left bottom;
         transition: transform 0.4s var(--ease-spring);
-      }
-      /* the bench only (above the column's 900px, and not the room, whose sign sets its own
-         width): 420px wraps the subtitle into two clean lines and keeps it clear of the ledger */
-      @media (min-width: 901px) {
-        html:not(.iso) .home-tape {
-          max-width: 420px;
-        }
       }
       .home-tape.lifted {
         transform: rotate(-2deg) skewY(-3deg) rotate(-1deg);
@@ -1531,68 +1549,337 @@
           transform: translate(52px, 16px) scale(2.4);
         }
       }
-
-      /* Phones: the bench becomes a column you scroll down. */
-      @media (max-width: 900px) {
-        .fit {
-          height: auto;
-        }
-        .stage {
-          position: relative;
-          left: auto;
-          width: auto;
-          height: auto;
-          transform: none;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 3rem;
-          padding: 1rem 1rem 5rem;
-        }
-        .home-tape,
-        .intro,
-        .thing,
-        .loose {
-          position: relative;
-          left: auto;
-          top: auto;
-        }
-        .intro {
-          width: min(100%, 22rem);
-        }
-        .thing {
-          width: min(var(--w), 86vw);
-          flex: none;
-        }
-        .cards {
-          margin-top: 1rem;
-        }
-        .jar {
-          margin-bottom: 2rem;
-        }
-        .mug {
-          margin: 0 30px 3rem 0;
-        }
-        .plush {
-          margin-bottom: 4rem;
-        }
-        .plush .label {
-          left: 50%;
-          top: calc(100% + 0.6rem);
-          width: max-content;
-          max-width: 86vw;
-          transform: translateX(-50%);
-          text-align: center;
-        }
-        .loose,
-        .pc {
-          display: none;
-        }
-      }
     </style>
   </head>
   <body data-page="home">
-    <div class="mat">
+    <!-- The professional home: the page everyone gets, unless they chose the room. Its rows
+         are written by tools/sync.py from data/projects/ and lead to pro/<id>.html. -->
+    <div class="pro">
+      <a class="skip" href="#projects">Skip to the projects</a>
+      <header class="top wrap">
+        <h1>Carlo Ruggiero</h1>
+        <p class="role">
+          Full Stack Software Developer at TeamSystem. On my own time I build self-hosted web apps
+          and cross-platform mobile apps, mostly in Go.
+        </p>
+        <ul class="reach">
+          <li><a class="main" href="mailto:caesar.themaster@gmail.com">Email me</a></li>
+          <li><a href="https://github.com/easly1989" rel="noopener">GitHub</a></li>
+          <li><a href="https://www.linkedin.com/in/cruggiero89/" rel="noopener">LinkedIn</a></li>
+        </ul>
+      </header>
+      <main class="wrap">
+        <section class="projects" id="projects" tabindex="-1" aria-labelledby="projects-h">
+          <!-- the way into the room: only on a window that can hold it (html.room-fits) -->
+          <a class="peek" href="?room">
+            <svg viewBox="0 0 96 58" aria-hidden="true">
+              <defs>
+                <clipPath id="peek-eyes">
+                  <path d="M33 39 q5 -5 10 0 q-5 4 -10 0 Z M53 39 q5 -5 10 0 q-5 4 -10 0 Z" />
+                </clipPath>
+              </defs>
+              <g class="w-head">
+                <path d="M18 40 L22 8 L36 22 Z" fill="#f4f4f2" stroke="#1b1b1b" stroke-width="1.5" stroke-linejoin="round" />
+                <path d="M78 40 L74 8 L60 22 Z" fill="#1b1b1b" stroke="#1b1b1b" stroke-width="1.5" stroke-linejoin="round" />
+                <path d="M14 58 C14 30 30 18 48 18 C66 18 82 30 82 58 Z" fill="#f4f4f2" stroke="#1b1b1b" stroke-width="1.5" />
+                <path d="M48 18 C62 18 76 26 80 42 C70 40 60 44 52 40 C46 37 44 28 48 18 Z" fill="#1b1b1b" />
+                <path d="M33 39 q5 -5 10 0 q-5 4 -10 0 Z" fill="#7cbf4a" stroke="#1b1b1b" stroke-width="1" />
+                <path d="M53 39 q5 -5 10 0 q-5 4 -10 0 Z" fill="#7cbf4a" stroke="#1b1b1b" stroke-width="1" />
+                <g clip-path="url(#peek-eyes)">
+                  <path class="w-pupil" d="M37.5 35.3 v7.2" stroke="#1b1b1b" stroke-width="1.6" />
+                  <path class="w-pupil" d="M57.5 35.3 v7.2" stroke="#1b1b1b" stroke-width="1.6" />
+                </g>
+                <path d="M46 47 l2 2 l2 -2 Z" fill="#d98a96" />
+              </g>
+              <!-- the paws on the rule, each with its leg behind it, below the drawing's edge -->
+              <g class="w-paw l">
+                <path d="M22 57 V92 H38 V57" fill="#f4f4f2" stroke="#1b1b1b" stroke-width="1.5" />
+                <ellipse cx="30" cy="57" rx="9" ry="5" fill="#f4f4f2" stroke="#1b1b1b" stroke-width="1.5" />
+              </g>
+              <g class="w-paw r">
+                <path d="M58 57 V92 H74 V57" fill="#f4f4f2" stroke="#1b1b1b" stroke-width="1.5" />
+                <ellipse cx="66" cy="57" rx="9" ry="5" fill="#f4f4f2" stroke="#1b1b1b" stroke-width="1.5" />
+              </g>
+            </svg>
+            <span>Step into the room</span>
+          </a>
+          <h2 class="sec" id="projects-h">Projects</h2>
+          <ul class="list">
+            <!-- data:cloudbank.pro-row -->
+            <li class="row" style="--c: #2f6fd0">
+              <a href="pro/cloudbank.html">
+                <img src="logo.svg" alt="" width="44" height="44" />
+                <span><b>CloudBank</b><span class="st">Shipping, <span data-cloudbank="stable">v3.12.0</span>. Open source under AGPL-3.0.</span></span>
+                <p>
+                  Your money, self-hosted. A free personal finance manager — a from-scratch web port
+                  of HomeBank, built for the browser and the cloud.
+                </p>
+              </a>
+            </li>
+            <!-- /data -->
+            <!-- data:nutreek.pro-row -->
+            <li class="row" style="--c: #2f7d32">
+              <a href="pro/nutreek.html">
+                <img src="nutreek.svg" alt="" width="44" height="44" />
+                <span><b>Nutreek</b><span class="st">Open source under AGPL-3.0. Self-hosted.</span></span>
+                <p>
+                  A self-hosted weekly nutrition planner — plan meals, track macros, and let
+                  adaptive TDEE keep your targets honest.
+                </p>
+              </a>
+            </li>
+            <!-- /data -->
+            <!-- data:social-contacts-sync.pro-row -->
+            <li class="row" style="--c: #5b4cf0">
+              <a href="pro/social-contacts-sync.html">
+                <img src="social-contacts-sync.svg" alt="" width="44" height="44" />
+                <span><b>Social Contacts Sync</b><span class="st">Shipping, v1.4.5. Open source.</span></span>
+                <p>
+                  Give every contact a face. A desktop app that fills Google Contacts with your
+                  contacts' profile photos from WhatsApp, Telegram, Gravatar and their social
+                  profiles, and tidies up duplicates on the way.
+                </p>
+              </a>
+            </li>
+            <!-- /data -->
+            <!-- data:planora.pro-row -->
+            <li class="row" style="--c: #6d59ad">
+              <a href="pro/planora.html">
+                <img src="planora.svg" alt="" width="44" height="44" />
+                <span><b>Planora</b><span class="st">In internal testing. Free, and hosted for you.</span></span>
+                <p>
+                  Plan together, decide less, do more — a mobile-first shared activity planner that
+                  turns group indecision into events worth remembering.
+                </p>
+              </a>
+            </li>
+            <!-- /data -->
+            <!-- data:cupid.pro-row -->
+            <li class="row" style="--c: #c4356a">
+              <a href="pro/cupid.html">
+                <img src="cupid.svg" alt="" width="44" height="44" />
+                <span><b>Cupid</b><span class="st">Available to license. Closed source, self-hosted or hosted.</span></span>
+                <p>
+                  A web management system for matchmaking and dating agencies — a cloud-ready
+                  rewrite of the classic <em>Cuore</em> desktop application.
+                </p>
+              </a>
+            </li>
+            <!-- /data -->
+            <!-- data:asf-plugins.pro-row -->
+            <li class="row" style="--c: #0f766e">
+              <a href="pro/asf-plugins.html">
+                <img src="asf-notifier.svg" alt="" width="44" height="44" />
+                <span><b>ASF Plugins</b><span class="st">Two plugins for ArchiSteamFarm: one shipping, one a pre-release. Open source under Apache-2.0.</span></span>
+                <p>
+                  Plugins for ArchiSteamFarm. Each one drops into ASF's <code>plugins</code>
+                  directory, keeps its settings in ASF's own config files, and works in ASF's Docker
+                  image.
+                </p>
+              </a>
+            </li>
+            <!-- /data -->
+            <!-- data:coordinator-monitor.pro-row -->
+            <li class="row" style="--c: #b0573a">
+              <a href="pro/coordinator-monitor.html">
+                <img src="coordinator-monitor.svg" alt="" width="44" height="44" />
+                <span><b>coordinator-monitor</b><span class="st">Version 0.2.0, early. Open source under AGPL-3.0-or-later.</span></span>
+                <p>
+                  One pane for every local Claude Code session: what each one is doing, its
+                  subagents, and everything that waits for you, answerable in place.
+                </p>
+              </a>
+            </li>
+            <!-- /data -->
+          </ul>
+        </section>
+        <section class="about" aria-labelledby="about-h">
+          <h2 id="about-h">About</h2>
+          <div>
+            <p>
+              I'm a software developer with more than a decade of experience. By day I'm a Full
+              Stack Software Developer at TeamSystem: the database, the API and the interface on
+              top of it, for the web and for phones.
+            </p>
+            <p>
+              I like finishing things: an app someone can actually run and keep running, rather
+              than a proof of concept. The projects here are the ones I keep going on my own time.
+              Some are open source, some are licensed, and some I host.
+            </p>
+            <ul class="how">
+              <li><b>Go backends</b><span>Small, dependency-light services with a clear REST API.</span></li>
+              <li><b>Embedded SQLite</b><span>No separate database server: the data is a file you control.</span></li>
+              <li><b>One-container deploys</b><span>Each product ships as a single Docker container.</span></li>
+              <li><b>The right front end</b><span>HTMX, a React SPA, or Flutter, whichever fits.</span></li>
+            </ul>
+          </div>
+        </section>
+      </main>
+      <footer class="wrap">Carlo Ruggiero. The playful version of this site is a room with a cat in it.</footer>
+    </div>
+    <script>
+      // Willy, peeking in, follows a mouse with his eyes and his head, and swats at it once when it
+      // comes close to his face or onto the link; a keyboard focus on the link gets the same swat.
+      // Only while he shows (html.room-fits), never under reduced motion, never for touch or a pen.
+      // Nothing is measured while the pointer moves: his place is kept from the last resize.
+      (function () {
+        var root = document.documentElement;
+        var peek = document.querySelector(".peek");
+        if (!peek || root.classList.contains("iso")) return;
+        var svg = peek.querySelector("svg"),
+          head = svg.querySelector(".w-head"),
+          pupils = svg.querySelectorAll(".w-pupil"),
+          paws = { l: svg.querySelector(".w-paw.l"), r: svg.querySelector(".w-paw.r") };
+        var still = matchMedia("(prefers-reduced-motion: reduce)");
+        var REACH = 1.5 * 68, // px of the drawing (96 wide): a face and a half from his face
+          COOL = 5000,
+          MOST = 3;
+        var on = false,
+          box = null, // the drawing in page px: left, top, and px per unit of its drawing
+          to = null, // where the mouse is, page px; null once it has left the window
+          now = { x: 0, y: 0, t: 0 }, // the pupils' shift and the head's turn, as drawn
+          frame = 0,
+          swats = 0,
+          last = -COOL,
+          armed = true,
+          onLink = false;
+        function measure() {
+          var r = svg.getBoundingClientRect();
+          box = { l: r.left + scrollX, t: r.top + scrollY, k: r.width / 96 };
+        }
+        // a point of the drawing, in page px
+        function at(x, y) {
+          return { x: box.l + x * box.k, y: box.t + y * box.k };
+        }
+        function draw() {
+          head.style.transform = "translateX(" + (now.t * 0.3).toFixed(2) + "px) rotate(" + now.t.toFixed(2) + "deg)";
+          var p = "translate(" + now.x.toFixed(2) + "px, " + now.y.toFixed(2) + "px)";
+          pupils[0].style.transform = pupils[1].style.transform = p;
+        }
+        function swat(x, y) {
+          var t = performance.now();
+          if (swats >= MOST || t - last < COOL) return;
+          swats++;
+          last = t;
+          // the paw on the mouse's side, turned towards it, inside the drawing
+          var face = at(48, 38),
+            side = x < face.x ? "l" : "r",
+            base = at(side === "l" ? 30 : 66, 92),
+            a = Math.max(-32, Math.min(32, (Math.atan2(x - base.x, base.y - y) * 180) / Math.PI));
+          paws[side].animate(
+            [
+              { transform: "none" },
+              { transform: "translateY(-20px) rotate(" + a + "deg)", offset: 0.4 },
+              { transform: "translateY(-17px) rotate(" + (a + (a < 0 ? -16 : 16)) + "deg)", offset: 0.6 },
+              { transform: "none" },
+            ],
+            { duration: 400, easing: "ease-in-out" }
+          );
+        }
+        function step() {
+          frame = 0;
+          var aim = { x: 0, y: 0, t: 0 };
+          if (to) {
+            var face = at(48, 38),
+              dx = to.x - face.x,
+              dy = to.y - face.y,
+              d = Math.hypot(dx, dy) || 1;
+            aim.x = (2.2 * dx) / Math.max(d, 60);
+            aim.y = (0.9 * dy) / Math.max(d, 60);
+            aim.t = Math.max(-5, Math.min(5, dx / 40));
+            var near = d < REACH * box.k || onLink;
+            // once each time it comes close, if he may: not again until it has gone away
+            if (near && armed) {
+              armed = false;
+              swat(to.x, to.y);
+            } else if (!near) armed = true;
+          }
+          var moving = false;
+          ["x", "y", "t"].forEach(function (k) {
+            now[k] += (aim[k] - now[k]) * 0.2;
+            if (Math.abs(aim[k] - now[k]) > 0.01) moving = true;
+            else now[k] = aim[k];
+          });
+          draw();
+          // eased there, and nothing new: no more frames until the mouse moves
+          if (moving) frame = requestAnimationFrame(step);
+        }
+        function ask() {
+          if (!frame) frame = requestAnimationFrame(step);
+        }
+        function move(e) {
+          if (e.pointerType !== "mouse") return;
+          to = { x: e.pageX, y: e.pageY };
+          ask();
+        }
+        function out(e) {
+          if (e.pointerType !== "mouse" || e.relatedTarget) return;
+          to = null;
+          ask();
+        }
+        function enter(e) {
+          if (e.pointerType !== "mouse") return;
+          onLink = true;
+          to = { x: e.pageX, y: e.pageY };
+          ask();
+        }
+        function leave(e) {
+          if (e.pointerType === "mouse") onLink = false;
+        }
+        function focused() {
+          if (!peek.matches(":focus-visible")) return;
+          var s = at(96, 40);
+          swat(s.x + 40, s.y);
+        }
+        function start() {
+          on = true;
+          measure();
+          addEventListener("pointermove", move, { passive: true });
+          document.addEventListener("pointerout", out);
+          peek.addEventListener("pointerenter", enter);
+          peek.addEventListener("pointerleave", leave);
+          peek.addEventListener("focus", focused);
+          addEventListener("resize", measure);
+        }
+        function stop() {
+          on = false;
+          removeEventListener("pointermove", move);
+          document.removeEventListener("pointerout", out);
+          peek.removeEventListener("pointerenter", enter);
+          peek.removeEventListener("pointerleave", leave);
+          peek.removeEventListener("focus", focused);
+          removeEventListener("resize", measure);
+          cancelAnimationFrame(frame);
+          frame = 0;
+          to = null;
+          onLink = false;
+          now = { x: 0, y: 0, t: 0 };
+          draw();
+          paws.l.getAnimations().concat(paws.r.getAnimations()).forEach(function (a) {
+            a.cancel();
+          });
+        }
+        // he shows on a window that can hold the room (the head's script), and moves only
+        // without reduced motion
+        function update() {
+          var want = root.classList.contains("room-fits") && !still.matches;
+          if (want && !on) start();
+          else if (!want && on) stop();
+        }
+        new MutationObserver(update).observe(root, { attributes: true, attributeFilter: ["class"] });
+        still.addEventListener("change", update);
+        if (document.fonts) document.fonts.ready.then(function () {
+          if (on) measure();
+        });
+        update();
+      })();
+    </script>
+
+    <!-- The room: the bench's objects, which room.js sets out in 3D. Hidden unless the room
+         was chosen and fits (the head's script); the script after it shows it. -->
+    <div class="mat" hidden>
+      <!-- the room's first stop for the keyboard: the plain home, as the tie on the chair does -->
+      <a class="skip-plain" href="index.html">Plain version of this site</a>
       <svg class="guides" aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 100 100">
         <line x1="0" y1="100" x2="100" y2="0" vector-effect="non-scaling-stroke" />
         <line x1="0" y1="60" x2="60" y2="0" vector-effect="non-scaling-stroke" />
@@ -1605,12 +1892,12 @@
       </header>
 
       <div class="fit">
-        <main class="stage" data-cat-world>
-          <div class="tape home-tape" data-cat="tape">
+        <main class="stage">
+          <div class="tape home-tape">
             <h1>Carlo Ruggiero</h1>
             <p>Senior Architect &amp; Software Developer, 10&nbsp;years and counting.</p>
           </div>
-          <div class="paper ruled intro" data-cat="sit">
+          <div class="paper ruled intro">
             <p>
               This is my bench. Everything on it is something I built and still look after. Pick
               anything up to see what it is. The cat is not for sale, and does what it likes.
@@ -1622,7 +1909,6 @@
             href="about.html"
             data-open="camera"
             data-open-ms="1100"
-            data-cat="push sit"
             style="--x: 96px; --y: 512px; --w: 220px; --h: 172px; --r: -6deg"
             aria-label="About me: take a photo"
           >
@@ -1643,7 +1929,6 @@
             data-open="ledger"
             data-open-ms="1050"
             data-vt-ms="220"
-            data-cat="scratch hide sit"
             style="--x: 486px; --y: 92px; --w: 250px; --h: 330px; --r: 4deg"
             aria-label="CloudBank, a personal finance manager. Open the ledger"
           ><!-- /data -->
@@ -1661,7 +1946,6 @@
             href="social-contacts-sync.html"
             data-open="cards"
             data-open-ms="1050"
-            data-cat="cards push"
             style="--x: 812px; --y: 96px; --w: 260px; --h: 120px; --r: -3deg"
             aria-label="Social Contacts Sync, profile photos for Google Contacts"
           ><!-- /data -->
@@ -1676,7 +1960,6 @@
             href="planora.html"
             data-open="jar"
             data-open-ms="1100"
-            data-cat="jar push"
             style="--x: 1100px; --y: 70px; --w: 150px; --h: 150px"
             aria-label="Planora, a shared activity planner for groups"
           ><!-- /data -->
@@ -1696,7 +1979,6 @@
             data-open="agenda"
             data-open-ms="1650"
             data-vt-ms="220"
-            data-cat="sit scratch"
             id="agenda"
             style="--x: 488px; --y: 494px; --w: 220px; --h: 290px; --r: -4deg"
             aria-label="Nutreek, a weekly nutrition planner. Open the agenda"
@@ -1720,7 +2002,6 @@
             href="cupid.html"
             data-open="envelope"
             data-open-ms="1250"
-            data-cat="envelope push"
             style="--x: 828px; --y: 380px; --w: 210px; --h: 140px; --r: 8deg"
             aria-label="Cupid, a management system for matchmaking agencies"
           ><!-- /data -->
@@ -1737,7 +2018,6 @@
             href="asf-plugins.html"
             data-open="pager"
             data-open-ms="900"
-            data-cat="push sit"
             style="--x: 1130px; --y: 420px; --w: 90px; --h: 58px; --r: -7deg"
             aria-label="ASF Plugins, plugins for ArchiSteamFarm: ASF-Notifier reports to a Matrix room"
           ><!-- /data -->
@@ -1767,7 +2047,6 @@
           <button
             class="thing sticky"
             data-sheet="contact"
-            data-cat="push sit"
             style="--x: 850px; --y: 610px; --w: 180px; --h: 150px; --r: -4deg"
           >
             Write to me<small>A project, a licence, or just to talk shop.</small>
@@ -1778,7 +2057,6 @@
             href="donate.html"
             data-open="mug"
             data-open-ms="1450"
-            data-cat="coffee push"
             style="--x: 1100px; --y: 600px; --w: 130px; --h: 130px"
             aria-label="Buy me a coffee: ways to support my work"
           >
@@ -1795,11 +2073,11 @@
             <span class="label">Buy me a coffee<small>It keeps the bench open</small></span>
           </a>
 
-          <span class="loose pencil" data-cat="knock" style="left: 120px; top: 800px; --r: -14deg" aria-hidden="true"></span>
-          <span class="loose eraser" data-cat="knock" style="left: 380px; top: 812px; --r: 12deg" aria-hidden="true"></span>
-          <span class="loose clip" data-cat="knock" style="left: 784px; top: 290px; --r: 30deg" aria-hidden="true"></span>
-          <span class="loose coin" data-cat="knock" style="left: 1060px; top: 560px" aria-hidden="true"></span>
-          <div class="pc" data-cat-avoid>
+          <span class="loose pencil" style="left: 120px; top: 800px; --r: -14deg" aria-hidden="true"></span>
+          <span class="loose eraser" style="left: 380px; top: 812px; --r: 12deg" aria-hidden="true"></span>
+          <span class="loose clip" style="left: 784px; top: 290px; --r: 30deg" aria-hidden="true"></span>
+          <span class="loose coin" style="left: 1060px; top: 560px" aria-hidden="true"></span>
+          <div class="pc">
             <span class="floor" aria-hidden="true"></span>
             <span class="top" aria-hidden="true"></span>
             <span class="side" aria-hidden="true"></span>
@@ -1824,6 +2102,13 @@ SYSTEM HALTED.</span>
         </main>
       </div>
     </div>
+    <script>
+      // the room is chosen and fits (the head's script): it shows, and the professional page goes
+      if (document.documentElement.classList.contains("iso")) {
+        document.querySelector(".mat").hidden = false;
+        document.querySelector(".pro").hidden = true;
+      }
+    </script>
 
     <template id="sheet-contact">
       <form id="contact-form">
@@ -1887,14 +2172,17 @@ SYSTEM HALTED.</span>
         });
       })();
     </script>
-    <script src="crt.js"></script>
+    <script>
+      // the room's sounds and its radio; the professional page makes none
+      if (document.documentElement.classList.contains("iso")) document.write('<script src="crt.js"><\/script>');
+    </script>
     <script>
       // The old computer. Only its switch does anything until it has booted; then
       // the screen and the keyboard open the terminal. It stays on for the visit,
       // unless someone went to the terminal without it: then it never starts again.
       (function () {
         var pc = document.querySelector(".pc");
-        if (!pc) return;
+        if (!pc || !document.documentElement.classList.contains("iso")) return;
         var reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
         var power = pc.querySelector(".power");
         var uses = pc.querySelectorAll(".use");
@@ -2078,7 +2366,7 @@ SYSTEM HALTED.</span>
       // motion it shows one, still; in a hidden tab it waits.
       (function () {
         var lcd = document.querySelector(".pager .pg-lcd");
-        if (!lcd) return;
+        if (!lcd || !document.documentElement.classList.contains("iso")) return;
         var msg = lcd.querySelector(".pg-msg");
         var MESSAGES = [
           ["bot1 login failed (TwoFactorCodeMismatch), ASF stopped the bot", "bad"],
@@ -2140,15 +2428,14 @@ SYSTEM HALTED.</span>
         if (document.fonts) document.fonts.ready.then(refit);
       })();
     </script>
-    <script src="radio.js"></script>
+    <script>
+      if (document.documentElement.classList.contains("iso")) document.write('<script src="radio.js"><\/script>');
+    </script>
     <script src="site.js" defer></script>
     <script>
-      // the room is built here, before the first frame; the cat lives on the bench only
-      document.write(
-        document.documentElement.classList.contains("iso")
-          ? '<script src="photos.js"><\/script><script src="room.js"><\/script><script src="morph.js"><\/script>'
-          : '<script src="cat.js" defer><\/script>',
-      );
+      // the room is built here, before the first frame
+      if (document.documentElement.classList.contains("iso"))
+        document.write('<script src="photos.js"><\/script><script src="room.js"><\/script><script src="morph.js"><\/script>');
     </script>
     <span id="room-ready" hidden></span>
   </body>

@@ -1,0 +1,469 @@
+/* The professional home and its project pages (pro/): a cool off-white ground, one ink, and
+   nothing of the bench. The home loads this only when it is not the room; the room's own
+   styles never load with it. A project's accent comes in as --c, written from styles.css's
+   :root by tools/sync.py, and shows only as the status line's square and the page's buttons. */
+
+:root {
+  --ground: #f4f6f5;
+  --ink: #16201b;
+  --ink-2: #4a5852;
+  --rule: #d3dbd7;
+  --focus: #1f5a4a;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ground: #0f1512;
+    --ink: #e3eae6;
+    --ink-2: #9caba4;
+    --rule: #27332d;
+    --focus: #ffd84a;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+html {
+  background: var(--ground);
+  scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font: 400 1.0625rem/1.6 "Atkinson Hyperlegible", system-ui, sans-serif;
+}
+a {
+  color: inherit;
+}
+button {
+  font: inherit;
+  color: inherit;
+}
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+code {
+  font: 500 0.9em "IBM Plex Mono", ui-monospace, monospace;
+}
+.wrap {
+  width: min(68rem, calc(100% - 2.5rem));
+  margin-inline: auto;
+}
+
+/* the first stop for the keyboard, shown only while it has the focus */
+.skip {
+  position: absolute;
+  left: 1rem;
+  top: 1rem;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 1rem;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--ground);
+  font-weight: 700;
+  text-decoration: none;
+  transform: translateY(calc(-100% - 2rem));
+}
+.skip:focus {
+  transform: none;
+}
+.projects:focus {
+  outline: none;
+}
+
+/* ---- the home: the name is the one loud thing ---------------------------------------- */
+.top {
+  padding: 4.5rem 0 3.25rem;
+}
+.top h1 {
+  margin: 0;
+  font: 800 clamp(3rem, 9.5vw, 7.25rem) / 0.92 "Bricolage Grotesque", sans-serif;
+  font-variation-settings: "opsz" 96;
+  letter-spacing: -0.035em;
+}
+.top .role {
+  margin: 1.1rem 0 0;
+  max-width: 34rem;
+  font-size: 1.2rem;
+  color: var(--ink-2);
+}
+.reach {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 1.6rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.reach a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 1rem;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 700;
+}
+.reach a.main {
+  background: var(--ink);
+  color: var(--ground);
+}
+
+/* Willy, peeking over the top rule of the project list: only where the window can hold the
+   room (the head's script sets html.room-fits), so never on a phone and never without scripts */
+.projects {
+  position: relative;
+  border-top: 2px solid var(--ink);
+  padding-top: 0.4rem;
+}
+.peek {
+  display: none;
+  position: absolute;
+  right: 0.5rem;
+  bottom: 100%;
+  align-items: flex-end;
+  gap: 0.75rem;
+  text-decoration: none;
+}
+.room-fits .peek {
+  display: flex;
+}
+.peek svg {
+  display: block;
+  width: 124px;
+  height: 75px;
+}
+.peek span {
+  margin-bottom: 0.55rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.peek:hover span {
+  text-decoration-thickness: 2px;
+}
+/* his head turns about his neck and his paws swing from below the rule (the home's script);
+   a paw never takes the pointer, so a click through it lands on the link */
+.peek .w-head,
+.peek .w-paw {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+.peek .w-paw {
+  pointer-events: none;
+}
+
+h2.sec {
+  margin: 1.2rem 0 0.4rem;
+  font: 700 1rem/1.3 "Atkinson Hyperlegible", sans-serif;
+  color: var(--ink-2);
+}
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.row {
+  border-bottom: 1px solid var(--rule);
+}
+.row a {
+  display: grid;
+  grid-template-columns: 44px 15rem 1fr;
+  gap: 0.4rem 1.25rem;
+  align-items: start;
+  padding: 1.15rem 0.25rem 1.2rem;
+  text-decoration: none;
+}
+.row img {
+  width: 44px;
+  height: 44px;
+}
+.row b {
+  font: 700 1.45rem/1.15 "Bricolage Grotesque", sans-serif;
+}
+.st::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 0.45rem;
+  background: var(--c);
+  vertical-align: 0.05em;
+}
+.row .st {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+}
+.row p {
+  margin: 0.1rem 0 0;
+}
+.row a:hover b {
+  text-decoration: underline;
+  text-decoration-color: var(--c);
+  text-decoration-thickness: 3px;
+  text-underline-offset: 4px;
+}
+.about {
+  display: grid;
+  grid-template-columns: 15rem 1fr;
+  gap: 1.25rem;
+  margin: 4rem 0 0;
+  padding: 1.5rem 0 0;
+  border-top: 2px solid var(--ink);
+}
+.about h2 {
+  margin: 0;
+  font: 700 1.45rem/1.15 "Bricolage Grotesque", sans-serif;
+}
+.about p {
+  margin: 0 0 1rem;
+  max-width: 40rem;
+}
+.how {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem 2rem;
+  margin: 1.5rem 0 0;
+  padding: 0;
+  list-style: none;
+  max-width: 44rem;
+}
+.how b {
+  display: block;
+}
+.how span {
+  color: var(--ink-2);
+  font-size: 0.95rem;
+}
+footer {
+  margin: 4rem 0 0;
+  padding: 1.5rem 0 3rem;
+  border-top: 1px solid var(--rule);
+  color: var(--ink-2);
+  font-size: 0.92rem;
+}
+
+/* ---- a project's page ---------------------------------------------------------------- */
+.back {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: 1.5rem;
+  font-weight: 700;
+}
+.ph {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 0 1.4rem;
+  padding: 2.5rem 0 2rem;
+  border-bottom: 2px solid var(--ink);
+}
+.ph img {
+  width: 64px;
+  height: 64px;
+}
+.ph .st {
+  margin: 0;
+  color: var(--ink-2);
+}
+.ph .st::before {
+  width: 9px;
+  height: 9px;
+  margin-right: 0.5rem;
+}
+.ph h1 {
+  margin: 0.2rem 0 0;
+  font: 800 clamp(2.6rem, 7vw, 4.75rem) / 0.95 "Bricolage Grotesque", sans-serif;
+  letter-spacing: -0.03em;
+}
+.ph .lede {
+  margin: 1rem 0 0;
+  max-width: 38rem;
+  font-size: 1.2rem;
+}
+.acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 1.5rem 0 0;
+}
+.acts a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 1.05rem;
+  border-radius: 8px;
+  border: 1.5px solid var(--c);
+  font-weight: 700;
+  text-decoration: none;
+}
+.acts a.go {
+  background: var(--c);
+  color: #fff;
+}
+.cols {
+  display: grid;
+  grid-template-columns: 1fr 19rem;
+  gap: 3rem;
+  padding: 2rem 0 0;
+}
+.cols h2 {
+  margin: 0 0 0.6rem;
+  font: 700 1.3rem/1.2 "Bricolage Grotesque", sans-serif;
+}
+.cols p {
+  max-width: 40rem;
+}
+dl.facts {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.55rem 1rem;
+}
+dl.facts dt {
+  color: var(--ink-2);
+}
+dl.facts dd {
+  margin: 0;
+  font: 500 0.9rem/1.6 "IBM Plex Mono", ui-monospace, monospace;
+}
+.shots {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+  align-items: start;
+  margin: 2.25rem 0 0;
+}
+.shot {
+  margin: 0;
+}
+.shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+}
+.shot figcaption {
+  margin-top: 0.5rem;
+  font-size: 0.88rem;
+  color: var(--ink-2);
+}
+/* a family's member, under the family's own head */
+.member {
+  margin: 3rem 0 0;
+}
+.member .ph {
+  grid-template-columns: 44px 1fr;
+  padding: 1.5rem 0;
+  border-top: 2px solid var(--ink);
+  border-bottom: 0;
+}
+.member .ph img {
+  width: 44px;
+  height: 44px;
+}
+.member h2 {
+  margin: 0.2rem 0 0;
+  font: 800 2rem/1.05 "Bricolage Grotesque", sans-serif;
+  letter-spacing: -0.02em;
+}
+.member .lede {
+  font-size: 1.0625rem;
+}
+
+/* ---- screenshots open full size (site.js wraps each .shot img in button.zoom) ---------- */
+.zoom {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  cursor: zoom-in;
+}
+dialog.lightbox {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  max-width: calc(100vw - 2rem);
+  max-height: calc(100vh - 2rem);
+  overflow: visible;
+}
+dialog.lightbox img {
+  display: block;
+  max-width: calc(100vw - 2rem);
+  max-height: calc(100vh - 5rem);
+  height: auto;
+}
+dialog.lightbox p {
+  margin: 0.6rem 0 0;
+  color: #f2f2ee;
+  text-align: center;
+}
+dialog::backdrop {
+  background: rgba(8, 14, 12, 0.82);
+}
+dialog.lightbox .close {
+  position: fixed;
+  right: 1rem;
+  top: 1rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 0;
+  border-radius: 50%;
+  /* dark under the white cross, which may sit over a white screenshot */
+  background: rgba(8, 14, 12, 0.82);
+  color: #fff;
+  font-size: 1.7rem;
+  line-height: 1;
+  cursor: pointer;
+}
+dialog.lightbox :focus-visible {
+  outline-color: #ffd84a;
+}
+
+@media (max-width: 46rem) {
+  .top {
+    padding: 3rem 0 2.75rem;
+  }
+  .row a {
+    grid-template-columns: 40px 1fr;
+  }
+  .row img {
+    width: 40px;
+    height: 40px;
+  }
+  .row p {
+    grid-column: 2;
+  }
+  .about,
+  .cols,
+  .how,
+  .shots {
+    grid-template-columns: 1fr;
+  }
+  .ph {
+    grid-template-columns: 1fr;
+  }
+  .ph img {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 0.8rem;
+  }
+}

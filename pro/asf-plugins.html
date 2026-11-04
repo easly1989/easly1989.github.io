@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ASF Plugins — ArchiSteamFarm plugins · Carlo Ruggiero</title>
+    <meta
+      name="description"
+      content="ASF Plugins: ASF-Notifier, which posts to a Matrix room when a bot stops, loses its connection, finishes farming or ASF is updated, and ASF-PluginConfig, a settings page for ASF plugins, now a pre-release. Free, open source, Apache-2.0."
+    />
+    <meta name="theme-color" content="#f4f6f5" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0f1512" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" type="image/svg+xml" href="../asf-notifier.svg" />
+    <meta property="og:title" content="ASF Plugins — ArchiSteamFarm plugins" />
+    <meta
+      property="og:description"
+      content="Plugins for ArchiSteamFarm: Matrix alerts when a bot stops, loses its connection or finishes farming, and a settings page for plugins, as a pre-release."
+    />
+    <meta property="og:type" content="website" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../pro.css" />
+  </head>
+  <body>
+    <div class="wrap" style="--c: #0f766e">
+      <a class="back" href="../index.html">All projects</a>
+      <header class="ph">
+        <img src="../asf-notifier.svg" alt="" width="64" height="64" />
+        <div>
+          <p class="st">Two plugins for ArchiSteamFarm: one shipping, one a pre-release. Open source under Apache-2.0.</p>
+          <h1>ASF Plugins</h1>
+          <p class="lede">
+            Plugins for ArchiSteamFarm. Each one drops into ASF's <code>plugins</code> directory,
+            keeps its settings in ASF's own config files, and works in ASF's Docker image.
+          </p>
+          <div class="acts">
+            <a class="go" href="#asf-notifier">ASF-Notifier</a>
+            <a href="#asf-pluginconfig">ASF-PluginConfig</a>
+          </div>
+        </div>
+      </header>
+      <main>
+        <div class="cols">
+          <section aria-labelledby="what-h">
+            <h2 id="what-h">What it is</h2>
+            <p>
+              ASF Plugins: ASF-Notifier, which posts to a Matrix room when a bot stops, loses its
+              connection, finishes farming or ASF is updated, and ASF-PluginConfig, a settings page
+              for ASF plugins, now a pre-release. Free, open source, Apache-2.0.
+            </p>
+          </section>
+          <section aria-labelledby="glance-h">
+            <h2 id="glance-h">At a glance</h2>
+            <dl class="facts">
+              <dt>Built against</dt><dd>ArchiSteamFarm 6.3.10.6 (ASF-Notifier) and 6.3.11.7 (ASF-PluginConfig), with the .NET runtime ASF ships with</dd>
+              <dt>Licence</dt><dd>Apache-2.0</dd>
+            </dl>
+          </section>
+        </div>
+        <section class="member" id="asf-notifier" style="--c: #0f766e" aria-labelledby="asf-notifier-h">
+          <header class="ph">
+            <img src="../asf-notifier.svg" alt="" width="44" height="44" />
+            <div>
+              <p class="st">Shipping, 1.1.2.0. Open source under Apache-2.0.</p>
+              <h2 id="asf-notifier-h">ASF-Notifier</h2>
+              <p class="lede">
+                Hear about it when a bot stops. An ArchiSteamFarm plugin that posts to a Matrix room
+                when a bot is stopped, loses its connection and comes back, finishes farming, or ASF
+                is updated.
+              </p>
+              <div class="acts">
+                <a class="go" href="https://github.com/easly1989/ASF-Notifier/releases/latest" rel="noopener">Download</a>
+                <a href="https://github.com/easly1989/ASF-Notifier" rel="noopener">View on GitHub</a>
+              </div>
+            </div>
+          </header>
+        </section>
+        <section class="member" id="asf-pluginconfig" style="--c: #4b5bb8" aria-labelledby="asf-pluginconfig-h">
+          <header class="ph">
+            <img src="../asf-pluginconfig.svg" alt="" width="44" height="44" />
+            <div>
+              <p class="st">Pre-release, 1.0.0.0. Open source under Apache-2.0.</p>
+              <h2 id="asf-pluginconfig-h">ASF-PluginConfig</h2>
+              <p class="lede">
+                One page to edit the settings of the other installed plugins. A plugin that embeds a
+                JSON Schema gets a form; one without gets a raw JSON editor for its key.
+              </p>
+              <div class="acts">
+                <a class="go" href="https://github.com/easly1989/ASF-PluginConfig/releases/tag/1.0.0.0" rel="noopener">Download the pre-release</a>
+                <a href="https://github.com/easly1989/ASF-PluginConfig" rel="noopener">View on GitHub</a>
+                <a href="https://github.com/easly1989/ASF-PluginConfig/issues/1" rel="noopener">Read the spec</a>
+              </div>
+            </div>
+          </header>
+          <div class="shots">
+            <figure class="shot">
+              <img src="../assets/asf-pluginconfig-page.png" alt="The page, listing one plugin with its global and bot settings, this plugin's own settings, the raw JSON card and the update button" width="1100" height="1004" loading="lazy" />
+              <figcaption>One card per plugin with a schema, a raw JSON card for the rest, and the button that asks ASF to update plugins.</figcaption>
+            </figure>
+          </div>
+        </section>
+      </main>
+      <footer>ASF Plugins is one of Carlo Ruggiero's projects. <a href="../index.html">All projects</a></footer>
+    </div>
+    <script src="../site.js" defer></script>
+  </body>
+</html>

@@ -56,7 +56,8 @@ try:
         # (the computer on: its screen's light flickers, over the whole window, in the dark)
         for scheme, light, radio, pc in (("light", "on", False, False), ("dark", "on", False, False), ("dark", "off", False, False), ("light", "on", True, False), ("dark", "off", True, False), ("dark", "off", False, True)):
             b.size(w, h)
-            b.media(prefers_color_scheme=scheme)
+            # (motion on, whatever the system says: under reduced motion Willy sleeps where he starts)
+            b.media(prefers_color_scheme=scheme, prefers_reduced_motion="no-preference")
             b.nav(base + "/index.html?room", 1)
             # (and the computer off: it stays on from one load to the next, and the case that
             # switches it on would leave it on for the next size's cases, and switch it off there)

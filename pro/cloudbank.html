@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CloudBank — Self-hosted personal finance manager · Carlo Ruggiero</title>
+    <meta
+      name="description"
+      content="CloudBank is a free, open-source, self-hosted personal finance manager — a production-ready web port of HomeBank. Accounts, a powerful register, scheduled transactions, budgets, rich reports, automatic bank sync, bank mails, notifications, an optional AI with your own key and a customizable dashboard."
+    />
+    <meta name="theme-color" content="#f4f6f5" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0f1512" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" type="image/svg+xml" href="../logo.svg" />
+    <meta property="og:title" content="CloudBank — Self-hosted personal finance manager" />
+    <meta
+      property="og:description"
+      content="A free, open-source, self-hosted web port of HomeBank — now production-ready, with automatic bank sync and a fully customizable dashboard."
+    />
+    <meta property="og:type" content="website" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../pro.css" />
+  </head>
+  <body>
+    <div class="wrap" style="--c: #2f6fd0">
+      <a class="back" href="../index.html">All projects</a>
+      <header class="ph">
+        <img src="../logo.svg" alt="" width="64" height="64" />
+        <div>
+          <p class="st">Shipping, <span data-cloudbank="stable">v3.12.0</span>. Open source under AGPL-3.0.</p>
+          <h1>CloudBank</h1>
+          <p class="lede">
+            Your money, self-hosted. A free personal finance manager — a from-scratch web port of
+            HomeBank, built for the browser and the cloud.
+          </p>
+          <div class="acts">
+            <a class="go" href="https://p01--cloudbank--7dcjw6mlmtky.code.run/" target="_blank" rel="noopener">Try the demo</a>
+            <a href="https://github.com/easly1989/cloudbank" rel="noopener">View on GitHub</a>
+            <a href="https://github.com/easly1989/cloudbank/blob/main/docs/README.md" rel="noopener">Documentation</a>
+          </div>
+        </div>
+      </header>
+      <main>
+        <div class="cols">
+          <section aria-labelledby="what-h">
+            <h2 id="what-h">What it is</h2>
+            <p>
+              CloudBank is a free, open-source, self-hosted personal finance manager — a
+              production-ready web port of HomeBank. Accounts, a powerful register, scheduled
+              transactions, budgets, rich reports, automatic bank sync, bank mails, notifications, an
+              optional AI with your own key and a customizable dashboard.
+            </p>
+          </section>
+          <section aria-labelledby="glance-h">
+            <h2 id="glance-h">At a glance</h2>
+            <dl class="facts">
+              <dt>Runs as</dt><dd>One Docker container</dd>
+              <dt>Database</dt><dd>Built in, none to run</dd>
+              <dt>Languages</dt><dd>6</dd>
+              <dt>Licence</dt><dd>AGPL-3.0</dd>
+            </dl>
+          </section>
+        </div>
+        <div class="shots">
+          <figure class="shot">
+            <img src="../assets/cloudbank-dashboard.png" alt="CloudBank dashboard with today's balance, what was earned, spent and kept, and an income versus expense chart" width="1980" height="1290" loading="lazy" />
+            <figcaption>The dashboard — a fully customizable, free-form grid of widgets.</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="../assets/cloudbank-register.png" alt="CloudBank register with four transactions selected and their total" width="1980" height="1290" loading="lazy" />
+            <figcaption>The register, and one edit for a whole selection.</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="../assets/cloudbank-reports.png" alt="CloudBank cash flow report for 2026" width="1980" height="1290" loading="lazy" />
+            <figcaption>Reports — spending, cash flow, balances and vehicle cost.</figcaption>
+          </figure>
+        </div>
+      </main>
+      <footer>CloudBank is one of Carlo Ruggiero's projects. <a href="../index.html">All projects</a></footer>
+    </div>
+    <script src="../site.js" defer></script>
+  </body>
+</html>

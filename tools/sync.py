@@ -8,11 +8,13 @@ Run from anywhere, after editing data/projects/:
 A generated block is the text between `<!-- data:<id>.<block> -->` and `<!-- /data -->`
 in a page at the repo root. Everything outside those markers is left byte for byte. A block
 whose opening marker ends its line is written as lines at that marker's indent; one that
-goes on along the line is written on that line. A marker that does not pair into a known
-block, a page with CR line endings, or a data file that does not load is an error: nothing
-is written and the exit code is 2. See tools/README.md for the blocks.
+goes on along the line is written on that line. Each project's professional page,
+pro/<id>.html, is written whole from its data file. A marker that does not pair into a known
+block, a page with CR line endings, a data file that does not load, or a page in pro/ with no
+data file is an error: nothing is written and the exit code is 2. See tools/README.md.
 """
 
+import functools
 import json
 import re
 import sys
@@ -20,6 +22,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data" / "projects"
+PRO = ROOT / "pro"
+TOP = []  # the projects with a data file of their own, in file order: one professional page each
 WIDTH = 100  # the markup's wrap column
 SITE = "Carlo Ruggiero"
 # anything that looks like a marker, so a mistyped one is caught rather than skipped
@@ -36,11 +40,14 @@ class Problem(Exception):
 def load():
     """Every project, and every member of a family, by id."""
     out = {}
+    TOP.clear()
     for path in sorted(DATA.glob("*.json")):
         try:
             out[path.stem] = json.loads(path.read_text(encoding="utf-8"))
         except ValueError as e:
             raise Problem(f"{path.name} is not JSON: {e}")
+        out[path.stem]["id"] = path.stem
+        TOP.append(path.stem)
     for pid, project in list(out.items()):
         for member in project.get("members", []):
             mid = member.get("id")
@@ -128,6 +135,169 @@ def title(p):
     return esc(f'{p["name"]} — {p["tagline"]}')
 
 
+# ---- the professional home's rows and pages (#127) -------------------------------------------
+# a professional page leads to what a project is, never to the playful pages: their own nav,
+# Donate and credits stay there
+ACTION_KINDS = {"demo", "release", "repo", "docs", "spec", "contact"}
+FONTS = "https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap"
+
+
+@functools.lru_cache(maxsize=None)
+def accents():
+    """The product accents, as styles.css :root holds them: the one place they live."""
+    css = (ROOT / "styles.css").read_text(encoding="utf-8")
+    return dict(re.findall(r"(--[a-z0-9-]+):\s*(#[0-9a-fA-F]{3,8});", css[: css.index("}")]))
+
+
+def colour(p):
+    if p.get("accent") not in accents():
+        raise Problem(f"accent {p.get('accent')} is not a colour in :root of styles.css")
+    return accents()[p["accent"]]
+
+
+def unlinked(p, *keys):
+    """Text that goes inside a link: a link in it would be a link in a link."""
+    for k in keys:
+        if "<a" in p[k]:
+            raise Problem(f"{k} has a link, and here it is written inside one")
+
+
+def pro_row(p, w):
+    if p["id"] not in TOP:
+        raise Problem("is a family member: its family's row stands for it")
+    unlinked(p, "status", "lede")
+    return [
+        f'<li class="row" style="--c: {colour(p)}">',
+        f'  <a href="pro/{p["id"]}.html">',
+        f'    <img src="{esc(p["mark"])}" alt="" width="44" height="44" />',
+        f'    <span><b>{esc(p["name"])}</b><span class="st">{markup(p["status"], p)}</span></span>',
+        "    <p>",
+        *[f"      {x}" for x in wrap(markup(p["lede"], p), w - 6)],
+        "    </p>",
+        "  </a>",
+        "</li>",
+    ]
+
+
+def actions(p, members):
+    """The label sheet's links that a professional page carries, as its buttons."""
+    out = []
+    for l in p["links"]:
+        href = l["href"]
+        cls = ' class="go"' if l.get("primary") else ""
+        if not l.get("label_sheet", True):
+            continue
+        if l.get("kind") == "nav":
+            if href.startswith("#") and href[1:] in members:  # a family's member, further down
+                out.append(f'<a{cls} href="{esc(href)}">{esc(l["label"])}</a>')
+            continue
+        if l.get("kind") not in ACTION_KINDS:
+            continue
+        if not re.match(r"(https?:|mailto:)", href):
+            raise Problem(f"link {href} would lead to the playful site")
+        tab = ' target="_blank"' if l.get("new_tab") else ""
+        rel = ' rel="noopener"' if href.startswith("http") else ""
+        out.append(f'<a{cls} href="{esc(href)}"{tab}{rel}>{esc(l["label"])}</a>')
+    return out
+
+
+def shots(p):
+    if not p.get("screenshots"):
+        return []
+    out = ['<div class="shots">']
+    for s in p["screenshots"]:
+        out += [
+            '  <figure class="shot">',
+            f'    <img src="../{esc(s["file"])}" alt="{esc(s["alt"])}" width="{s["width"]}" height="{s["height"]}" loading="lazy" />',
+            f'    <figcaption>{esc(s["caption"])}</figcaption>',
+            "  </figure>",
+        ]
+    return out + ["</div>"]
+
+
+def head(p, h, members, size, w):
+    """The mark, the status line, the name, the lede and the buttons."""
+    acts = actions(p, members)
+    hid = f' id="{p["id"]}-h"' if h == "h2" else ""  # a member's heading names its section
+    return [
+        f'<img src="../{esc(p["mark"])}" alt="" width="{size}" height="{size}" />',
+        "<div>",
+        f'  <p class="st">{markup(p["status"], p)}</p>',
+        f"  <{h}{hid}>{esc(p['name'])}</{h}>",
+        '  <p class="lede">',
+        *[f"    {x}" for x in wrap(markup(p["lede"], p), w - 4)],
+        "  </p>",
+        *(['  <div class="acts">'] + [f"    {a}" for a in acts] + ["  </div>"] if acts else []),
+        "</div>",
+    ]
+
+
+def pro_page(p):
+    """A project's professional page, whole: its head, what it is, its facts, its screenshots,
+    and a section for each member of a family. A section the data has nothing for is left out."""
+    members = [m["id"] for m in p.get("members", [])]
+    w = WIDTH - 8  # the page's content sits at an indent of 8
+    facts = [(r["label"], r["value"]) for r in p.get("stack", []) + p.get("facts", [])]
+    # (no licence, or one the data names "None": no row)
+    if isinstance(p.get("licence"), str) and p["licence"].strip().lower() not in ("", "none"):
+        facts.append(("Licence", p["licence"]))
+    what = [
+        '<section aria-labelledby="what-h">',
+        '  <h2 id="what-h">What it is</h2>',
+        "  <p>",
+        *[f"    {x}" for x in wrap(plain(p["description"], p), w - 4)],
+        "  </p>",
+        "</section>",
+    ]
+    glance = []
+    if facts:
+        glance = ['<section aria-labelledby="glance-h">', '  <h2 id="glance-h">At a glance</h2>', '  <dl class="facts">']
+        glance += [f"    <dt>{esc(k)}</dt><dd>{esc(v)}</dd>" for k, v in facts]
+        glance += ["  </dl>", "</section>"]
+    body = ['<div class="cols">'] + [f"  {x}" for x in what + glance] + ["</div>"] + shots(p)
+    for m in p.get("members", []):
+        body += [f'<section class="member" id="{m["id"]}" style="--c: {colour(m)}" aria-labelledby="{m["id"]}-h">']
+        body += ['  <header class="ph">'] + [f"    {x}" for x in head(m, "h2", [], 44, w - 4)] + ["  </header>"]
+        body += [f"  {x}" for x in shots(m)] + ["</section>"]
+    lines = [
+        "<!doctype html>",
+        '<html lang="en">',
+        "  <head>",
+        '    <meta charset="UTF-8" />',
+        '    <meta name="viewport" content="width=device-width, initial-scale=1" />',
+        *[f"    {x}" for x in RENDER["title"](p, WIDTH - 4)],
+        '    <meta name="theme-color" content="#f4f6f5" media="(prefers-color-scheme: light)" />',
+        '    <meta name="theme-color" content="#0f1512" media="(prefers-color-scheme: dark)" />',
+        f'    <link rel="icon" type="image/svg+xml" href="../{esc(p["mark"])}" />',
+        *[f"    {x}" for x in RENDER["og"](p, WIDTH - 4)],
+        '    <meta property="og:type" content="website" />',
+        "",
+        '    <link rel="preconnect" href="https://fonts.googleapis.com" />',
+        '    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />',
+        "    <link",
+        f'      href="{FONTS}"',
+        '      rel="stylesheet"',
+        "    />",
+        '    <link rel="stylesheet" href="../pro.css" />',
+        "  </head>",
+        "  <body>",
+        f'    <div class="wrap" style="--c: {colour(p)}">',
+        '      <a class="back" href="../index.html">All projects</a>',
+        '      <header class="ph">',
+        *[f"        {x}" for x in head(p, "h1", members, 64, w)],
+        "      </header>",
+        "      <main>",
+        *[f"        {x}" for x in body],
+        "      </main>",
+        f'      <footer>{esc(p["name"])} is one of {SITE}\'s projects. <a href="../index.html">All projects</a></footer>',
+        "    </div>",
+        '    <script src="../site.js" defer></script>',
+        "  </body>",
+        "</html>",
+    ]
+    return "".join(x.rstrip() + "\n" for x in lines)
+
+
 RENDER = {
     # the label sheet, or its equivalent
     "state": lambda p, w: [markup(p["status"], p)],
@@ -146,6 +316,8 @@ RENDER = {
     "object-apart": lambda p, w: label(p, True),
     # About's list of projects
     "about": lambda p, w: [f'<img src="{esc(p["mark"])}" alt="" /><span><b>{esc(p["name"])}</b>{markup(p["about"], p)}</span>'],
+    # the professional home's row, which leads to pro/<id>.html
+    "pro-row": pro_row,
 }
 KINDS = set(RENDER) | {"aria"}
 
@@ -233,6 +405,25 @@ def run(check):
         if text != old:
             writes.append((page, text))
 
+    # the professional pages, written whole
+    for pid in TOP:
+        page = PRO / f"{pid}.html"
+        try:
+            text = pro_page(projects[pid])
+        except Problem as e:
+            errors.append(f"pro/{pid}.html: {e}")
+            continue
+        except KeyError as e:
+            errors.append(f"pro/{pid}.html: the data has no {e}")
+            continue
+        old = page.read_bytes().decode("utf-8") if page.exists() else None
+        if text != old:
+            stale.append(f"pro/{pid}.html" + ("" if old is not None else " (missing)"))
+            writes.append((page, text))
+    for page in sorted(PRO.glob("*.html")):
+        if page.stem not in TOP:
+            errors.append(f"pro/{page.name}: has no data file in data/projects/; delete it, or add its data")
+
     for line in errors:
         print(f"error {line}")
     if errors:
@@ -243,8 +434,9 @@ def run(check):
             print(f"differs {line}")
         return 1 if stale else 0
     for page, text in writes:
+        page.parent.mkdir(exist_ok=True)
         page.write_bytes(text.encode("utf-8"))
-        print(f"wrote {page.name}")
+        print(f"wrote {page.relative_to(ROOT).as_posix()}")
     return 0
 
 

@@ -6,11 +6,15 @@ drawn as it is, then again with the ink of some texts made transparent; where th
 those texts' letters, and each letter's pixel is measured against the same pixel without it. So
 the night's darkening and the paper or the wall under a word all count; a neon's own glow is
 part of the letter, not of what is behind it. It is drawn at four times the density, so even
-the smallest letters have solid cores and their colours are measured rather than how a small word blurs."""
+the smallest letters have solid cores and their colours are measured rather than how a small word blurs.
+The professional home and every professional page are measured the same way, whole, in both
+schemes."""
 import base64
 import io
+import re
 import sys
 import time
+from pathlib import Path
 
 import numpy as np
 from PIL import Image
@@ -19,6 +23,7 @@ from cdp import Browser
 from serve import serve
 
 LEAST = 4.5
+ROOT = Path(__file__).resolve().parent.parent
 # every element with words of its own that the reader can see, and where it is on screen
 TEXTS = r"""((within) => {
   const out = [];
@@ -106,6 +111,16 @@ def measure(b, within):
     return out
 
 
+def rgb_ratio(fg, bg):
+    """The contrast of two computed colours, rgb() or rgba() (alpha ignored: both are opaque)."""
+    def l(c):
+        v = [int(x) / 255 for x in re.findall(r"[\d.]+", c)[:3]]
+        v = [x / 12.92 if x <= 0.04045 else ((x + 0.055) / 1.055) ** 2.4 for x in v]
+        return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]
+    a, b_ = sorted((l(fg), l(bg)))
+    return (b_ + 0.05) / (a + 0.05)
+
+
 failures = []
 base = serve()
 b = Browser(1460, 1000, headless=True)
@@ -124,6 +139,41 @@ try:
                 what += " (" + "; ".join(f"{n} {r:.1f}" for r, n in low) + ")"
                 failures.append(what)
             print(("ok    " if not low else "FAIL  ") + what)
+    # the professional pages: flat colours, so twice the density is enough; the window is as tall
+    # as the page, with its pictures in, so every word is in it
+    pro = ["index.html"] + sorted("pro/" + f.name for f in (ROOT / "pro").glob("*.html"))
+    b.call("Emulation.setDeviceMetricsOverride", width=1280, height=900, deviceScaleFactor=2, mobile=False)
+    # (the room was chosen above: the home is the professional page again)
+    b.js("localStorage.setItem('site:room', '0')")
+    for scheme in ("light", "dark"):
+        b.media(prefers_color_scheme=scheme, prefers_reduced_motion="reduce")
+        for page in pro:
+            b.nav(base + "/" + page, 1.5)
+            b.js("Promise.all([...document.images].map((i) => { i.loading = 'eager'; return i.decode().catch(() => {}); }))")
+            h = b.js("document.documentElement.scrollHeight")
+            b.call("Emulation.setDeviceMetricsOverride", width=1280, height=h, deviceScaleFactor=2, mobile=False)
+            time.sleep(0.5)
+            shown = b.js("!document.documentElement.classList.contains('iso') && !!document.querySelector('.pro, .ph')")
+            got = measure(b, ".pro" if page == "index.html" else "body") if shown else {}
+            low = sorted((r, n) for n, r in got.items() if r < LEAST)
+            what = f"{page}, {scheme}: every text at {LEAST}:1 or better ({len(got)} measured"
+            what += f", the lowest {min(got.values()):.1f})" if got else ", none: the page did not show)"
+            if low:
+                what += " (" + "; ".join(f"{n} {r:.1f}" for r, n in low) + ")"
+            bad = bool(low) or not got
+            if bad:
+                failures.append(what)
+            print(("ok    " if not bad else "FAIL  ") + what)
+            # a button's accent border against the ground: 3:1 for what is not text (WCAG 1.4.11)
+            edges = b.js("""[...document.querySelectorAll('.acts a:not(.go)')].map((a) => [a.textContent.trim(),
+              getComputedStyle(a).borderTopColor, getComputedStyle(document.body).backgroundColor])""")
+            weak = [(n, r) for n, fg, bg in edges if (r := rgb_ratio(fg, bg)) < 3]
+            if edges:
+                what = f"{page}, {scheme}: the buttons' borders at 3:1 or better ({len(edges)}, the lowest {min(rgb_ratio(f, g) for _, f, g in edges):.1f})"
+                if weak:
+                    what += " (" + "; ".join(f"{n} {r:.1f}" for n, r in weak) + ")"
+                    failures.append(what)
+                print(("ok    " if not weak else "FAIL  ") + what)
 finally:
     b.close()
 sys.exit(1 if failures else 0)

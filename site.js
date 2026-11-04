@@ -1,6 +1,6 @@
-/* What every page of the bench shares: the ruler, scaling the home bench to
-   the window, books you can leaf through, screenshots that open full size,
-   the Write to me sheet, tabbed folders, and the home objects' opening moves. */
+/* What every page shares: the ruler, books you can leaf through, screenshots
+   that open full size (the professional pages' too), the Write to me sheet,
+   tabbed folders, and the room's objects' opening moves. */
 (function () {
   "use strict";
   var reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -27,16 +27,6 @@
       }
     }
   }
-
-  // ---- the home bench is drawn at 1280px and scaled to fit -----------------
-  var fit = document.querySelector(".fit");
-  function scale() {
-    if (!fit) return;
-    var s = narrow.matches ? 1 : Math.min(1, (fit.clientWidth - 24) / 1280);
-    fit.style.setProperty("--s", s);
-  }
-  scale();
-  addEventListener("resize", scale);
 
   // ---- screenshots open full size ----------------------------------------
   var box = document.createElement("dialog");
@@ -106,7 +96,6 @@
         c.className = "corner";
         var forward = pg.classList.contains("front");
         c.setAttribute("aria-label", forward ? "Turn the page" : "Turn back");
-        c.dataset.cat = "corner";
         c.addEventListener("click", function () { go(forward ? i + 1 : i); });
         pg.appendChild(c);
       });
@@ -289,7 +278,6 @@
           sheets[j].hidden = i !== j;
         });
         if (focus || held) tabs[i].focus();
-        folder.dispatchEvent(new Event("fam-tab", { bubbles: true })); // cat.js keeps its toys on the page
       },
     };
     tabs.forEach(function (t, i) {

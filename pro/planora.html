@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Planora — Shared activity planner for groups · Carlo Ruggiero</title>
+    <meta
+      name="description"
+      content="Planora is a mobile-first shared activity planner for groups: a shared backlog of ideas, a guided Organize wizard with date voting, events, reminders and feedback. Web, Android and iOS."
+    />
+    <meta name="theme-color" content="#f4f6f5" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0f1512" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" type="image/svg+xml" href="../planora.svg" />
+    <meta property="og:title" content="Planora — Shared activity planner for groups" />
+    <meta
+      property="og:description"
+      content="Plan together. Decide less. Do more. A shared activity planner for friends, family, couples and teams — Web, Android and iOS."
+    />
+    <meta property="og:type" content="website" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../pro.css" />
+  </head>
+  <body>
+    <div class="wrap" style="--c: #6d59ad">
+      <a class="back" href="../index.html">All projects</a>
+      <header class="ph">
+        <img src="../planora.svg" alt="" width="64" height="64" />
+        <div>
+          <p class="st">In internal testing. Free, and hosted for you.</p>
+          <h1>Planora</h1>
+          <p class="lede">
+            Plan together, decide less, do more — a mobile-first shared activity planner that turns
+            group indecision into events worth remembering.
+          </p>
+          <div class="acts">
+            <a class="go" href="mailto:caesar.themaster@gmail.com?subject=Planora">Email me about Planora</a>
+          </div>
+        </div>
+      </header>
+      <main>
+        <div class="cols">
+          <section aria-labelledby="what-h">
+            <h2 id="what-h">What it is</h2>
+            <p>
+              Planora is a mobile-first shared activity planner for groups: a shared backlog of ideas,
+              a guided Organize wizard with date voting, events, reminders and feedback. Web, Android
+              and iOS.
+            </p>
+          </section>
+          <section aria-labelledby="glance-h">
+            <h2 id="glance-h">At a glance</h2>
+            <dl class="facts">
+              <dt>Backend</dt><dd>Go + Fiber, Clean Architecture, REST API under /api/v1</dd>
+              <dt>Database</dt><dd>SQLite (pure-Go modernc.org/sqlite), WAL, foreign keys, auto-migrations</dd>
+              <dt>Frontend</dt><dd>Flutter, Material Design 3, light/dark, responsive — one codebase for Web (PWA), Android and iOS</dd>
+              <dt>Auth</dt><dd>Email + password (Argon2id), JWT access + refresh; optional Google / Apple</dd>
+              <dt>Delivery</dt><dd>A single multi-arch container (amd64/arm64); the apps point at one backend</dd>
+            </dl>
+          </section>
+        </div>
+        <div class="shots">
+          <figure class="shot">
+            <img src="../assets/planora-preview.png" alt="Planora UI: onboarding, the activity backlog and the Organize date-voting screen" width="1208" height="812" loading="lazy" />
+            <figcaption>Onboarding, the shared activity backlog, and the Organize date-voting flow — Material 3, light and dark, responsive from phone to desktop web.</figcaption>
+          </figure>
+        </div>
+      </main>
+      <footer>Planora is one of Carlo Ruggiero's projects. <a href="../index.html">All projects</a></footer>
+    </div>
+    <script src="../site.js" defer></script>
+  </body>
+</html>

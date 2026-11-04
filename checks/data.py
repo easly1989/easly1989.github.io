@@ -2,7 +2,9 @@
 every file holds the fields the pages and the professional template read, each page has every
 block it is meant to have, and the facts still written by hand on a page (the licence in its
 prose, the stack table, captions, screenshots' alt and size, CloudBank's fallback version, the
-room's jar label, the links beyond the label sheet) agree with the data. No browser."""
+room's jar label, the links beyond the label sheet) agree with the data. Each project has its
+professional page, pro/<id>.html, with a title of its own, and neither those pages nor the
+professional home link to a playful page. No browser."""
 import html
 import importlib.util
 import json
@@ -50,10 +52,10 @@ INLINE = {"code", "b", "em", "a"}  # the markup an HTML field may carry
 HTML_FIELDS = {"status", "status_short", "lede", "about"}
 FILLED = HTML_FIELDS | {"description", "summary", "line", "aria"}  # where {name}, {version}, {licence} go
 TOP = {"name", "tagline", "status", "version", "version_live", "lede", "about", "description", "summary", "licence",
-       "accent", "mark", "stack", "home", "links", "screenshots", "members"}
+       "accent", "mark", "stack", "facts", "home", "links", "screenshots", "members"}
 MEMBER = {"id", "name", "status", "status_short", "version", "lede", "licence", "accent", "mark", "stack", "links",
           "screenshots"}
-OPTIONAL = {"version", "version_live", "members"}
+OPTIONAL = {"version", "version_live", "members", "facts"}
 ENTITY = re.compile(r"&(#\d+|#x[0-9a-fA-F]+|[a-zA-Z]+);")
 css = (ROOT / "styles.css").read_text(encoding="utf-8")
 root_vars = set(re.findall(r"(--[a-z0-9-]+):", css[: css.index("}")]))
@@ -110,6 +112,11 @@ def problems(d, fields, where):
     stack = d.get("stack")
     if not isinstance(stack, list) or any(not isinstance(r, dict) or set(r) != {"label", "value"} for r in stack):
         out.append(f"{where}.stack: not a list of {{label, value}}")
+    # what else the professional page lists at a glance, each a fact its playful page states
+    facts = d.get("facts", [])
+    if not isinstance(facts, list) or any(not isinstance(r, dict) or set(r) != {"label", "value"}
+                                          or not all(isinstance(r[k], str) and r[k].strip() for k in r) for r in facts):
+        out.append(f"{where}.facts: not a list of {{label, value}}, both text")
     if "home" in fields:
         home = d.get("home")
         if not isinstance(home, dict) or set(home) - {"label", "line", "aria"} or not isinstance(home.get("aria"), str) or "line" not in home:
@@ -176,7 +183,8 @@ want = Counter()
 for pid in data:
     for kind in ("title", "og", "state", "name", "lede", "actions"):
         want[(PAGE[pid], pid, kind)] += 1
-    for kind in ("aria", "object", "name"):  # the home object, its label and the contact option
+    # the room's object, its label, the contact option, and the professional home's row
+    for kind in ("aria", "object", "name", "pro-row"):
         want[("index.html", pid, kind)] += 1
     want[("about.html", pid, "about")] += 1
 for mid in set(PAGE) - set(data):
@@ -243,6 +251,25 @@ check(spans and all(v == cb for _, v in spans), f"every fallback of CloudBank's 
 for pid, p in projects.items():
     gone = [l["href"] for l in p["links"] if not l.get("label_sheet", True) and f'href="{sync.esc(l["href"])}"' not in prose[PAGE[pid]]]
     check(not gone, f"{pid}: every link beyond its label sheet is one its page carries", gone)
+
+# ---- the professional pages: one per project, and never a way into the playful pages -------
+pro = {p.stem: p.read_text(encoding="utf-8") for p in sorted((ROOT / "pro").glob("*.html"))}
+check(set(pro) == set(data), f"a professional page per project, pro/<id>.html, and no other ({len(pro)})",
+      [f"no pro/{i}.html" for i in sorted(set(data) - set(pro))] + [f"extra pro/{i}.html" for i in sorted(set(pro) - set(data))])
+titles = Counter(re.search(r"<title>(.*?)</title>", t).group(1) for t in pro.values())
+check(all(n == 1 for n in titles.values()), "every professional page has a title of its own")
+home = pages["index.html"]
+home_pro = home[home.index('<div class="pro">') : home.index('<div class="mat"')]
+LINK = r'<a[^>]*?href="(?!https?:|mailto:|#)([^"]*)"'  # a link to a page of this site
+leads = {f"pro/{i}": sorted(set(re.findall(LINK, t)) - {"../index.html"}) for i, t in pro.items()}
+leads["index.html (the professional home)"] = sorted(set(re.findall(LINK, home_pro))
+                                                    - {f"pro/{i}.html" for i in data} - {"?room"})
+wrong = [f"{page}: {h}" for page, hrefs in leads.items() for h in hrefs]
+check(not wrong, "the professional pages lead only to each other, the room's switch and elsewhere on the web", wrong)
+unshown = [f"pro/{pid}.html: {s['file']}" for pid, d in data.items()
+           for s in [s for m in [d] + d.get("members", []) for s in m.get("screenshots", [])]
+           if f'src="../{s["file"]}"' not in pro.get(pid, "")]
+check(not unshown, "every project's curated screenshots are on its professional page", unshown)
 
 room = (ROOT / "room.js").read_text(encoding="utf-8")
 check('tag.querySelector(".label")' in room and "Planora" not in re.sub(r"//.*", "", room),

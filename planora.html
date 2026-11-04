@@ -383,20 +383,20 @@
     </style>
   </head>
   <body data-page="planora">
-    <div class="mat" data-cat-world>
+    <div class="mat">
       <svg class="guides" aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 100 100">
         <line x1="0" y1="0" x2="100" y2="100" vector-effect="non-scaling-stroke" />
       </svg>
       <header class="bar">
         <a href="index.html">Projects</a>
         <a href="about.html">About</a>
-        <a href="donate.html" data-cat="nav">Donate</a>
+        <a href="donate.html">Donate</a>
         <a href="https://github.com/easly1989" rel="noopener">GitHub</a>
       </header>
       <a class="crumb" href="index.html">Back to the bench</a>
 
       <main>
-        <section class="paper label-sheet" style="--c: var(--planora)" data-cat="sit">
+        <section class="paper label-sheet" style="--c: var(--planora)">
           <img class="mark" src="planora.svg" alt="" width="56" height="56" />
           <p class="state"><!-- data:planora.state -->In internal testing. Free, and hosted for you.<!-- /data --></p>
           <h1><!-- data:planora.name -->Planora<!-- /data --></h1>
@@ -434,7 +434,7 @@
             </ol>
           </section>
 
-          <section class="paper card vote" style="--r: 0.7deg" data-cat="sit" aria-labelledby="vote-h">
+          <section class="paper card vote" style="--r: 0.7deg" aria-labelledby="vote-h">
             <h2 id="vote-h">Picnic by the lake</h2>
             <p>This is the Organize vote. Four friends have answered; add yours and see which date wins.</p>
             <div class="scroll" tabindex="0" role="region" aria-label="Votes by date">
@@ -458,7 +458,7 @@
 
           <section class="wide" aria-labelledby="features-h">
             <div class="jar-wrap">
-              <div class="ideajar" data-cat="jar" id="ideajar">
+              <div class="ideajar" id="ideajar">
                 <div class="glass" aria-hidden="true"></div>
                 <div>
                   <h2 id="features-h" class="vh">Features</h2>
@@ -466,35 +466,35 @@
                 </div>
               </div>
               <ul class="slips" id="slips">
-                <li class="slip" style="--c: #f6e7a8; --r: -1.2deg" data-cat="push">
+                <li class="slip" style="--c: #f6e7a8; --r: -1.2deg">
                   <h3>Groups and roles</h3>
                   <p>Create groups with Owner, Admin and Member roles, invite links and codes, transfer ownership, and leave or remove members.</p>
                 </li>
-                <li class="slip" style="--c: #d9e9f6; --r: 0.8deg" data-cat="push">
+                <li class="slip" style="--c: #d9e9f6; --r: 0.8deg">
                   <h3>Activity backlog</h3>
                   <p>Rich activities with category, tags, difficulty, links, address and map, cost and photos — plus global search and filtering.</p>
                 </li>
-                <li class="slip" style="--c: #e6dcf5; --r: -0.4deg" data-cat="push">
+                <li class="slip" style="--c: #e6dcf5; --r: -0.4deg">
                   <h3>Organize wizard</h3>
                   <p>Pick participants, propose dates, and collect live Available, Maybe and Not votes with automatic winner and tie handling. A suggestion engine and a Surprise Mode keep the details hidden until the reveal.</p>
                 </li>
-                <li class="slip" style="--c: #dcefdc; --r: 1.1deg" data-cat="push">
+                <li class="slip" style="--c: #dcefdc; --r: 1.1deg">
                   <h3>Events and calendar</h3>
                   <p>Confirm events, get day-before and two-hours-before reminders, browse a month or week calendar, and export to ICS or Google and Apple calendars.</p>
                 </li>
-                <li class="slip" style="--c: #f6dcd9; --r: -0.9deg" data-cat="push">
+                <li class="slip" style="--c: #f6dcd9; --r: -0.9deg">
                   <h3>After the event</h3>
                   <p>Add photos and notes, leave star feedback on whether you'd do it again, and keep a history with completion counts and average ratings — or duplicate an outing to run it again.</p>
                 </li>
-                <li class="slip" style="--c: #f6e7a8; --r: 0.6deg" data-cat="push">
+                <li class="slip" style="--c: #f6e7a8; --r: 0.6deg">
                   <h3>Dashboard and stats</h3>
                   <p>Totals, most active member, favourite category, average monthly events, average rating, estimated spend and places visited.</p>
                 </li>
-                <li class="slip" style="--c: #d9e9f6; --r: -1deg" data-cat="push">
+                <li class="slip" style="--c: #d9e9f6; --r: -1deg">
                   <h3>Notifications</h3>
                   <p>In-app notification centre with an unread badge, plus optional email (SMTP) and web push (VAPID), gated by per-user preferences.</p>
                 </li>
-                <li class="slip" style="--c: #e6dcf5; --r: 1.3deg" data-cat="push">
+                <li class="slip" style="--c: #e6dcf5; --r: 1.3deg">
                   <h3>Works offline</h3>
                   <p>A local cache of core data lets you read offline, while an outbox queues your changes and syncs them when you reconnect.</p>
                 </li>
@@ -502,7 +502,7 @@
             </div>
           </section>
 
-          <section class="paper card ruled" style="--r: 0.4deg" data-cat="sit">
+          <section class="paper card ruled" style="--r: 0.4deg">
             <h2>Under the hood</h2>
             <table class="spec">
               <tr><th scope="row">Backend</th><td>Go + Fiber, Clean Architecture, REST API under /api/v1</td></tr>
@@ -537,8 +537,8 @@
         </div>
       </main>
 
-      <span class="loose eraser" data-cat="knock" style="left: 46px; top: 760px; --r: -18deg" aria-hidden="true"></span>
-      <span class="loose coin" data-cat="knock" style="right: 60px; top: 520px" aria-hidden="true"></span>
+      <span class="loose eraser" style="left: 46px; top: 760px; --r: -18deg" aria-hidden="true"></span>
+      <span class="loose coin" style="right: 60px; top: 520px" aria-hidden="true"></span>
     </div>
 
     <script>
@@ -608,6 +608,5 @@
     </script>
     <script src="radio.js"></script>
     <script src="site.js" defer></script>
-    <script src="cat.js" defer></script>
   </body>
 </html>

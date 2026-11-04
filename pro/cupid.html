@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cupid — Management system for matchmaking agencies · Carlo Ruggiero</title>
+    <meta
+      name="description"
+      content="Cupid is a web management system for matchmaking and dating agencies: client records, partner requests, affinity matching, meetings, contracts, printing, GDPR tooling and encrypted backups."
+    />
+    <meta name="theme-color" content="#f4f6f5" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0f1512" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" type="image/svg+xml" href="../cupid.svg" />
+    <meta property="og:title" content="Cupid — Management system for matchmaking agencies" />
+    <meta
+      property="og:description"
+      content="A cloud-ready rewrite of the classic Cuore desktop application, delivered as a single container an agency can run itself."
+    />
+    <meta property="og:type" content="website" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../pro.css" />
+  </head>
+  <body>
+    <div class="wrap" style="--c: #c4356a">
+      <a class="back" href="../index.html">All projects</a>
+      <header class="ph">
+        <img src="../cupid.svg" alt="" width="64" height="64" />
+        <div>
+          <p class="st">Available to license. Closed source, self-hosted or hosted.</p>
+          <h1>Cupid</h1>
+          <p class="lede">
+            A web management system for matchmaking and dating agencies — a cloud-ready rewrite of
+            the classic <em>Cuore</em> desktop application.
+          </p>
+          <div class="acts">
+            <a class="go" href="mailto:caesar.themaster@gmail.com?subject=Cupid">Email me about Cupid</a>
+          </div>
+        </div>
+      </header>
+      <main>
+        <div class="cols">
+          <section aria-labelledby="what-h">
+            <h2 id="what-h">What it is</h2>
+            <p>
+              Cupid is a web management system for matchmaking and dating agencies: client records,
+              partner requests, affinity matching, meetings, contracts, printing, GDPR tooling and
+              encrypted backups.
+            </p>
+          </section>
+          <section aria-labelledby="glance-h">
+            <h2 id="glance-h">At a glance</h2>
+            <dl class="facts">
+              <dt>Backend</dt><dd>Go 1.25 (chi router), SQLite (modernc.org/sqlite, pure-Go), goose migrations</dd>
+              <dt>Frontend</dt><dd>React 19 + Vite + TypeScript + Mantine, i18n (Italian by default)</dd>
+              <dt>API</dt><dd>OpenAPI 3 contract with generated server (Go) and client (TS) types</dd>
+              <dt>Security</dt><dd>Ed25519-signed license keys (offline verification), CSP + HSTS, login rate limiting, argon2id</dd>
+              <dt>Delivery</dt><dd>A single distroless Docker image with the SPA embedded and a /data volume</dd>
+              <dt>Licence</dt><dd>Closed source</dd>
+            </dl>
+          </section>
+        </div>
+        <div class="shots">
+          <figure class="shot">
+            <img src="../assets/cupid-dashboard.png" alt="Cupid dashboard with agency figures, operational counters and twelve-month trend charts" width="2560" height="1668" loading="lazy" />
+            <figcaption>The dashboard — agency figures, counters you can click through, and twelve-month trends.</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="../assets/cupid-clients.png" alt="Cupid client list with instant search and a status filter" width="2560" height="1668" loading="lazy" />
+            <figcaption>The client list, with instant search and a filter by status.</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="../assets/cupid-abbinamenti.png" alt="Cupid matching with candidates ranked by affinity and the meeting cycle" width="2560" height="1668" loading="lazy" />
+            <figcaption>Matching — candidates ranked by affinity, then the mailing, judgement and meeting cycle.</figcaption>
+          </figure>
+        </div>
+      </main>
+      <footer>Cupid is one of Carlo Ruggiero's projects. <a href="../index.html">All projects</a></footer>
+    </div>
+    <script src="../site.js" defer></script>
+  </body>
+</html>

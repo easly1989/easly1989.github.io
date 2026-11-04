@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nutreek — Self-hosted weekly nutrition planner · Carlo Ruggiero</title>
+    <meta
+      name="description"
+      content="Nutreek is a self-hosted weekly nutrition planner: meal plans, macros per meal, day and week, offline OpenFoodFacts search, a barcode scanner, adaptive TDEE, weight and hydration tracking, and a coach mode. Installable on your phone."
+    />
+    <meta name="theme-color" content="#f4f6f5" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0f1512" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" type="image/svg+xml" href="../nutreek.svg" />
+    <meta property="og:title" content="Nutreek — Self-hosted weekly nutrition planner" />
+    <meta
+      property="og:description"
+      content="Plan meals, track macros, and let adaptive TDEE keep your targets honest — self-hosted, one Go binary or one container."
+    />
+    <meta property="og:type" content="website" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../pro.css" />
+  </head>
+  <body>
+    <div class="wrap" style="--c: #2f7d32">
+      <a class="back" href="../index.html">All projects</a>
+      <header class="ph">
+        <img src="../nutreek.svg" alt="" width="64" height="64" />
+        <div>
+          <p class="st">Open source under AGPL-3.0. Self-hosted.</p>
+          <h1>Nutreek</h1>
+          <p class="lede">
+            A self-hosted weekly nutrition planner — plan meals, track macros, and let adaptive TDEE
+            keep your targets honest.
+          </p>
+          <div class="acts">
+            <a class="go" href="https://p01--nutreek--7dcjw6mlmtky.code.run/" target="_blank" rel="noopener">Try the demo</a>
+            <a href="https://github.com/easly1989/nutreek" rel="noopener">Source code</a>
+          </div>
+        </div>
+      </header>
+      <main>
+        <div class="cols">
+          <section aria-labelledby="what-h">
+            <h2 id="what-h">What it is</h2>
+            <p>
+              Nutreek is a self-hosted weekly nutrition planner: meal plans, macros per meal, day and
+              week, offline OpenFoodFacts search, a barcode scanner, adaptive TDEE, weight and
+              hydration tracking, and a coach mode. Installable on your phone.
+            </p>
+          </section>
+          <section aria-labelledby="glance-h">
+            <h2 id="glance-h">At a glance</h2>
+            <dl class="facts">
+              <dt>Backend</dt><dd>Go 1.27+ (chi, scs, goose, bcrypt, nosurf), hand-written SQL</dd>
+              <dt>Database</dt><dd>SQLite via modernc.org/sqlite — pure Go, no CGO</dd>
+              <dt>Frontend</dt><dd>html/template + HTMX + Tailwind CSS; installable as a PWA</dd>
+              <dt>Deploy</dt><dd>Static binary or a distroless Docker image (~20 MB), health-checked</dd>
+              <dt>Your data</dt><dd>One SQLite file, with optional scheduled backups and retention</dd>
+              <dt>Licence</dt><dd>AGPL-3.0</dd>
+            </dl>
+          </section>
+        </div>
+        <div class="shots">
+          <figure class="shot">
+            <img src="../assets/nutreek-week.png" alt="Nutreek week view: day tabs with calories, the day's meals with macros, a calorie ring, water and a workout" width="1280" height="853" loading="lazy" />
+            <figcaption>The meals with their macros, and beside them the calorie ring, water and workouts.</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="../assets/nutreek-phone.png" alt="Three phone screens: the week, the scanner and the shopping list" width="1920" height="1280" loading="lazy" />
+            <figcaption>On the phone, with the bottom bar.</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="../assets/nutreek-stats.png" alt="Statistics in dark mode with estimated energy needs" width="1280" height="853" loading="lazy" />
+            <figcaption>Statistics and adaptive TDEE.</figcaption>
+          </figure>
+        </div>
+      </main>
+      <footer>Nutreek is one of Carlo Ruggiero's projects. <a href="../index.html">All projects</a></footer>
+    </div>
+    <script src="../site.js" defer></script>
+  </body>
+</html>
