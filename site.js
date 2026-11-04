@@ -96,7 +96,6 @@
         c.className = "corner";
         var forward = pg.classList.contains("front");
         c.setAttribute("aria-label", forward ? "Turn the page" : "Turn back");
-        c.dataset.cat = "corner";
         c.addEventListener("click", function () { go(forward ? i + 1 : i); });
         pg.appendChild(c);
       });
@@ -279,7 +278,6 @@
           sheets[j].hidden = i !== j;
         });
         if (focus || held) tabs[i].focus();
-        folder.dispatchEvent(new Event("fam-tab", { bubbles: true })); // cat.js keeps its toys on the page
       },
     };
     tabs.forEach(function (t, i) {

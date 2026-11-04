@@ -153,6 +153,23 @@
   box(chair, { x: cx - 10, y: 292, w: 20, d: 14, z: seatZ + 70 + BACK_H, h: 40, color: "#9aa2a8" });
   box(chair, { x: cx - 105, y: 280, w: 210, d: 34, z: seatZ + 110 + BACK_H, h: 90, color: "var(--chair)", r: 22 });
 
+  // A tie hung over the headrest, knotted, its blade down the back towards the reader: the way
+  // back to the professional home. Picked up, it is put on (it lifts and swings once, room.css)
+  // and the home opens plain (plainHome(), below). Its faces move together (.chair-tie, which
+  // the light pass follows); its link is one plane in front of it all, as the camera's is.
+  var TOP = seatZ + 110 + BACK_H + 90;
+  var tie = el("span", "chair-tie", chair, "transform-origin:" + cx + "px 297px " + TOP + "px");
+  box(tie, { x: cx - 9, y: 280, w: 18, d: 34, z: TOP, h: 2, color: "var(--tie)" });
+  box(tie, { x: cx - 9, y: 314, w: 18, d: 2, z: TOP - 33, h: 34, color: "var(--tie)" });
+  var knot = box(tie, { x: cx - 13, y: 314, w: 26, d: 8, z: TOP - 62, h: 32, color: "var(--tie)" });
+  knot.querySelector("i.s").style.clipPath = "polygon(0 0, 100% 0, 78% 100%, 22% 100%)";
+  knot.querySelector("i.e").remove();
+  knot.querySelector("i.w").remove();
+  el("span", "tie-face", tie, "left:" + (cx - 23) + "px;top:318px;width:46px;height:170px;background:" + shade("var(--tie)", 0.92) + ";transform:translateZ(" + (TOP - 58) + "px) rotateX(-90deg);clip-path:polygon(30% 0, 70% 0, 100% 84%, 50% 100%, 0 84%)");
+  var tieLink = el("a", "tie-link", chair, "left:" + (cx - 45) + "px;top:324px;width:90px;height:250px;transform:translateZ(" + (TOP + 10) + "px) rotateX(-90deg)");
+  tieLink.href = "index.html";
+  tieLink.setAttribute("aria-label", "Plain version of this site: the professional home");
+
   var jar = stage.querySelector(".thing.jar");
   if (jar) jar.style.setProperty("--x", "930px");
   var mug = stage.querySelector(".thing.mug");
@@ -326,8 +343,6 @@
       });
       wrap(t, '<span class="jar-shine faint"></span>', { r: 76.4, w: 28, h: 150, z: -24, at: 345, strip: 7 });
       hitPlane(t, t, 152, sp.h);
-      // tipping it over was the flat bench's trick: a jar of rings cannot lie down
-      t.removeAttribute("data-cat");
       // one idea folded in half among the slips at the bottom: on the way to Planora it
       // comes up out of the jar and unfolds (morph.js)
       var at = el("span", "jar-idea-at", t);
@@ -610,7 +625,6 @@
   onWall("back", -360, 340, "poster low").appendChild(intro);
   var cards = stage.querySelector(".thing.cards");
   if (cards) {
-    cards.removeAttribute("data-cat");
     var pin = onWall("right", 0, 250, "pinned");
     pin.appendChild(cards);
     el("span", "tape-strip one", pin);
@@ -1045,7 +1059,6 @@
   var letter = stage.querySelector(".thing.envelope");
   var top = document.querySelector(".pc .top");
   if (letter && top) {
-    letter.removeAttribute("data-cat");
     var pile = el("span", "post", top);
     el("span", "post-card", pile).setAttribute("aria-hidden", "true");
     el("span", "post-env", pile).setAttribute("aria-hidden", "true");
@@ -1065,7 +1078,6 @@
   var sticky = stage.querySelector(".thing.sticky");
   var side = document.querySelector(".pc .side");
   if (sticky && side) {
-    sticky.removeAttribute("data-cat");
     el("span", "pc-note", side).appendChild(sticky);
   }
   // the keyboard's keys stand up off it, so they catch the light and throw their own shadows:
@@ -1596,6 +1608,49 @@
         tag.classList.remove("on");
       });
     });
+  });
+  // the tie's tag, the same way
+  var tieTag = el("span", "tag", layer);
+  tieTag.setAttribute("aria-hidden", "true");
+  tieTag.innerHTML = "<b>Plain version</b>";
+  tags.push({ a: el("span", "anchor", tieLink), tag: tieTag, t: tieLink });
+  ["mouseenter", "focus"].forEach(function (ev) {
+    tieLink.addEventListener(ev, function () {
+      tieTag.classList.add("on");
+    });
+  });
+  ["mouseleave", "blur"].forEach(function (ev) {
+    tieLink.addEventListener(ev, function () {
+      tieTag.classList.remove("on");
+    });
+  });
+  // The way back to the plain home, the tie's and the skip link's: the room is no longer chosen,
+  // and the link (index.html, with nothing after it, so no ?room chooses it again) opens it.
+  function plainHome() {
+    try {
+      localStorage.setItem("site:room", "0");
+      sessionStorage.removeItem("room");
+    } catch (e) {}
+  }
+  var skipLink = document.querySelector(".skip-plain");
+  if (skipLink) skipLink.addEventListener("click", plainHome);
+  tieLink.addEventListener("click", function (e) {
+    plainHome();
+    // Shift, Ctrl or Cmd-click is the browser's own; under reduced motion it just goes
+    if (still.matches || e.button || e.metaKey || e.ctrlKey || e.shiftKey) return;
+    e.preventDefault();
+    if (tie.classList.contains("worn")) return;
+    document.body.inert = true;
+    tie.classList.add("worn");
+    setTimeout(function () {
+      location.href = tieLink.href;
+    }, 650);
+  });
+  // back through the back/forward cache: the tie hangs on the chair again
+  addEventListener("pageshow", function (e) {
+    if (!e.persisted) return;
+    tie.classList.remove("worn");
+    document.body.inert = false;
   });
   // The window's, once there is weather to show: the place, how warm and the sky in words, and
   // where the data come from, as Open-Meteo's licence (CC BY 4.0) asks next to them. The window

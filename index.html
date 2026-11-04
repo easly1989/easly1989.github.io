@@ -52,6 +52,11 @@
           if (q !== null) {
             sessionStorage.setItem("room", q === "0" ? "0" : "1");
             localStorage.setItem("site:room", q === "0" ? "0" : "1");
+            // the choice is kept: from here the address is a clean one, so that a reload, or a
+            // copy of it, never chooses again over a later choice (the tie)
+            var clean = new URL(location.href);
+            clean.searchParams.delete("room");
+            history.replaceState(history.state, "", clean.pathname + clean.search + clean.hash);
           }
           on = localStorage.getItem("site:room") === "1";
           box = JSON.parse(localStorage.getItem("room-box"));
@@ -1544,6 +1549,7 @@
     <!-- The professional home: the page everyone gets, unless they chose the room. Its rows
          are written by tools/sync.py from data/projects/ and lead to pro/<id>.html. -->
     <div class="pro">
+      <a class="skip" href="#projects">Skip to the projects</a>
       <header class="top wrap">
         <h1>Carlo Ruggiero</h1>
         <p class="role">
@@ -1557,7 +1563,7 @@
         </ul>
       </header>
       <main class="wrap">
-        <section class="projects" aria-labelledby="projects-h">
+        <section class="projects" id="projects" tabindex="-1" aria-labelledby="projects-h">
           <!-- the way into the room: only on a window that can hold it (html.room-fits) -->
           <a class="peek" href="?room">
             <svg viewBox="0 0 96 58" aria-hidden="true">
@@ -1692,6 +1698,8 @@
     <!-- The room: the bench's objects, which room.js sets out in 3D. Hidden unless the room
          was chosen and fits (the head's script); the script after it shows it. -->
     <div class="mat" hidden>
+      <!-- the room's first stop for the keyboard: the plain home, as the tie on the chair does -->
+      <a class="skip-plain" href="index.html">Plain version of this site</a>
       <svg class="guides" aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 100 100">
         <line x1="0" y1="100" x2="100" y2="0" vector-effect="non-scaling-stroke" />
         <line x1="0" y1="60" x2="60" y2="0" vector-effect="non-scaling-stroke" />
@@ -1704,12 +1712,12 @@
       </header>
 
       <div class="fit">
-        <main class="stage" data-cat-world>
-          <div class="tape home-tape" data-cat="tape">
+        <main class="stage">
+          <div class="tape home-tape">
             <h1>Carlo Ruggiero</h1>
             <p>Senior Architect &amp; Software Developer, 10&nbsp;years and counting.</p>
           </div>
-          <div class="paper ruled intro" data-cat="sit">
+          <div class="paper ruled intro">
             <p>
               This is my bench. Everything on it is something I built and still look after. Pick
               anything up to see what it is. The cat is not for sale, and does what it likes.
@@ -1721,7 +1729,6 @@
             href="about.html"
             data-open="camera"
             data-open-ms="1100"
-            data-cat="push sit"
             style="--x: 96px; --y: 512px; --w: 220px; --h: 172px; --r: -6deg"
             aria-label="About me: take a photo"
           >
@@ -1742,7 +1749,6 @@
             data-open="ledger"
             data-open-ms="1050"
             data-vt-ms="220"
-            data-cat="scratch hide sit"
             style="--x: 486px; --y: 92px; --w: 250px; --h: 330px; --r: 4deg"
             aria-label="CloudBank, a personal finance manager. Open the ledger"
           ><!-- /data -->
@@ -1760,7 +1766,6 @@
             href="social-contacts-sync.html"
             data-open="cards"
             data-open-ms="1050"
-            data-cat="cards push"
             style="--x: 812px; --y: 96px; --w: 260px; --h: 120px; --r: -3deg"
             aria-label="Social Contacts Sync, profile photos for Google Contacts"
           ><!-- /data -->
@@ -1775,7 +1780,6 @@
             href="planora.html"
             data-open="jar"
             data-open-ms="1100"
-            data-cat="jar push"
             style="--x: 1100px; --y: 70px; --w: 150px; --h: 150px"
             aria-label="Planora, a shared activity planner for groups"
           ><!-- /data -->
@@ -1795,7 +1799,6 @@
             data-open="agenda"
             data-open-ms="1650"
             data-vt-ms="220"
-            data-cat="sit scratch"
             id="agenda"
             style="--x: 488px; --y: 494px; --w: 220px; --h: 290px; --r: -4deg"
             aria-label="Nutreek, a weekly nutrition planner. Open the agenda"
@@ -1819,7 +1822,6 @@
             href="cupid.html"
             data-open="envelope"
             data-open-ms="1250"
-            data-cat="envelope push"
             style="--x: 828px; --y: 380px; --w: 210px; --h: 140px; --r: 8deg"
             aria-label="Cupid, a management system for matchmaking agencies"
           ><!-- /data -->
@@ -1836,7 +1838,6 @@
             href="asf-plugins.html"
             data-open="pager"
             data-open-ms="900"
-            data-cat="push sit"
             style="--x: 1130px; --y: 420px; --w: 90px; --h: 58px; --r: -7deg"
             aria-label="ASF Plugins, plugins for ArchiSteamFarm: ASF-Notifier reports to a Matrix room"
           ><!-- /data -->
@@ -1866,7 +1867,6 @@
           <button
             class="thing sticky"
             data-sheet="contact"
-            data-cat="push sit"
             style="--x: 850px; --y: 610px; --w: 180px; --h: 150px; --r: -4deg"
           >
             Write to me<small>A project, a licence, or just to talk shop.</small>
@@ -1877,7 +1877,6 @@
             href="donate.html"
             data-open="mug"
             data-open-ms="1450"
-            data-cat="coffee push"
             style="--x: 1100px; --y: 600px; --w: 130px; --h: 130px"
             aria-label="Buy me a coffee: ways to support my work"
           >
@@ -1894,11 +1893,11 @@
             <span class="label">Buy me a coffee<small>It keeps the bench open</small></span>
           </a>
 
-          <span class="loose pencil" data-cat="knock" style="left: 120px; top: 800px; --r: -14deg" aria-hidden="true"></span>
-          <span class="loose eraser" data-cat="knock" style="left: 380px; top: 812px; --r: 12deg" aria-hidden="true"></span>
-          <span class="loose clip" data-cat="knock" style="left: 784px; top: 290px; --r: 30deg" aria-hidden="true"></span>
-          <span class="loose coin" data-cat="knock" style="left: 1060px; top: 560px" aria-hidden="true"></span>
-          <div class="pc" data-cat-avoid>
+          <span class="loose pencil" style="left: 120px; top: 800px; --r: -14deg" aria-hidden="true"></span>
+          <span class="loose eraser" style="left: 380px; top: 812px; --r: 12deg" aria-hidden="true"></span>
+          <span class="loose clip" style="left: 784px; top: 290px; --r: 30deg" aria-hidden="true"></span>
+          <span class="loose coin" style="left: 1060px; top: 560px" aria-hidden="true"></span>
+          <div class="pc">
             <span class="floor" aria-hidden="true"></span>
             <span class="top" aria-hidden="true"></span>
             <span class="side" aria-hidden="true"></span>

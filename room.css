@@ -37,6 +37,7 @@
   --chair: #3f4a52;
   --chair-leg: #2c3338;
   --chair-mesh: #353e45;
+  --tie: #b3343c;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -47,6 +48,7 @@
     --chair: #2c353b;
     --chair-leg: #1e2428;
     --chair-mesh: #262d32;
+    --tie: #a52f37;
   }
   .iso .floor-plane {
     filter: brightness(0.55);
@@ -1147,6 +1149,76 @@ html:not(.iso) .strip {
   height: 14px;
   background: rgba(240, 231, 204, 0.85);
   rotate: -3deg;
+}
+
+/* ---- the tie over the chair's back, the way to the plain home (room.js) ------------- */
+.iso .chair-tie {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+.iso .tie-face {
+  position: absolute;
+  display: block;
+  transform-origin: 50% 0;
+  pointer-events: none;
+}
+.iso .tie-link {
+  position: absolute;
+  display: block;
+  transform-origin: 50% 0;
+  border-radius: 8px;
+  pointer-events: auto;
+}
+.iso .tie-link:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+/* picked up, it is put on: up off the headrest and one swing, and the page goes */
+.iso .chair-tie.worn {
+  animation: tie-on 0.6s var(--ease-out) both;
+}
+@keyframes tie-on {
+  0% {
+    transform: none;
+  }
+  35% {
+    transform: translateZ(44px) rotateY(16deg);
+  }
+  70% {
+    transform: translateZ(56px) rotateY(-9deg);
+  }
+  100% {
+    transform: translateZ(52px) rotateY(0deg);
+  }
+}
+/* the room's first stop for the keyboard: the plain home, shown only while it has the focus */
+.iso .skip-plain {
+  position: fixed;
+  left: 1rem;
+  top: 1rem;
+  z-index: 40;
+  padding: 0.6rem 1rem;
+  border-radius: 3px 3px 3px 12px;
+  background: var(--paper);
+  color: var(--paper-ink);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+  font: 700 1.05rem/1.2 "Bricolage Grotesque", sans-serif;
+  text-decoration: underline;
+  transform: translateY(calc(-100% - 2rem));
+}
+.iso .skip-plain:focus {
+  transform: none;
+}
+/* the ring framed in ink, so it shows on the wall in both schemes */
+.iso .skip-plain:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+  box-shadow:
+    0 0 0 3px var(--paper-ink),
+    0 0 0 9px var(--paper-ink);
 }
 
 /* ---- tags: an object's name at reading size, while it is pointed at --------------- */

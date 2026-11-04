@@ -17,7 +17,7 @@ USABLE = """(() => {
   const fit = document.querySelector('.fit'), f = fit.getClientRects()[0];
   const a = { l: Math.max(0, f.left), t: Math.max(0, f.top), r: Math.min(innerWidth, f.right), b: Math.min(innerHeight, f.bottom) };
   const out = [...fit.querySelectorAll("a[href], button, [tabindex]:not([tabindex='-1']), .home-tape, .intro")].filter((e) => {
-    if (e.closest('[hidden], [inert], .cat-toy, .cat')) return false;
+    if (e.closest('[hidden], [inert]')) return false;
     const cs = getComputedStyle(e);
     if (cs.visibility === 'hidden' || cs.display === 'none') return false;
     const r = e.getClientRects()[0];

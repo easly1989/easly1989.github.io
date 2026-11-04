@@ -321,21 +321,21 @@
     </style>
   </head>
   <body data-page="about">
-    <div class="mat" data-cat-world>
+    <div class="mat">
       <svg class="guides" aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 100 100">
         <line x1="0" y1="0" x2="100" y2="100" vector-effect="non-scaling-stroke" />
       </svg>
       <header class="bar">
         <a href="index.html">Projects</a>
         <a href="about.html" aria-current="page">About</a>
-        <a href="donate.html" data-cat="nav">Donate</a>
+        <a href="donate.html">Donate</a>
         <a href="https://github.com/easly1989" rel="noopener">GitHub</a>
       </header>
       <a class="crumb" href="index.html">Back to the bench</a>
 
       <main>
         <div class="top">
-          <button class="instant" type="button" id="print" data-cat="photo" aria-label="The photo is still developing. Shake it.">
+          <button class="instant" type="button" id="print" aria-label="The photo is still developing. Shake it.">
             <span class="frame">
               <img
                 src="assets/carlo.jpg"
@@ -348,7 +348,7 @@
             <span class="hint" aria-hidden="true">Developing…</span>
           </button>
 
-          <section class="paper who" data-cat="sit">
+          <section class="paper who">
             <p class="state">Full Stack Software Developer at TeamSystem.</p>
             <h1>Carlo Ruggiero</h1>
             <p class="lede">
@@ -363,7 +363,7 @@
         </div>
 
         <div class="table">
-          <section class="paper card ruled" style="--r: -0.6deg" data-cat="sit">
+          <section class="paper card ruled" style="--r: -0.6deg">
             <h2>What I do</h2>
             <p>
               By day I'm a Full Stack Software Developer at <strong>TeamSystem</strong>. Either way
@@ -392,12 +392,12 @@
           <section class="wide" aria-labelledby="build-h">
             <h2 id="build-h">How I build</h2>
             <dl class="index-cards">
-              <div style="--r: -1deg" data-cat="push"><dt>Go backends</dt><dd>Small, dependency-light services in Go, with a clear REST API and a layout that is simple to operate.</dd></div>
-              <div style="--r: 0.8deg" data-cat="push"><dt>Embedded SQLite</dt><dd>Pure-Go SQLite means no separate database server to run or back up — the data is a single file you control.</dd></div>
-              <div style="--r: -0.5deg" data-cat="push"><dt>One-container deploys</dt><dd>Each product ships as a single Docker container, often distroless, so it is cheap to run and straightforward to self-host.</dd></div>
-              <div style="--r: 1.2deg" data-cat="push"><dt>The right front end</dt><dd>Server-rendered HTMX, a React SPA, or Flutter for web, Android and iOS — whichever fits the product best.</dd></div>
-              <div style="--r: -1.3deg" data-cat="push"><dt>Privacy by default</dt><dd>Self-hostable, no unnecessary tracking, and GDPR tooling where personal data is involved. Your data stays yours.</dd></div>
-              <div style="--r: 0.6deg" data-cat="push"><dt>Shipped and maintained</dt><dd>CI, tagged releases, backups and health checks — the unglamorous parts that decide whether something keeps working.</dd></div>
+              <div style="--r: -1deg"><dt>Go backends</dt><dd>Small, dependency-light services in Go, with a clear REST API and a layout that is simple to operate.</dd></div>
+              <div style="--r: 0.8deg"><dt>Embedded SQLite</dt><dd>Pure-Go SQLite means no separate database server to run or back up — the data is a single file you control.</dd></div>
+              <div style="--r: -0.5deg"><dt>One-container deploys</dt><dd>Each product ships as a single Docker container, often distroless, so it is cheap to run and straightforward to self-host.</dd></div>
+              <div style="--r: 1.2deg"><dt>The right front end</dt><dd>Server-rendered HTMX, a React SPA, or Flutter for web, Android and iOS — whichever fits the product best.</dd></div>
+              <div style="--r: -1.3deg"><dt>Privacy by default</dt><dd>Self-hostable, no unnecessary tracking, and GDPR tooling where personal data is involved. Your data stays yours.</dd></div>
+              <div style="--r: 0.6deg"><dt>Shipped and maintained</dt><dd>CI, tagged releases, backups and health checks — the unglamorous parts that decide whether something keeps working.</dd></div>
             </dl>
           </section>
 
@@ -451,8 +451,8 @@
         </div>
       </main>
 
-      <span class="loose pencil" data-cat="knock" style="right: 50px; top: 640px; --r: 70deg" aria-hidden="true"></span>
-      <span class="loose eraser" data-cat="knock" style="left: 40px; top: 1100px; --r: -10deg" aria-hidden="true"></span>
+      <span class="loose pencil" style="right: 50px; top: 640px; --r: 70deg" aria-hidden="true"></span>
+      <span class="loose eraser" style="left: 40px; top: 1100px; --r: -10deg" aria-hidden="true"></span>
     </div>
 
     <script src="photos.js"></script>
@@ -515,6 +515,5 @@
     </script>
     <script src="radio.js"></script>
     <script src="site.js" defer></script>
-    <script src="cat.js" defer></script>
   </body>
 </html>

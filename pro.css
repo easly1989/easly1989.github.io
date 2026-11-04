@@ -59,6 +59,30 @@ code {
   margin-inline: auto;
 }
 
+/* the first stop for the keyboard, shown only while it has the focus */
+.skip {
+  position: absolute;
+  left: 1rem;
+  top: 1rem;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 1rem;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--ground);
+  font-weight: 700;
+  text-decoration: none;
+  transform: translateY(calc(-100% - 2rem));
+}
+.skip:focus {
+  transform: none;
+}
+.projects:focus {
+  outline: none;
+}
+
 /* ---- the home: the name is the one loud thing ---------------------------------------- */
 .top {
   padding: 4.5rem 0 3.25rem;

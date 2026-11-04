@@ -1,7 +1,7 @@
 // What Willy does next, in the room (willy-room.js): one of his everyday actions, picked at random,
 // weighted, among those he can do where he is, never the one he did last, and none again before
-// its cooldown is up. The actions and their weights are the 2D cat's (cat.js), remapped to the
-// room; the ones that need a prop or a toy come with those.
+// its cooldown is up. The actions and their weights were the 2D cat's (the bench's cat, which he
+// replaced), remapped to the room; the ones that need a prop or a toy come with those.
 //
 // An action's run(at) gives where he ends up and the show that takes him there, as moments
 // (willy-moves.js), or null when it cannot be done this time (no room for it, say). A moment may
