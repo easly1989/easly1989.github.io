@@ -6,11 +6,14 @@ drawn as it is, then again with the ink of some texts made transparent; where th
 those texts' letters, and each letter's pixel is measured against the same pixel without it. So
 the night's darkening and the paper or the wall under a word all count; a neon's own glow is
 part of the letter, not of what is behind it. It is drawn at four times the density, so even
-the smallest letters have solid cores and their colours are measured rather than how a small word blurs."""
+the smallest letters have solid cores and their colours are measured rather than how a small word blurs.
+The professional home and every professional page are measured the same way, whole, in both
+schemes."""
 import base64
 import io
 import sys
 import time
+from pathlib import Path
 
 import numpy as np
 from PIL import Image
@@ -19,6 +22,7 @@ from cdp import Browser
 from serve import serve
 
 LEAST = 4.5
+ROOT = Path(__file__).resolve().parent.parent
 # every element with words of its own that the reader can see, and where it is on screen
 TEXTS = r"""((within) => {
   const out = [];
@@ -120,6 +124,24 @@ try:
             within = ".fit" if light == "on" else ".fit nav.plexi"
             low = sorted((r, n) for n, r in measure(b, within).items() if r < LEAST)
             what = f"{scheme}, light {light}: every text {'' if light == 'on' else 'of the navigation '}at {LEAST}:1 or better"
+            if low:
+                what += " (" + "; ".join(f"{n} {r:.1f}" for r, n in low) + ")"
+                failures.append(what)
+            print(("ok    " if not low else "FAIL  ") + what)
+    # the professional pages: flat colours, so twice the density is enough; the window is as tall
+    # as the page, with its pictures in, so every word is in it
+    pro = ["index.html"] + sorted("pro/" + f.name for f in (ROOT / "pro").glob("*.html"))
+    b.call("Emulation.setDeviceMetricsOverride", width=1280, height=900, deviceScaleFactor=2, mobile=False)
+    for scheme in ("light", "dark"):
+        b.media(prefers_color_scheme=scheme, prefers_reduced_motion="reduce")
+        for page in pro:
+            b.nav(base + "/" + page, 1.5)
+            b.js("Promise.all([...document.images].map((i) => { i.loading = 'eager'; return i.decode().catch(() => {}); }))")
+            h = b.js("document.documentElement.scrollHeight")
+            b.call("Emulation.setDeviceMetricsOverride", width=1280, height=h, deviceScaleFactor=2, mobile=False)
+            time.sleep(0.5)
+            low = sorted((r, n) for n, r in measure(b, ".pro" if page == "index.html" else "body").items() if r < LEAST)
+            what = f"{page}, {scheme}: every text at {LEAST}:1 or better"
             if low:
                 what += " (" + "; ".join(f"{n} {r:.1f}" for r, n in low) + ")"
                 failures.append(what)

@@ -22,11 +22,13 @@ python checks/data.py
 
 `contrast.py` also needs `pip install pillow numpy`.
 
-- `framing.py` — a first visit to the home gets the room; every link, button and word in it is
-  inside the window at 1280×720, 1366×768, 1440×900, 1920×1080 and 2560×1080, and the walls and
-  floor fill it to the corners; a window too small for the room and a phone get the bench;
-  `?room=0` turns the room off for the session and `?room` back on; nothing on the
-  desk moves when the fonts arrive after the first frame. Headless.
+- `framing.py` — a first visit to the home gets the professional page, with its way into the
+  room; "Step into the room" shows the room and the choice holds on the next visit; every link,
+  button and word in the room is inside the window at 1280×720, 1366×768, 1440×900, 1920×1080
+  and 2560×1080, and the walls and floor fill it to the corners; a window too small for the room
+  and a phone get the professional page, with no way in; `?room=0` turns the room off and
+  `?room` back on; nothing on the desk moves when the fonts arrive after the first frame.
+  Headless. The other checks reach the room through `?room`, which chooses it.
 - `fps.py` — the room keeps pace with a 60 Hz display while Willy walks, in both schemes, with
   its light on and off, with the radio playing and with the computer on; he rests between walks, so a sample is taken
   again until he has walked through enough of it. It draws without vsync, so it measures what a
@@ -36,7 +38,8 @@ python checks/data.py
 - `contrast.py` — with the room's light on, every text the reader can see clears 4.5:1 against
   what is really behind it, in both schemes; with the light off, the night is a view the reader
   chose and only the neon navigation has to. It measures pixels, drawing each text with and
-  without its ink at four times the density. Headless; about three minutes.
+  without its ink at four times the density. Then the professional home and every page in
+  `pro/`, whole, in both schemes. Headless; about four minutes.
 
 - `moves.py` — each project object is clicked with the mouse, and a second click lands
   elsewhere mid-move: the first click's page opens within about 1.6 s and at 60 fps or more,
@@ -78,7 +81,9 @@ python checks/data.py
   has each block it is meant to have, once, and the facts still written by hand agree with the
   data: the licence in each page's prose, the stack tables, a data screenshot's alt, size and
   caption (shown on its own page unless `pro_only`), CloudBank's fallback version, the links
-  beyond the label sheet, and the room's jar label. A second.
+  beyond the label sheet, and the room's jar label. Every project has its professional page,
+  `pro/<id>.html`, with its own title and its curated screenshots, and neither those pages nor
+  the professional home link to a playful page. A second.
 
 The room's window shows Pesaro's weather from Open-Meteo, asked once and kept for 15 minutes
 in `sessionStorage` (`weather`). For a check or a screenshot, `?weather=` forces a state without

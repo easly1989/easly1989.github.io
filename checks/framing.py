@@ -1,7 +1,8 @@
-"""The room's frame: the home is the room, and every link and button in it, and the name and
-the note on the wall, are inside the window at every size the room shows at, and the walls and
-the floor fill it to the corners; below its smallest scale, and with ?room=0, the home is the flat
-bench."""
+"""The room's frame: the home is the professional page until the reader chooses the room, which
+is remembered; then every link and button in the room, and the name and the note on the wall,
+are inside the window at every size the room shows at, and the walls and the floor fill it to the
+corners. Below its smallest scale, on a phone, and with ?room=0, the home is the professional
+page, and its way into the room shows only where the room would fit."""
 import sys
 import time
 
@@ -9,7 +10,7 @@ from cdp import Browser
 from serve import serve
 
 ROOM_SIZES = [(1280, 720), (1366, 768), (1440, 900), (1920, 1080), (2560, 1080)]
-# a window too small for the room at a scale of 0.7: the column, or the bench, instead
+# a window too small for the room at a scale of 0.7: the professional page instead
 SMALL = (1100, 640)
 
 USABLE = """(() => {
@@ -64,6 +65,9 @@ HIDDEN = """(() => {
   return out;
 })()"""
 
+# the professional page's way into the room is showing
+PEEK = "getComputedStyle(document.querySelector('.peek')).display !== 'none'"
+
 failures = []
 
 
@@ -79,7 +83,15 @@ try:
     b.media(prefers_reduced_motion="reduce")
     b.size(1440, 900)
     b.nav(base + "/index.html", 3)
-    check(b.js("document.documentElement.classList.contains('iso')"), "a first visit to the home, with no ?room, gets the room")
+    check(not b.js("document.documentElement.classList.contains('iso')") and b.js(PEEK),
+          "a first visit to the home gets the professional page, with the way into the room")
+    b.js("document.querySelector('.peek').click()")
+    time.sleep(3)
+    check(b.js("document.documentElement.classList.contains('iso') && localStorage.getItem('site:room') === '1'"),
+          "Step into the room chooses the room, and it shows")
+    b.js("sessionStorage.clear()")
+    b.nav(base + "/index.html", 3)
+    check(b.js("document.documentElement.classList.contains('iso')"), "the choice is remembered on the next visit")
     for w, h in ROOM_SIZES:
         b.size(w, h)
         b.nav(base + "/index.html?room", 3)
@@ -100,33 +112,36 @@ try:
     check(not hidden, "in 10 loads, nothing loose is hidden behind something tall" + (f" ({', '.join(hidden)})" if hidden else ""))
     b.size(*SMALL)
     b.nav(base + "/index.html?room", 4)
-    check(not b.js("document.documentElement.classList.contains('iso')"), f"{SMALL[0]} x {SMALL[1]}: too small for the room, so the bench shows")
+    check(not b.js("document.documentElement.classList.contains('iso')") and not b.js(PEEK),
+          f"{SMALL[0]} x {SMALL[1]}: too small for the room, so the professional page shows, with no way in")
     # the first visit on a small window: the room measures itself, finds it does not fit,
     # and the page reloads once into the bench
     b.js("localStorage.clear(); sessionStorage.removeItem('room-reload')")
     b.nav(base + "/index.html?room", 6)
-    check(not b.js("document.documentElement.classList.contains('iso')"), f"{SMALL[0]} x {SMALL[1]}, first visit: the bench, after one reload")
+    check(not b.js("document.documentElement.classList.contains('iso')"), f"{SMALL[0]} x {SMALL[1]}, first visit: the professional page, after one reload")
     b.size(390, 844, mobile=True)
     b.nav(base + "/index.html?room", 3)
-    check(not b.js("document.documentElement.classList.contains('iso')"), "on a phone the column shows")
-    # remembered for the session: after ?room=0 and then ?room, the plain address keeps the room
+    check(not b.js("document.documentElement.classList.contains('iso')") and not b.js(PEEK),
+          "on a phone the room is ignored: the professional page, with no way in")
+    # remembered: after ?room=0 and then ?room, the plain address keeps the room
     b.size(1440, 900)
     b.nav(base + "/index.html?room=0", 2)
     b.nav(base + "/index.html?room", 3)
     b.nav(base + "/index.html", 3)
-    check(b.js("document.documentElement.classList.contains('iso')"), "?room is remembered for the session")
+    check(b.js("document.documentElement.classList.contains('iso')"), "?room is remembered")
     # the window changing size under the room: narrower than the room's layout, then wide again
     b.size(860, 900)
     time.sleep(3)
-    check(not b.js("document.documentElement.classList.contains('iso')"), "narrowed to 860, the room gives way to the column")
+    check(not b.js("document.documentElement.classList.contains('iso')"), "narrowed to 860, the room gives way to the professional page")
     b.size(1440, 900)
     time.sleep(3)
     check(b.js("document.documentElement.classList.contains('iso')"), "widened to 1440 again, the room comes back")
-    # ?room=0 turns it off for the session
+    # ?room=0 turns it off, and it stays off
     b.nav(base + "/index.html?room=0", 3)
     off = not b.js("document.documentElement.classList.contains('iso')")
+    b.js("sessionStorage.clear()")
     b.nav(base + "/index.html", 3)
-    check(off and not b.js("document.documentElement.classList.contains('iso')"), "?room=0 turns the room off for the session")
+    check(off and not b.js("document.documentElement.classList.contains('iso')"), "?room=0 turns the room off, and it stays off")
     # the first frame is the layout: when the fonts come in, nothing moves to a new place
     b.call("Network.enable")
     b.call("Network.setCacheDisabled", cacheDisabled=True)

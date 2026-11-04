@@ -8,8 +8,8 @@
       name="description"
       content="Seven projects by Carlo Ruggiero, a software developer: CloudBank, a free open-source self-hosted personal finance manager, Social Contacts Sync, ASF Plugins, coordinator-monitor, plus Planora, Nutreek and Cupid."
     />
-    <meta name="theme-color" content="#22594b" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#12352d" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f4f6f5" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0f1512" media="(prefers-color-scheme: dark)" />
     <link rel="icon" type="image/svg+xml" href="logo.svg" />
     <meta property="og:title" content="Carlo Ruggiero — Projects" />
     <meta
@@ -21,10 +21,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&family=VT323&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css" />
+    <!-- the professional home's; the room takes it away and brings its own (below) -->
+    <link rel="stylesheet" href="pro.css" />
 
     <!-- ===== Site config =====================================================
          CONTACT_EMAIL: where the "Write to me" sheet sends people (mailto). -->
@@ -32,27 +33,32 @@
       window.CONTACT_EMAIL = "caesar.themaster@gmail.com";
     </script>
     <script>
-      // The home is the room, unless ?room=0 in the address turned it off for the session (?room
-      // turns it on again). It needs a wide window it fits at a scale of ROOM_FIT.min or more,
-      // within ROOM_FIT.margin of the edges, as room.js frames it: room.js measures the box it
-      // needs and keeps it, so this decides before anything is drawn. Otherwise the home is the
-      // bench. sessionStorage "room" is "1" once the room has shown in this visit (About and the
-      // radio read it). The room holds the first frame until it is built (#room-ready, at the
-      // end of the body).
+      // The home is the professional page, unless the reader chose the room: localStorage
+      // "site:room" is "1" (the professional page's "Step into the room", or ?room in the
+      // address; ?room=0 sets it to "0"). The room needs a wide window it fits at a scale of
+      // ROOM_FIT.min or more, within ROOM_FIT.margin of the edges, as room.js frames it: room.js
+      // measures the box it needs and keeps it, so this decides before anything is drawn.
+      // Otherwise the home is the professional page, which shows the way in (html.room-fits)
+      // only where the room would fit. sessionStorage "room" is "1" once the room has shown in
+      // this visit (About and the radio read it). The room holds the first frame until it is
+      // built (#room-ready, at the end of the body).
       window.ROOM_FIT = { min: 0.7, margin: 16 };
       (function () {
-        // (without storage the room could not size itself or be turned off: the bench)
         var on = false,
-          box = null;
+          box = null,
+          root = document.documentElement;
         try {
           var q = new URLSearchParams(location.search).get("room");
-          if (q !== null) sessionStorage.setItem("room", q === "0" ? "0" : "1");
-          on = sessionStorage.getItem("room") !== "0";
+          if (q !== null) {
+            sessionStorage.setItem("room", q === "0" ? "0" : "1");
+            localStorage.setItem("site:room", q === "0" ? "0" : "1");
+          }
+          on = localStorage.getItem("site:room") === "1";
           box = JSON.parse(localStorage.getItem("room-box"));
         } catch (e) {
-          on = false;
+          // without storage the room could not be chosen or size itself: the professional page
+          return;
         }
-        if (!on) return;
         // a box that is not four sizes is ignored: the room measures it again
         if (!box || !["w", "h", "dw", "dh"].every(function (k) { return box[k] > 0 || box[k] === 0; })) box = null;
         function fits() {
@@ -60,19 +66,24 @@
           var m = 2 * ROOM_FIT.margin;
           return !box || Math.min((innerWidth - box.dw - m) / box.w, (innerHeight - box.dh - m) / box.h) >= ROOM_FIT.min;
         }
-        if (!fits()) {
+        if (!on || !fits()) {
+          root.classList.toggle("room-fits", fits());
           addEventListener("resize", function () {
-            if (fits()) location.reload();
+            if (on && fits()) location.reload();
+            root.classList.toggle("room-fits", fits());
           });
           return;
         }
-        document.documentElement.classList.add("iso");
+        root.classList.add("iso");
         try {
           sessionStorage.setItem("room", "1");
         } catch (e) {}
+        // the room has the bench's styles, not the professional page's
+        document.querySelector('link[href="pro.css"]').remove();
         document.write(
-          '<link rel="expect" href="#room-ready" blocking="render" />' +
-            '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tilt+Neon&family=Caveat:wght@500&family=Nanum+Pen+Script&family=Reenie+Beanie&display=swap" />' +
+          '<link rel="stylesheet" href="styles.css" />' +
+            '<link rel="expect" href="#room-ready" blocking="render" />' +
+            '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tilt+Neon&family=Caveat:wght@500&family=Nanum+Pen+Script&family=Reenie+Beanie&family=VT323&display=swap" />' +
             '<link rel="stylesheet" href="room.css" />',
         );
         // Willy (willy-room.js), with three.js r186 from vendor/three, which he loads only once the
@@ -91,9 +102,14 @@
       })();
     </script>
     <style>
+      /* the professional page and the room share this page: the room is the bench's objects,
+         which room.js sets out in 3D, and the professional page is not shown with it */
+      html.iso .pro {
+        display: none;
+      }
+      /* the room's 1280 x 880 mat, which room.css turns and room.js frames */
       .fit {
         position: relative;
-        height: calc(880px * var(--s, 1));
       }
       .stage {
         position: absolute;
@@ -101,8 +117,6 @@
         top: 0;
         width: 1280px;
         height: 880px;
-        transform: translateX(-50%) scale(var(--s, 1));
-        transform-origin: top center;
       }
       .home-tape {
         position: absolute;
@@ -111,13 +125,6 @@
         transform: rotate(-2deg);
         transform-origin: left bottom;
         transition: transform 0.4s var(--ease-spring);
-      }
-      /* the bench only (above the column's 900px, and not the room, whose sign sets its own
-         width): 420px wraps the subtitle into two clean lines and keeps it clear of the ledger */
-      @media (min-width: 901px) {
-        html:not(.iso) .home-tape {
-          max-width: 420px;
-        }
       }
       .home-tape.lifted {
         transform: rotate(-2deg) skewY(-3deg) rotate(-1deg);
@@ -1531,68 +1538,160 @@
           transform: translate(52px, 16px) scale(2.4);
         }
       }
-
-      /* Phones: the bench becomes a column you scroll down. */
-      @media (max-width: 900px) {
-        .fit {
-          height: auto;
-        }
-        .stage {
-          position: relative;
-          left: auto;
-          width: auto;
-          height: auto;
-          transform: none;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 3rem;
-          padding: 1rem 1rem 5rem;
-        }
-        .home-tape,
-        .intro,
-        .thing,
-        .loose {
-          position: relative;
-          left: auto;
-          top: auto;
-        }
-        .intro {
-          width: min(100%, 22rem);
-        }
-        .thing {
-          width: min(var(--w), 86vw);
-          flex: none;
-        }
-        .cards {
-          margin-top: 1rem;
-        }
-        .jar {
-          margin-bottom: 2rem;
-        }
-        .mug {
-          margin: 0 30px 3rem 0;
-        }
-        .plush {
-          margin-bottom: 4rem;
-        }
-        .plush .label {
-          left: 50%;
-          top: calc(100% + 0.6rem);
-          width: max-content;
-          max-width: 86vw;
-          transform: translateX(-50%);
-          text-align: center;
-        }
-        .loose,
-        .pc {
-          display: none;
-        }
-      }
     </style>
   </head>
   <body data-page="home">
-    <div class="mat">
+    <!-- The professional home: the page everyone gets, unless they chose the room. Its rows
+         are written by tools/sync.py from data/projects/ and lead to pro/<id>.html. -->
+    <div class="pro">
+      <header class="top wrap">
+        <h1>Carlo Ruggiero</h1>
+        <p class="role">
+          Full Stack Software Developer at TeamSystem. On my own time I build self-hosted web apps
+          and cross-platform mobile apps, mostly in Go.
+        </p>
+        <ul class="reach">
+          <li><a class="main" href="mailto:caesar.themaster@gmail.com">Email me</a></li>
+          <li><a href="https://github.com/easly1989" rel="noopener">GitHub</a></li>
+          <li><a href="https://www.linkedin.com/in/cruggiero89/" rel="noopener">LinkedIn</a></li>
+        </ul>
+      </header>
+      <main class="wrap">
+        <section class="projects" aria-labelledby="projects-h">
+          <!-- the way into the room: only on a window that can hold it (html.room-fits) -->
+          <a class="peek" href="?room">
+            <svg viewBox="0 0 96 58" aria-hidden="true">
+              <path d="M18 40 L22 8 L36 22 Z" fill="#f4f4f2" stroke="#1b1b1b" stroke-width="1.5" stroke-linejoin="round" />
+              <path d="M78 40 L74 8 L60 22 Z" fill="#1b1b1b" stroke="#1b1b1b" stroke-width="1.5" stroke-linejoin="round" />
+              <path d="M14 58 C14 30 30 18 48 18 C66 18 82 30 82 58 Z" fill="#f4f4f2" stroke="#1b1b1b" stroke-width="1.5" />
+              <path d="M48 18 C62 18 76 26 80 42 C70 40 60 44 52 40 C46 37 44 28 48 18 Z" fill="#1b1b1b" />
+              <path d="M33 39 q5 -5 10 0 q-5 4 -10 0 Z" fill="#7cbf4a" stroke="#1b1b1b" stroke-width="1" />
+              <path d="M53 39 q5 -5 10 0 q-5 4 -10 0 Z" fill="#7cbf4a" stroke="#1b1b1b" stroke-width="1" />
+              <path d="M37.5 36.3 v5.2 M57.5 36.3 v5.2" stroke="#1b1b1b" stroke-width="1.6" />
+              <path d="M46 47 l2 2 l2 -2 Z" fill="#d98a96" />
+              <ellipse cx="30" cy="57" rx="9" ry="5" fill="#f4f4f2" stroke="#1b1b1b" stroke-width="1.5" />
+              <ellipse cx="66" cy="57" rx="9" ry="5" fill="#f4f4f2" stroke="#1b1b1b" stroke-width="1.5" />
+            </svg>
+            <span>Step into the room</span>
+          </a>
+          <h2 class="sec" id="projects-h">Projects</h2>
+          <ul class="list">
+            <!-- data:cloudbank.pro-row -->
+            <li class="row" style="--c: #2f6fd0">
+              <a href="pro/cloudbank.html">
+                <img src="logo.svg" alt="" width="44" height="44" />
+                <span><b>CloudBank</b><span class="st">Shipping, <span data-cloudbank="stable">v3.12.0</span>. Open source under AGPL-3.0.</span></span>
+                <p>
+                  Your money, self-hosted. A free personal finance manager — a from-scratch web port
+                  of HomeBank, built for the browser and the cloud.
+                </p>
+              </a>
+            </li>
+            <!-- /data -->
+            <!-- data:nutreek.pro-row -->
+            <li class="row" style="--c: #2f7d32">
+              <a href="pro/nutreek.html">
+                <img src="nutreek.svg" alt="" width="44" height="44" />
+                <span><b>Nutreek</b><span class="st">Open source under AGPL-3.0. Self-hosted.</span></span>
+                <p>
+                  A self-hosted weekly nutrition planner — plan meals, track macros, and let
+                  adaptive TDEE keep your targets honest.
+                </p>
+              </a>
+            </li>
+            <!-- /data -->
+            <!-- data:social-contacts-sync.pro-row -->
+            <li class="row" style="--c: #5b4cf0">
+              <a href="pro/social-contacts-sync.html">
+                <img src="social-contacts-sync.svg" alt="" width="44" height="44" />
+                <span><b>Social Contacts Sync</b><span class="st">Shipping, v1.4.5. Open source.</span></span>
+                <p>
+                  Give every contact a face. A desktop app that fills Google Contacts with your
+                  contacts' profile photos from WhatsApp, Telegram, Gravatar and their social
+                  profiles, and tidies up duplicates on the way.
+                </p>
+              </a>
+            </li>
+            <!-- /data -->
+            <!-- data:planora.pro-row -->
+            <li class="row" style="--c: #6d59ad">
+              <a href="pro/planora.html">
+                <img src="planora.svg" alt="" width="44" height="44" />
+                <span><b>Planora</b><span class="st">In internal testing. Free, and hosted for you.</span></span>
+                <p>
+                  Plan together, decide less, do more — a mobile-first shared activity planner that
+                  turns group indecision into events worth remembering.
+                </p>
+              </a>
+            </li>
+            <!-- /data -->
+            <!-- data:cupid.pro-row -->
+            <li class="row" style="--c: #c4356a">
+              <a href="pro/cupid.html">
+                <img src="cupid.svg" alt="" width="44" height="44" />
+                <span><b>Cupid</b><span class="st">Available to license. Closed source, self-hosted or hosted.</span></span>
+                <p>
+                  A web management system for matchmaking and dating agencies — a cloud-ready
+                  rewrite of the classic <em>Cuore</em> desktop application.
+                </p>
+              </a>
+            </li>
+            <!-- /data -->
+            <!-- data:asf-plugins.pro-row -->
+            <li class="row" style="--c: #0f766e">
+              <a href="pro/asf-plugins.html">
+                <img src="asf-notifier.svg" alt="" width="44" height="44" />
+                <span><b>ASF Plugins</b><span class="st">Two plugins for ArchiSteamFarm. Open source under Apache-2.0.</span></span>
+                <p>
+                  Plugins for ArchiSteamFarm. Each one drops into ASF's <code>plugins</code>
+                  directory, keeps its settings in ASF's own config files, and works in ASF's Docker
+                  image.
+                </p>
+              </a>
+            </li>
+            <!-- /data -->
+            <!-- data:coordinator-monitor.pro-row -->
+            <li class="row" style="--c: #b0573a">
+              <a href="pro/coordinator-monitor.html">
+                <img src="coordinator-monitor.svg" alt="" width="44" height="44" />
+                <span><b>coordinator-monitor</b><span class="st">Version 0.2.0, early. Open source under AGPL-3.0-or-later.</span></span>
+                <p>
+                  One pane for every local Claude Code session: what each one is doing, its
+                  subagents, and everything that waits for you, answerable in place.
+                </p>
+              </a>
+            </li>
+            <!-- /data -->
+          </ul>
+        </section>
+        <section class="about" aria-labelledby="about-h">
+          <h2 id="about-h">About</h2>
+          <div>
+            <p>
+              I'm a software developer with more than a decade of experience. By day I'm a Full
+              Stack Software Developer at TeamSystem: the database, the API and the interface on
+              top of it, for the web and for phones.
+            </p>
+            <p>
+              I like finishing things: an app someone can actually run and keep running, rather
+              than a proof of concept. The projects here are the ones I keep going on my own time.
+              Some are open source, some are licensed, and some I host.
+            </p>
+            <ul class="how">
+              <li><b>Go backends</b><span>Small, dependency-light services with a clear REST API.</span></li>
+              <li><b>Embedded SQLite</b><span>No separate database server: the data is a file you control.</span></li>
+              <li><b>One-container deploys</b><span>Each product ships as a single Docker container.</span></li>
+              <li><b>The right front end</b><span>HTMX, a React SPA, or Flutter, whichever fits.</span></li>
+            </ul>
+          </div>
+        </section>
+      </main>
+      <footer class="wrap">Carlo Ruggiero. The playful version of this site is a room with a cat in it.</footer>
+    </div>
+
+    <!-- The room: the bench's objects, which room.js sets out in 3D. Hidden unless the room
+         was chosen and fits (the head's script); the script after it shows it. -->
+    <div class="mat" hidden>
       <svg class="guides" aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 100 100">
         <line x1="0" y1="100" x2="100" y2="0" vector-effect="non-scaling-stroke" />
         <line x1="0" y1="60" x2="60" y2="0" vector-effect="non-scaling-stroke" />
@@ -1824,6 +1923,13 @@ SYSTEM HALTED.</span>
         </main>
       </div>
     </div>
+    <script>
+      // the room is chosen and fits (the head's script): it shows, and the professional page goes
+      if (document.documentElement.classList.contains("iso")) {
+        document.querySelector(".mat").hidden = false;
+        document.querySelector(".pro").hidden = true;
+      }
+    </script>
 
     <template id="sheet-contact">
       <form id="contact-form">
@@ -1887,14 +1993,17 @@ SYSTEM HALTED.</span>
         });
       })();
     </script>
-    <script src="crt.js"></script>
+    <script>
+      // the room's sounds and its radio; the professional page makes none
+      if (document.documentElement.classList.contains("iso")) document.write('<script src="crt.js"><\/script>');
+    </script>
     <script>
       // The old computer. Only its switch does anything until it has booted; then
       // the screen and the keyboard open the terminal. It stays on for the visit,
       // unless someone went to the terminal without it: then it never starts again.
       (function () {
         var pc = document.querySelector(".pc");
-        if (!pc) return;
+        if (!pc || !document.documentElement.classList.contains("iso")) return;
         var reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
         var power = pc.querySelector(".power");
         var uses = pc.querySelectorAll(".use");
@@ -2078,7 +2187,7 @@ SYSTEM HALTED.</span>
       // motion it shows one, still; in a hidden tab it waits.
       (function () {
         var lcd = document.querySelector(".pager .pg-lcd");
-        if (!lcd) return;
+        if (!lcd || !document.documentElement.classList.contains("iso")) return;
         var msg = lcd.querySelector(".pg-msg");
         var MESSAGES = [
           ["bot1 login failed (TwoFactorCodeMismatch), ASF stopped the bot", "bad"],
@@ -2140,15 +2249,14 @@ SYSTEM HALTED.</span>
         if (document.fonts) document.fonts.ready.then(refit);
       })();
     </script>
-    <script src="radio.js"></script>
+    <script>
+      if (document.documentElement.classList.contains("iso")) document.write('<script src="radio.js"><\/script>');
+    </script>
     <script src="site.js" defer></script>
     <script>
-      // the room is built here, before the first frame; the cat lives on the bench only
-      document.write(
-        document.documentElement.classList.contains("iso")
-          ? '<script src="photos.js"><\/script><script src="room.js"><\/script><script src="morph.js"><\/script>'
-          : '<script src="cat.js" defer><\/script>',
-      );
+      // the room is built here, before the first frame
+      if (document.documentElement.classList.contains("iso"))
+        document.write('<script src="photos.js"><\/script><script src="room.js"><\/script><script src="morph.js"><\/script>');
     </script>
     <span id="room-ready" hidden></span>
   </body>
