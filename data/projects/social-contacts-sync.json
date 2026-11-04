@@ -1,8 +1,10 @@
 {
   "name": "Social Contacts Sync",
   "tagline": "Profile photos for Google Contacts",
-  "status": "Shipping, {version}. Open source.",
+  "status": "{release}. Open source.",
   "version": "v1.4.5",
+  "release": { "repo": "easly1989/social-contacts-sync" },
+  "prerelease": false,
   "lede": "Give every contact a face. A desktop app that fills Google Contacts with your contacts' profile photos from WhatsApp, Telegram, Gravatar and their social profiles, and tidies up duplicates on the way.",
   "about": "A free, open-source desktop app that fills Google Contacts with profile photos from WhatsApp, Telegram and Gravatar and cleans up duplicates.",
   "description": "Social Contacts Sync is a free, open-source desktop app that fills Google Contacts with your contacts' profile photos from WhatsApp, Telegram, Gravatar and their social profiles, finds those profiles for you, and cleans up duplicates, shared numbers and missing country codes. For Windows, Linux and macOS.",
@@ -26,6 +28,11 @@
       "label": "View on GitHub",
       "href": "https://github.com/easly1989/social-contacts-sync",
       "kind": "repo"
+    },
+    {
+      "label": "Changelog",
+      "href": "https://github.com/easly1989/social-contacts-sync/blob/main/CHANGELOG.md",
+      "kind": "changelog"
     },
     {
       "label": "Donate",

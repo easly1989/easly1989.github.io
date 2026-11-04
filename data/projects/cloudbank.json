@@ -2,8 +2,9 @@
   "name": "CloudBank",
   "tagline": "Self-hosted personal finance manager",
   "status": "Shipping, {version}. Open source under {licence}.",
-  "version": "v3.12.0",
+  "version": "v3.13.0",
   "version_live": "stable",
+  "release": { "repo": "easly1989/cloudbank" },
   "lede": "Your money, self-hosted. A free personal finance manager — a from-scratch web port of HomeBank, built for the browser and the cloud.",
   "about": "A free, open-source, self-hosted personal finance manager — a web port of HomeBank. Shipping at {version}.",
   "description": "CloudBank is a free, open-source, self-hosted personal finance manager — a production-ready web port of HomeBank. Accounts, a powerful register, scheduled transactions, budgets, rich reports, automatic bank sync, bank mails, notifications, an optional AI with your own key and a customizable dashboard.",
@@ -38,6 +39,11 @@
       "label": "Documentation",
       "href": "https://github.com/easly1989/cloudbank/blob/main/docs/README.md",
       "kind": "docs"
+    },
+    {
+      "label": "Changelog",
+      "href": "https://github.com/easly1989/cloudbank/blob/main/CHANGELOG.md",
+      "kind": "changelog"
     },
     {
       "label": "Donate",

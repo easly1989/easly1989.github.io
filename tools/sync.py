@@ -4,6 +4,7 @@ Run from anywhere, after editing data/projects/:
 
     python tools/sync.py           rewrite every generated block
     python tools/sync.py --check   write nothing; exit 1 listing every block that differs
+    python tools/sync.py --versions  first move each fallback version to what GitHub publishes
 
 A generated block is the text between `<!-- data:<id>.<block> -->` and `<!-- /data -->`
 in a page at the repo root. Everything outside those markers is left byte for byte. A block
@@ -15,9 +16,12 @@ data file is an error: nothing is written and the exit code is 2. See tools/READ
 """
 
 import functools
+import http.client
 import json
 import re
 import sys
+import urllib.error
+import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -30,7 +34,9 @@ SITE = "Carlo Ruggiero"
 LOOSE = re.compile(r"<!--\s*(?:/\s*data\b|data\s*:)[^>]*-->")
 OPEN = re.compile(r"<!-- data:([a-z0-9-]+)\.([a-z-]+) -->")
 CLOSE = "<!-- /data -->"
-PLACEHOLDER = re.compile(r"\{(name|version|licence)\}")
+PLACEHOLDER = re.compile(r"\{(name|version|release|licence)\}")
+STAGE = {False: "Shipping", True: "Pre-release"}  # {release}'s words; site.js writes the same
+VERSION = re.compile(r"v?\d[0-9A-Za-z.+-]{0,30}")  # what a version may look like; site.js holds the same
 
 
 class Problem(Exception):
@@ -67,17 +73,31 @@ def esc(text):
     return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
 
 
+def source(p):
+    """Where GitHub publishes a project's version: its repo, or a JSON file in it."""
+    r = p["release"]
+    return r["repo"] + ("/" + r["file"] if r.get("file") else "")
+
+
 def fill(text, p, html):
-    """Expand {name}, {version} and {licence}. In markup (html) the values are escaped, and a
-    live CloudBank version becomes the span site.js fills; plain text comes back raw."""
+    """Expand {name}, {version}, {release} (the stage and the version, "Shipping, 1.1.2.0") and
+    {licence}. In markup (html) the values are escaped, and a version GitHub publishes becomes
+    the span site.js fills (CloudBank's from its versions.json); plain text comes back raw."""
 
     def one(m):
         key = m.group(1)
+        if key == "release":
+            if not isinstance(p.get("version"), str) or not isinstance(p.get("release"), dict):
+                raise Problem("says {release} but has no version or no release")
+            value = f'{STAGE[bool(p.get("prerelease"))]}, {p["version"]}'
+            return f'<span data-release="{esc(source(p))}">{esc(value)}</span>' if html else value
         if not isinstance(p.get(key), str):
             raise Problem(f"says {{{key}}} but has no {key}")
         value = esc(p[key]) if html else p[key]
         if key == "version" and html and p.get("version_live"):
             return f'<span data-cloudbank="{esc(p["version_live"])}">{value}</span>'
+        if key == "version" and html and isinstance(p.get("release"), dict):
+            return f'<span data-version="{esc(source(p))}">{value}</span>'
         return value
 
     return PLACEHOLDER.sub(one, text)
@@ -138,7 +158,7 @@ def title(p):
 # ---- the professional home's rows and pages (#127) -------------------------------------------
 # a professional page leads to what a project is, never to the playful pages: their own nav,
 # Donate and credits stay there
-ACTION_KINDS = {"demo", "release", "repo", "docs", "spec", "contact"}
+ACTION_KINDS = {"demo", "release", "repo", "docs", "changelog", "spec", "contact"}
 FONTS = "https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap"
 
 
@@ -185,7 +205,8 @@ def actions(p, members):
     for l in p["links"]:
         href = l["href"]
         cls = ' class="go"' if l.get("primary") else ""
-        if not l.get("label_sheet", True):
+        # the changelog is always here, though its playful page may carry it off the label sheet
+        if not l.get("label_sheet", True) and l.get("kind") != "changelog":
             continue
         if l.get("kind") == "nav":
             if href.startswith("#") and href[1:] in members:  # a family's member, further down
@@ -440,5 +461,70 @@ def run(check):
     return 0
 
 
+def latest(release):
+    """The newest version GitHub publishes, and whether it is a pre-release: the newest release
+    (drafts are not public), or the version field of a JSON file on the default branch."""
+    repo, file = release["repo"], release.get("file")
+    url = (f"https://raw.githubusercontent.com/{repo}/HEAD/{file}" if file
+           else f"https://api.github.com/repos/{repo}/releases?per_page=1")
+    try:
+        with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "easly1989.github.io"}), timeout=20) as r:
+            got = json.load(r)
+        version, pre = (got["version"], False) if file else (got[0]["tag_name"], got[0]["prerelease"])
+    except (urllib.error.URLError, http.client.HTTPException, OSError, ValueError, KeyError, IndexError, TypeError) as e:
+        raise Problem(f"{url}: no version read ({e})")
+    if not isinstance(version, str) or not VERSION.fullmatch(version) or not isinstance(pre, bool):
+        raise Problem(f"{url}: {version!r} does not look like a version")
+    return version, pre
+
+
+def pull():
+    """Move every fallback version (and pre-release flag) in data/projects/ to what GitHub
+    publishes, editing only those values in place. Anonymous: a few requests of the API's 60
+    an hour. Nothing is written if any one cannot be read."""
+    writes = []
+    try:
+        load()
+        for path in sorted(DATA.glob("*.json")):
+            old = path.read_bytes().decode("utf-8")
+            try:
+                d, text = json.loads(old), old
+            except ValueError as e:
+                raise Problem(f"{path.name} is not JSON: {e}")
+            for p in [d] + d.get("members", []):
+                if not isinstance(p.get("release"), dict):
+                    continue
+                version, pre = latest(p["release"])
+                who = p.get("id", path.stem)
+                at = text.find(f'"id": "{p["id"]}"') if p is not d else 0  # a member's own fields follow its id
+                if at < 0:
+                    raise Problem(f'{path.name}: no "id": "{who}" written so, to find its version by')
+                for key, value in (("version", version), ("prerelease", pre)):
+                    if key not in p:
+                        continue
+                    was = f'"{key}": {json.dumps(p[key])}'
+                    i = text.find(was, at)
+                    if i < 0:
+                        raise Problem(f"{path.name}: {who} has no {was} written so, after its id")
+                    text = text[:i] + f'"{key}": {json.dumps(value)}' + text[i + len(was):]
+                    if value != p[key]:
+                        print(f"{path.name}: {who} {key} {p[key]} -> {value}")
+            if text != old:
+                writes.append((path, text))
+    except Problem as e:
+        print(f"error {e}")
+        print("nothing written")
+        return 2
+    for path, text in writes:
+        path.write_bytes(text.encode("utf-8"))
+    return 0
+
+
 if __name__ == "__main__":
-    sys.exit(run("--check" in sys.argv[1:]))
+    args = sys.argv[1:]
+    if "--versions" in args and "--check" in args:
+        print("error --versions writes the data files and --check writes nothing: use one")
+        sys.exit(2)
+    if "--versions" in args and pull():
+        sys.exit(2)
+    sys.exit(run("--check" in args))

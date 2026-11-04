@@ -96,7 +96,9 @@ of motion that forgets it measures a room in which Willy only sleeps.
   has each block it is meant to have, once, and the facts still written by hand agree with the
   data: the licence in each page's prose, the stack tables, a data screenshot's alt, size and
   caption (shown on its own page unless `pro_only`), CloudBank's fallback version, the links
-  beyond the label sheet, and the room's jar label. A professional page's `facts` are a list of
+  beyond the label sheet, and the room's jar label. A version GitHub publishes (`release`) has
+  a well-formed source, a `prerelease` flag where `{release}` shows it, and one changelog link;
+  `site.js` writes the stage in `sync.py`'s words. A professional page's `facts` are a list of
   `{label, value}`. Every project has its professional page,
   `pro/<id>.html`, with its own title and its curated screenshots, and neither those pages nor
   the professional home link to a playful page. A second.

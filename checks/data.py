@@ -2,7 +2,8 @@
 every file holds the fields the pages and the professional template read, each page has every
 block it is meant to have, and the facts still written by hand on a page (the licence in its
 prose, the stack table, captions, screenshots' alt and size, CloudBank's fallback version, the
-room's jar label, the links beyond the label sheet) agree with the data. Each project has its
+room's jar label, the links beyond the label sheet) agree with the data, and a version GitHub
+publishes has its source and its changelog link. Each project has its
 professional page, pro/<id>.html, with a title of its own, and neither those pages nor the
 professional home link to a playful page. No browser."""
 import html
@@ -47,15 +48,18 @@ except sync.Problem as e:
     sys.exit(1)
 
 # ---- the fields -----------------------------------------------------------------------------
-KINDS = {"demo", "release", "repo", "docs", "spec", "donate", "contact", "nav", "credit"}
+KINDS = {"demo", "release", "repo", "docs", "changelog", "spec", "donate", "contact", "nav", "credit"}
 INLINE = {"code", "b", "em", "a"}  # the markup an HTML field may carry
 HTML_FIELDS = {"status", "status_short", "lede", "about"}
-FILLED = HTML_FIELDS | {"description", "summary", "line", "aria"}  # where {name}, {version}, {licence} go
-TOP = {"name", "tagline", "status", "version", "version_live", "lede", "about", "description", "summary", "licence",
-       "accent", "mark", "stack", "facts", "home", "links", "screenshots", "members"}
-MEMBER = {"id", "name", "status", "status_short", "version", "lede", "licence", "accent", "mark", "stack", "links",
-          "screenshots"}
-OPTIONAL = {"version", "version_live", "members", "facts"}
+FILLED = HTML_FIELDS | {"description", "summary", "line", "aria"}  # where the placeholders go
+PLACEHOLDERS = ("name", "version", "release", "licence")
+TOP = {"name", "tagline", "status", "version", "version_live", "release", "prerelease", "lede", "about", "description",
+       "summary", "licence", "accent", "mark", "stack", "facts", "home", "links", "screenshots", "members"}
+MEMBER = {"id", "name", "status", "status_short", "version", "release", "prerelease", "lede", "licence", "accent", "mark",
+          "stack", "links", "screenshots"}
+OPTIONAL = {"version", "version_live", "release", "prerelease", "members", "facts"}
+REPO = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
+FILE = re.compile(r"(?!.*\.\.)[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)*\.json")
 ENTITY = re.compile(r"&(#\d+|#x[0-9a-fA-F]+|[a-zA-Z]+);")
 css = (ROOT / "styles.css").read_text(encoding="utf-8")
 root_vars = set(re.findall(r"(--[a-z0-9-]+):", css[: css.index("}")]))
@@ -92,17 +96,39 @@ def problems(d, fields, where):
         elif "<" in v or ENTITY.search(v):
             out.append(f"{where}.{name}: plain text, so no tags and no entities (the generator escapes it)")
         for ph in re.findall(r"\{([^}]*)\}", v):
-            if field not in FILLED or ph not in ("name", "version", "licence"):
+            if field not in FILLED or ph not in PLACEHOLDERS:
                 out.append(f"{where}.{name}: unknown placeholder {{{ph}}}")
-            elif ph != "name" and not isinstance(d.get(ph), str):
+            elif ph == "release" and not (isinstance(d.get("release"), dict) and "prerelease" in d):
+                out.append(f"{where}.{name}: says {{release}} but there is no release with a prerelease flag")
+            elif ph not in ("name", "release") and not isinstance(d.get(ph), str):
                 out.append(f"{where}.{name}: says {{{ph}}} but there is no {ph}")
     for key in ("name", "tagline", "description", "summary", "status", "status_short", "lede", "about", "mark", "id"):
         if key in fields and key in d and not (isinstance(d[key], str) and d[key]):
             out.append(f"{where}.{key}: not text")
     if "version" in d and not isinstance(d["version"], str):
         out.append(f"{where}.version: not a string")
+    if "version" in d and isinstance(d["version"], str) and not sync.VERSION.fullmatch(d["version"]):
+        out.append(f"{where}.version: {d['version']} does not look like a version")
     if d.get("version_live") not in (None, "stable", "nightly"):
         out.append(f"{where}.version_live: stable or nightly")
+    # where GitHub publishes the version: a repo's newest release, or a JSON file's version field
+    rel = d.get("release")
+    if "release" in d:
+        if not (isinstance(rel, dict) and set(rel) <= {"repo", "file"} and REPO.fullmatch(str(rel.get("repo")))
+                and ("file" not in rel or FILE.fullmatch(str(rel["file"])))):
+            out.append(f"{where}.release: needs repo (owner/name), and may have file (a .json path in it)")
+            rel = {}
+        if not isinstance(d.get("version"), str):
+            out.append(f"{where}.release: there is no version for it to replace")
+        if "prerelease" in d and rel.get("file"):
+            out.append(f"{where}.prerelease: a file's version is never a pre-release")
+        n = sum(l.get("kind") == "changelog" for l in d.get("links", []) if isinstance(l, dict))
+        if n != 1:
+            out.append(f"{where}.links: a version GitHub publishes needs one changelog link ({n})")
+    elif "prerelease" in d:
+        out.append(f"{where}.prerelease: only with release")
+    if "prerelease" in d and not isinstance(d["prerelease"], bool):
+        out.append(f"{where}.prerelease: not true or false")
     if not (d.get("licence") is None or isinstance(d.get("licence"), str) and d["licence"]):
         out.append(f"{where}.licence: not text or null")
     if d.get("accent") not in root_vars:
@@ -270,6 +296,10 @@ unshown = [f"pro/{pid}.html: {s['file']}" for pid, d in data.items()
            for s in [s for m in [d] + d.get("members", []) for s in m.get("screenshots", [])]
            if f'src="../{s["file"]}"' not in pro.get(pid, "")]
 check(not unshown, "every project's curated screenshots are on its professional page", unshown)
+
+site_js = (ROOT / "site.js").read_text(encoding="utf-8")
+check(all(f'"{w}, "' in site_js for w in sync.STAGE.values()) and sync.VERSION.pattern in site_js,
+      "site.js writes a release's stage in sync.py's words and takes a version as sync.py does")
 
 room = (ROOT / "room.js").read_text(encoding="utf-8")
 check('tag.querySelector(".label")' in room and "Planora" not in re.sub(r"//.*", "", room),
