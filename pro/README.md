@@ -26,3 +26,23 @@ A page has, in order:
 
 A section the data has nothing for is left out rather than written by hand. The accent is read
 from `:root` in `styles.css`, where the accents live, and written into the page as `--c`.
+
+## Willy on the home
+
+The professional home's one playful thing is Willy peeking over the top rule of the project list,
+next to "Step into the room", on a window that can hold the room (`html.room-fits`). He is an
+inline SVG in `../index.html`, the same in both schemes, and the home's own inline script (never
+`site.js`, never anything of the room) moves him:
+
+- his pupils (`.w-pupil`, clipped to his eyes) and his head (`.w-head`) follow a mouse, eased, a
+  few px and degrees, from `pointermove` with `pointerType` "mouse", drawn once a frame and only
+  until they have caught up. Nothing is measured while the mouse moves: his place is read again on
+  a resize and once the fonts are in;
+- a mouse that comes within a face and a half of his face, or onto the link, gets one swat of the
+  paw on its side (`.w-paw`, 400 ms), then none for 5 s and none until it has gone away again,
+  and three at most for the page; the keyboard focus on the link gets the same swat, towards it;
+- the paws take no pointer and stay inside the drawing, so the link is never covered, moved or
+  shrunk.
+
+Under reduced motion, for touch and a pen, and wherever he is not shown, nothing listens and he is
+the still drawing; without scripts too. `checks/peek.py` checks all of it.

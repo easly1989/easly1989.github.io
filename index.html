@@ -1567,16 +1567,33 @@
           <!-- the way into the room: only on a window that can hold it (html.room-fits) -->
           <a class="peek" href="?room">
             <svg viewBox="0 0 96 58" aria-hidden="true">
-              <path d="M18 40 L22 8 L36 22 Z" fill="#f4f4f2" stroke="#1b1b1b" stroke-width="1.5" stroke-linejoin="round" />
-              <path d="M78 40 L74 8 L60 22 Z" fill="#1b1b1b" stroke="#1b1b1b" stroke-width="1.5" stroke-linejoin="round" />
-              <path d="M14 58 C14 30 30 18 48 18 C66 18 82 30 82 58 Z" fill="#f4f4f2" stroke="#1b1b1b" stroke-width="1.5" />
-              <path d="M48 18 C62 18 76 26 80 42 C70 40 60 44 52 40 C46 37 44 28 48 18 Z" fill="#1b1b1b" />
-              <path d="M33 39 q5 -5 10 0 q-5 4 -10 0 Z" fill="#7cbf4a" stroke="#1b1b1b" stroke-width="1" />
-              <path d="M53 39 q5 -5 10 0 q-5 4 -10 0 Z" fill="#7cbf4a" stroke="#1b1b1b" stroke-width="1" />
-              <path d="M37.5 36.3 v5.2 M57.5 36.3 v5.2" stroke="#1b1b1b" stroke-width="1.6" />
-              <path d="M46 47 l2 2 l2 -2 Z" fill="#d98a96" />
-              <ellipse cx="30" cy="57" rx="9" ry="5" fill="#f4f4f2" stroke="#1b1b1b" stroke-width="1.5" />
-              <ellipse cx="66" cy="57" rx="9" ry="5" fill="#f4f4f2" stroke="#1b1b1b" stroke-width="1.5" />
+              <defs>
+                <clipPath id="peek-eyes">
+                  <path d="M33 39 q5 -5 10 0 q-5 4 -10 0 Z M53 39 q5 -5 10 0 q-5 4 -10 0 Z" />
+                </clipPath>
+              </defs>
+              <g class="w-head">
+                <path d="M18 40 L22 8 L36 22 Z" fill="#f4f4f2" stroke="#1b1b1b" stroke-width="1.5" stroke-linejoin="round" />
+                <path d="M78 40 L74 8 L60 22 Z" fill="#1b1b1b" stroke="#1b1b1b" stroke-width="1.5" stroke-linejoin="round" />
+                <path d="M14 58 C14 30 30 18 48 18 C66 18 82 30 82 58 Z" fill="#f4f4f2" stroke="#1b1b1b" stroke-width="1.5" />
+                <path d="M48 18 C62 18 76 26 80 42 C70 40 60 44 52 40 C46 37 44 28 48 18 Z" fill="#1b1b1b" />
+                <path d="M33 39 q5 -5 10 0 q-5 4 -10 0 Z" fill="#7cbf4a" stroke="#1b1b1b" stroke-width="1" />
+                <path d="M53 39 q5 -5 10 0 q-5 4 -10 0 Z" fill="#7cbf4a" stroke="#1b1b1b" stroke-width="1" />
+                <g clip-path="url(#peek-eyes)">
+                  <path class="w-pupil" d="M37.5 35.3 v7.2" stroke="#1b1b1b" stroke-width="1.6" />
+                  <path class="w-pupil" d="M57.5 35.3 v7.2" stroke="#1b1b1b" stroke-width="1.6" />
+                </g>
+                <path d="M46 47 l2 2 l2 -2 Z" fill="#d98a96" />
+              </g>
+              <!-- the paws on the rule, each with its leg behind it, below the drawing's edge -->
+              <g class="w-paw l">
+                <path d="M22 57 V92 H38 V57" fill="#f4f4f2" stroke="#1b1b1b" stroke-width="1.5" />
+                <ellipse cx="30" cy="57" rx="9" ry="5" fill="#f4f4f2" stroke="#1b1b1b" stroke-width="1.5" />
+              </g>
+              <g class="w-paw r">
+                <path d="M58 57 V92 H74 V57" fill="#f4f4f2" stroke="#1b1b1b" stroke-width="1.5" />
+                <ellipse cx="66" cy="57" rx="9" ry="5" fill="#f4f4f2" stroke="#1b1b1b" stroke-width="1.5" />
+              </g>
             </svg>
             <span>Step into the room</span>
           </a>
@@ -1694,6 +1711,163 @@
       </main>
       <footer class="wrap">Carlo Ruggiero. The playful version of this site is a room with a cat in it.</footer>
     </div>
+    <script>
+      // Willy, peeking in, follows a mouse with his eyes and his head, and swats at it once when it
+      // comes close to his face or onto the link; a keyboard focus on the link gets the same swat.
+      // Only while he shows (html.room-fits), never under reduced motion, never for touch or a pen.
+      // Nothing is measured while the pointer moves: his place is kept from the last resize.
+      (function () {
+        var root = document.documentElement;
+        var peek = document.querySelector(".peek");
+        if (!peek || root.classList.contains("iso")) return;
+        var svg = peek.querySelector("svg"),
+          head = svg.querySelector(".w-head"),
+          pupils = svg.querySelectorAll(".w-pupil"),
+          paws = { l: svg.querySelector(".w-paw.l"), r: svg.querySelector(".w-paw.r") };
+        var still = matchMedia("(prefers-reduced-motion: reduce)");
+        var REACH = 1.5 * 68, // px of the drawing (96 wide): a face and a half from his face
+          COOL = 5000,
+          MOST = 3;
+        var on = false,
+          box = null, // the drawing in page px: left, top, and px per unit of its drawing
+          to = null, // where the mouse is, page px; null once it has left the window
+          now = { x: 0, y: 0, t: 0 }, // the pupils' shift and the head's turn, as drawn
+          frame = 0,
+          swats = 0,
+          last = -COOL,
+          armed = true,
+          onLink = false;
+        function measure() {
+          var r = svg.getBoundingClientRect();
+          box = { l: r.left + scrollX, t: r.top + scrollY, k: r.width / 96 };
+        }
+        // a point of the drawing, in page px
+        function at(x, y) {
+          return { x: box.l + x * box.k, y: box.t + y * box.k };
+        }
+        function draw() {
+          head.style.transform = "translateX(" + (now.t * 0.3).toFixed(2) + "px) rotate(" + now.t.toFixed(2) + "deg)";
+          var p = "translate(" + now.x.toFixed(2) + "px, " + now.y.toFixed(2) + "px)";
+          pupils[0].style.transform = pupils[1].style.transform = p;
+        }
+        function swat(x, y) {
+          var t = performance.now();
+          if (swats >= MOST || t - last < COOL) return;
+          swats++;
+          last = t;
+          // the paw on the mouse's side, turned towards it, inside the drawing
+          var face = at(48, 38),
+            side = x < face.x ? "l" : "r",
+            base = at(side === "l" ? 30 : 66, 92),
+            a = Math.max(-32, Math.min(32, (Math.atan2(x - base.x, base.y - y) * 180) / Math.PI));
+          paws[side].animate(
+            [
+              { transform: "none" },
+              { transform: "translateY(-20px) rotate(" + a + "deg)", offset: 0.4 },
+              { transform: "translateY(-17px) rotate(" + (a + (a < 0 ? -16 : 16)) + "deg)", offset: 0.6 },
+              { transform: "none" },
+            ],
+            { duration: 400, easing: "ease-in-out" }
+          );
+        }
+        function step() {
+          frame = 0;
+          var aim = { x: 0, y: 0, t: 0 };
+          if (to) {
+            var face = at(48, 38),
+              dx = to.x - face.x,
+              dy = to.y - face.y,
+              d = Math.hypot(dx, dy) || 1;
+            aim.x = (2.2 * dx) / Math.max(d, 60);
+            aim.y = (0.9 * dy) / Math.max(d, 60);
+            aim.t = Math.max(-5, Math.min(5, dx / 40));
+            var near = d < REACH * box.k || onLink;
+            // once each time it comes close, if he may: not again until it has gone away
+            if (near && armed) {
+              armed = false;
+              swat(to.x, to.y);
+            } else if (!near) armed = true;
+          }
+          var moving = false;
+          ["x", "y", "t"].forEach(function (k) {
+            now[k] += (aim[k] - now[k]) * 0.2;
+            if (Math.abs(aim[k] - now[k]) > 0.01) moving = true;
+            else now[k] = aim[k];
+          });
+          draw();
+          // eased there, and nothing new: no more frames until the mouse moves
+          if (moving) frame = requestAnimationFrame(step);
+        }
+        function ask() {
+          if (!frame) frame = requestAnimationFrame(step);
+        }
+        function move(e) {
+          if (e.pointerType !== "mouse") return;
+          to = { x: e.pageX, y: e.pageY };
+          ask();
+        }
+        function out(e) {
+          if (e.pointerType !== "mouse" || e.relatedTarget) return;
+          to = null;
+          ask();
+        }
+        function enter(e) {
+          if (e.pointerType !== "mouse") return;
+          onLink = true;
+          to = { x: e.pageX, y: e.pageY };
+          ask();
+        }
+        function leave(e) {
+          if (e.pointerType === "mouse") onLink = false;
+        }
+        function focused() {
+          if (!peek.matches(":focus-visible")) return;
+          var s = at(96, 40);
+          swat(s.x + 40, s.y);
+        }
+        function start() {
+          on = true;
+          measure();
+          addEventListener("pointermove", move, { passive: true });
+          document.addEventListener("pointerout", out);
+          peek.addEventListener("pointerenter", enter);
+          peek.addEventListener("pointerleave", leave);
+          peek.addEventListener("focus", focused);
+          addEventListener("resize", measure);
+        }
+        function stop() {
+          on = false;
+          removeEventListener("pointermove", move);
+          document.removeEventListener("pointerout", out);
+          peek.removeEventListener("pointerenter", enter);
+          peek.removeEventListener("pointerleave", leave);
+          peek.removeEventListener("focus", focused);
+          removeEventListener("resize", measure);
+          cancelAnimationFrame(frame);
+          frame = 0;
+          to = null;
+          onLink = false;
+          now = { x: 0, y: 0, t: 0 };
+          draw();
+          paws.l.getAnimations().concat(paws.r.getAnimations()).forEach(function (a) {
+            a.cancel();
+          });
+        }
+        // he shows on a window that can hold the room (the head's script), and moves only
+        // without reduced motion
+        function update() {
+          var want = root.classList.contains("room-fits") && !still.matches;
+          if (want && !on) start();
+          else if (!want && on) stop();
+        }
+        new MutationObserver(update).observe(root, { attributes: true, attributeFilter: ["class"] });
+        still.addEventListener("change", update);
+        if (document.fonts) document.fonts.ready.then(function () {
+          if (on) measure();
+        });
+        update();
+      })();
+    </script>
 
     <!-- The room: the bench's objects, which room.js sets out in 3D. Hidden unless the room
          was chosen and fits (the head's script); the script after it shows it. -->
