@@ -15,6 +15,12 @@ nothing. A block whose opening marker ends its line is written as lines at that 
 indent, wrapped at 100 columns; one that goes on along the line stays on it. `<id>` is a data
 file's name, or a family member's `id`.
 
+Both modes stop with exit code 2, write nothing and name the page, the line and the block when
+a marker does not pair (an opening marker with no closing one, a closing one with none open, a
+block inside a block), a marker is malformed or names no known block or id, a page has CR line
+endings (the pages are LF, see `.gitattributes`), or the data does not load (a member without
+an `id`, an `id` used twice, a `version` that is not a string, a placeholder with no value).
+
 | Block | What it writes |
 |---|---|
 | `title` | `<title>` and the description meta: `name`, `tagline`, `description` |
@@ -29,12 +35,22 @@ file's name, or a family member's `id`.
 | `aria` | keeps the home object's start tag and sets only its `aria-label`: `home.aria` |
 | `about` | About's entry: `mark`, `name` and `about` |
 
-In text, `{name}` is the project's name and `{version}` its `version`; with `version_live`
-(CloudBank), `{version}` becomes `<span data-cloudbank="stable">` around it, which `site.js`
-fills from `versions.json`. Text may carry `<code>`, `<b>`, `<em>` and `<a>`; `description`,
-`summary` and `home.aria` are plain text. A link's `kind` (demo, release, repo, docs, spec,
-donate, contact, nav) says what it is to a page that picks links, and `screenshots` is the
-curated set for the professional pages, not the playful pages' taped prints.
+**Text.** `status`, `status_short`, `lede` and `about` hold markup, and only `<code>`, `<b>`,
+`<em>` and `<a>`. Every other string is plain text, with no tags and no entities: write `&`,
+not `&amp;`, and the generator escapes it wherever it writes it. In `status`, `status_short`,
+`lede`, `about`, `description`, `summary`, `home.line` and `home.aria`, `{name}`, `{version}`
+and `{licence}` are the project's own; with `version_live` (CloudBank), `{version}` in markup
+becomes `<span data-cloudbank="stable">` around it, which `site.js` fills from `versions.json`.
 
-`checks/data.py` runs `--check`, validates every data file and checks that a screenshot in the
-data has the same alt text and size on every page that shows it.
+**Links.** A link's `kind` (demo, release, repo, docs, spec, donate, contact, nav, credit) says
+what it is to a page that picks links. Those with `"label_sheet": false` are not on the label
+sheet but elsewhere on the page, which must still carry them.
+
+**Read only by the professional template (#127).** `screenshots` is the curated set for it,
+not the playful pages' taped prints: each is also shown on its project's page, with the same
+alt text, size and caption, unless it is `"pro_only": true`. `stack` is shown on a page only by
+Nutreek, Planora and Cupid; for the others it is read by #127 alone, and no page checks it.
+
+`checks/data.py` runs `--check`, validates every data file, requires every block each page is
+meant to have, and compares with the data the facts still written by hand on the pages (see
+"The things that are coupled" in `CLAUDE.md`).
