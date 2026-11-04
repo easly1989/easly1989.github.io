@@ -17,7 +17,9 @@ A page has, in order:
   and the buttons: the label sheet's links of kind `demo`, `release`, `repo`, `docs`, `spec` or
   `contact`, the primary one filled with the accent; a family's links to its members' sections;
 - "What it is": `description`;
-- "At a glance": `stack`, then the licence; left out when there are neither;
+- "At a glance": `stack`, then `facts` (an optional list of `{label, value}`, each a fact its
+  playful page already states), then the licence, unless it is null, empty or "None"; left out
+  when there is none of them;
 - the curated `screenshots`, each opening full size in the lightbox (`../site.js`);
 - for a family (ASF Plugins), a section per member, `#<member id>`, with its own head and
   screenshots.

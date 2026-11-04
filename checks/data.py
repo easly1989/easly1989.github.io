@@ -52,10 +52,10 @@ INLINE = {"code", "b", "em", "a"}  # the markup an HTML field may carry
 HTML_FIELDS = {"status", "status_short", "lede", "about"}
 FILLED = HTML_FIELDS | {"description", "summary", "line", "aria"}  # where {name}, {version}, {licence} go
 TOP = {"name", "tagline", "status", "version", "version_live", "lede", "about", "description", "summary", "licence",
-       "accent", "mark", "stack", "home", "links", "screenshots", "members"}
+       "accent", "mark", "stack", "facts", "home", "links", "screenshots", "members"}
 MEMBER = {"id", "name", "status", "status_short", "version", "lede", "licence", "accent", "mark", "stack", "links",
           "screenshots"}
-OPTIONAL = {"version", "version_live", "members"}
+OPTIONAL = {"version", "version_live", "members", "facts"}
 ENTITY = re.compile(r"&(#\d+|#x[0-9a-fA-F]+|[a-zA-Z]+);")
 css = (ROOT / "styles.css").read_text(encoding="utf-8")
 root_vars = set(re.findall(r"(--[a-z0-9-]+):", css[: css.index("}")]))
@@ -112,6 +112,11 @@ def problems(d, fields, where):
     stack = d.get("stack")
     if not isinstance(stack, list) or any(not isinstance(r, dict) or set(r) != {"label", "value"} for r in stack):
         out.append(f"{where}.stack: not a list of {{label, value}}")
+    # what else the professional page lists at a glance, each a fact its playful page states
+    facts = d.get("facts", [])
+    if not isinstance(facts, list) or any(not isinstance(r, dict) or set(r) != {"label", "value"}
+                                          or not all(isinstance(r[k], str) and r[k].strip() for k in r) for r in facts):
+        out.append(f"{where}.facts: not a list of {{label, value}}, both text")
     if "home" in fields:
         home = d.get("home")
         if not isinstance(home, dict) or set(home) - {"label", "line", "aria"} or not isinstance(home.get("aria"), str) or "line" not in home:

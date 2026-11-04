@@ -237,8 +237,9 @@ def pro_page(p):
     and a section for each member of a family. A section the data has nothing for is left out."""
     members = [m["id"] for m in p.get("members", [])]
     w = WIDTH - 8  # the page's content sits at an indent of 8
-    facts = [(r["label"], r["value"]) for r in p.get("stack", [])]
-    if isinstance(p.get("licence"), str):
+    facts = [(r["label"], r["value"]) for r in p.get("stack", []) + p.get("facts", [])]
+    # (no licence, or one the data names "None": no row)
+    if isinstance(p.get("licence"), str) and p["licence"].strip().lower() not in ("", "none"):
         facts.append(("Licence", p["licence"]))
     what = [
         '<section aria-labelledby="what-h">',

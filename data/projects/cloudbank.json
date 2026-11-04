@@ -12,6 +12,11 @@
   "accent": "--cloudbank",
   "mark": "logo.svg",
   "stack": [],
+  "facts": [
+    { "label": "Runs as", "value": "One Docker container" },
+    { "label": "Database", "value": "Built in, none to run" },
+    { "label": "Languages", "value": "6" }
+  ],
   "home": {
     "line": "Personal finance, self-hosted",
     "aria": "{name}, a personal finance manager. Open the ledger"
