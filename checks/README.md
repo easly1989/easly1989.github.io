@@ -17,17 +17,24 @@ python checks/moves.py
 python checks/photos.py
 python checks/radio.py
 python checks/dark.py
+python checks/peek.py
 python checks/data.py
 ```
 
 `contrast.py` also needs `pip install pillow numpy`.
+
+Chrome on this PC reports `prefers-reduced-motion: reduce` unless told otherwise (Windows'
+animation effects are off), so every check sets the motion it means, with `b.media(...)`: a check
+of motion that forgets it measures a room in which Willy only sleeps.
 
 - `framing.py` — a first visit to the home gets the professional page, with its way into the
   room; "Step into the room" shows the room and the choice holds on the next visit; every link,
   button and word in the room is inside the window at 1280×720, 1366×768, 1440×900, 1920×1080
   and 2560×1080, and the walls and floor fill it to the corners; a window too small for the room
   and a phone get the professional page, with no way in; `?room=0` turns the room off and
-  `?room` back on; nothing on the desk moves when the fonts arrive after the first frame.
+  `?room` back on; `?room` leaves a clean address, and the tie on the chair opens the professional
+  home at one, which a reload keeps; nothing on the desk moves when the fonts arrive after the
+  first frame.
   Headless. The other checks reach the room through `?room`, which chooses it.
 - `fps.py` — the room keeps pace with a 60 Hz display while Willy walks, in both schemes, with
   its light on and off, with the radio playing and with the computer on; he rests between walks, so a sample is taken
@@ -73,6 +80,12 @@ python checks/data.py
   start; and with whatever holds the light never letting go and the page's scripts stopped
   once the room is up, the dark still ends on its own. A visible window.
 
+- `peek.py` — Willy peeking in on the professional home: a mouse turns his eyes and head; close
+  to his face or onto "Step into the room" he swats once, then not for 5 s and not again while
+  the mouse stays; a click through the raised paw still opens the room; the keyboard focus on the
+  link gets one swat and no eye-following; under reduced motion, for a touch and on a phone
+  nothing of him moves; at 960 wide he still shows. Headless; about half a minute.
+
 - `data.py` — no browser, and run it after any change to `data/projects/` or to a page's
   facts: every page is what `python tools/sync.py` would write from the data, every data file
   has its fields and they are well formed (plain text without tags or entities, only the
@@ -81,7 +94,8 @@ python checks/data.py
   has each block it is meant to have, once, and the facts still written by hand agree with the
   data: the licence in each page's prose, the stack tables, a data screenshot's alt, size and
   caption (shown on its own page unless `pro_only`), CloudBank's fallback version, the links
-  beyond the label sheet, and the room's jar label. Every project has its professional page,
+  beyond the label sheet, and the room's jar label. A professional page's `facts` are a list of
+  `{label, value}`. Every project has its professional page,
   `pro/<id>.html`, with its own title and its curated screenshots, and neither those pages nor
   the professional home link to a playful page. A second.
 

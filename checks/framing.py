@@ -142,6 +142,17 @@ try:
     b.js("sessionStorage.clear()")
     b.nav(base + "/index.html", 3)
     check(off and not b.js("document.documentElement.classList.contains('iso')"), "?room=0 turns the room off, and it stays off")
+    # ?room leaves a clean address; the tie on the chair opens the plain home at one, and it stays
+    b.nav(base + "/index.html?room", 3)
+    clean = b.js("location.search === '' && document.documentElement.classList.contains('iso')")
+    b.js("document.querySelector('.tie-link').click()")
+    time.sleep(3)
+    plain = b.js("!document.documentElement.classList.contains('iso') && location.pathname.endsWith('/index.html')"
+                 " && location.search === '' && localStorage.getItem('site:room') === '0'")
+    b.call("Page.reload")
+    time.sleep(3)
+    check(clean and plain and not b.js("document.documentElement.classList.contains('iso')"),
+          "?room leaves a clean address, and the tie opens the plain home at one, which a reload keeps")
     # the first frame is the layout: when the fonts come in, nothing moves to a new place
     b.call("Network.enable")
     b.call("Network.setCacheDisabled", cacheDisabled=True)
