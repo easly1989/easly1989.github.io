@@ -72,10 +72,13 @@ python checks/data.py
 
 - `data.py` — no browser, and run it after any change to `data/projects/` or to a page's
   facts: every page is what `python tools/sync.py` would write from the data, every data file
-  has its fields and they are well formed (accents in `:root`, marks and screenshots on disk at
-  their real size, one primary link on each label sheet), every project's page, home object
-  and About entry show it from the data, and a screenshot in the data has the same alt text
-  and size on every page that shows it. A second.
+  has its fields and they are well formed (plain text without tags or entities, only the
+  inline tags in the markup fields, no unknown placeholder, accents in `:root`, marks and
+  screenshots on disk at their real size, one primary link on each label sheet), every page
+  has each block it is meant to have, once, and the facts still written by hand agree with the
+  data: the licence in each page's prose, the stack tables, a data screenshot's alt, size and
+  caption (shown on its own page unless `pro_only`), CloudBank's fallback version, the links
+  beyond the label sheet, and the room's jar label. A second.
 
 The room's window shows Pesaro's weather from Open-Meteo, asked once and kept for 15 minutes
 in `sessionStorage` (`weather`). For a check or a screenshot, `?weather=` forces a state without
