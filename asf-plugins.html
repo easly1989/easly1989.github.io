@@ -7,7 +7,7 @@
     <title>ASF Plugins — ArchiSteamFarm plugins · Carlo Ruggiero</title>
     <meta
       name="description"
-      content="ASF Plugins: ASF-Notifier, which posts to a Matrix room when a bot stops, loses its connection, finishes farming or ASF is updated, and ASF-PluginConfig, a settings page for ASF plugins, in development. Free, open source, Apache-2.0."
+      content="ASF Plugins: ASF-Notifier, which posts to a Matrix room when a bot stops, loses its connection, finishes farming or ASF is updated, and ASF-PluginConfig, a settings page for ASF plugins, now a pre-release. Free, open source, Apache-2.0."
     />
     <!-- /data -->
     <meta name="theme-color" content="#22594b" media="(prefers-color-scheme: light)" />
@@ -17,7 +17,7 @@
     <meta property="og:title" content="ASF Plugins — ArchiSteamFarm plugins" />
     <meta
       property="og:description"
-      content="Plugins for ArchiSteamFarm: Matrix alerts when a bot stops, loses its connection or finishes farming, and a settings page for plugins, in development."
+      content="Plugins for ArchiSteamFarm: Matrix alerts when a bot stops, loses its connection or finishes farming, and a settings page for plugins, as a pre-release."
     />
     <!-- /data -->
     <meta property="og:type" content="website" />
@@ -33,6 +33,17 @@
       /* what this page becomes from, on the bench */
       .label-sheet {
         view-transition-name: asf;
+      }
+      /* ASF-PluginConfig's page, taped above its cards */
+      .pc-shot {
+        z-index: 5;
+        max-width: 34rem;
+        margin: 0 0 2.2rem;
+      }
+      .pc-shot img {
+        display: block;
+        width: 100%;
+        height: auto;
       }
     </style>
   </head>
@@ -52,7 +63,7 @@
       <main>
         <section class="paper label-sheet" style="--c: var(--asf)">
           <img class="mark" src="asf-notifier.svg" alt="" width="56" height="56" />
-          <p class="state"><!-- data:asf-plugins.state -->Two plugins for ArchiSteamFarm. Open source under Apache-2.0.<!-- /data --></p>
+          <p class="state"><!-- data:asf-plugins.state -->Two plugins for ArchiSteamFarm: one shipping, one a pre-release. Open source under Apache-2.0.<!-- /data --></p>
           <h1><!-- data:asf-plugins.name -->ASF Plugins<!-- /data --></h1>
           <p class="lede">
             <!-- data:asf-plugins.lede -->
@@ -71,18 +82,19 @@
 
         <article class="fam-card fam-shared" style="--r: 0.4deg">
           <h2>What they share</h2>
-          <small>ArchiSteamFarm 6.3.10.6</small>
+          <small>ArchiSteamFarm plugins</small>
           <p>
-            Both are built and tested against ArchiSteamFarm 6.3.10.6, with the .NET runtime ASF
-            ships with. Each is installed by extracting its release zip into
-            <code>plugins/&lt;Name&gt;/</code>, and ASF's plugin updater can keep it current.
+            Each is installed by extracting its release zip into <code>plugins/&lt;Name&gt;/</code>,
+            and ASF's plugin updater can keep it current. ASF-Notifier is built and tested against
+            ArchiSteamFarm 6.3.10.6, with the .NET runtime ASF ships with; ASF-PluginConfig needs
+            ASF 6.3.11.7 or later, with IPC enabled.
           </p>
         </article>
 
         <div class="fam-folder" data-tabs>
           <nav class="fam-tabs" aria-label="The plugins">
             <a class="fam-tab" href="#asf-notifier" style="--c: var(--asf)"><!-- data:asf-notifier.tab --><b>ASF-Notifier</b><small>Shipping, v1.0.0.0</small><!-- /data --></a>
-            <a class="fam-tab" href="#asf-pluginconfig" style="--c: var(--asf-pc)"><!-- data:asf-pluginconfig.tab --><b>ASF-PluginConfig</b><small>In development</small><!-- /data --></a>
+            <a class="fam-tab" href="#asf-pluginconfig" style="--c: var(--asf-pc)"><!-- data:asf-pluginconfig.tab --><b>ASF-PluginConfig</b><small>Pre-release, 1.0.0.0</small><!-- /data --></a>
           </nav>
 
           <section class="fam-sheet" id="asf-notifier" aria-labelledby="asf-notifier-name" style="--c: var(--asf)">
@@ -271,21 +283,27 @@
           <section class="fam-sheet" id="asf-pluginconfig" aria-labelledby="asf-pluginconfig-name" style="--c: var(--asf-pc)">
             <header class="fam-head">
               <img class="mark" src="asf-pluginconfig.svg" alt="" width="48" height="48" />
-              <p class="state"><!-- data:asf-pluginconfig.state -->In development. Open source under Apache-2.0. No release yet.<!-- /data --></p>
+              <p class="state"><!-- data:asf-pluginconfig.state -->Pre-release, 1.0.0.0. Open source under Apache-2.0.<!-- /data --></p>
               <h2 id="asf-pluginconfig-name"><!-- data:asf-pluginconfig.name -->ASF-PluginConfig<!-- /data --></h2>
               <p class="lede">
                 <!-- data:asf-pluginconfig.lede -->
-                One page in ASF-ui to edit the settings of every installed plugin. A plugin that
-                ships a JSON Schema gets a form; one without gets a raw JSON editor for its key.
+                One page to edit the settings of the other installed plugins. A plugin that embeds a
+                JSON Schema gets a form; one without gets a raw JSON editor for its key.
                 <!-- /data -->
               </p>
               <div class="actions">
                 <!-- data:asf-pluginconfig.actions -->
-                <a class="btn" href="https://github.com/easly1989/ASF-PluginConfig" rel="noopener">View on GitHub</a>
+                <a class="btn" href="https://github.com/easly1989/ASF-PluginConfig/releases/tag/1.0.0.0" rel="noopener">Download the pre-release</a>
+                <a class="btn quiet" href="https://github.com/easly1989/ASF-PluginConfig" rel="noopener">View on GitHub</a>
                 <a class="btn quiet" href="https://github.com/easly1989/ASF-PluginConfig/issues/1" rel="noopener">Read the spec</a>
                 <!-- /data -->
               </div>
             </header>
+
+            <figure class="shot pc-shot" style="--r: -0.5deg">
+              <img width="1100" height="1004" src="assets/asf-pluginconfig-page.png" alt="The page, listing one plugin with its global and bot settings, this plugin's own settings, the raw JSON card and the update button" loading="lazy" />
+              <figcaption>One card per plugin with a schema, a raw JSON card for the rest, and the button that asks ASF to update plugins.</figcaption>
+            </figure>
 
             <div class="fam-grid">
               <article class="fam-card" style="--r: -0.6deg">
@@ -293,9 +311,9 @@
                 <small>A host for other plugins' settings</small>
                 <p>
                   Most ASF plugins keep their settings as an extra key in <code>ASF.json</code> or a
-                  bot's config file, and ASF-ui does not show those keys. This plugin serves a page,
-                  linked from ASF-ui's Plugins page, with one form per plugin: a global part and a
-                  part for each bot.
+                  bot's config file, and ASF-ui does not show those keys. This plugin serves a page
+                  with a form for each plugin that embeds a schema, for its global settings and for
+                  each bot's, and a button that asks ASF to update plugins.
                 </p>
               </article>
 
@@ -308,9 +326,9 @@
                   ASF, a per-bot change restarts that bot.
                 </p>
                 <p>
-                  Writes are refused while <code>IPCPassword</code> is empty, a save is rejected if
-                  the file changed since the form was loaded, and secret fields are never shown
-                  back.
+                  Saving needs <code>IPCPassword</code> set, unless you opt out, a save is rejected
+                  if the file changed since the form was loaded, and secrets stay on the server: a
+                  secret field is never sent to the page.
                 </p>
               </article>
 
@@ -320,7 +338,18 @@
                 <p>
                   A plugin opts in by embedding <code>&lt;AssemblyName&gt;.config.schema.json</code>,
                   with no shared assembly to reference, and keeps reading its config as before.
-                  ASF-Notifier will be the first plugin with a schema.
+                  A plugin without one is edited as raw JSON.
+                </p>
+              </article>
+
+              <article class="fam-card" style="--r: 0.6deg">
+                <h3>Getting it</h3>
+                <small>A pre-release</small>
+                <p>
+                  It needs ASF 6.3.11.7 or later, with IPC enabled. Download the release zip, unzip
+                  it into <code>plugins/ASFPluginConfig/</code>, restart ASF and open
+                  <code>/plugin-config/</code> on ASF's IPC address. The steps are in its
+                  <a href="https://github.com/easly1989/ASF-PluginConfig#install" rel="noopener">README</a>.
                 </p>
               </article>
             </div>
