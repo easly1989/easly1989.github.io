@@ -47,7 +47,8 @@ of motion that forgets it measures a room in which Willy only sleeps.
   chose and only the neon navigation has to. It measures pixels, drawing each text with and
   without its ink at four times the density. Then the professional home and every page in
   `pro/`, whole, in both schemes, failing a page that shows nothing to measure, and each page's
-  accent-bordered buttons at 3:1 against the ground. Headless; about four minutes.
+  accent-bordered buttons and Donate's services at 3:1 against the ground, and each service's
+  icon at 3:1 against its colour. Headless; about four minutes.
 
 - `moves.py` — each project object is clicked with the mouse, and a second click lands
   elsewhere mid-move: the first click's page opens within about 1.6 s and at 60 fps or more,
@@ -101,7 +102,10 @@ of motion that forgets it measures a room in which Willy only sleeps.
   `site.js` writes the stage in `sync.py`'s words. A professional page's `facts` are a list of
   `{label, value}`. Every project has its professional page,
   `pro/<id>.html`, with its own title and its curated screenshots, and neither those pages nor
-  the professional home link to a playful page. A second.
+  the professional home link to a playful page, and every link out carries `rel="noopener"`.
+  Each has the site's nav, its own page marked. `data/pages/about.json` and `donate.json` are
+  well formed, with the photo on disk at its real size; About lists every project once and
+  says nothing of the person that the playful About does not; Donate names no project. A second.
 
 The room's window shows Pesaro's weather from Open-Meteo, asked once and kept for 15 minutes
 in `sessionStorage` (`weather`). For a check or a screenshot, `?weather=` forces a state without

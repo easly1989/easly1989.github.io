@@ -9,7 +9,7 @@ The site's home for everyone, on every device: the name, one line, a row per pro
 _Avoid_: plain page, pro site, CV page
 
 **Professional page**:
-A project's own page in the professional home's style, reachable from its row and linkable on its own.
+A page in the professional home's style, linkable on its own: a project's own, reachable from its row, or the professional About or Donate.
 _Avoid_: detail page, pro page (in prose)
 
 **Room**:

@@ -1,6 +1,7 @@
 # Tools
 
-`sync.py` writes each project's facts from `data/projects/<id>.json` into the pages. Python 3,
+`sync.py` writes each project's facts from `data/projects/<id>.json` into the pages, and the
+professional About and Donate from `data/pages/`. Python 3,
 standard library only. Nothing runs at deploy: the pages it writes are committed, so the site
 stays plain static HTML that reads in full with scripts off.
 
@@ -41,6 +42,20 @@ an `id`, an `id` used twice, a `version` that is not a string, a placeholder wit
 written whole (see `pro/README.md`); `--check` names one that differs or is missing, and a page
 in `pro/` with no data file is an error. Text that goes inside a link there (a row's `status` and
 `lede`) may not hold an `<a>`.
+
+**About and Donate.** `data/pages/<name>.json` is the professional `pro/<name>.html`, written
+whole the same way: `about` and `donate`. Each has `title`, `description` and `summary` (the
+title, the description and `og:` tags), `status`, `name` and `lede` for its head, an optional
+`photo` (`file`, `width`, `height`, `alt`) and `links` (`label`, `href`, `primary`: its buttons,
+only ever out of the site), and `sections`, each with an `id`, a `heading`, any `text` (its
+paragraphs) and then what it lists: `items` (`label`, `text`), `terms` (`label`, `text`), `facts`
+(`label`, `value`), `contacts` (`label`, `href`, `text`), `projects` (project ids, each written
+from that project's `mark`, `name`, `about` and accent and leading to its professional page) or
+`services` (`id`, `name`, `text`, `href`, `address`, `icon`: the paths of its 24×24 icon, drawn in
+this repo) with a `note`. A paragraph, an item's or a term's `text` and a `note` hold markup, with
+`<strong>` too, and a link in it goes out of the site with `rel="noopener"`; every other string is
+plain text. The nav row at the top of every professional page and the footer are written by
+`bar()` and `foot()`.
 
 **Text.** `status`, `status_short`, `lede` and `about` hold markup, and only `<code>`, `<b>`,
 `<em>` and `<a>`. Every other string is plain text, with no tags and no entities: write `&`,

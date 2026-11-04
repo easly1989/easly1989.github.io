@@ -1556,6 +1556,13 @@
          are written by tools/sync.py from data/projects/ and lead to pro/<id>.html. -->
     <div class="pro">
       <a class="skip" href="#projects">Skip to the projects</a>
+      <div class="bar wrap">
+        <nav class="site" aria-label="Site">
+          <a href="index.html" aria-current="page">Projects</a>
+          <a href="pro/about.html">About</a>
+          <a href="pro/donate.html">Donate</a>
+        </nav>
+      </div>
       <header class="top wrap">
         <h1>Carlo Ruggiero</h1>
         <p class="role">
@@ -1706,6 +1713,7 @@
               than a proof of concept. The projects here are the ones I keep going on my own time.
               Some are open source, some are licensed, and some I host.
             </p>
+            <p><a class="more" href="pro/about.html">More about me</a></p>
             <ul class="how">
               <li><b>Go backends</b><span>Small, dependency-light services with a clear REST API.</span></li>
               <li><b>Embedded SQLite</b><span>No separate database server: the data is a file you control.</span></li>
@@ -1715,7 +1723,14 @@
           </div>
         </section>
       </main>
-      <footer class="wrap">Carlo Ruggiero. The playful version of this site is a room with a cat in it.</footer>
+      <footer class="wrap">
+        <span>Carlo Ruggiero. The playful version of this site is a room with a cat in it.</span>
+        <nav class="foot" aria-label="More">
+          <a href="pro/about.html">About</a>
+          <a href="pro/donate.html">Donate</a>
+          <a href="https://github.com/easly1989" rel="noopener">GitHub</a>
+        </nav>
+      </footer>
     </div>
     <script>
       // Willy, peeking in, follows a mouse with his eyes and his head, and swats at it once when it

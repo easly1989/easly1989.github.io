@@ -1,0 +1,85 @@
+{
+  "title": "Donate — Carlo Ruggiero",
+  "description": "Support for building and releasing more software openly. Entirely optional, through Buy Me a Coffee, GitHub Sponsors, PayPal or Liberapay.",
+  "summary": "If something here has been useful, you can help towards the next one.",
+  "status": "Entirely optional, and much appreciated.",
+  "name": "Donate",
+  "lede": "If something I've made has been useful to you, and you'd like to help with what comes next, this is the place. Thank you for even considering it.",
+  "sections": [
+    {
+      "id": "ways",
+      "heading": "Ways to give",
+      "services": [
+        {
+          "id": "coffee",
+          "name": "Buy me a coffee",
+          "text": "A small one-off, no account needed.",
+          "href": "https://buymeacoffee.com/easly1989",
+          "address": "buymeacoffee.com/easly1989",
+          "icon": ["M4 8h12v7a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8zm13 1h1.5a3.5 3.5 0 0 1 0 7H17v-2h1.5a1.5 1.5 0 0 0 0-3H17V9zM6 2.6c.5.5.5 1 0 1.7-.6.7-.6 1.5 0 2.2H4.6c-.5-.8-.5-1.7 0-2.4.5-.6.5-1 0-1.5h1.4zm3.6 0c.5.5.5 1 0 1.7-.6.7-.6 1.5 0 2.2H8.2c-.5-.8-.5-1.7 0-2.4.5-.6.5-1 0-1.5h1.4zm3.6 0c.5.5.5 1 0 1.7-.6.7-.6 1.5 0 2.2h-1.4c-.5-.8-.5-1.7 0-2.4.5-.6.5-1 0-1.5h1.4z"]
+        },
+        {
+          "id": "sponsors",
+          "name": "GitHub Sponsors",
+          "text": "Monthly or one-off, right next to the code.",
+          "href": "https://github.com/sponsors/easly1989",
+          "address": "github.com/sponsors/easly1989",
+          "icon": ["M12 21s-7.5-4.7-9.6-9.2A5.4 5.4 0 0 1 12 6.2a5.4 5.4 0 0 1 9.6 5.6C19.5 16.3 12 21 12 21z"]
+        },
+        {
+          "id": "paypal",
+          "name": "PayPal",
+          "text": "A one-off amount, if you already have an account.",
+          "href": "https://paypal.me/carloruggiero",
+          "address": "paypal.me/carloruggiero",
+          "icon": ["M3 6.5A2.5 2.5 0 0 1 5.5 4h13A2.5 2.5 0 0 1 21 6.5V8H3V6.5zM3 10h18v7.5a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5V10zm3 4.5h5V16H6v-1.5z"]
+        },
+        {
+          "id": "liberapay",
+          "name": "Liberapay",
+          "text": "Recurring, and run as a non-profit itself.",
+          "href": "https://liberapay.com/amon2126/donate",
+          "address": "liberapay.com/amon2126",
+          "icon": [
+            "M12 5a7 7 0 0 1 6.3 4h-2.4a5 5 0 1 0-.3 5.5l1.7 1.4A7 7 0 1 1 12 5z",
+            "M18.6 4.2v4.4a.3.3 0 0 1-.5.2l-3-2.2a.3.3 0 0 1 0-.4l3-2.2a.3.3 0 0 1 .5.2z"
+          ]
+        }
+      ],
+      "note": "<strong>Nothing is taken on this site.</strong> Each link hands you to that service, which handles the payment."
+    },
+    {
+      "id": "supports",
+      "heading": "What it supports",
+      "text": [
+        "Donations go towards building and releasing more software, and towards releasing more of it openly. Open source is the part of this work I enjoy most, and support is what makes it easier to keep choosing."
+      ],
+      "terms": [
+        { "label": "The time to build things properly", "text": "Getting something finished, and then keeping it maintained, takes rather more evenings than a first release suggests. Support is what keeps that going." },
+        { "label": "More of it in the open", "text": "There are projects I would like to work on publicly, and nothing that is closed today is closed forever — opening more of it up later is something I would like to do." },
+        { "label": "Somewhere to run it", "text": "Hosting for the apps I run for people and for the demos, so anyone can try something without installing it first." }
+      ]
+    },
+    {
+      "id": "here",
+      "heading": "On this site",
+      "facts": [
+        { "label": "Card details asked", "value": "None" },
+        { "label": "Backend to send them to", "value": "None" },
+        { "label": "Payment handled by", "value": "The service you pick" },
+        { "label": "Charged here", "value": "0.00" }
+      ]
+    },
+    {
+      "id": "free",
+      "heading": "Or help without paying",
+      "text": ["Just as welcome, and sometimes worth more:"],
+      "items": [
+        { "label": "Tell me what breaks", "text": "A clear report with steps to reproduce is genuinely valuable. Issues go on <a href=\"https://github.com/easly1989\" rel=\"noopener\">GitHub</a>." },
+        { "label": "Mention it to someone", "text": "A word in the right place reaches further than anything I can post myself." },
+        { "label": "Translate something", "text": "What I release ships in English and Italian. Another language is always a welcome pull request." },
+        { "label": "Just say hello", "text": "Hearing that something is being used, and what for, is a good reason to keep going." }
+      ]
+    }
+  ]
+}

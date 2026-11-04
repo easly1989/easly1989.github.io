@@ -157,16 +157,20 @@
   // back to the professional home. Picked up, it is put on (it lifts and swings once, room.css)
   // and the home opens plain (plainHome(), below). Its faces move together (.chair-tie, which
   // the light pass follows); its link is one plane in front of it all, as the camera's is.
+  var TIE_DX = -70;
   var TOP = seatZ + 110 + BACK_H + 90;
-  var tie = el("span", "chair-tie", chair, "transform-origin:" + cx + "px 297px " + TOP + "px");
-  box(tie, { x: cx - 9, y: 280, w: 18, d: 34, z: TOP, h: 2, color: "var(--tie)" });
-  box(tie, { x: cx - 9, y: 314, w: 18, d: 2, z: TOP - 33, h: 34, color: "var(--tie)" });
-  var knot = box(tie, { x: cx - 13, y: 314, w: 26, d: 8, z: TOP - 62, h: 32, color: "var(--tie)" });
+  // draped over the back's left corner as the reader sees it, not its middle: the headrest is 105
+  // wide each side of cx, so 70 keeps the knot's 26 on its top edge
+  var tx = cx + TIE_DX;
+  var tie = el("span", "chair-tie", chair, "transform-origin:" + tx + "px 297px " + TOP + "px");
+  box(tie, { x: tx - 9, y: 280, w: 18, d: 34, z: TOP, h: 2, color: "var(--tie)" });
+  box(tie, { x: tx - 9, y: 314, w: 18, d: 2, z: TOP - 33, h: 34, color: "var(--tie)" });
+  var knot = box(tie, { x: tx - 13, y: 314, w: 26, d: 8, z: TOP - 62, h: 32, color: "var(--tie)" });
   knot.querySelector("i.s").style.clipPath = "polygon(0 0, 100% 0, 78% 100%, 22% 100%)";
   knot.querySelector("i.e").remove();
   knot.querySelector("i.w").remove();
-  el("span", "tie-face", tie, "left:" + (cx - 23) + "px;top:318px;width:46px;height:170px;background:" + shade("var(--tie)", 0.92) + ";transform:translateZ(" + (TOP - 58) + "px) rotateX(-90deg);clip-path:polygon(30% 0, 70% 0, 100% 84%, 50% 100%, 0 84%)");
-  var tieLink = el("a", "tie-link", chair, "left:" + (cx - 45) + "px;top:324px;width:90px;height:250px;transform:translateZ(" + (TOP + 10) + "px) rotateX(-90deg)");
+  el("span", "tie-face", tie, "left:" + (tx - 23) + "px;top:318px;width:46px;height:170px;background:" + shade("var(--tie)", 0.92) + ";transform:translateZ(" + (TOP - 58) + "px) rotateX(-90deg);clip-path:polygon(30% 0, 70% 0, 100% 84%, 50% 100%, 0 84%)");
+  var tieLink = el("a", "tie-link", chair, "left:" + (tx - 45) + "px;top:324px;width:90px;height:250px;transform:translateZ(" + (TOP + 10) + "px) rotateX(-90deg)");
   tieLink.href = "index.html";
   tieLink.setAttribute("aria-label", "Plain version of this site: the professional home");
 
@@ -1645,6 +1649,21 @@
     setTimeout(function () {
       location.href = tieLink.href;
     }, 650);
+  });
+  // pointed at, or reached by keyboard, it sways a little and settles; clicked, it swings harder
+  // (tie-on). Not under reduced motion.
+  function sway() {
+    if (still.matches || tie.classList.contains("worn")) return;
+    tie.classList.remove("sway");
+    void tie.offsetWidth;
+    tie.classList.add("sway");
+  }
+  tieLink.addEventListener("mouseenter", sway);
+  tieLink.addEventListener("focus", function () {
+    if (tieLink.matches(":focus-visible")) sway();
+  });
+  tie.addEventListener("animationend", function () {
+    tie.classList.remove("sway");
   });
   // Space picks it up too, as it would a button
   tieLink.addEventListener("keydown", function (e) {
