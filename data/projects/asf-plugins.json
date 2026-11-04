@@ -1,0 +1,106 @@
+{
+  "name": "ASF Plugins",
+  "tagline": "ArchiSteamFarm plugins",
+  "status": "Two plugins for ArchiSteamFarm. Open source under {licence}.",
+  "lede": "Plugins for ArchiSteamFarm. Each one drops into ASF's <code>plugins</code> directory, keeps its settings in ASF's own config files, and works in ASF's Docker image.",
+  "about": "Plugins for ArchiSteamFarm: ASF-Notifier tells a Matrix room when a bot stops, loses its connection, finishes farming or ASF is updated, and ASF-PluginConfig, in development, edits plugin settings.",
+  "description": "ASF Plugins: ASF-Notifier, which posts to a Matrix room when a bot stops, loses its connection, finishes farming or ASF is updated, and ASF-PluginConfig, a settings page for ASF plugins, in development. Free, open source, Apache-2.0.",
+  "summary": "Plugins for ArchiSteamFarm: Matrix alerts when a bot stops, loses its connection or finishes farming, and a settings page for plugins, in development.",
+  "licence": "Apache-2.0",
+  "accent": "--asf",
+  "mark": "asf-notifier.svg",
+  "stack": [
+    {
+      "label": "Built against",
+      "value": "ArchiSteamFarm 6.3.10.6, with the .NET runtime ASF ships with"
+    }
+  ],
+  "home": {
+    "line": null,
+    "aria": "{name}, plugins for ArchiSteamFarm: ASF-Notifier reports to a Matrix room"
+  },
+  "links": [
+    {
+      "label": "ASF-Notifier",
+      "href": "#asf-notifier",
+      "kind": "nav",
+      "primary": true
+    },
+    {
+      "label": "ASF-PluginConfig",
+      "href": "#asf-pluginconfig",
+      "kind": "nav"
+    },
+    {
+      "label": "Donate",
+      "href": "donate.html",
+      "kind": "donate"
+    },
+    {
+      "label": "GitHub Sponsors",
+      "href": "https://github.com/sponsors/easly1989",
+      "kind": "donate",
+      "label_sheet": false
+    }
+  ],
+  "screenshots": [],
+  "members": [
+    {
+      "id": "asf-notifier",
+      "name": "ASF-Notifier",
+      "status": "Shipping, {version}. Open source under {licence}.",
+      "status_short": "Shipping, {version}",
+      "version": "v1.0.0.0",
+      "lede": "Hear about it when a bot stops. An ArchiSteamFarm plugin that posts to a Matrix room when a bot is stopped, loses its connection and comes back, finishes farming, or ASF is updated.",
+      "licence": "Apache-2.0",
+      "accent": "--asf",
+      "mark": "asf-notifier.svg",
+      "stack": [],
+      "links": [
+        {
+          "label": "Download",
+          "href": "https://github.com/easly1989/ASF-Notifier/releases/latest",
+          "kind": "release",
+          "primary": true
+        },
+        {
+          "label": "View on GitHub",
+          "href": "https://github.com/easly1989/ASF-Notifier",
+          "kind": "repo"
+        },
+        {
+          "label": "README",
+          "href": "https://github.com/easly1989/ASF-Notifier#readme",
+          "kind": "docs",
+          "label_sheet": false
+        }
+      ],
+      "screenshots": []
+    },
+    {
+      "id": "asf-pluginconfig",
+      "name": "ASF-PluginConfig",
+      "status": "In development. Open source under {licence}. No release yet.",
+      "status_short": "In development",
+      "lede": "One page in ASF-ui to edit the settings of every installed plugin. A plugin that ships a JSON Schema gets a form; one without gets a raw JSON editor for its key.",
+      "licence": "Apache-2.0",
+      "accent": "--asf-pc",
+      "mark": "asf-pluginconfig.svg",
+      "stack": [],
+      "links": [
+        {
+          "label": "View on GitHub",
+          "href": "https://github.com/easly1989/ASF-PluginConfig",
+          "kind": "repo",
+          "primary": true
+        },
+        {
+          "label": "Read the spec",
+          "href": "https://github.com/easly1989/ASF-PluginConfig/issues/1",
+          "kind": "spec"
+        }
+      ],
+      "screenshots": []
+    }
+  ]
+}

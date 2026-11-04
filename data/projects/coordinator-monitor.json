@@ -1,0 +1,84 @@
+{
+  "name": "coordinator-monitor",
+  "tagline": "one pane for your Claude Code sessions",
+  "status": "Version {version}, early. Open source under {licence}.",
+  "version": "0.2.0",
+  "lede": "One pane for every local Claude Code session: what each one is doing, its subagents, and everything that waits for you, answerable in place.",
+  "about": "A Claude Code mod: one pane for every local session, its subagents, and the permissions and questions that wait for you.",
+  "description": "coordinator-monitor is an open-source Claude Code mod: one pane for every local session, with its subagents and everything that waits for you, permissions and questions, answerable in place.",
+  "summary": "An open-source Claude Code mod: every local session, its subagents, and what waits for you, in one pane.",
+  "licence": "AGPL-3.0-or-later",
+  "accent": "--coordinator-monitor",
+  "mark": "coordinator-monitor.svg",
+  "stack": [],
+  "home": {
+    "label": "Claude stuff",
+    "line": "One pane for every local Claude Code session",
+    "aria": "Claude stuff: {name}, one pane for every local Claude Code session"
+  },
+  "links": [
+    {
+      "label": "View on GitHub",
+      "href": "https://github.com/easly1989/coordinator-monitor",
+      "kind": "repo",
+      "primary": true
+    },
+    {
+      "label": "Install",
+      "href": "#install",
+      "kind": "nav"
+    },
+    {
+      "label": "Donate",
+      "href": "donate.html",
+      "kind": "donate"
+    },
+    {
+      "label": "Changelog",
+      "href": "https://github.com/easly1989/coordinator-monitor/blob/main/CHANGELOG.md",
+      "kind": "docs",
+      "label_sheet": false
+    },
+    {
+      "label": "README",
+      "href": "https://github.com/easly1989/coordinator-monitor#readme",
+      "kind": "docs",
+      "label_sheet": false
+    },
+    {
+      "label": "savvy-progress",
+      "href": "https://github.com/johnnyvizz/claude-kit/tree/main/plugins/savvy-progress",
+      "kind": "credit",
+      "label_sheet": false
+    },
+    {
+      "label": "savvy-flow",
+      "href": "https://github.com/johnnyvizz/claude-kit/tree/main/plugins/savvy-flow",
+      "kind": "credit",
+      "label_sheet": false
+    }
+  ],
+  "screenshots": [
+    {
+      "file": "assets/coordinator-monitor-overview.png",
+      "width": 1440,
+      "height": 900,
+      "alt": "The coordinator session with the Agents pane beside the chat",
+      "caption": "The coordinator session with the Agents pane beside the chat."
+    },
+    {
+      "file": "assets/coordinator-monitor-pane.png",
+      "width": 601,
+      "height": 859,
+      "alt": "The pane: usage, tabs, and amber cards for a permission and a question that wait for an answer",
+      "caption": "What waits for you comes first, with the buttons to answer it."
+    },
+    {
+      "file": "assets/coordinator-monitor-sessions.png",
+      "width": 601,
+      "height": 859,
+      "alt": "Sessions listed with their savvy-flow workers, tier crabs and progress bars",
+      "caption": "Sessions with their savvy-flow workers."
+    }
+  ]
+}

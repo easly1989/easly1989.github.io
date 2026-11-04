@@ -1,0 +1,60 @@
+{
+  "name": "Planora",
+  "tagline": "Shared activity planner for groups",
+  "status": "In internal testing. Free, and hosted for you.",
+  "lede": "Plan together, decide less, do more — a mobile-first shared activity planner that turns group indecision into events worth remembering.",
+  "about": "A shared activity planner for groups, for web, Android and iOS. Free, and in internal testing.",
+  "description": "Planora is a mobile-first shared activity planner for groups: a shared backlog of ideas, a guided Organize wizard with date voting, events, reminders and feedback. Web, Android and iOS.",
+  "summary": "Plan together. Decide less. Do more. A shared activity planner for friends, family, couples and teams — Web, Android and iOS.",
+  "licence": null,
+  "accent": "--planora",
+  "mark": "planora.svg",
+  "stack": [
+    {
+      "label": "Backend",
+      "value": "Go + Fiber, Clean Architecture, REST API under /api/v1"
+    },
+    {
+      "label": "Database",
+      "value": "SQLite (pure-Go modernc.org/sqlite), WAL, foreign keys, auto-migrations"
+    },
+    {
+      "label": "Frontend",
+      "value": "Flutter, Material Design 3, light/dark, responsive — one codebase for Web (PWA), Android and iOS"
+    },
+    {
+      "label": "Auth",
+      "value": "Email + password (Argon2id), JWT access + refresh; optional Google / Apple"
+    },
+    {
+      "label": "Delivery",
+      "value": "A single multi-arch container (amd64/arm64); the apps point at one backend"
+    }
+  ],
+  "home": {
+    "line": "Ideas for the group. In testing.",
+    "aria": "{name}, a shared activity planner for groups"
+  },
+  "links": [
+    {
+      "label": "Email me about Planora",
+      "href": "mailto:caesar.themaster@gmail.com?subject=Planora",
+      "kind": "contact",
+      "primary": true
+    },
+    {
+      "label": "All projects",
+      "href": "index.html",
+      "kind": "nav"
+    }
+  ],
+  "screenshots": [
+    {
+      "file": "assets/planora-preview.png",
+      "width": 1208,
+      "height": 812,
+      "alt": "Planora UI: onboarding, the activity backlog and the Organize date-voting screen",
+      "caption": "Onboarding, the shared activity backlog, and the Organize date-voting flow — Material 3, light and dark, responsive from phone to desktop web."
+    }
+  ]
+}

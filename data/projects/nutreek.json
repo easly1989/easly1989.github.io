@@ -1,0 +1,85 @@
+{
+  "name": "Nutreek",
+  "tagline": "Self-hosted weekly nutrition planner",
+  "status": "Open source under {licence}. Self-hosted.",
+  "lede": "A self-hosted weekly nutrition planner — plan meals, track macros, and let adaptive TDEE keep your targets honest.",
+  "about": "A self-hosted weekly nutrition planner with macros, adaptive TDEE and a coach mode.",
+  "description": "Nutreek is a self-hosted weekly nutrition planner: meal plans, macros per meal, day and week, offline OpenFoodFacts search, a barcode scanner, adaptive TDEE, weight and hydration tracking, and a coach mode. Installable on your phone.",
+  "summary": "Plan meals, track macros, and let adaptive TDEE keep your targets honest — self-hosted, one Go binary or one container.",
+  "licence": "AGPL-3.0",
+  "accent": "--nutreek",
+  "mark": "nutreek.svg",
+  "stack": [
+    {
+      "label": "Backend",
+      "value": "Go 1.27+ (chi, scs, goose, bcrypt, nosurf), hand-written SQL"
+    },
+    {
+      "label": "Database",
+      "value": "SQLite via modernc.org/sqlite — pure Go, no CGO"
+    },
+    {
+      "label": "Frontend",
+      "value": "html/template + HTMX + Tailwind CSS; installable as a PWA"
+    },
+    {
+      "label": "Deploy",
+      "value": "Static binary or a distroless Docker image (~20 MB), health-checked"
+    },
+    {
+      "label": "Your data",
+      "value": "One SQLite file, with optional scheduled backups and retention"
+    }
+  ],
+  "home": {
+    "line": "The week's meals, planned",
+    "aria": "{name}, a weekly nutrition planner. Open the agenda"
+  },
+  "links": [
+    {
+      "label": "Try the demo",
+      "href": "https://p01--nutreek--7dcjw6mlmtky.code.run/",
+      "kind": "demo",
+      "primary": true,
+      "new_tab": true
+    },
+    {
+      "label": "Source code",
+      "href": "https://github.com/easly1989/nutreek",
+      "kind": "repo"
+    },
+    {
+      "label": "Donate",
+      "href": "donate.html",
+      "kind": "donate"
+    },
+    {
+      "label": "All projects",
+      "href": "index.html",
+      "kind": "nav"
+    }
+  ],
+  "screenshots": [
+    {
+      "file": "assets/nutreek-week.png",
+      "width": 1280,
+      "height": 853,
+      "alt": "Nutreek week view: day tabs with calories, the day's meals with macros, a calorie ring, water and a workout",
+      "caption": "The meals with their macros, and beside them the calorie ring, water and workouts."
+    },
+    {
+      "file": "assets/nutreek-phone.png",
+      "width": 1920,
+      "height": 1280,
+      "alt": "Three phone screens: the week, the scanner and the shopping list",
+      "caption": "On the phone, with the bottom bar."
+    },
+    {
+      "file": "assets/nutreek-stats.png",
+      "width": 1280,
+      "height": 853,
+      "alt": "Statistics in dark mode with estimated energy needs",
+      "caption": "Statistics and adaptive TDEE."
+    }
+  ]
+}

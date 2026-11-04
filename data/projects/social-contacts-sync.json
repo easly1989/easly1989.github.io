@@ -1,0 +1,77 @@
+{
+  "name": "Social Contacts Sync",
+  "tagline": "Profile photos for Google Contacts",
+  "status": "Shipping, {version}. Open source.",
+  "version": "v1.4.5",
+  "lede": "Give every contact a face. A desktop app that fills Google Contacts with your contacts' profile photos from WhatsApp, Telegram, Gravatar and their social profiles, and tidies up duplicates on the way.",
+  "about": "A free, open-source desktop app that fills Google Contacts with profile photos from WhatsApp, Telegram and Gravatar and cleans up duplicates.",
+  "description": "Social Contacts Sync is a free, open-source desktop app that fills Google Contacts with your contacts' profile photos from WhatsApp, Telegram, Gravatar and their social profiles, finds those profiles for you, and cleans up duplicates, shared numbers and missing country codes. For Windows, Linux and macOS.",
+  "summary": "A free, open-source desktop app that gives every Google contact a face, with photos from WhatsApp, Telegram, Gravatar and their social profiles, and tidies up duplicates on the way.",
+  "licence": "Apache 2.0 with the Commons Clause",
+  "accent": "--scs",
+  "mark": "social-contacts-sync.svg",
+  "stack": [],
+  "home": {
+    "line": "Every contact gets a face",
+    "aria": "{name}, profile photos for Google Contacts"
+  },
+  "links": [
+    {
+      "label": "Download",
+      "href": "https://github.com/easly1989/social-contacts-sync/releases",
+      "kind": "release",
+      "primary": true
+    },
+    {
+      "label": "View on GitHub",
+      "href": "https://github.com/easly1989/social-contacts-sync",
+      "kind": "repo"
+    },
+    {
+      "label": "Donate",
+      "href": "donate.html",
+      "kind": "donate"
+    },
+    {
+      "label": "README",
+      "href": "https://github.com/easly1989/social-contacts-sync#download",
+      "kind": "docs",
+      "label_sheet": false
+    },
+    {
+      "label": "WhatsApp Contact Sync",
+      "href": "https://github.com/guyzyl/whatsapp-contact-sync",
+      "kind": "credit",
+      "label_sheet": false
+    },
+    {
+      "label": "GitHub Sponsors",
+      "href": "https://github.com/sponsors/easly1989",
+      "kind": "donate",
+      "label_sheet": false
+    }
+  ],
+  "screenshots": [
+    {
+      "file": "assets/social-contacts-sync-dashboard.png",
+      "width": 1280,
+      "height": 800,
+      "alt": "Social Contacts Sync dashboard with photo coverage in three parts and the next steps",
+      "caption": "The dashboard — who has a face, who has one ready, and what to do next."
+    },
+    {
+      "file": "assets/social-contacts-sync-sync-review.png",
+      "width": 1280,
+      "height": 800,
+      "alt": "The Photos step: a contact's photos from WhatsApp and from a Bluesky profile just linked",
+      "caption": "Pick whose photo to use, including the profiles you just linked."
+    },
+    {
+      "file": "assets/social-contacts-sync-cleanup.png",
+      "width": 1280,
+      "height": 800,
+      "alt": "Clean up page with duplicate contacts and a merge table",
+      "caption": "Pick each value, the rest is combined."
+    }
+  ]
+}

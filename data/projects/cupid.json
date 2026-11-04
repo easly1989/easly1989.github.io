@@ -1,0 +1,74 @@
+{
+  "name": "Cupid",
+  "tagline": "Management system for matchmaking agencies",
+  "status": "Available to license. {licence}, self-hosted or hosted.",
+  "lede": "A web management system for matchmaking and dating agencies — a cloud-ready rewrite of the classic <em>Cuore</em> desktop application.",
+  "about": "A web management system for matchmaking and dating agencies.",
+  "description": "Cupid is a web management system for matchmaking and dating agencies: client records, partner requests, affinity matching, meetings, contracts, printing, GDPR tooling and encrypted backups.",
+  "summary": "A cloud-ready rewrite of the classic Cuore desktop application, delivered as a single container an agency can run itself.",
+  "licence": "Closed source",
+  "accent": "--cupid",
+  "mark": "cupid.svg",
+  "stack": [
+    {
+      "label": "Backend",
+      "value": "Go 1.25 (chi router), SQLite (modernc.org/sqlite, pure-Go), goose migrations"
+    },
+    {
+      "label": "Frontend",
+      "value": "React 19 + Vite + TypeScript + Mantine, i18n (Italian by default)"
+    },
+    {
+      "label": "API",
+      "value": "OpenAPI 3 contract with generated server (Go) and client (TS) types"
+    },
+    {
+      "label": "Security",
+      "value": "Ed25519-signed license keys (offline verification), CSP + HSTS, login rate limiting, argon2id"
+    },
+    {
+      "label": "Delivery",
+      "value": "A single distroless Docker image with the SPA embedded and a /data volume"
+    }
+  ],
+  "home": {
+    "line": "Sealed: available to license",
+    "aria": "{name}, a management system for matchmaking agencies"
+  },
+  "links": [
+    {
+      "label": "Email me about Cupid",
+      "href": "mailto:caesar.themaster@gmail.com?subject=Cupid",
+      "kind": "contact",
+      "primary": true
+    },
+    {
+      "label": "All projects",
+      "href": "index.html",
+      "kind": "nav"
+    }
+  ],
+  "screenshots": [
+    {
+      "file": "assets/cupid-dashboard.png",
+      "width": 2560,
+      "height": 1668,
+      "alt": "Cupid dashboard with agency figures, operational counters and twelve-month trend charts",
+      "caption": "The dashboard — agency figures, counters you can click through, and twelve-month trends."
+    },
+    {
+      "file": "assets/cupid-clients.png",
+      "width": 2560,
+      "height": 1668,
+      "alt": "Cupid client list with instant search and a status filter",
+      "caption": "The client list, with instant search and a filter by status."
+    },
+    {
+      "file": "assets/cupid-abbinamenti.png",
+      "width": 2560,
+      "height": 1668,
+      "alt": "Cupid matching with candidates ranked by affinity and the meeting cycle",
+      "caption": "Matching — candidates ranked by affinity, then the mailing, judgement and meeting cycle."
+    }
+  ]
+}

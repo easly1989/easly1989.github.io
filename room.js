@@ -15,6 +15,9 @@
     (parent || stage).appendChild(e);
     return e;
   }
+  function escapeHTML(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
   // A side drawn darker, k of its colour, or a face dimmed to k: the room's painted light, which
   // the light pass (room-light.js) does instead when it runs, by setting --shading to 0
   function shade(color, k) {
@@ -309,7 +312,12 @@
       // Planora's label, stuck round the glass
       var tag = t.querySelector(".jar-tag");
       tag.classList.add("moved");
-      wrap(t, '<span class="jar-label"><b>Planora</b><small>Ideas for the group.<br />In testing.</small></span>', { r: 75.6, w: 176, h: 76, z: -64, at: 45, strip: 12 });
+      // its name and line are the bench label's, which tools/sync.py writes from the data;
+      // round the glass the line breaks after its first sentence
+      var jarLabel = tag.querySelector(".label");
+      var jarName = escapeHTML(jarLabel.firstChild.textContent);
+      var jarLine = escapeHTML(jarLabel.querySelector("small").textContent).replace(". ", ".<br />");
+      wrap(t, '<span class="jar-label"><b>' + jarName + "</b><small>" + jarLine + "</small></span>", { r: 75.6, w: 176, h: 76, z: -64, at: 45, strip: 12 });
       // and the light on the glass, left of the front (the label faces the reader at 45
       // degrees): a streak down it, above the label and below it, on the glass and not on the
       // paper; and a fainter one down its right edge
@@ -325,7 +333,7 @@
       var at = el("span", "jar-idea-at", t);
       at.setAttribute("aria-hidden", "true");
       at.innerHTML =
-        '<span class="jar-idea"><span class="fold a"><b>Planora</b></span>' +
+        '<span class="jar-idea"><span class="fold a"><b>' + jarName + "</b></span>" +
         '<span class="fold b"><span class="front">An idea for the group</span><span class="back"></span></span></span>';
     }
   });

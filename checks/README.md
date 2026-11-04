@@ -17,6 +17,7 @@ python checks/moves.py
 python checks/photos.py
 python checks/radio.py
 python checks/dark.py
+python checks/data.py
 ```
 
 `contrast.py` also needs `pip install pillow numpy`.
@@ -68,6 +69,16 @@ python checks/dark.py
   light on at once; under reduced motion it is lit from the
   start; and with whatever holds the light never letting go and the page's scripts stopped
   once the room is up, the dark still ends on its own. A visible window.
+
+- `data.py` — no browser, and run it after any change to `data/projects/` or to a page's
+  facts: every page is what `python tools/sync.py` would write from the data, every data file
+  has its fields and they are well formed (plain text without tags or entities, only the
+  inline tags in the markup fields, no unknown placeholder, accents in `:root`, marks and
+  screenshots on disk at their real size, one primary link on each label sheet), every page
+  has each block it is meant to have, once, and the facts still written by hand agree with the
+  data: the licence in each page's prose, the stack tables, a data screenshot's alt, size and
+  caption (shown on its own page unless `pro_only`), CloudBank's fallback version, the links
+  beyond the label sheet, and the room's jar label. A second.
 
 The room's window shows Pesaro's weather from Open-Meteo, asked once and kept for 15 minutes
 in `sessionStorage` (`weather`). For a check or a screenshot, `?weather=` forces a state without

@@ -5,9 +5,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## What this is
 
 Carlo Ruggiero's personal project site, served by GitHub Pages from the root of
-`main` at https://easly1989.github.io. There is no build step, no package manager,
-no test suite and no CI — the `.html`, `.css`, `.js` and `.svg` files in the repo
-root are exactly what ships. A push to `main` is a deploy.
+`main` at https://easly1989.github.io. There is no build step at deploy, no package
+manager, no test suite and no CI — the `.html`, `.css`, `.js` and `.svg` files in the
+repo root are exactly what ships. A push to `main` is a deploy. Run
+`python tools/sync.py` after editing `data/projects/`: it writes each project's facts
+into the pages, and the result is committed (see The things that are coupled).
 
 The whole site is one scene: a cutting mat seen from above — "the bench" — with
 one object on it per project, and a cat that lives there and does what it likes.
@@ -94,6 +96,11 @@ committed, so they had to be rebuilt by hand.
   (three.js), the bench's picture of it and the room's picture without WebGL,
   and `render.html`/`render.py`, which draw those pictures from the model (its
   `README.md`). `room-plush.js` draws the model live on the room's back wall.
+- `data/projects/` — one JSON file per project, named as its page, with every fact
+  the pages show about it; `asf-plugins.json` also holds one entry per plugin under
+  `members`.
+- `tools/` — `sync.py`, which writes those facts into the pages (its `README.md`).
+  `checks/data.py` fails when a page differs from what it would write.
 
 ## The bench and its objects
 
@@ -126,7 +133,8 @@ framed. Its tag, high on the wall, comes out under it rather than above.
 The crab is named "Claude stuff", a home for the Claude things, and leads to
 `coordinator-monitor.html` for now. Pointing it at a hub page later means its
 `href` in `index.html`, the words that describe where it leads (its `aria-label`
-and small line there, and the contact sheet's option), and the new page's morph
+and small line, `home` in `data/projects/coordinator-monitor.json` today, and the
+contact sheet's option), and the new page's morph
 entries (`morph.js` PAIRS and POSE, the page's `view-transition-name: crab`,
 `checks/moves.py`).
 
@@ -203,7 +211,9 @@ morph lands. The other objects play their move on the bench and morph after it.
 
 `asf-plugins.html` is the page for several pieces of one platform: a label sheet for the
 family, then one kraft folder (`.fam-folder[data-tabs]`) with a tab per piece. Another family
-page is markup only: copy its structure.
+page copies its structure, and its facts go in a data file with one entry per piece under
+`members`, with the markers of `asf-plugins.html` (each sheet's `state`, `name`, `lede` and
+`actions`, each tab's `tab`).
 
 - `.fam-tabs` holds one `a.fam-tab` per piece, `href="#<sheet id>"`, `style="--c: <accent>"`,
   with `<b>` the name and `<small>` the status. Each sheet is `section.fam-sheet#<id>` with
@@ -404,20 +414,46 @@ appended to button text.
 one as `--c`. Light accents are chosen to clear 4.5:1 against white, because a
 `.btn` puts white text on `--c`.
 
-**The home page describes each product twice over.** Its object (a name and a
-short line) and the page's label sheet. A release or a status change usually
-touches both.
+**A project's facts live in its data file**, `data/projects/<id>.json`: its name,
+status line, version, lede, the home object's short line and `aria-label`, About's
+line, the page's title and descriptions, licence, stack, links and a curated set of
+screenshots. `tools/sync.py` writes them into the pages between
+`<!-- data:<id>.<block> -->` and `<!-- /data -->`: the label sheet (Cupid's letter, each
+`.fam-head` and `.fam-tab`), the home object's label, the contact sheet's option,
+About's list and the page's `<title>` and metas. Never edit inside those markers: a
+release or a status change is an edit to the data file and a run of
+`python tools/sync.py`, done by the session, never by Carlo, and `checks/data.py`
+fails while a page differs. The playful scenery, the long sections and their
+screenshots stay in each page's markup.
+
+Some facts are still written by hand on the pages, and `checks/data.py` compares each
+with the data: the licence as the page's prose names it, the stack tables of Nutreek,
+Planora and Cupid, a data screenshot's alt, size and caption wherever it is shown (it
+must be shown on its project's page unless it is `pro_only`), CloudBank's fallback
+version in the ledger's Run it table, and the links beyond the label sheet, which the
+page must still carry. The room's label round Planora's jar is read by `room.js` from the
+bench's label, so it follows the data.
+
+Adding a project: write `data/projects/<id>.json` (copy one, then run
+`python checks/data.py`, which names every missing field); put the markers on its page
+(`title` and `og` in the head, and `state`, `name`, `lede` and `actions` in its label
+sheet, empty: the generator fills them); add its home object in `index.html` with its
+`aria` and `object` markers, its contact option (`<option><!-- data:<id>.name --><!-- /data --></option>`)
+and its entry in About's list (`about`); then run `python tools/sync.py` and
+`python checks/data.py`. Its morph is a pair as well (Between pages).
 
 **`.label-sheet .state` is the status line.** One sentence, "Shipping, v3.8.1.
 Open source under AGPL-3.0.", "In internal testing. Free, and hosted for you.",
-"Available to license."
+"Available to license." It is `status` in the data file.
 
 **CloudBank's version is not written by hand.** Every mention is a
 `<span data-cloudbank="stable">` (or `"nightly"`, or `data-cloudbank-date`), and
 `site.js` fills it from `versions.json` on CloudBank's `site-data` branch, which
 CloudBank's release and nightly workflows rewrite when they publish. The text in
 the markup is only the fallback shown if that fetch fails; move it forward now
-and then, but a release no longer needs an edit here.
+and then, but a release no longer needs an edit here. The fallback is `version` in
+`data/projects/cloudbank.json`, which `{version}` in its facts becomes; the span in the
+ledger's Run it table is a hand copy, which `checks/data.py` holds to the same version.
 
 **A morph is a pair.** Renaming or removing a home object, or the element its
 page shows first, breaks its page transition: see the table under Between pages.
