@@ -1176,6 +1176,35 @@ html:not(.iso) .strip {
   outline: 3px solid var(--focus);
   outline-offset: 3px;
 }
+/* pointed at: a few small swings about the headrest, settling */
+.iso .chair-tie.sway {
+  animation: tie-sway 1.4s ease-out both;
+}
+@keyframes tie-sway {
+  0% {
+    transform: none;
+  }
+  18% {
+    transform: rotateY(5deg);
+  }
+  42% {
+    transform: rotateY(-3.5deg);
+  }
+  66% {
+    transform: rotateY(2deg);
+  }
+  84% {
+    transform: rotateY(-1deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .iso .chair-tie.sway {
+    animation: none;
+  }
+}
 /* picked up, it is put on: up off the headrest and one swing, and the page goes */
 .iso .chair-tie.worn {
   animation: tie-on 0.6s var(--ease-out) both;
