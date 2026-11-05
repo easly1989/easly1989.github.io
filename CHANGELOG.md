@@ -3,6 +3,16 @@
 What changed on easly1989.github.io, newest first. The site has no build: a push to `main` is
 a deploy, and a release is a tag on the `main` that was live at that moment.
 
+## Unreleased
+
+- **Animate anyway:** a reader whose browser asks for reduced motion can choose to animate
+  anyway, from a button in the footer of the professional pages. The choice is remembered, and
+  Willy follows the pointer and the room moves; nothing changes for a reader who does not
+  choose.
+- **Willy no longer flips over** as he turns or lies down on a book, the ledger, the agenda or
+  the pager. A new check watches his body for sudden turns.
+- The repository's `CLAUDE.md` is cut to its rules, and the reference moved to `docs/`.
+
 ## 1.0.0 — 2026-11-04
 
 The first release.
