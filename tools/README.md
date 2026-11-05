@@ -91,4 +91,4 @@ Nutreek, Planora and Cupid; for the others only the professional pages show it.
 
 `checks/data.py` runs `--check`, validates every data file, requires every block each page is
 meant to have, and compares with the data the facts still written by hand on the pages (see
-"The things that are coupled" in `CLAUDE.md`).
+`docs/data.md`).

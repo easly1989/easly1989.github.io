@@ -14,7 +14,7 @@ missing, or has no data file. About and Donate are written from `data/pages/abou
 Every page here, and the professional home, opens with a quiet nav row at the top right: Projects,
 About, Donate, the current page marked `aria-current="page"` (none on a project's page), with "All
 projects" at its left here. The footer is the name and About, Donate and GitHub, and, on a line
-of its own, the "Animate anyway" button (`CLAUDE.md`, Motion): `MOTION` in `tools/sync.py`, the
+of its own, the "Animate anyway" button (`docs/motion.md`): `MOTION` in `tools/sync.py`, the
 same by hand in the home's footer, hidden until `site.js` shows it where the browser asks for
 less motion or the reader chose. It looks like the footer's links. Every link is 44px
 tall at least, except a link inside running text (Donate's "GitHub" in a sentence), which WCAG
@@ -47,7 +47,7 @@ the name, the lede and the buttons, then What I do, How I build, What I've built
 project, from its `about`, leading to its professional page) and Get in touch. Everything it says
 of the person is on the playful About, which `checks/data.py` holds it to: never invent biography.
 
-Donate keeps the playful Donate's rules (`CLAUDE.md`, Money and attribution): it names no
+Donate keeps the playful Donate's rules (`docs/content.md`, Money and attribution): it names no
 project, closed projects are never called closed for good, and each of the four services is a
 plain bordered link with its own colour and the icon drawn in this repo, handing the reader to
 that service. Nothing is collected here, and there is no form.
