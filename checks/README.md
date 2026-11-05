@@ -110,8 +110,11 @@ of motion that forgets it measures a room in which Willy only sleeps.
   before. The button is 44 px tall, with a focus ring, inside the window, on the home and on the
   professional pages, in both schemes at 1280 and 375 wide. A playful page morphs into the next
   only with the choice; in the room, with it, Willy walks and the cards play their move, and
-  without it he sleeps and they just open their page. A visible window, like `fps.py`; about two
-  minutes.
+  without it he sleeps and they just open their page. A choice made in another tab is followed
+  at once; where storage refuses it, it holds for the page and says so. With `motion.js` blocked,
+  as on a stale cached page, no page throws, `site.js` still runs, there is no button and reduced
+  motion holds. And every reduced-motion rule (`:not(.motion-ok)`) and script, in every folder,
+  goes through the choice. A visible window, like `fps.py`; about three minutes.
 
 - `data.py` — no browser, and run it after any change to `data/projects/` or to a page's
   facts: every page is what `python tools/sync.py` would write from the data, every data file

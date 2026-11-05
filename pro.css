@@ -533,6 +533,9 @@ nav.foot {
 footer .motion {
   flex-basis: 100%;
 }
+footer .motion small {
+  margin-left: 1rem;
+}
 footer .motion button {
   padding: 0;
   border: 0;

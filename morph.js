@@ -12,6 +12,8 @@
    interface: it listens to clicks and to pageswap, pagereveal and pageshow. */
 (function () {
   "use strict";
+  // (motion.js's answer, or the browser's where it never ran)
+  var reducedMotion = window.reducedMotion || function () { return matchMedia("(prefers-reduced-motion: reduce)").matches; };
   if (!document.documentElement.classList.contains("iso") || !window.ROOM) return;
   var stage = ROOM.stage;
   // without cross-document view transitions (Firefox today) the pages simply load

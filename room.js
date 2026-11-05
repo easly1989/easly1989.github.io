@@ -4,6 +4,8 @@
    markup before the first frame, and frames it to the window. */
 (function () {
   "use strict";
+  // (motion.js's answer, or the browser's where it never ran)
+  var reducedMotion = window.reducedMotion || function () { return matchMedia("(prefers-reduced-motion: reduce)").matches; };
   if (!document.documentElement.classList.contains("iso")) return;
   var stage = document.querySelector(".stage");
   var fit = document.querySelector(".fit");

@@ -5,6 +5,8 @@
 // model load only from here, so nothing of the room waits on them; without WebGL 2, or if
 // anything fails, there is no Willy and the room is as it is. Under reduced motion he sleeps on
 // the cushion and does not move.
+// (motion.js's answer, or the browser's where it never ran)
+const reducedMotion = window.reducedMotion || function () { return matchMedia("(prefers-reduced-motion: reduce)").matches; };
 const room = document.querySelector(".room");
 const stage = document.querySelector(".stage");
 

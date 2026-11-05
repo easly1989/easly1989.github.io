@@ -3,6 +3,7 @@
    tabbed folders, and the room's objects' opening moves. */
 (function () {
   "use strict";
+  var reducedMotion = window.reducedMotion || function () { return matchMedia("(prefers-reduced-motion: reduce)").matches; };
   var reduced = reducedMotion();
   var narrow = matchMedia("(max-width: 900px)");
   // the browser morphs one page into the next (cross-document view transitions)
@@ -31,7 +32,7 @@
   // ---- "Animate anyway" (motion.js), in the professional pages' footer ------
   // Shown where the browser asks for less motion, or the reader chose to animate anyway. The
   // choice holds at once for the home's Willy (he watches html.motion-ok); the rest of a page
-  // reads it as it loads.
+  // reads it as it loads. Without motion.js (a stale or blocked copy) it stays hidden.
   var choice = document.querySelector(".motion");
   if (choice && reducedMotion.canChoose) {
     var chooser = choice.querySelector("button");
@@ -43,9 +44,20 @@
     var offer = function () {
       choice.hidden = !reducedMotion.query.matches && !reducedMotion.chosen();
     };
+    var note = null;
     chooser.addEventListener("click", function () {
-      reducedMotion.choose(!reducedMotion.chosen());
+      // where the browser will not keep it, it holds for this page only, and says so
+      if (!reducedMotion.choose(!reducedMotion.chosen()) && !note) {
+        note = document.createElement("small");
+        note.setAttribute("role", "status");
+        note.textContent = "This browser will not remember it: it holds for this page only.";
+        choice.append(note);
+      }
+    });
+    // chosen here, in another tab, or before the page came back from the back/forward cache
+    addEventListener("motion-change", function () {
       said();
+      if (reducedMotion.chosen()) choice.hidden = false;
     });
     reducedMotion.query.addEventListener("change", offer);
     said();

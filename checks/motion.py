@@ -38,16 +38,28 @@ def check(ok, what):
         failures.append(what)
 
 
+# the one fallback a caller may hold, for a page where motion.js never ran
+FALLBACK = 'window.reducedMotion || function () { return matchMedia("(prefers-reduced-motion: reduce)").matches; }'
+QUERY = r"matchMedia\(\s*[\"']\(prefers-reduced-motion: reduce\)[\"']\s*\)"
+SKIP = {"vendor", "checks", "cat-src", ".git", "node_modules"}
+
+
 def through_the_choice():
-    """Every reduced-motion rule yields to html.motion-ok, and no script reads the query's .matches
-    itself: the only way to that answer is reducedMotion() (motion.js)."""
+    """Every reduced-motion rule yields to html.motion-ok (`:not(.motion-ok)`), and no script reads
+    the query's answer itself, directly or through a variable: the only way to it is
+    reducedMotion() (motion.js), or the fallback above. terminal.html stands alone (CLAUDE.md)."""
     root = pathlib.Path(__file__).resolve().parent.parent
-    files = [f for f in [*root.glob("*.css"), *root.glob("*.html"), *root.glob("*.js")] if f.name not in ("terminal.html", "motion.js")]
+    files = [f for ext in ("css", "html", "js") for f in root.rglob(f"*.{ext}")
+             if not SKIP & set(f.relative_to(root).parts) and f.name not in ("terminal.html", "motion.js")]
     bad = []
     for f in files:
-        s = f.read_text(encoding="utf-8")
-        if re.search(r"matchMedia\(\s*[\"']\(prefers-reduced-motion: reduce\)[\"']\s*\)\.matches", s):
-            bad.append(f"{f.name}: matchMedia(...).matches")
+        name = f.relative_to(root).as_posix()
+        s = f.read_text(encoding="utf-8").replace(FALLBACK, "")
+        if re.search(QUERY + r"\.matches", s):
+            bad.append(f"{name}: matchMedia(...).matches")
+        for v in re.findall(r"(?:var|let|const)\s+(\w+)\s*=\s*" + QUERY, s):
+            if re.search(r"\b" + v + r"\.matches\b", s):
+                bad.append(f"{name}: {v}.matches")
         for m in re.finditer(r"@media[^{]*prefers-reduced-motion[^{]*\{", s):
             i, d = m.end(), 1
             while d:
@@ -68,7 +80,7 @@ def through_the_choice():
                     else:
                         cur += c
                 parts.append(cur)
-                bad += [f"{f.name}: {p.strip()}" for p in parts if "motion-ok" not in p]
+                bad += [f"{name}: {p.strip()}" for p in parts if ":not(.motion-ok)" not in p]
     check(not bad, "every reduced-motion rule and script goes through the reader's choice" + (": " + "; ".join(bad) if bad else ""))
 
 
@@ -170,6 +182,52 @@ try:
                       f"{page} {scheme} {w}: the button shows, {btn and btn['h']:.0f} px tall, with a focus ring, inside the window")
     load(b, f"{base}/pro/cloudbank.html", reduce=False, choice=False, wait=1.5)
     check(not b.js(BUTTON)["shown"], "pro/cloudbank.html, no reduced motion: no button")
+
+    # ---- chosen in another tab (here a frame of the site, which shares its storage): the page follows
+    load(b, home, reduce=True, choice=False)
+    b.js("new Promise((r) => { const f = document.createElement('iframe'); f.src = 'pro/about.html'; f.onload = () => {"
+         " f.contentWindow.localStorage.setItem('site:motion', '1'); setTimeout(r, 300); }; document.body.append(f); })")
+    btn = b.js(BUTTON)
+    moved, swats = follows(b)
+    check(btn["ok"] and btn["pressed"] == "true" and btn["text"] == ON and moved and swats == 1,
+          f"chosen in another tab: the button says so and Willy follows and swats, without a reload ({swats})")
+
+    # ---- a browser that will not store it: it holds for the page, and the page says it is not kept
+    load(b, home, reduce=True, choice=False)
+    b.js("Storage.prototype.setItem = function () { throw new Error('quota'); }")
+    btn = b.js(BUTTON)
+    click(b, btn["x"], btn["y"])
+    time.sleep(0.3)
+    btn = b.js(BUTTON)
+    note = b.js("(document.querySelector('footer .motion [role=status]') || {}).textContent || ''")
+    moved, swats = follows(b)
+    check(btn["ok"] and btn["pressed"] == "true" and btn["stored"] is None and "not remember" in note and moved,
+          f"storage refused: on for this page, not stored, and it says so ({note!r})")
+    b.nav(home, 1)  # (a page whose storage works again)
+
+    # ---- motion.js missing (a stale page, a blocked script): every page still works, and moves as
+    # the browser says
+    b.call("Network.enable")
+    b.call("Network.setBlockedURLs", urls=["*motion.js"])
+    b.call("Page.addScriptToEvaluateOnNewDocument", source="window.__errs = []; addEventListener('error', (e) => __errs.push(String(e.message)));"
+           " addEventListener('unhandledrejection', (e) => __errs.push(String(e.reason)));")
+    for page, ready in (("pro/cloudbank.html", "document.querySelectorAll('button.zoom').length > 0"),
+                        ("cloudbank.html", "document.querySelectorAll('button.zoom').length > 0"),
+                        ("index.html", "true")):
+        load(b, f"{base}/{page}", reduce=True, choice=True, wait=2)
+        st = b.js("({ errs: window.__errs, ok:document.documentElement.classList.contains('motion-ok'),"
+                  " hidden: !!(document.querySelector('footer .motion') || { hidden: true }).hidden, ready: " + ready + " })")
+        check(not st["errs"] and st["ready"] and not st["ok"] and st["hidden"],
+              f"{page} without motion.js: no error, site.js still runs, no button, reduced motion holds ({st['errs']})")
+    load(b, home, reduce=False, choice=False)
+    moved, swats = follows(b)
+    check(moved and swats == 1 and not b.js("window.__errs"), "the home without motion.js, no reduced motion: Willy follows and swats")
+    load(b, home + "?room", reduce=False, choice=False, w=1440, h=900, wait=1)
+    b.nav(home, 5)
+    st = b.js("({ errs: window.__errs, iso: document.documentElement.classList.contains('iso'), willy: !!document.querySelector('canvas.willy') })")
+    check(st["iso"] and st["willy"] and not st["errs"], f"the room without motion.js: it shows, with Willy, and no error ({st['errs']})")
+    b.call("Network.setBlockedURLs", urls=[])
+    b.js("localStorage.setItem('site:room', '0')")
 
     # ---- the playful pages morph again for a reader who chose
     for choice in (False, True):

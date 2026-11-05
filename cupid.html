@@ -433,7 +433,7 @@
         var seal = document.getElementById("seal");
         var reopen = document.getElementById("reopen");
         var letter = document.getElementById("letter");
-        var reduced = reducedMotion();
+        var reduced = (window.reducedMotion || function () { return matchMedia("(prefers-reduced-motion: reduce)").matches; })();
         var timer;
         // Take the letter out of the envelope.
         function rise() {

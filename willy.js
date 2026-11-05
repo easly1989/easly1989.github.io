@@ -7,6 +7,8 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
+// (motion.js's answer, or the browser's where it never ran)
+const reducedMotion = window.reducedMotion || function () { return matchMedia("(prefers-reduced-motion: reduce)").matches; };
 
 const SCALE = 55; // room px per model unit: cat-src/build.py makes him 388 px nose to tail tip
 const W = 560; // room enough for all of him, 388 px nose to tail, whichever way he faces

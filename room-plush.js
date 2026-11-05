@@ -11,6 +11,8 @@
 // on its own. Without WebGL 2, or if anything here fails, the room keeps its picture (room.js).
 // (the room's light waits for it, and so does the light pass for its faces: its picture is one
 // only where it is not drawn)
+// (motion.js's answer, or the browser's where it never ran)
+const reducedMotion = window.reducedMotion || function () { return matchMedia("(prefers-reduced-motion: reduce)").matches; };
 let ready;
 const settled = new Promise((r) => (ready = r));
 ROOM.holdLight(settled);

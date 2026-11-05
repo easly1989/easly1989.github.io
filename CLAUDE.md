@@ -302,10 +302,16 @@ in the footer of the professional home and of every professional page ("Your bro
 less motion. Animate anyway.", `aria-pressed`; on, "Animating. Respect my browser's setting."),
 shown by `site.js` only where the browser asks for less motion or the choice is set. The playful
 pages have no button and follow the choice. `motion.js`, loaded (not deferred) in every page's
-head, after `styles.css` where there is one, holds the one answer:
+head, after `styles.css` where there is one, holds the one answer. Two pages go without it:
+`terminal.html`, which stands alone and is rewritten by the kit outside the repo (The computer), so
+it keeps its own reduced-motion rules and the browser's answer, and `asf-notifier.html`, only a
+redirect.
 
 - **Scripts** ask `reducedMotion()`, never `matchMedia` for its `.matches`; `reducedMotion.query`
-  is the browser's own query, for its `change` event.
+  is the browser's own query, for its `change` event. Each file that asks holds one line of
+  fallback to the browser's answer (`window.reducedMotion || function () { … }`), so a page whose
+  `motion.js` never ran (an old cached page, a blocked script) still works and keeps still.
+  `reducedMotion()` reads the choice kept in memory, never storage, so it is cheap per frame.
 - **CSS**: every rule under `@media (prefers-reduced-motion: reduce)` starts with
   `:where(html:not(.motion-ok))`, or puts `:where(:not(.motion-ok))` on its first compound when that
   is `html` or `.iso` (`.iso:where(:not(.motion-ok)) .thing`), so it adds no specificity and
@@ -315,8 +321,11 @@ head, after `styles.css` where there is one, holds the one answer:
   `motion.js` adopts a sheet with `navigation: auto`, which outweighs the reduced-motion `none`.
 
 The button takes effect at once for Willy's peek, which watches `html.motion-ok`; the room, the
-playful pages and the page transitions read it on their next load. Without storage there is no
-choice and no button. With none chosen, nothing may move on its own under reduced motion.
+playful pages and the page transitions read it on their next load. A choice made in another tab
+(the `storage` event) or before a page came back from the back/forward cache (`pageshow`) is read
+again, with the class, the button and the page transitions. Without storage there is no choice and
+no button; where storing it fails, the choice holds for that page and a note by the button says it
+is not remembered. With none chosen, nothing may move on its own under reduced motion.
 
 ## Money and attribution
 

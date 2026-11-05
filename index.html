@@ -114,6 +114,10 @@
     </script>
     <!-- reducedMotion() and html.motion-ok: after the room's styles, if it wrote them -->
     <script src="motion.js"></script>
+    <script>
+      // (the browser's answer, where motion.js never ran)
+      window.reducedMotion = window.reducedMotion || function () { return matchMedia("(prefers-reduced-motion: reduce)").matches; };
+    </script>
     <style>
       /* the professional page and the room share this page: the room is the bench's objects,
          which room.js sets out in 3D, and the professional page is not shown with it */
