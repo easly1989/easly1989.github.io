@@ -25,8 +25,8 @@ python checks/data.py
 
 `contrast.py` also needs `pip install pillow numpy`.
 
-Chrome on this PC reports `prefers-reduced-motion: reduce` unless told otherwise (Windows'
-animation effects are off), so every check sets the motion it means, with `b.media(...)`: a check
+A long-lived Chrome may report `prefers-reduced-motion: reduce` (Remote Desktop can leave one
+that way until it is fully quit), so every check sets the motion it means, with `b.media(...)`: a check
 of motion that forgets it measures a room in which Willy only sleeps.
 
 - `framing.py` — a first visit to the home gets the professional page, with its way into the
