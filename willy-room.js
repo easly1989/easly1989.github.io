@@ -5,9 +5,10 @@
 // model load only from here, so nothing of the room waits on them; without WebGL 2, or if
 // anything fails, there is no Willy and the room is as it is. Under reduced motion he sleeps on
 // the cushion and does not move.
+// (motion.js's answer, or the browser's where it never ran)
+const reducedMotion = window.reducedMotion || function () { return matchMedia("(prefers-reduced-motion: reduce)").matches; };
 const room = document.querySelector(".room");
 const stage = document.querySelector(".stage");
-const still = matchMedia("(prefers-reduced-motion: reduce)");
 
 let ready;
 ROOM.holdLight(new Promise((r) => (ready = r)));
@@ -41,7 +42,7 @@ async function live() {
   const between = ([a, b]) => a + Math.random() * (b - a);
 
   // asleep on the cushion, along it, and nothing more
-  if (still.matches) {
+  if (reducedMotion()) {
     const bed = P.spot("perch", "sleep", Math.random, [0, 180]);
     if (!bed) throw new Error("no room on the cushion");
     M.pose(M.hold("sleep-idle", bed, "perch").at(0));

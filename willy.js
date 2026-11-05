@@ -7,6 +7,8 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
+// (motion.js's answer, or the browser's where it never ran)
+const reducedMotion = window.reducedMotion || function () { return matchMedia("(prefers-reduced-motion: reduce)").matches; };
 
 const SCALE = 55; // room px per model unit: cat-src/build.py makes him 388 px nose to tail tip
 const W = 560; // room enough for all of him, 388 px nose to tail, whichever way he faces
@@ -237,7 +239,7 @@ export async function willy(room, stage, src = "assets/willy.glb") {
     veiled = true;
   };
   // none under reduced motion, where he sleeps and does not move
-  const life = matchMedia("(prefers-reduced-motion: reduce)").matches ? null : alive(model, holder);
+  const life = reducedMotion() ? null : alive(model, holder);
   let at = { x: 0, y: 0, z: 0, heading: 0, under: null },
     steps = [0, 0, 0, 0],
     then = 0,

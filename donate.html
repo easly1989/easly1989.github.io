@@ -25,6 +25,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
+    <script src="motion.js"></script>
     <style>
       /* focus and anchors stop clear of the pinned tray (WCAG 2.4.11) */
       html {
@@ -354,10 +355,10 @@
         }
       }
       @media (prefers-reduced-motion: reduce) {
-        .spill .puddle {
+        :where(html:not(.motion-ok)) .spill .puddle {
           animation: none;
         }
-        .packet {
+        :where(html:not(.motion-ok)) .packet {
           transition: none;
         }
       }

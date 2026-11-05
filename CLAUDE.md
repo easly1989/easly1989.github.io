@@ -39,8 +39,9 @@ The way into the room is Willy peeking over the top rule of the project list, an
 with "Step into the room" (`href="?room"`). He shows only where the room would fit
 (`html.room-fits`), so never on a phone and never without scripts. There, the home's inline
 script has his eyes and head follow a mouse, and a paw swat at it when it comes close or onto
-the link, or when the link takes the keyboard focus; under reduced motion, for touch and for a
-pen he stays still (`pro/README.md`, `checks/peek.py`).
+the link, or when the link takes the keyboard focus; under reduced motion (unless the reader chose
+to animate anyway, Motion), for touch and for a pen he stays still (`pro/README.md`,
+`checks/peek.py`).
 
 ## The room, and choosing it
 
@@ -86,7 +87,8 @@ which may bring the page back as it was; or check what the page actually loaded.
 Verification: load the affected page, check both colour schemes (`prefers-color-scheme` light
 and dark are both styled), phone width, and `prefers-reduced-motion: reduce`, under which
 nothing may move on its own: books arrive open, the About photo arrives developed, there are no
-page transitions or opening moves, Willy sleeps, and his peek on the professional home is still.
+page transitions or opening moves, Willy sleeps, and his peek on the professional home is still;
+and all of it moving again once the reader chose to animate anyway (Motion).
 Then the checks in `checks/README.md`.
 
 **This PC's Chrome reports reduced motion by default** (Windows' animation effects are off):
@@ -114,6 +116,7 @@ command during an earlier redesign; nothing was committed, so they had to be reb
   and inline scripts run the computer, the pager's screen, the contact sheet's `mailto:` URL
   and Willy's peek.
 - `pro.css`, `pro/`: the professional home's and pages' styles, and the pages, generated.
+- `motion.js`: whether the reader wants motion (Motion), loaded in every page's head.
 - `styles.css`: what the playful pages and the room share: tokens and accents, the mat, paper
   and tape, buttons, the label sheet, taped screenshots and the lightbox, the sheet dialog,
   loose desk items, the book, Willy's speech bubble (`.cat-says`) and the page transitions.
@@ -292,6 +295,37 @@ crab on the room's wall swings a few times as the room arrives (about 2.5 s) and
 pointed at, and comes to rest; once any object's move starts, or the computer is switched on, it
 settles in a few frames and stays still until the move is over. Under reduced motion it never
 moves. Willy's peek on the professional home moves only in answer to a mouse or the keyboard.
+
+**A reader may animate anyway.** "Under reduced motion" means: the browser asks for it and the
+reader did not choose otherwise. The choice is `localStorage` `site:motion` `"1"`, set by a button
+in the footer of the professional home and of every professional page ("Your browser asks for
+less motion. Animate anyway.", `aria-pressed`; on, "Animating. Respect my browser's setting."),
+shown by `site.js` only where the browser asks for less motion or the choice is set. The playful
+pages have no button and follow the choice. `motion.js`, loaded (not deferred) in every page's
+head, after `styles.css` where there is one, holds the one answer. Two pages go without it:
+`terminal.html`, which stands alone and is rewritten by the kit outside the repo (The computer), so
+it keeps its own reduced-motion rules and the browser's answer, and `asf-notifier.html`, only a
+redirect.
+
+- **Scripts** ask `reducedMotion()`, never `matchMedia` for its `.matches`; `reducedMotion.query`
+  is the browser's own query, for its `change` event. Each file that asks holds one line of
+  fallback to the browser's answer (`window.reducedMotion || function () { … }`), so a page whose
+  `motion.js` never ran (an old cached page, a blocked script) still works and keeps still.
+  `reducedMotion()` reads the choice kept in memory, never storage, so it is cheap per frame.
+- **CSS**: every rule under `@media (prefers-reduced-motion: reduce)` starts with
+  `:where(html:not(.motion-ok))`, or puts `:where(:not(.motion-ok))` on its first compound when that
+  is `html` or `.iso` (`.iso:where(:not(.motion-ok)) .thing`), so it adds no specificity and
+  yields to `html.motion-ok`, which `motion.js` sets. A new reduced-motion rule follows the same
+  form (`checks/motion.py`).
+- **Page transitions**: no class can reach `@view-transition`, so on the pages with `styles.css`
+  `motion.js` adopts a sheet with `navigation: auto`, which outweighs the reduced-motion `none`.
+
+The button takes effect at once for Willy's peek, which watches `html.motion-ok`; the room, the
+playful pages and the page transitions read it on their next load. A choice made in another tab
+(the `storage` event) or before a page came back from the back/forward cache (`pageshow`) is read
+again, with the class, the button and the page transitions. Without storage there is no choice and
+no button; where storing it fails, the choice holds for that page and a note by the button says it
+is not remembered. With none chosen, nothing may move on its own under reduced motion.
 
 ## Money and attribution
 

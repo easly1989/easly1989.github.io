@@ -444,7 +444,7 @@ html:not(.iso) .strip {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .iso.flashing .fit::after {
+  .iso.flashing:where(:not(.motion-ok)) .fit::after {
     animation: none;
   }
 }
@@ -779,7 +779,7 @@ html:not(.iso) .strip {
   stroke-linecap: round;
 }
 @media (prefers-reduced-motion: reduce) {
-  .iso .pc .pc-mouse {
+  .iso:where(:not(.motion-ok)) .pc .pc-mouse {
     transition: none;
   }
 }
@@ -1201,7 +1201,7 @@ html:not(.iso) .strip {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .iso .chair-tie.sway {
+  .iso:where(:not(.motion-ok)) .chair-tie.sway {
     animation: none;
   }
 }
@@ -1296,10 +1296,10 @@ html:not(.iso) .strip {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .iso .thing,
-  .iso .shade,
-  .iso .tag,
-  .iso .thing .ground {
+  .iso:where(:not(.motion-ok)) .thing,
+  .iso:where(:not(.motion-ok)) .shade,
+  .iso:where(:not(.motion-ok)) .tag,
+  .iso:where(:not(.motion-ok)) .thing .ground {
     transition: none;
   }
 }
@@ -1399,10 +1399,10 @@ html:not(.iso) .strip {
   border-radius: 12px;
 }
 @media (prefers-reduced-motion: reduce) {
-  .iso .on-wall.neon.striking h1 {
+  .iso:where(:not(.motion-ok)) .on-wall.neon.striking h1 {
     animation: none;
   }
-  .iso .on-wall.neon h1 {
+  .iso:where(:not(.motion-ok)) .on-wall.neon h1 {
     transition: none;
   }
 }
@@ -1447,7 +1447,7 @@ html:not(.iso) .strip {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .iso .on-wall.neon p {
+  .iso:where(:not(.motion-ok)) .on-wall.neon p {
     transition: none;
   }
 }
@@ -1863,7 +1863,7 @@ html:not(.iso) .strip {
 }
 /* (as specific as the rules that start them, and after them) */
 @media (prefers-reduced-motion: reduce) {
-  .iso[data-weather] .window :is(.wx-fall, .wx-clouds, .sky) {
+  .iso[data-weather]:where(:not(.motion-ok)) .window :is(.wx-fall, .wx-clouds, .sky) {
     animation: none;
   }
 }
@@ -2217,11 +2217,11 @@ html:not(.iso) .strip {
   background: linear-gradient(rgba(196, 212, 255, 0.5), rgba(196, 212, 255, 0.2) 70%, transparent);
 }
 @media (prefers-reduced-motion: reduce) {
-  .iso .night,
-  .iso .light-switch .rocker {
+  .iso:where(:not(.motion-ok)) .night,
+  .iso:where(:not(.motion-ok)) .light-switch .rocker {
     transition: none;
   }
-  .iso .night-screen {
+  .iso:where(:not(.motion-ok)) .night-screen {
     animation: none;
   }
 }
@@ -2304,8 +2304,8 @@ html:not(.iso) .strip {
   opacity: 1;
 }
 @media (prefers-reduced-motion: reduce) {
-  .iso .radio-lamp,
-  .iso .radio-pool {
+  .iso:where(:not(.motion-ok)) .radio-lamp,
+  .iso:where(:not(.motion-ok)) .radio-pool {
     transition: none;
   }
 }
@@ -2374,8 +2374,8 @@ html:not(.iso) .strip {
   outline-offset: 3px;
 }
 @media (prefers-reduced-motion: reduce) {
-  .iso .radio-face .needle,
-  .iso .radio-face .knob {
+  .iso:where(:not(.motion-ok)) .radio-face .needle,
+  .iso:where(:not(.motion-ok)) .radio-face .knob {
     transition: none;
   }
 }
@@ -2569,12 +2569,12 @@ html:not(.iso) .strip {
   filter: drop-shadow(0 0 6px rgba(255, 200, 140, 0.9));
 }
 @media (prefers-reduced-motion: reduce) {
-  .iso .projector .proj-lens,
-  .iso .proj-beam,
-  .iso .proj-beam.lit,
-  .iso .projector.lit .proj-lens,
-  .iso .on-wall.projected > .projection.lit,
-  .iso .on-wall.projected > .projection {
+  .iso:where(:not(.motion-ok)) .projector .proj-lens,
+  .iso:where(:not(.motion-ok)) .proj-beam,
+  .iso:where(:not(.motion-ok)) .proj-beam.lit,
+  .iso:where(:not(.motion-ok)) .projector.lit .proj-lens,
+  .iso:where(:not(.motion-ok)) .on-wall.projected > .projection.lit,
+  .iso:where(:not(.motion-ok)) .on-wall.projected > .projection {
     transition: none;
     animation: none;
   }

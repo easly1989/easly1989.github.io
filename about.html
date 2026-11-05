@@ -25,6 +25,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
+    <script src="motion.js"></script>
     <style>
       .top {
         position: relative;
@@ -306,15 +307,15 @@
         }
       }
       @media (prefers-reduced-motion: reduce) {
-        .instant img,
-        .instant .frame::after,
-        .instant.shake {
+        :where(html:not(.motion-ok)) .instant img,
+        :where(html:not(.motion-ok)) .instant .frame::after,
+        :where(html:not(.motion-ok)) .instant.shake {
           animation: none;
         }
-        .instant .hint {
+        :where(html:not(.motion-ok)) .instant .hint {
           display: none;
         }
-        .tags a {
+        :where(html:not(.motion-ok)) .tags a {
           transition: none;
         }
       }

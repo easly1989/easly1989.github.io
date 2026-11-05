@@ -8,6 +8,8 @@
 // room paints no light of its own (room.css, .lit); without WebGL 2, or if anything here
 // fails, it never starts and the room is lit as it was, by its painted shadows and the night
 // layer.
+// (motion.js's answer, or the browser's where it never ran)
+const reducedMotion = window.reducedMotion || function () { return matchMedia("(prefers-reduced-motion: reduce)").matches; };
 let THREE; // (loaded once the room is built, as Willy's is, so the room never waits on it)
 
 let ready;
@@ -518,7 +520,7 @@ void main() {
       him.add(w.holder);
     }
     const screen = lamps.screen;
-    flickers = !!screen && screen.visible && !still.matches;
+    flickers = !!screen && screen.visible && !reducedMotion();
     if (flickers) screen.intensity = screen.userData.full * crt(performance.now());
     // the projector's picture as the wall shows it now; and its shadow map only when what moved
     // is in or near its cone, or has just left it (Willy here, the things on the desk in

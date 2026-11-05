@@ -29,7 +29,7 @@ html {
   scroll-behavior: smooth;
 }
 @media (prefers-reduced-motion: reduce) {
-  html {
+  html:where(:not(.motion-ok)) {
     scroll-behavior: auto;
   }
 }
@@ -491,7 +491,8 @@ nav.site {
   margin-left: auto;
 }
 nav.site a,
-nav.foot a {
+nav.foot a,
+footer .motion button {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
@@ -501,7 +502,8 @@ nav.foot a {
   font-size: 0.95rem;
 }
 nav.site a:hover,
-nav.foot a:hover {
+nav.foot a:hover,
+footer .motion button:hover {
   color: var(--ink);
   text-decoration: underline;
   text-underline-offset: 4px;
@@ -525,6 +527,21 @@ footer {
 nav.foot {
   display: flex;
   gap: 0 1.25rem;
+}
+/* "Animate anyway" (motion.js; site.js shows it): a line of its own under the footer's links,
+   a button that looks like them */
+footer .motion {
+  flex-basis: 100%;
+}
+footer .motion small {
+  margin-left: 1rem;
+}
+footer .motion button {
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
 }
 .more {
   display: inline-flex;

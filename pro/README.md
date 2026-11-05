@@ -13,7 +13,10 @@ missing, or has no data file. About and Donate are written from `data/pages/abou
 
 Every page here, and the professional home, opens with a quiet nav row at the top right: Projects,
 About, Donate, the current page marked `aria-current="page"` (none on a project's page), with "All
-projects" at its left here. The footer is the name and About, Donate and GitHub. Every link is 44px
+projects" at its left here. The footer is the name and About, Donate and GitHub, and, on a line
+of its own, the "Animate anyway" button (`CLAUDE.md`, Motion): `MOTION` in `tools/sync.py`, the
+same by hand in the home's footer, hidden until `site.js` shows it where the browser asks for
+less motion or the reader chose. It looks like the footer's links. Every link is 44px
 tall at least, except a link inside running text (Donate's "GitHub" in a sentence), which WCAG
 2.5.8 lets be the line's height.
 
@@ -68,4 +71,7 @@ inline SVG in `../index.html`, the same in both schemes, and the home's own inli
   shrunk.
 
 Under reduced motion, for touch and a pen, and wherever he is not shown, nothing listens and he is
-the still drawing; without scripts too. `checks/peek.py` checks all of it.
+the still drawing; without scripts too. `checks/peek.py` checks all of it. A reader whose browser
+asks for less motion can choose to animate anyway with the footer's button: he then follows and
+swats at once, without a reload, and stops again at once when the choice is undone
+(`checks/motion.py`).
