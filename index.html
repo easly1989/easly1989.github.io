@@ -112,6 +112,8 @@
         );
       })();
     </script>
+    <!-- reducedMotion() and html.motion-ok: after the room's styles, if it wrote them -->
+    <script src="motion.js"></script>
     <style>
       /* the professional page and the room share this page: the room is the bench's objects,
          which room.js sets out in 3D, and the professional page is not shown with it */
@@ -995,7 +997,7 @@
       }
       /* nothing runs on its own: one message, cut short */
       @media (prefers-reduced-motion: reduce) {
-        .pager .pg-msg {
+        :where(html:not(.motion-ok)) .pager .pg-msg {
           flex: 0 1 auto;
           min-width: 0;
           overflow: hidden;
@@ -1730,6 +1732,9 @@
           <a href="pro/donate.html">Donate</a>
           <a href="https://github.com/easly1989" rel="noopener">GitHub</a>
         </nav>
+        <div class="motion" hidden>
+          <button type="button" aria-pressed="false">Your browser asks for less motion. Animate anyway.</button>
+        </div>
       </footer>
     </div>
     <script>
@@ -1875,9 +1880,9 @@
           });
         }
         // he shows on a window that can hold the room (the head's script), and moves only
-        // without reduced motion
+        // without reduced motion, or when the reader chose to animate anyway (html.motion-ok)
         function update() {
-          var want = root.classList.contains("room-fits") && !still.matches;
+          var want = root.classList.contains("room-fits") && !reducedMotion();
           if (want && !on) start();
           else if (!want && on) stop();
         }
@@ -2198,7 +2203,7 @@ SYSTEM HALTED.</span>
       (function () {
         var pc = document.querySelector(".pc");
         if (!pc || !document.documentElement.classList.contains("iso")) return;
-        var reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var reduced = reducedMotion();
         var power = pc.querySelector(".power");
         var uses = pc.querySelectorAll(".use");
         var boot = pc.querySelector(".boot");
@@ -2424,7 +2429,7 @@ SYSTEM HALTED.</span>
         // the next message after 8 to 25 s, and never before this one has run there and back
         function next() {
           clearTimeout(timer);
-          if (motion.matches || document.hidden) return;
+          if (reducedMotion() || document.hidden) return;
           timer = setTimeout(function () {
             if (!lcd.closest(".opening")) show();
             next();

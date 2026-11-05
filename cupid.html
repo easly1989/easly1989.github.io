@@ -29,6 +29,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
+    <script src="motion.js"></script>
     <style>
       .post {
         position: relative;
@@ -285,12 +286,12 @@
         }
       }
       @media (prefers-reduced-motion: reduce) {
-        .reading .letter-sheet {
+        :where(html:not(.motion-ok)) .reading .letter-sheet {
           animation: none;
         }
-        .letter-sheet,
-        .env .flap,
-        .seal i {
+        :where(html:not(.motion-ok)) .letter-sheet,
+        :where(html:not(.motion-ok)) .env .flap,
+        :where(html:not(.motion-ok)) .seal i {
           transition: none;
         }
       }
@@ -432,7 +433,7 @@
         var seal = document.getElementById("seal");
         var reopen = document.getElementById("reopen");
         var letter = document.getElementById("letter");
-        var reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var reduced = reducedMotion();
         var timer;
         // Take the letter out of the envelope.
         function rise() {

@@ -240,8 +240,8 @@ header.bar .page-radio {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .page-radio .pr-needle,
-  .page-radio .pr-knob {
+  :where(html:not(.motion-ok)) .page-radio .pr-needle,
+  :where(html:not(.motion-ok)) .page-radio .pr-knob {
     transition: none;
   }
 }
@@ -926,9 +926,9 @@ dialog[open].sheet-dialog {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  :where(html:not(.motion-ok), html:not(.motion-ok) *),
+  :where(html:not(.motion-ok), html:not(.motion-ok) *)::before,
+  :where(html:not(.motion-ok), html:not(.motion-ok) *)::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -983,6 +983,7 @@ header.bar {
     transform: translateY(14px);
   }
 }
+/* (a reader who chose to animate anyway gets them back from motion.js, which no class can do) */
 @media (prefers-reduced-motion: reduce) {
   @view-transition {
     navigation: none;

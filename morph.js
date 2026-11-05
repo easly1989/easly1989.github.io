@@ -14,7 +14,6 @@
   "use strict";
   if (!document.documentElement.classList.contains("iso") || !window.ROOM) return;
   var stage = ROOM.stage;
-  var still = matchMedia("(prefers-reduced-motion: reduce)");
   // without cross-document view transitions (Firefox today) the pages simply load
   var morphs = "onpagereveal" in window;
 
@@ -239,7 +238,7 @@
       var shot = a.classList.contains("camera") && window.PHOTOS ? PHOTOS.shoot() : null;
       // under reduced motion, or with no morphs to land in, the link just opens its page,
       // without any move
-      if (still.matches || !morphs) {
+      if (reducedMotion() || !morphs) {
         unpin(shot);
         return ev.stopImmediatePropagation();
       }
@@ -369,7 +368,7 @@
   var note = document.querySelector(".thing.sticky");
   var passing = false;
   function swap(from, to, change) {
-    if (!document.startViewTransition || still.matches) return change();
+    if (!document.startViewTransition || reducedMotion()) return change();
     from.style.viewTransitionName = "sheet";
     var t = document.startViewTransition(function () {
       from.style.viewTransitionName = "";

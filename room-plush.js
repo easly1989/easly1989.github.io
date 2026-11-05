@@ -15,7 +15,6 @@ let ready;
 const settled = new Promise((r) => (ready = r));
 ROOM.holdLight(settled);
 if (ROOM.plush) ROOM.plush.settled = settled;
-const still = matchMedia("(prefers-reduced-motion: reduce)");
 
 // a swing: up to SWING radians each way, a full one every PERIOD s, dying away over DECAY s (over
 // ARRIVE s as the room arrives, about 2.5 s in all; over CALM s when a move starts), done once
@@ -184,7 +183,7 @@ async function start() {
   // and never while a move plays)
   const swing = (by = SWING, decay = DECAY) => {
     const now = performance.now();
-    if (still.matches || now < heldTo || swung(now).size > by / 2) return;
+    if (reducedMotion() || now < heldTo || swung(now).size > by / 2) return;
     push(by, decay);
   };
   // a move starting (any object picked up, or the old computer switched on): it comes to rest in
@@ -213,7 +212,7 @@ async function start() {
     if (!cv.isConnected) return pictures(done);
     tugAt = performance.now();
     tugTo = tugAt + P.ms;
-    if (!still.matches && swung(tugAt).size <= SWING / 4) push(SWING / 2, DECAY);
+    if (!reducedMotion() && swung(tugAt).size <= SWING / 4) push(SWING / 2, DECAY);
     loop();
     setTimeout(() => {
       calm();

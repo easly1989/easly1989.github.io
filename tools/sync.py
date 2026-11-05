@@ -301,6 +301,7 @@ def pro_page(p):
         '      rel="stylesheet"',
         "    />",
         '    <link rel="stylesheet" href="../pro.css" />',
+        '    <script src="../motion.js"></script>',
         "  </head>",
         "  <body>",
         f'    <div class="wrap" style="--c: {colour(p)}">',
@@ -350,6 +351,15 @@ def bar(current=None):
     ]
 
 
+# "Animate anyway", shown by site.js only where the browser asks for less motion or the reader
+# chose (motion.js); the professional home's footer carries the same by hand
+MOTION = [
+    '  <div class="motion" hidden>',
+    '    <button type="button" aria-pressed="false">Your browser asks for less motion. Animate anyway.</button>',
+    "  </div>",
+]
+
+
 def foot():
     return [
         "<footer>",
@@ -359,6 +369,7 @@ def foot():
         '    <a href="donate.html">Donate</a>',
         f'    <a href="{GITHUB}" rel="noopener">GitHub</a>',
         "  </nav>",
+        *MOTION,
         "</footer>",
     ]
 
@@ -470,6 +481,7 @@ def person_page(name, d, projects):
         '      rel="stylesheet"',
         "    />",
         '    <link rel="stylesheet" href="../pro.css" />',
+        '    <script src="../motion.js"></script>',
         "  </head>",
         "  <body>",
         # the ink is these pages' accent: they are about the person, not a product

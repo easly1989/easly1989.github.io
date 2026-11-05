@@ -3,7 +3,7 @@
    tabbed folders, and the room's objects' opening moves. */
 (function () {
   "use strict";
-  var reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var reduced = reducedMotion();
   var narrow = matchMedia("(max-width: 900px)");
   // the browser morphs one page into the next (cross-document view transitions)
   var morphs = "PageRevealEvent" in window && !reduced;
@@ -26,6 +26,30 @@
         mat.appendChild(l);
       }
     }
+  }
+
+  // ---- "Animate anyway" (motion.js), in the professional pages' footer ------
+  // Shown where the browser asks for less motion, or the reader chose to animate anyway. The
+  // choice holds at once for the home's Willy (he watches html.motion-ok); the rest of a page
+  // reads it as it loads.
+  var choice = document.querySelector(".motion");
+  if (choice && reducedMotion.canChoose) {
+    var chooser = choice.querySelector("button");
+    var said = function () {
+      var on = reducedMotion.chosen();
+      chooser.setAttribute("aria-pressed", String(on));
+      chooser.textContent = on ? "Animating. Respect my browser's setting." : "Your browser asks for less motion. Animate anyway.";
+    };
+    var offer = function () {
+      choice.hidden = !reducedMotion.query.matches && !reducedMotion.chosen();
+    };
+    chooser.addEventListener("click", function () {
+      reducedMotion.choose(!reducedMotion.chosen());
+      said();
+    });
+    reducedMotion.query.addEventListener("change", offer);
+    said();
+    offer();
   }
 
   // ---- screenshots open full size ----------------------------------------

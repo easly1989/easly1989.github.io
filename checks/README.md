@@ -19,6 +19,7 @@ python checks/radio.py
 python checks/dark.py
 python checks/peek.py
 python checks/willy-flips.py
+python checks/motion.py
 python checks/data.py
 ```
 
@@ -101,6 +102,16 @@ of motion that forgets it measures a room in which Willy only sleeps.
   comes upon a book there is chance, so a pass there proves little; a browser that cannot show
   that much of it in four times as long prints `slow`, too slow to judge, and does not fail.
   Headless; about five minutes.
+
+- `motion.py` — the reader's choice to animate anyway (`motion.js`), under reduced motion: with
+  no choice the footer's button offers it and nothing of Willy's peek moves; clicked, it is pressed,
+  stored and says so, and he follows the mouse and swats at once; on the next load it is still on,
+  and clicked again he is still at once; without reduced motion there is no button and he moves as
+  before. The button is 44 px tall, with a focus ring, inside the window, on the home and on the
+  professional pages, in both schemes at 1280 and 375 wide. A playful page morphs into the next
+  only with the choice; in the room, with it, Willy walks and the cards play their move, and
+  without it he sleeps and they just open their page. A visible window, like `fps.py`; about two
+  minutes.
 
 - `data.py` — no browser, and run it after any change to `data/projects/` or to a page's
   facts: every page is what `python tools/sync.py` would write from the data, every data file

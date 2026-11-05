@@ -605,7 +605,7 @@
       sign.style.setProperty("--neon", NEON[hue]);
       glow();
     }
-    if (still.matches) return next();
+    if (reducedMotion()) return next();
     sign.classList.add("striking");
     struck = performance.now();
     glow();
@@ -967,7 +967,7 @@
     phase = 0;
   function drawWave() {
     waving = 0;
-    var bins = !still.matches && window.RADIO && RADIO.wave();
+    var bins = !reducedMotion() && window.RADIO && RADIO.wave();
     if (bins) {
       var sq = 0;
       for (var k = 0; k < bins.length; k++) sq += Math.pow((bins[k] - 128) / 128, 2);
@@ -993,7 +993,7 @@
       else waveX.moveTo(0, y);
     }
     waveX.stroke();
-    if (cast.classList.contains("lit") && !still.matches) waving = requestAnimationFrame(drawWave);
+    if (cast.classList.contains("lit") && !reducedMotion()) waving = requestAnimationFrame(drawWave);
   }
   still.addEventListener("change", function () {
     if (!waving) drawWave();
@@ -1157,7 +1157,7 @@
   // time and never as hard twice, a gust of it lifts the note (room.css, .gust)
   if (side) el("span", "draught", side).innerHTML = "<i></i><i></i><i></i><i></i>";
   var pcCase = document.querySelector(".pc");
-  if (pcCase && sticky && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  if (pcCase && sticky && !reducedMotion()) {
     (function gust() {
       setTimeout(function () {
         if (pcCase.classList.contains("on") && !document.hidden) {
@@ -1641,7 +1641,7 @@
   tieLink.addEventListener("click", function (e) {
     plainHome();
     // Shift, Ctrl or Cmd-click is the browser's own; under reduced motion it just goes
-    if (still.matches || e.button || e.metaKey || e.ctrlKey || e.shiftKey) return;
+    if (reducedMotion() || e.button || e.metaKey || e.ctrlKey || e.shiftKey) return;
     e.preventDefault();
     if (tie.classList.contains("worn")) return;
     document.body.inert = true;
@@ -1653,7 +1653,7 @@
   // pointed at, or reached by keyboard, it sways a little and settles; clicked, it swings harder
   // (tie-on). Not under reduced motion.
   function sway() {
-    if (still.matches || tie.classList.contains("worn")) return;
+    if (reducedMotion() || tie.classList.contains("worn")) return;
     tie.classList.remove("sway");
     void tie.offsetWidth;
     tie.classList.add("sway");
@@ -1833,7 +1833,7 @@
   // a CSS animation that ends lit on its own (room.css, .dawn); this only ends it sooner, or
   // at its end puts the switch where the light is. Later loads in the visit skip it.
   var holds = [];
-  var dawn = lightWas === null && !still.matches;
+  var dawn = lightWas === null && !reducedMotion();
   var dawnAt = performance.now();
   var lightUp = function () {};
   if (dawn) {

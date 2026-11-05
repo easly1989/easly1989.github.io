@@ -518,7 +518,7 @@ void main() {
       him.add(w.holder);
     }
     const screen = lamps.screen;
-    flickers = !!screen && screen.visible && !still.matches;
+    flickers = !!screen && screen.visible && !reducedMotion();
     if (flickers) screen.intensity = screen.userData.full * crt(performance.now());
     // the projector's picture as the wall shows it now; and its shadow map only when what moved
     // is in or near its cone, or has just left it (Willy here, the things on the desk in

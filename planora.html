@@ -29,6 +29,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
+    <script src="motion.js"></script>
     <style>
       .table {
         position: relative;
@@ -370,9 +371,9 @@
         }
       }
       @media (prefers-reduced-motion: reduce) {
-        .slip,
-        .ideajar .glass,
-        tr.win .ring path {
+        :where(html:not(.motion-ok)) .slip,
+        :where(html:not(.motion-ok)) .ideajar .glass,
+        :where(html:not(.motion-ok)) tr.win .ring path {
           transition: none;
         }
       }
@@ -602,7 +603,7 @@
           do { n = Math.floor(Math.random() * slips.length); } while (n === last && slips.length > 1);
           last = n;
           slips.forEach(function (s, i) { s.classList.toggle("drawn", i === n); });
-          slips[n].scrollIntoView({ block: "nearest", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+          slips[n].scrollIntoView({ block: "nearest", behavior: reducedMotion() ? "auto" : "smooth" });
         });
       })();
     </script>

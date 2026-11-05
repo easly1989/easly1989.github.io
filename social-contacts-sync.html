@@ -29,6 +29,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
+    <script src="motion.js"></script>
     <style>
       .syncbar {
         position: relative;
@@ -418,7 +419,7 @@
       // The page does what the app does: every contact gets a face, one at a
       // time, with a report and an undo.
       (function () {
-        var reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var reduced = reducedMotion();
         var avatars = [].slice.call(document.querySelectorAll(".contact .avatar"));
         var palette = ["#7b8fa6", "#a67b9b", "#7ba68c", "#a6957b", "#7b86a6", "#9ba67b"];
         var skins = ["#f1c9a5", "#e0ac83", "#c68b5e", "#8d5a3b", "#f5d7bf"];

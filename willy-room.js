@@ -7,7 +7,6 @@
 // the cushion and does not move.
 const room = document.querySelector(".room");
 const stage = document.querySelector(".stage");
-const still = matchMedia("(prefers-reduced-motion: reduce)");
 
 let ready;
 ROOM.holdLight(new Promise((r) => (ready = r)));
@@ -41,7 +40,7 @@ async function live() {
   const between = ([a, b]) => a + Math.random() * (b - a);
 
   // asleep on the cushion, along it, and nothing more
-  if (still.matches) {
+  if (reducedMotion()) {
     const bed = P.spot("perch", "sleep", Math.random, [0, 180]);
     if (!bed) throw new Error("no room on the cushion");
     M.pose(M.hold("sleep-idle", bed, "perch").at(0));
