@@ -193,7 +193,6 @@ export async function willy(room, stage, src = "assets/willy.glb") {
   for (const mesh of skinned) mesh.layers.enable(SHADE.layer);
   const blob = shadow(renderer);
   room.insertBefore(blob.canvas, cv);
-  holder.rotation.order = "ZYX"; // tilted in his own frame, then turned to his heading
   const legs = LEGS.map((l) => l.map((n) => model.getObjectByName(THREE.PropertyBinding.sanitizeNodeName(n))));
   const legged = legs.every((l) => l.every(Boolean));
   const skull = model.getObjectByName("Head");
@@ -271,19 +270,25 @@ export async function willy(room, stage, src = "assets/willy.glb") {
     steps = want.map((g, i) => (dt > 0.25 || under || Math.abs(g - steps[i]) < 0.5 ? g : g + (steps[i] - g) * Math.exp(-dt / EASE)));
     let lift = 0;
     if (steps.some((g) => g > 0)) {
+      // tilted along the line from his hips to his shoulders, as the clip has them: never his
+      // heading or his paws, since a turn swings his body half round from his heading and lying
+      // down tucks his front paws behind his hind ones, and a tilt over the little between them
+      // went to 90 degrees and over, a somersault
       const pair = (a, b, k) => Math.min(a, b) + k * Math.abs(a - b),
-        along = (i) => feet[i].paw.x * Math.cos(r) + feet[i].paw.y * Math.sin(r),
         front = pair(steps[0], steps[1], RAISE[0]),
         hind = pair(steps[2], steps[3], RAISE[1]),
-        xf = (along(0) + along(1)) / 2,
-        xh = (along(2) + along(3)) / 2,
-        tilt = (front - hind) / (xf - xh);
-      lift = front - xf * tilt;
-      holder.rotation.set(0, -Math.atan(tilt), r); // (nose up is a turn the other way about his y)
+        mid = (i) => feet[i].top.clone().add(feet[i + 1].top).setZ(0).multiplyScalar(0.5),
+        shoulders = mid(0),
+        spine = shoulders.clone().sub(mid(2)),
+        span = spine.length(), // (no clip brings them nearer than 85 px)
+        tilt = (front - hind) / span;
+      lift = front - (shoulders.dot(spine) / span) * tilt;
+      // (nose up is a turn the other way about his left)
+      holder.quaternion.setFromAxisAngle(new THREE.Vector3(-spine.y, spine.x, 0).divideScalar(span), -Math.atan(tilt)).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), r));
       // tilted about the height of his shoulders and hips, which a tilt about his feet would
       // push back and forth, out of his legs' reach
       const pivot = new THREE.Vector3(0, 0, feet.reduce((n, f) => n + f.top.z, 0) / 4);
-      holder.position.copy(pivot).sub(pivot.clone().applyEuler(holder.rotation));
+      holder.position.copy(pivot).sub(pivot.clone().applyQuaternion(holder.quaternion));
       holder.updateMatrixWorld(true);
       legs.forEach((l, i) => {
         for (const b of l.slice(0, 3)) bent.push([b, b.quaternion.clone()]);

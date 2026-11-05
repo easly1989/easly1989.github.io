@@ -18,6 +18,7 @@ python checks/photos.py
 python checks/radio.py
 python checks/dark.py
 python checks/peek.py
+python checks/willy-flips.py
 python checks/data.py
 ```
 
@@ -88,6 +89,14 @@ of motion that forgets it measures a room in which Willy only sleeps.
   link gets one swat and no eye-following; under reduced motion, for a touch and on a phone
   nothing of him moves; at 1120×740, the smallest window that holds the room, he shows, and
   at 960×800 and on a phone in landscape (915×412, touch) he does not. Headless; about half a minute.
+
+- `willy-flips.py` — Willy never flips over: his body turns at most 45 degrees between two frames
+  and he leans at most 35, on the desk, on the books and the pager he walks over and across their
+  edges. First a sweep on the review page at 60 fps, in the middle of each of those and at the
+  middle of each edge, facing along it and across: he turns on the spot both ways, lies down, sits
+  and sleeps and gets up again, and walks over the edge and back; then two minutes of the room as
+  a reader sees it (`python checks/willy-flips.py 600` watches ten), every frame measured, each
+  failing frame printed with its clip and where he was. Headless; about three minutes.
 
 - `data.py` — no browser, and run it after any change to `data/projects/` or to a page's
   facts: every page is what `python tools/sync.py` would write from the data, every data file
