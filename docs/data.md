@@ -30,7 +30,8 @@ which names every missing field); put the markers on its page (`title` and `og` 
 its room object in `index.html` with its `aria` and `object` markers, its contact option
 (`<option><!-- data:<id>.name --><!-- /data --></option>`), its entry in About's list (`about`)
 and its professional row (`<!-- data:<id>.pro-row --><!-- /data -->` in the home's list); then
-run `python tools/sync.py` and `python checks/data.py`. Its morph is a pair as well (`docs/pages.md`).
+run `python tools/sync.py` and `python checks/data.py`. Its morph is a pair as well
+(`docs/pages.md`).
 
 **`.label-sheet .state` is the status line.** One sentence, "Shipping, v3.8.1. Open source under
 AGPL-3.0.", "In internal testing. Free, and hosted for you.", "Available to license." It is

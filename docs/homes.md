@@ -38,9 +38,9 @@ The first script in `index.html`'s head decides. The room shows only when `local
 `site:room` is `"1"` and the window holds it: wider than 900px, with a mouse or a trackpad
 (`any-pointer: fine`, so a phone in landscape never qualifies), at a scale of 0.7 or more
 (`ROOM_FIT`; `room.js` keeps the box it needs in `localStorage` `room-box`, and before it has
-measured one the head assumes the room's usual box). Willy's peek shows on the same terms. Then it adds
-`html.iso`, takes `pro.css` away and writes `styles.css`, the room's fonts, `room.css` and the
-room's modules into the head; a script after the mat un-hides it and hides the professional
+measured one the head assumes the room's usual box). Willy's peek shows on the same terms. Then
+it adds `html.iso`, takes `pro.css` away and writes `styles.css`, the room's fonts, `room.css`
+and the room's modules into the head; a script after the mat un-hides it and hides the professional
 page; the end of the body writes `crt.js`, `radio.js`, `photos.js`, `room.js` and `morph.js`.
 So a professional visitor downloads none of them. Otherwise it is the professional page,
 whatever was chosen: a phone never gets the room.
@@ -99,5 +99,5 @@ mouse about. He keeps the room's light off until he is ready, at most as long as
 Without WebGL 2, or if anything fails, there is no Willy and the room is as it was. Under
 reduced motion he sleeps.
 
-On the professional home he is the drawing peeking in (`docs/homes.md`). He is on no
+On the professional home he is the drawing peeking in (The professional home, above). He is on no
 other page: the playful pages have no cat.

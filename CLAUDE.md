@@ -32,11 +32,13 @@ home** (`index.html`'s `<div class="pro">`, `pro.css`, `pro/`), the default ever
   something else runs. Under reduced motion, unless the reader chose to animate anyway, nothing
   moves on its own: books arrive open, the About photo developed, no page transitions or opening
   moves, Willy sleeps and his peek is still. Scripts ask `reducedMotion()`, never `matchMedia`;
-  reduced-motion CSS starts with `:where(html:not(.motion-ok))`. This PC's Chrome reports reduced
-  motion by default: emulate `no-preference` to test motion (`docs/motion.md`).
+  reduced-motion CSS starts with `:where(html:not(.motion-ok))`. A long-lived Chrome may report
+  reduce: set the motion a test means with `b.media(...)`, as every check does (`docs/motion.md`).
 - Donate, playful and professional, names no project and never calls a closed project closed for
-  good; donation links point at `donate.html`; HomeBank's attribution is on `cloudbank.html`
-  only. Never invent biography: personal facts come from Carlo (`docs/content.md`).
+  good; donation links point at `donate.html`; it collects no payment details, its icons are drawn
+  in this repo, its packets come first and stay pinned; HomeBank's attribution is on
+  `cloudbank.html` only. Words: plain, first-person, no broader than the facts; never invent
+  biography, personal facts come from Carlo (`docs/content.md`).
 - The professional pages never link to the playful ones and load nothing of the room.
 - External links carry `rel="noopener"`. Keep the accessibility and 4.5:1 contrast in both
   schemes; product accents live once, in `:root` in `styles.css` (`docs/design.md`).

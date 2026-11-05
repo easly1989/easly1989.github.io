@@ -22,9 +22,9 @@ less motion. Animate anyway.", `aria-pressed`; on, "Animating. Respect my browse
 shown by `site.js` only where the browser asks for less motion or the choice is set. The playful
 pages have no button and follow the choice. `motion.js`, loaded (not deferred) in every page's
 head, after `styles.css` where there is one, holds the one answer. Two pages go without it:
-`terminal.html`, which stands alone and is rewritten by the kit outside the repo (`docs/computer.md`), so
-it keeps its own reduced-motion rules and the browser's answer, and `asf-notifier.html`, only a
-redirect.
+`terminal.html`, which stands alone and is rewritten by the kit outside the repo
+(`docs/computer.md`), so it keeps its own reduced-motion rules and the browser's answer, and
+`asf-notifier.html`, only a redirect.
 
 - **Scripts** ask `reducedMotion()`, never `matchMedia` for its `.matches`; `reducedMotion.query`
   is the browser's own query, for its `change` event. Each file that asks holds one line of

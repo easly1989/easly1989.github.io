@@ -18,9 +18,9 @@ page transitions or opening moves, Willy sleeps, and his peek on the professiona
 and all of it moving again once the reader chose to animate anyway (`docs/motion.md`).
 Then the checks in `checks/README.md`.
 
-**This PC's Chrome reports reduced motion by default** (Windows' animation effects are off):
-a check or a test of motion must emulate `prefers-reduced-motion: no-preference`, or Willy never
-walks and nothing moves.
+**A long-lived Chrome may report reduced motion** (Remote Desktop can leave one that way until
+it is fully quit): every check sets the motion it means with `b.media(...)`, and a test of motion
+must do likewise, or Willy never walks and nothing moves.
 
 Motion needs a browser that is actually painting. Willy, the books and every transition run per
 frame, so in a hidden, throttled or offscreen preview none of it appears to work while the
@@ -38,8 +38,9 @@ command during an earlier redesign; nothing was committed, so they had to be reb
 
 ## Structure
 
-- `index.html`: both homes (`docs/homes.md`). The room's mat is a 1280×880 stage, `.stage` inside `.fit`;
-  its inline `<style>` draws the objects (`.thing`), its templates hold the Write to me sheet,
+- `index.html`: both homes (`docs/homes.md`). The room's mat is a 1280×880 stage, `.stage`
+  inside `.fit`; its inline `<style>` draws the objects (`.thing`), its templates hold the Write
+  to me sheet,
   and inline scripts run the computer, the pager's screen, the contact sheet's `mailto:` URL
   and Willy's peek.
 - `pro.css`, `pro/`: the professional home's and pages' styles, and the pages, generated.
