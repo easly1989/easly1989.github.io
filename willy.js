@@ -280,11 +280,14 @@ export async function willy(room, stage, src = "assets/willy.glb") {
         mid = (i) => feet[i].top.clone().add(feet[i + 1].top).setZ(0).multiplyScalar(0.5),
         shoulders = mid(0),
         spine = shoulders.clone().sub(mid(2)),
-        span = spine.length(), // (no clip brings them nearer than 85 px)
+        // (on the floor no clip brings them nearer than 85 px, sitting to be petted; a clip that
+        // ever stood him on end would tilt him no more than over 80, and his heading's way)
+        span = Math.max(spine.length(), 80),
+        along = spine.lengthSq() > 1 ? spine.normalize() : new THREE.Vector3(Math.cos(r), Math.sin(r), 0),
         tilt = (front - hind) / span;
-      lift = front - (shoulders.dot(spine) / span) * tilt;
+      lift = front - shoulders.dot(along) * tilt;
       // (nose up is a turn the other way about his left)
-      holder.quaternion.setFromAxisAngle(new THREE.Vector3(-spine.y, spine.x, 0).divideScalar(span), -Math.atan(tilt)).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), r));
+      holder.quaternion.setFromAxisAngle(new THREE.Vector3(-along.y, along.x, 0), -Math.atan(tilt)).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), r));
       // tilted about the height of his shoulders and hips, which a tilt about his feet would
       // push back and forth, out of his legs' reach
       const pivot = new THREE.Vector3(0, 0, feet.reduce((n, f) => n + f.top.z, 0) / 4);

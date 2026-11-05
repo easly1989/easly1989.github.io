@@ -2184,11 +2184,11 @@
       heard.push(f);
     },
     ground: ground,
-    // what is low enough to walk over, and how high, by name
+    // what is low enough to walk over, each by name, how high and where on the desk
     lows: function () {
       solid();
       return lows.map(function (o) {
-        return [o.name, Math.round(o.b.z1)];
+        return { name: o.name, z: Math.round(o.b.z1), x0: o.b.x0, y0: o.b.y0, x1: o.b.x1, y1: o.b.y1 };
       });
     },
     // whether a shape, in bounds()'s form, goes into nothing solid, but what makes the

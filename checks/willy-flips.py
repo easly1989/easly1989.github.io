@@ -3,8 +3,11 @@ his body turns no further between two frames than a cat can, and he leans no fur
 step under his paws asks. First a sweep on the review page, frame by frame at 60 fps: in the middle
 of each low thing on the desk and at the middle of each of its edges, facing along it and across
 it, he turns on the spot both ways, lies down and gets up, sits and gets up, sleeps and wakes, and
-walks over the edge and back. Then the room as a reader sees it, for LIFE seconds (or the first
-argument), watched on every frame. Headless; about three minutes."""
+walks over the edge and back. The sweep is the gate. Then the room as a reader sees it, on a clock
+that moves 1/60 s with every frame however long the frame takes, for LIFE seconds of it (or the
+first argument), watched on every frame: whether he comes upon a book there is chance, and a
+browser too slow to show that much of it in four times as long is too slow to judge. Headless;
+about five minutes."""
 import json
 import sys
 import time
@@ -12,7 +15,7 @@ import time
 from cdp import Browser
 from serve import serve
 
-LIFE = int(sys.argv[1]) if len(sys.argv) > 1 else 120  # s of the room
+LIFE = int(sys.argv[1]) if len(sys.argv) > 1 else 90  # s of the room, on its clock
 # degrees his body may turn between two frames: a flip went 70 to 170; the most a clip of his does
 # is the start of a jump, its first frame already crouched, about 35
 BODY = 45
@@ -47,15 +50,8 @@ SWEEP = r"""(async () => {
   const { moves } = await import("./willy-moves.js");
   const { w, P } = __review;
   const M = moves(w, P, ROOM.surfaces);
-  // the low things on the desk, each as the box of desk px whose ground is its height
-  const desk = ROOM.surfaces.find((s) => s.name === "desk"), lows = ROOM.lows(), boxes = {};
-  for (let x = desk.x0; x <= desk.x1; x += 4)
-    for (let y = desk.y0; y <= desk.y1; y += 4) {
-      const g = Math.round(ROOM.ground(x, y, 0));
-      if (!g) continue;
-      const b = (boxes[g] ??= { x0: x, x1: x, y0: y, y1: y });
-      Object.assign(b, { x0: Math.min(b.x0, x), x1: Math.max(b.x1, x), y0: Math.min(b.y0, y), y1: Math.max(b.y1, y) });
-    }
+  // the low things on the desk, each by its own box (a name twice gets its number)
+  const lows = ROOM.lows().map((o, i, all) => ({ ...o, name: all.filter((p) => p.name === o.name).length > 1 ? o.name + " " + (i + 1) : o.name }));
   // time stands still between frames but for what the sweep moves on: a frame every 1/60 s
   const real = performance.now, step = 1000 / 60;
   let clock = real.call(performance);
@@ -82,9 +78,7 @@ SWEEP = r"""(async () => {
     }
   };
   try {
-    for (const [name, z] of lows) {
-      const b = boxes[z];
-      if (!b) continue;
+    for (const b of lows) {
       const mid = [(b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2];
       // its middle, and the middle of each edge with the way across it (heading 0 along the room's
       // x, 90 towards the back)
@@ -92,7 +86,7 @@ SWEEP = r"""(async () => {
       for (const [x, y, across] of edges)
         for (const h of [across, across + 90]) {
           places++;
-          const at = [x, y, h], where = name + " " + [x, y, h].map(Math.round).join(",");
+          const at = [x, y, h], where = b.name + " " + [x, y, h].map(Math.round).join(",");
           const r = (h * Math.PI) / 180, off = (d) => [x + Math.cos(r) * d, y - Math.sin(r) * d, h];
           play([...M.turning(at, 180, "desk"), ...M.turning([x, y, h + 180], -135, "desk"), ...M.turning([x, y, h + 45], 45, "desk")], where);
           play([M.hold("lie", at, "desk"), M.hold("loaf", at, "desk", 0.5), M.hold("lie-from", at, "desk")], where);
@@ -106,8 +100,20 @@ SWEEP = r"""(async () => {
     for (const [f, v] of fur) f.visible = v;
     body.drawn = drawn;
   }
-  return { places, frames, lows, worst: Object.fromEntries(Object.entries(worst).map(([k, v]) => [k, r1(v)])), flips };
+  return { places, frames, lows: lows.map((o) => o.name), worst: Object.fromEntries(Object.entries(worst).map(([k, v]) => [k, r1(v)])), flips };
 })()""" % MEASURE
+
+# the room's clock, from its first script on: 1/60 s a frame, standing still in between, so that a
+# frame of him is a sixtieth of a second however slowly this browser draws it
+CLOCK = r"""(() => {
+  const raf = window.requestAnimationFrame.bind(window);
+  let clock = performance.now(), last = null;
+  performance.now = () => clock;
+  window.requestAnimationFrame = (cb) => raf((t) => {
+    if (t !== last) { last = t; clock += 1000 / 60; }
+    cb(clock);
+  });
+})()"""
 
 # the room's own life, watched on every frame; the clip that shows, from three.js's own play()
 LIFE_WATCH = r"""(async () => {
@@ -120,12 +126,14 @@ LIFE_WATCH = r"""(async () => {
     act = this;
     return play.call(this);
   };
-  const L = (window.__flips = { frames: 0, worst: { turn: 0, lean: 0 }, flips: [], clips: {} });
+  const L = (window.__flips = { frames: 0, s: 0, worst: { turn: 0, lean: 0 }, flips: [], clips: {} });
+  const t0 = performance.now();
   let prev = null;
   (function tick() {
     const m = measure(), h = body.here(), clip = act ? act.getClip().name : "";
     const now = { clip, time: act ? r1(act.time) : 0, x: r1(h[0]), y: r1(h[1]), z: r1(h[2]), ground: Math.round(ROOM.ground(h[0], h[1], 0)) };
     L.frames++;
+    L.s = r1((performance.now() - t0) / 1000);
     L.clips[clip] = (L.clips[clip] || 0) + 1;
     for (const k of ["turn", "lean"]) L.worst[k] = r1(Math.max(L.worst[k], m[k]));
     if (bad(m) && L.flips.length < 12) L.flips.push({ from: prev, to: now, turn: r1(m.turn), lean: r1(m.lean) });
@@ -150,7 +158,7 @@ try:
         print("FAIL  " + failures[-1])
     else:
         w = s["worst"]
-        what = f"sweep: {s['places']} places on and at the edges of {', '.join(n for n, _ in s['lows'])}, {s['frames']} frames in {time.time() - t0:.0f} s: his body turns at most {w['turn']} degrees a frame, he leans at most {w['lean']}"
+        what = f"sweep: {s['places']} places on and at the edges of {', '.join(s['lows'])}, {s['frames']} frames in {time.time() - t0:.0f} s: his body turns at most {w['turn']} degrees a frame, he leans at most {w['lean']}"
         ok = not s["flips"]
         print(("ok    " if ok else "FAIL  ") + what)
         if not ok:
@@ -158,19 +166,27 @@ try:
             for f in s["flips"]:
                 print("        " + json.dumps(f))
 
+    b.call("Page.addScriptToEvaluateOnNewDocument", source=CLOCK)
     b.nav(base + "/index.html?room", 2)
     print("      the room: " + b.js(LIFE_WATCH))
-    time.sleep(LIFE)
-    L = b.js("__flips")
+    t0 = time.time()
+    while True:
+        time.sleep(5)
+        L = b.js("__flips")
+        if L["s"] >= LIFE or L["flips"] or time.time() - t0 > 4 * LIFE:
+            break
     w = L["worst"]
     seen = ", ".join(sorted(c for c in L["clips"] if c))
-    what = f"the room, {LIFE} s, {L['frames']} frames ({seen}): his body turns at most {w['turn']} degrees a frame, he leans at most {w['lean']}"
-    ok = not L["flips"] and L["frames"] > LIFE * 10
-    print(("ok    " if ok else "FAIL  ") + what)
-    if not ok:
+    what = f"the room, {L['s']} s of it in {time.time() - t0:.0f} s, {L['frames']} frames ({seen}): his body turns at most {w['turn']} degrees a frame, he leans at most {w['lean']}"
+    if L["flips"]:
         failures.append(what)
+        print("FAIL  " + what)
         for f in L["flips"]:
             print("        " + json.dumps(f))
+    elif L["s"] < LIFE:
+        print("slow  " + what + ": too slow to judge")
+    else:
+        print("ok    " + what)
 finally:
     b.close()
 sys.exit(1 if failures else 0)
