@@ -5,6 +5,12 @@ a deploy, and a release is a tag on the `main` that was live at that moment.
 
 ## Unreleased
 
+- **Archive:** a page of the public projects I no longer maintain (ffxiv_act_dfassist,
+  ffxiv_actor, coordinator-monitor and git-svn-merge), each linked to its repository on GitHub. In
+  the room it is a wastebasket on the floor by the right wall; on the professional pages it is a
+  row on the home and a link in every footer.
+- **coordinator-monitor** is no longer a project on the site: its page, its card and the crab on
+  the room's wall are gone, and it is listed in the Archive.
 - **Animate anyway:** a reader whose browser asks for reduced motion can choose to animate
   anyway, from a button in the footer of the professional pages. The choice is remembered, and
   Willy follows the pointer and the room moves; nothing changes for a reader who does not

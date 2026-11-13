@@ -19,7 +19,6 @@ MOVES = [
     (".thing.jar", "planora.html", ["planora"]),
     (".thing.envelope", "cupid.html", ["cupid"]),
     (".thing.pager", "asf-plugins.html", ["asf"]),
-    (".thing.plush", "coordinator-monitor.html", ["crab"]),
     (".thing.mug", "donate.html", ["puddle"]),
     (".thing.camera", "about.html", ["photo"]),
 ]

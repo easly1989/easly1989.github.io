@@ -38,6 +38,9 @@
   --chair-leg: #2c3338;
   --chair-mesh: #353e45;
   --tie: #b3343c;
+  --bin-wire: #3a4045;
+  --bin-in: #2a2f33;
+  --bin-paper: #f1eee6;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -49,6 +52,9 @@
     --chair-leg: #1e2428;
     --chair-mesh: #262d32;
     --tie: #a52f37;
+    --bin-wire: #23282b;
+    --bin-in: #14181a;
+    --bin-paper: #b9b6ae;
   }
   .iso .floor-plane {
     filter: brightness(0.55);
@@ -158,7 +164,6 @@
 .iso .thing.jar,
 .iso .thing.envelope,
 .iso .thing.pager,
-.iso .thing.plush,
 .iso .mug .cup,
 .iso .mug .puddle,
 .iso .camera .film,
@@ -1023,59 +1028,6 @@ html:not(.iso) .strip {
   translate: 0 0 14px;
   transform: scale(1.5) rotate(-3deg);
 }
-/* coordinator-monitor's crab, hung high on the back wall by its cup (room.js): its link is the
-   box round the toy below the cup, a hair off the wall; pointed at, it swings rather than lifting
-   (room-plush.js), and its name is on its tag */
-.iso .on-wall.hung > .thing.plush,
-.iso .on-wall.hung > .thing.plush:hover,
-.iso .on-wall.hung > .thing.plush:focus-visible {
-  position: absolute;
-  left: 0;
-  top: 56px;
-  width: 95px;
-  height: 110px;
-  translate: 0 0 2px;
-  transform: none;
-}
-.iso .thing.plush .label {
-  display: none;
-}
-.iso .thing.plush .plush-hit {
-  position: absolute;
-  left: -10px;
-  top: -16px;
-  width: 175px;
-  height: 170px;
-}
-/* its picture on the wall, where the model's canvas goes (assets/plush/plush.js, ON_WALL) */
-.iso .thing.plush .plush-pic {
-  width: 216px;
-  height: 216px;
-  background-image: url("assets/plush/plush-wall.png");
-  pointer-events: none;
-}
-/* tugged, the picture bounces on its cord: pulled down and back, twice, smaller */
-.iso .thing.plush.tugged .plush-pic {
-  animation: plush-tug 0.48s linear;
-}
-@keyframes plush-tug {
-  0%,
-  100% {
-    translate: 0 0;
-  }
-  12% {
-    translate: 0 7px;
-  }
-  34% {
-    translate: 0 -3px;
-  }
-  56% {
-    translate: 0 3px;
-  }
-  78% {
-    translate: 0 -1px;
-  }
-}
 
 /* ---- the photos the camera took: on the wall, or stuck on the computer ---------------- */
 .iso .snap {
@@ -1149,6 +1101,98 @@ html:not(.iso) .strip {
   height: 14px;
   background: rgba(240, 231, 204, 0.85);
   rotate: -3deg;
+}
+
+/* ---- the wastebasket in the floor's corner, the way to the archive (room.js) --------- */
+.iso .thing.bin,
+.iso .thing.bin:hover,
+.iso .thing.bin:focus-visible {
+  position: absolute;
+  display: block;
+  transform-origin: 50% 0;
+  transform: translateZ(var(--bz)) rotateX(-90deg);
+  translate: none;
+  border-radius: 10px;
+}
+.iso .thing.bin .label {
+  display: none;
+}
+.iso .thing.bin:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+/* its body: a round mesh shell in strips, crumpled sheets each one plane facing the reader */
+.iso .wastebasket,
+.iso .wastebasket span,
+.iso .wastebasket i {
+  position: absolute;
+  display: block;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+.iso .wastebasket,
+.iso .bin-body,
+.iso .bin-paper {
+  width: 0;
+  height: 0;
+}
+.iso .bin-body {
+  left: 0;
+  top: 0;
+  transform-origin: 0 0 0;
+}
+.iso .wastebasket .bin-wall {
+  left: 0;
+  top: 0;
+  transform-origin: 50% 0;
+}
+.iso .bin-floor {
+  border-radius: 50%;
+  background: var(--bin-in);
+}
+/* pointed at: it rocks on its foot and the sheets on top jostle, settling */
+.iso .wastebasket.rock .bin-body {
+  animation: bin-rock 0.9s ease-out both;
+}
+.iso .wastebasket.rock .jostle {
+  animation: bin-jostle 0.7s ease-out both;
+}
+.iso .wastebasket.rock .jostle.late {
+  animation-delay: 0.08s;
+}
+@keyframes bin-rock {
+  0% {
+    transform: none;
+  }
+  20% {
+    transform: rotate3d(1, -1, 0, 5deg);
+  }
+  45% {
+    transform: rotate3d(1, -1, 0, -3deg);
+  }
+  70% {
+    transform: rotate3d(1, -1, 0, 1.5deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+@keyframes bin-jostle {
+  0%,
+  100% {
+    translate: 0 0 0;
+  }
+  30% {
+    translate: 0 0 22px;
+  }
+  60% {
+    translate: 0 0 4px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .iso:where(:not(.motion-ok)) .wastebasket.rock :is(.bin-body, .jostle) {
+    animation: none;
+  }
 }
 
 /* ---- the tie over the chair's back, the way to the plain home (room.js) ------------- */

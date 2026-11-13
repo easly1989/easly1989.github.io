@@ -1,7 +1,7 @@
 # Tools
 
 `sync.py` writes each project's facts from `data/projects/<id>.json` into the pages, and the
-professional About and Donate from `data/pages/`. Python 3,
+professional About, Donate and Archive from `data/pages/`. Python 3,
 standard library only. Nothing runs at deploy: the pages it writes are committed, so the site
 stays plain static HTML that reads in full with scripts off.
 
@@ -44,7 +44,9 @@ in `pro/` with no data file is an error. Text that goes inside a link there (a r
 `lede`) may not hold an `<a>`.
 
 **About and Donate.** `data/pages/<name>.json` is the professional `pro/<name>.html`, written
-whole the same way: `about` and `donate`. Each has `title`, `description` and `summary` (the
+whole the same way: `about`, `donate` and `archive` (the public projects I no longer maintain: a
+section of `contacts`, each a repository's name, address and one line; the playful `archive.html`
+lists the same by hand, and `checks/data.py` compares them). Each has `title`, `description` and `summary` (the
 title, the description and `og:` tags), `status`, `name` and `lede` for its head, an optional
 `photo` (`file`, `width`, `height`, `alt`) and `links` (`label`, `href`, `primary`: its buttons,
 only ever out of the site), and `sections`, each with an `id`, a `heading`, any `text` (its

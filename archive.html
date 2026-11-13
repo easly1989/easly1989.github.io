@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Archive — Carlo Ruggiero</title>
+    <meta
+      name="description"
+      content="Public projects by Carlo Ruggiero that he no longer maintains, each with its repository on GitHub."
+    />
+    <meta name="theme-color" content="#22594b" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#12352d" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" type="image/svg+xml" href="logo.svg" />
+    <meta property="og:title" content="Archive — Carlo Ruggiero" />
+    <meta
+      property="og:description"
+      content="Public projects I no longer maintain, each with its repository on GitHub."
+    />
+    <meta property="og:type" content="website" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="motion.js"></script>
+    <style>
+      /* The bin's contents: a tag per repository, the way About lists what I've built. */
+      .bin-list {
+        position: relative;
+        z-index: 4;
+        width: min(48rem, calc(100% - 2rem));
+        margin: 2.5rem auto 4rem;
+        display: grid;
+        gap: 1.2rem;
+        list-style: none;
+        padding: 0;
+      }
+      .bin-list a {
+        display: block;
+        padding: 1rem 1.2rem 1.1rem 1.7rem;
+        background: var(--paper);
+        color: var(--paper-ink);
+        text-decoration: none;
+        box-shadow: 0 5px 12px rgba(0, 0, 0, 0.22);
+        clip-path: polygon(14px 0, 100% 0, 100% 100%, 14px 100%, 0 calc(100% - 14px), 0 14px);
+        transform: rotate(var(--r, 0deg));
+        transition: transform 0.25s var(--ease-spring);
+      }
+      .bin-list a:hover,
+      .bin-list a:focus-visible {
+        transform: rotate(0deg) translateY(-3px);
+      }
+      .bin-list b {
+        display: block;
+        font: 800 1.15rem "Bricolage Grotesque", sans-serif;
+      }
+      .bin-list a:hover b {
+        text-decoration: underline;
+      }
+      .bin-list span {
+        display: block;
+        margin-top: 0.3rem;
+        font-size: 0.95rem;
+        line-height: 1.45;
+      }
+      .end {
+        position: relative;
+        z-index: 4;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.8rem;
+        justify-content: center;
+        margin: 0 auto 4rem;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        :where(html:not(.motion-ok)) .bin-list a {
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body data-page="archive">
+    <div class="mat">
+      <svg class="guides" aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 100 100">
+        <line x1="0" y1="0" x2="100" y2="100" vector-effect="non-scaling-stroke" />
+      </svg>
+      <header class="bar">
+        <a href="index.html">Projects</a>
+        <a href="about.html">About</a>
+        <a href="donate.html">Donate</a>
+        <a href="https://github.com/easly1989" rel="noopener">GitHub</a>
+      </header>
+      <a class="crumb" href="index.html">Back to the bench</a>
+
+      <main>
+        <section class="paper label-sheet" style="--c: var(--paper-ink)">
+          <p class="state">No longer maintained.</p>
+          <h1>Archive</h1>
+          <p class="lede">Public projects I no longer maintain. The code is still on GitHub.</p>
+        </section>
+
+        <ul class="bin-list" aria-label="Repositories">
+          <li>
+            <a href="https://github.com/easly1989/ffxiv_act_dfassist" rel="noopener" style="--r: -0.6deg">
+              <b>ffxiv_act_dfassist</b>
+              <span>A Duty Finder Assist plugin for ACT, based on devunt's DFAssist. C#.</span>
+            </a>
+          </li>
+          <li>
+            <a href="https://github.com/easly1989/ffxiv_actor" rel="noopener" style="--r: 0.5deg">
+              <b>ffxiv_actor</b>
+              <span>A C# application that installs ACT and several plugins for Final Fantasy XIV, based on eai04191's Actor.</span>
+            </a>
+          </li>
+          <li>
+            <a href="https://github.com/easly1989/coordinator-monitor" rel="noopener" style="--r: -0.4deg">
+              <b>coordinator-monitor</b>
+              <span>A Claude Code mod: one pane for every local session, its subagents, and the permissions and questions that wait for you. TypeScript.</span>
+            </a>
+          </li>
+          <li>
+            <a href="https://github.com/easly1989/git-svn-merge" rel="noopener" style="--r: 0.7deg">
+              <b>git-svn-merge</b>
+              <span>A Python script that merges Git branches into an SVN trunk, with interactive conflict resolution.</span>
+            </a>
+          </li>
+        </ul>
+
+        <div class="end actions">
+          <a class="btn" href="index.html" style="--c: #f4f1ea; --on-c: #1d211f">See the projects</a>
+          <a class="btn" href="about.html" style="--c: transparent; --on-c: var(--ruler); box-shadow: inset 0 0 0 1.5px var(--ruler)">About me</a>
+        </div>
+      </main>
+    </div>
+    <script src="radio.js"></script>
+    <script src="site.js" defer></script>
+  </body>
+</html>
