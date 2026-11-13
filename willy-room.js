@@ -27,7 +27,7 @@ live()
 const LOOK_ABOUT = [3, 7];
 
 async function live() {
-  const [{ willy }, { planner }, { moves }, { pick, everyday }] = await Promise.all([import("./willy.js"), import("./willy-paths.js"), import("./willy-moves.js"), import("./willy-life.js")]);
+  const [{ willy }, { planner }, { moves }, { pick, everyday, reactions, react }] = await Promise.all([import("./willy.js"), import("./willy-paths.js"), import("./willy-moves.js"), import("./willy-life.js")]);
   await ROOM.ready;
   await ROOM.landed(); // (setting him up takes the main thread for a while, and the morph would stop for it)
   const w = await willy(room, stage);
@@ -41,13 +41,130 @@ async function live() {
   const free = (to) => fits(to, "walk") && [...Array(16).keys()].every((i) => fits({ ...to, heading: i * 22.5 }, "turn"));
   const between = ([a, b]) => a + Math.random() * (b - a);
 
-  // asleep on the cushion, along it, and nothing more
+  // The live line: one polite line, a few words a time, for what concerns the reader and no more.
+  // Cleared first, so that the same words twice still speak; at most one in a second and a half.
+  const voice = document.createElement("div");
+  voice.className = "vh willy-live";
+  voice.setAttribute("aria-live", "polite");
+  document.body.append(voice);
+  let spoke = 0;
+  const announce = (text) => {
+    if (performance.now() - spoke < 1500) return;
+    spoke = performance.now();
+    voice.textContent = "";
+    setTimeout(() => (voice.textContent = text), 60);
+  };
+
+  // His button: invisible, on him (willy.js, area()), the last Tab stop of the room. Fixed to the
+  // window, outside the room's frame, so that where he stands never changes how big the room is.
+  // It leaves the Tab order while he is wholly out of the window. The mouse reaches him through
+  // his own outline (the button lets the pointer through): a click on him is for him, whatever
+  // is under him.
+  const touch = document.createElement("button");
+  touch.type = "button";
+  touch.className = "willy-pet";
+  touch.setAttribute("aria-label", "Willy. You can pet him!");
+  touch.hidden = true;
+  document.body.append(touch);
+  let area = null;
+  const track = () => {
+    area = w.area();
+    const out = !(area.right > 0 && area.left < innerWidth && area.bottom > 0 && area.top < innerHeight);
+    touch.hidden = out || ![area.left, area.top, area.right, area.bottom].every(Number.isFinite);
+    if (!touch.hidden) Object.assign(touch.style, { left: area.left + "px", top: area.top + "px", width: area.right - area.left + "px", height: area.bottom - area.top + "px" });
+  };
+  const retrack = () => {
+    requestAnimationFrame(track);
+    setTimeout(track, 250); // (the room frames itself to its window a moment after the resize)
+  };
+  addEventListener("resize", retrack);
+  let petted = () => {};
+  addEventListener(
+    "click",
+    (e) => {
+      // (a click with no press behind it, from the keyboard or a screen reader, is on its target)
+      if (e.target !== touch && !(e.detail > 0 && area && !touch.hidden && area.hit(e.clientX, e.clientY))) return;
+      e.preventDefault();
+      e.stopPropagation();
+      petted();
+    },
+    true,
+  );
+
+  // his answers to being petted (willy-life.js): where he is, from the pose p he was caught in,
+  // and what he does about it; or null. A little fur is left on what he stands on.
+  const REACT = reactions({ w, P, M, SURF });
+  const tufts = [];
+  const fur = (at) => {
+    const tuft = document.createElement("i");
+    tuft.className = "fur-tuft";
+    tuft.setAttribute("aria-hidden", "true");
+    const x = at.x + between([-30, 30]),
+      y = at.y + between([-30, 30]);
+    tuft.style.transform = "translate3d(" + x + "px," + y + "px," + (SURF[at.surface].z + 1) + "px) rotate(" + between([0, 180]) + "deg)";
+    room.append(tuft);
+    tufts.push(tuft);
+    if (tufts.length > 3) tufts.shift().remove();
+  };
+  let lastReaction = null;
+  async function answer(p) {
+    const on = ROOM.surfaces.find((s) => Math.abs(s.z - p.z) < 0.5 && SURF[s.name]);
+    if (!on) return null;
+    const at = { surface: on.name, x: p.x, y: p.y, heading: ((p.h % 360) + 360) % 360 },
+      rest = /^(sleep|curl|uncurl)/.test(p.clip) ? "sleep" : /^(lie|wake|loaf|knead-lie|pet-lie|roll-over)/.test(p.clip) ? "lie" : null,
+      ctx = { where: at.surface, rest, fur },
+      state = { last: lastReaction, skip: new Set() };
+    for (let tries = 0; tries < 8; tries++) {
+      const a = react(REACT, ctx, state);
+      if (!a) break;
+      const r = await a.run(at, ctx);
+      const got = Array.isArray(r) ? { to: at, moments: r } : r;
+      if (got && got.moments.length) {
+        lastReaction = a.n;
+        announce(a.line);
+        return got;
+      }
+      state.skip.add(a.n);
+    }
+    return null;
+  }
+
+  // asleep on the cushion, along it, and nothing more; petted, he changes pose at once, and the
+  // live line says what he did
   if (reducedMotion()) {
     const bed = P.spot("perch", "sleep", Math.random, [0, 180]);
     if (!bed) throw new Error("no room on the cushion");
-    M.pose(M.hold("sleep-idle", bed, "perch").at(0));
-    w.draw(0);
-    addEventListener("resize", () => w.draw(0));
+    let now = M.hold("sleep-idle", bed, "perch").at(0);
+    const draw = () => {
+      M.pose(now);
+      w.draw(0);
+      track();
+    };
+    draw();
+    addEventListener("resize", () => {
+      w.draw(0);
+      retrack();
+    });
+    let busy = false;
+    petted = async () => {
+      if (busy) return;
+      busy = true;
+      try {
+        const r = await answer(now);
+        if (r) {
+          // (the middle of it, where he does what he does, and what it does to the room)
+          const total = r.moments.reduce((n, m) => n + m.dur, 0);
+          let s = total / 2,
+            i = 0;
+          while (i < r.moments.length - 1 && s > r.moments[i].dur) s -= r.moments[i++].dur;
+          if (r.moments[i].act) r.moments[i].act();
+          now = r.moments[i].at(Math.min(s, r.moments[i].dur));
+          draw();
+        }
+      } finally {
+        busy = false;
+      }
+    };
     return;
   }
 
@@ -136,10 +253,38 @@ async function live() {
     total = show.reduce((n, m) => n + m.dur, 0),
     t = 0,
     last = null,
-    drawn = "";
+    drawn = "",
+    pending = false,
+    blend = null; // the pose a reaction cut into, fading out as it takes over
+  // A click on him can come at any moment. His answer starts where he is: from the pose he was
+  // caught in, which fades into the answer's first (willy-moves.js, pose()) instead of jumping to
+  // it. In the air it waits for the landing. Meanwhile the next trip is not found, nor the frames
+  // run: the answer is worked out first, and he carries on if there is none.
+  const FADE = 0.3; // s
+  petted = () => (pending = true);
+  async function answering(time) {
+    const p = M.now(show, Math.min(t, total));
+    const r = await answer(p).catch((e) => (console.warn("Willy stays:", e), null));
+    if (r) {
+      says.classList.remove("on");
+      saying = 0;
+      ({ to: at, moments: show } = r);
+      total = show.reduce((k, m) => k + m.dur, 0);
+      t = 0;
+      cued = -1;
+      blend = { from: p, at: null };
+    }
+    last = null;
+    requestAnimationFrame(frame);
+  }
   // one frame: where the show has got to, drawn only if he is anywhere new; at its end, the
   // next trip is found while he holds his last pose (the page's frames go on meanwhile)
   function frame(time) {
+    if (pending && t < total && !/^jump/.test(M.now(show, t).clip)) {
+      pending = false;
+      answering(time);
+      return;
+    }
     const dt = last == null ? 0 : Math.min(0.05, (time - last) / 1000);
     last = time;
     t += dt;
@@ -149,6 +294,8 @@ async function live() {
       saying = 0;
       M.pose(show[show.length - 1].at(show[show.length - 1].dur));
       w.draw(0);
+      track();
+      blend = null;
       // (an action that fails leaves him looking about where he is, rather than frozen)
       next(at)
         .catch((e) => {
@@ -184,12 +331,16 @@ async function live() {
       w.look(gaze(p));
       lookAt = time + between(LOOKS) * 1000;
     }
-    const key = [p.x, p.y, p.z, p.h, p.clip, p.time].map((v) => (typeof v === "number" ? v.toFixed(2) : v)).join();
+    if (blend) blend.at ??= time;
+    const k = blend ? Math.min(1, (time - blend.at) / 1000 / FADE) : 1;
+    const key = [p.x, p.y, p.z, p.h, p.clip, p.time, k].map((v) => (typeof v === "number" ? v.toFixed(2) : v)).join();
     if (key !== drawn) {
-      M.pose(p);
+      M.pose(p, blend && blend.from, k);
       w.draw(0);
+      track();
       drawn = key;
     }
+    if (k === 1) blend = null;
     if (saying) {
       if (time > saying) {
         says.classList.remove("on");

@@ -123,16 +123,24 @@ export function moves(w, P, surfaces) {
   const under = (x, y, z) => Math.max(0, ...surfaces.filter((s) => s.z <= z && x >= s.x0 && x <= s.x1 && y >= s.y0 && y <= s.y1).map((s) => s.z));
   // him at a moment of a show: in his place (his root riding above the arc in the air, his
   // shadow on what is under him), and every clip set to its moment by hand
-  function pose(p) {
+  // from, the pose he was in a moment ago, fades into p over k, 0 to 1, where a reaction cuts into
+  // an action: both clips show, weighted, so his pose does not jump (both are where he stands)
+  function pose(p, from = null, k = 1) {
     if (p.clip === "jump-air") {
       const g = under(p.x, p.y, p.z);
       w.place(p.x, p.y, p.z + w.lift(p.time / dur(p.clip)), p.h, { z: g, by: p.z - g });
     } else w.place(p.x, p.y, p.z, p.h);
-    for (const [n, a] of Object.entries(w.clips)) if (n !== p.clip) a.stop();
-    const a = w.clips[p.clip];
-    a.play();
-    a.paused = true;
-    a.time = Math.min(p.time, dur(p.clip));
+    const blend = from && k < 1 && from.clip !== p.clip && !/^jump-air/.test(from.clip);
+    for (const [n, a] of Object.entries(w.clips)) if (n !== p.clip && !(blend && n === from.clip)) a.stop();
+    const set = (q, weight) => {
+      const a = w.clips[q.clip];
+      a.play();
+      a.paused = true;
+      a.time = Math.min(q.time, dur(q.clip));
+      a.setEffectiveWeight(weight);
+    };
+    set(p, blend ? k : 1);
+    if (blend) set(from, 1 - k);
   }
 
   return { dur, hold, turning, walking, jumping, pouncing, chasing, legs, go, now, pose };

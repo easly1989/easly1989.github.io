@@ -28,6 +28,7 @@ const LENGTH = 5.64;
 // which the arc does not know (cat-src/build.py prints them)
 const LIFT = [83.6, 155];
 const lift = (at) => LIFT[0] + (LIFT[1] - LIFT[0]) * at;
+const GIRTH = 30; // px, in the room's, from a bone to the edge of him: where a click lands on him
 const CLEAR = 4; // px he keeps from everything solid
 const OVER = 6; // px he may hang over the edge of what he stands on, being soft
 const LYING = 20; // and lying down or asleep, his paws and tail spilling over
@@ -198,6 +199,8 @@ export async function willy(room, stage, src = "assets/willy.glb") {
   const legs = LEGS.map((l) => l.map((n) => model.getObjectByName(THREE.PropertyBinding.sanitizeNodeName(n))));
   const legged = legs.every((l) => l.every(Boolean));
   const skull = model.getObjectByName("Head");
+  const bones = [];
+  model.traverse((o) => o.isBone && bones.push(o));
   // what of him the moon is looked for on: his head and along his back
   const torso = ["Head", "Spine.3", "Spine.2", "Spine.1", "Spine"].map((n) => model.getObjectByName(THREE.PropertyBinding.sanitizeNodeName(n))).filter(Boolean);
   // him cut out of the dark layer: his body drawn plain white into a canvas in it, where the
@@ -390,6 +393,35 @@ export async function willy(room, stage, src = "assets/willy.glb") {
     // a slow blink, s long; an ear turned
     blink: (s) => life?.blink(s),
     twitch: () => life?.twitch(),
+    // where he is on the screen, in the viewport's px: the box round him, and whether a point
+    // is on him (his bones, as thick as he is). As he was last drawn.
+    area() {
+      const r = cv.getBoundingClientRect(),
+        k = r.width / W,
+        v = new THREE.Vector3(),
+        pts = new Map();
+      for (const bn of bones) {
+        bn.getWorldPosition(v).project(cam);
+        pts.set(bn, [r.left + ((v.x + 1) / 2) * r.width, r.top + ((1 - v.y) / 2) * r.height]);
+      }
+      const R = GIRTH * k,
+        all = [...pts.values()],
+        segs = bones.filter((bn) => pts.has(bn.parent)).map((bn) => [pts.get(bn.parent), pts.get(bn)]);
+      return {
+        left: Math.min(...all.map((p) => p[0])) - R,
+        top: Math.min(...all.map((p) => p[1])) - R,
+        right: Math.max(...all.map((p) => p[0])) + R,
+        bottom: Math.max(...all.map((p) => p[1])) + R,
+        hit(x, y) {
+          return segs.some(([[ax, ay], [bx, by]]) => {
+            const dx = bx - ax,
+              dy = by - ay,
+              q = dx * dx + dy * dy ? Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy))) : 0;
+            return Math.hypot(x - ax - dx * q, y - ay - dy * q) <= R;
+          });
+        },
+      };
+    },
     // where the top of his head is on the screen, in the viewport's px
     head() {
       const v = skull.getWorldPosition(new THREE.Vector3());
