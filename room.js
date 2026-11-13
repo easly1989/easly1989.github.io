@@ -2221,11 +2221,14 @@
       heard.push(f);
     },
     ground: ground,
-    // what is low enough to walk over, each by name, how high and where on the desk
+    // the floor's height, where Willy lands off the desk's front edge
+    floor: FLOOR,
+    // what is low enough to walk over, each by name, how high and where on the desk, and its
+    // element
     lows: function () {
       solid();
       return lows.map(function (o) {
-        return { name: o.name, z: Math.round(o.b.z1), x0: o.b.x0, y0: o.b.y0, x1: o.b.x1, y1: o.b.y1 };
+        return { name: o.name, z: Math.round(o.b.z1), x0: o.b.x0, y0: o.b.y0, x1: o.b.x1, y1: o.b.y1, el: o.e };
       });
     },
     // whether a shape, in bounds()'s form, goes into nothing solid, but what makes the
