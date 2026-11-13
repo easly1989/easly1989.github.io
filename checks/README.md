@@ -19,6 +19,7 @@ python checks/radio.py
 python checks/dark.py
 python checks/peek.py
 python checks/willy-flips.py
+python checks/willy-pet.py
 python checks/motion.py
 python checks/data.py
 ```
@@ -102,6 +103,13 @@ of motion that forgets it measures a room in which Willy only sleeps.
   comes upon a book there is chance, so a pass there proves little; a browser that cannot show
   that much of it in four times as long prints `slow`, too slow to judge, and does not fail.
   Headless; about five minutes.
+
+- `willy-pet.py` — petting Willy: his button is labelled "Willy. You can pet him!", Tab reaches
+  him as the last stop and the next Tab leaves the page's stops; under reduced motion he stays
+  still and silent until petted, Enter on him and a click on him are answered by the polite live
+  line, a click elsewhere is not, and his label never changes; with the choice to animate anyway
+  he is petted four times mid-action, the line speaks each time and nothing throws. Headless; about
+  a minute.
 
 - `motion.py` — the reader's choice to animate anyway (`motion.js`), under reduced motion: with
   no choice the footer's button offers it and nothing of Willy's peek moves; clicked, it is pressed,

@@ -99,5 +99,18 @@ mouse about. He keeps the room's light off until he is ready, at most as long as
 Without WebGL 2, or if anything fails, there is no Willy and the room is as it was. Under
 reduced motion he sleeps.
 
+He can be petted. An invisible button (`.willy-pet`, labelled "Willy. You can pet him!", never
+relabelled) tracks his outline on screen, fixed to the window outside the room's frame, and is the
+room's last Tab stop; it is hidden, so out of the Tab order, while he is wholly out of the window.
+The button lets the pointer through: a click is his when it lands within his outline
+(`willy.js`, `area().hit`). One of fourteen reactions (`reactions()` in `willy-life.js`) answers, by
+where he is: on the cushion, asleep or lying, he only opens one eye; on the shelf he looks down. It
+cuts into whatever he is doing, from the pose he is in, which fades into the reaction
+(`pose(p, from, k)` in `willy-moves.js`); in the air it waits for the landing. A polite live line
+(`.willy-live`) says what he did, at most once in 1.5 s, and is for what concerns the reader:
+wandering and grooming are not announced. Under reduced motion he is still until petted, then
+changes pose at once. Peekaboo (#71) adds its reaction as a solo one in the same list.
+`checks/willy-pet.py` covers it.
+
 On the professional home he is the drawing peeking in (The professional home, above). He is on no
 other page: the playful pages have no cat.

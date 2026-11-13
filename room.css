@@ -2579,3 +2579,45 @@ html:not(.iso) .strip {
     animation: none;
   }
 }
+
+/* Willy's button: on him, drawn by willy-room.js, the room's last Tab stop. Nothing to see of it
+   but its focus ring; the pointer goes through it, since a click on him is told by his outline. */
+.willy-pet {
+  position: fixed;
+  z-index: 60;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  pointer-events: none;
+  border-radius: 24px;
+}
+/* the live line, out of the flow so that it never makes the page a pixel taller than the window */
+.willy-live {
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+.willy-pet[hidden] {
+  display: none;
+}
+.willy-pet:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 0;
+  box-shadow: 0 0 0 3px #1b1b1b;
+}
+/* a little of his fur on the desk, where he rubbed against the reader */
+.iso .fur-tuft {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 16px;
+  height: 6px;
+  border-radius: 50%;
+  background: #f4f1ea;
+  box-shadow:
+    5px -3px 0 -1px #e8e3d9,
+    -6px 2px 0 -1px #f4f1ea,
+    9px 3px 0 -2px #2a2a2a;
+  pointer-events: none;
+}
