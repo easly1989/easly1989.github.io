@@ -1121,7 +1121,7 @@ html:not(.iso) .strip {
   outline: 3px solid var(--focus);
   outline-offset: 3px;
 }
-/* its body: a round mesh shell in strips, crumpled sheets of three crossing planes */
+/* its body: a round mesh shell in strips, crumpled sheets each one plane facing the reader */
 .iso .wastebasket,
 .iso .wastebasket span,
 .iso .wastebasket i {

@@ -80,11 +80,14 @@ The wastebasket on the floor by the right wall (`.thing.bin`, "Archive") is the 
 `archive.html`, the public projects I no longer maintain. Its body is drawn by `room.js` like the
 chair's, and its link is one plane in front of it, as the tie's is, so it must stay inside the
 room's frame (`checks/framing.py`). It is a black wire-mesh basket, a round shell of lit strips
-like the mug's, with crumpled sheets inside; pointed at or focused it rocks on its foot and the
-sheets jostle (`bin-rock`), and under reduced motion it stays still. It stands in front of the
-desk's front-right leg, clear of it. It has no move and no morph: it is a plain link. The
-professional pages reach the same list through `pro/archive.html` (`data/pages/archive.json`), and
-`archive.html` lists by hand the repositories the data lists, which `checks/data.py` holds to it.
+like the mug's, with crumpled sheets inside. Its strips are plain rectangles that overlap towards
+the foot, not cut to taper with `clip-path`: each clipped plane in the 3D room is a layer of its
+own, and with the radio on, a few dozen of them drop frames. Pointed at or focused it rocks on
+its foot and the sheets jostle (`bin-rock`), and under reduced motion it stays still. It stands
+in front of the desk's front-right leg, clear of it. It has no move and no morph: it is a plain
+link. The professional pages reach the same list through `pro/archive.html`
+(`data/pages/archive.json`), and `archive.html` lists by hand the repositories the data lists,
+which `checks/data.py` holds to it.
 
 The loose desk items (pencil, eraser, clip, coin) are scenery, with no behaviour.
 
