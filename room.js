@@ -177,22 +177,75 @@
   tieLink.setAttribute("aria-label", "Plain version of this site: the professional home");
 
   // A wastebasket on the floor in the corner by the right wall, a few crumpled sheets in it: the
-  // way to the archive, the projects I no longer maintain. Its body is drawn here, like the
-  // chair's; its link (the bench's .thing.bin) is one plane in front of it, as the tie's is, with
-  // the tag of every object. It stands beside the desk's right end, out of Willy's way.
-  var BIN = { x: 1235, y: 1000, w: 110, d: 110, h: 190 };
-  var bin = el("span", "rbox bin", room, "left:" + BIN.x + "px;top:" + BIN.y + "px;width:" + BIN.w + "px;height:" + BIN.d + "px");
-  box(bin, { x: 0, y: 0, w: BIN.w, d: BIN.d, z: FLOOR, h: BIN.h, color: "var(--bin)" });
-  box(bin, { x: -6, y: -6, w: BIN.w + 12, d: BIN.d + 12, z: FLOOR + BIN.h, h: 14, color: "var(--bin-rim)" });
-  box(bin, { x: 8, y: 8, w: BIN.w - 16, d: BIN.d - 16, z: FLOOR + BIN.h + 14, h: 1, color: "var(--bin-in)" });
-  [[18, 22, 34, 20], [52, 40, 30, -35], [30, 58, 28, 50]].forEach(function (b) {
-    var ball = el("span", "rbox", bin, "left:" + b[0] + "px;top:" + b[1] + "px;width:" + b[2] + "px;height:" + b[2] + "px;transform:rotateZ(" + b[3] + "deg)");
-    box(ball, { x: 0, y: 0, w: b[2], d: b[2], z: FLOOR + BIN.h + 15, h: b[2] * 0.9, color: "var(--bin-paper)", r: 8 });
-  });
+  // way to the archive, the projects I no longer maintain. A black wire-mesh office basket, its
+  // rim and foot rolled solid, the sheets showing through the mesh. Its body is drawn here, like
+  // the chair's; its link (the bench's .thing.bin) is one plane in front of it, as the tie's is,
+  // with the tag of every object. It stands in front of the desk's front-right leg, clear of it,
+  // and out of Willy's way. BIN is the square it stands in, R0 and R1 its foot and rim radii.
+  // (its rim is 15 clear of the leg; further forward, its link would draw the room smaller)
+  var BIN = { x: 1210, y: 1020, w: 110, d: 110, h: 200 };
+  var R0 = 46, R1 = 60;
+  var bin = el("span", "wastebasket", room, "left:" + (BIN.x + BIN.w / 2) + "px;top:" + (BIN.y + BIN.d / 2) + "px;transform:translateZ(" + FLOOR + "px)");
+  var binBody = el("span", "bin-body", bin);
+  // a round shell standing on z = 0, r0 at its foot and r1 at its top, h high, in n upright
+  // strips, each lit as the way it faces (as the mug's wall is); bg(lit) is a strip's paint
+  function shell(host, o) {
+    var t = Math.atan((o.r1 - o.r0) / o.h), len = o.h / Math.cos(t);
+    var w1 = 2 * o.r1 * Math.sin(Math.PI / o.n) + 0.8, w0 = 2 * o.r0 * Math.sin(Math.PI / o.n) + 0.8;
+    var L = (50 - (50 * w0) / w1).toFixed(2), R = (50 + (50 * w0) / w1).toFixed(2);
+    for (var i = 0; i < o.n; i++) {
+      var a = (i * 360) / o.n, lit = 0.82 + 0.13 * Math.cos(((a - 135) * Math.PI) / 180);
+      var s = el("i", "bin-wall", host, "width:" + w1.toFixed(1) + "px;height:" + len.toFixed(1) + "px;margin-left:" + (-w1 / 2).toFixed(1) + "px;transform:translateZ(" + (o.z + o.h) + "px) rotateZ(" + a + "deg) translateY(" + o.r1 + "px) rotateX(" + (-90 - (t * 180) / Math.PI).toFixed(2) + "deg);clip-path:polygon(0 0, 100% 0, " + R + "% 100%, " + L + "% 100%);background:" + o.bg(o.inner ? lit - 0.3 : lit));
+      s.dataset.round = "0 0";
+    }
+  }
+  // a sheet crumpled into a ball: three crossing planes, each cut ragged and creased, so it
+  // reads as a ball from any side, as the light pass shades it
+  var CRUMPLE = [
+    "polygon(50% 0, 66% 9%, 88% 8%, 92% 30%, 100% 50%, 90% 68%, 86% 90%, 64% 92%, 48% 100%, 30% 90%, 10% 88%, 9% 66%, 0 46%, 11% 28%, 14% 8%, 34% 10%)",
+    "polygon(46% 0, 70% 6%, 92% 14%, 96% 38%, 100% 58%, 88% 78%, 74% 96%, 50% 92%, 28% 100%, 12% 84%, 2% 62%, 8% 40%, 0 22%, 22% 10%)",
+    "polygon(54% 0, 78% 12%, 98% 26%, 90% 48%, 98% 72%, 80% 88%, 58% 100%, 38% 90%, 16% 94%, 8% 72%, 0 52%, 10% 30%, 24% 6%)",
+  ];
+  var CREASE = "linear-gradient(118deg, transparent 38%, rgba(0,0,0,.13) 39% 41%, transparent 42%), linear-gradient(32deg, transparent 58%, rgba(0,0,0,.1) 59% 60.5%, transparent 61.5%), linear-gradient(200deg, transparent 22%, rgba(0,0,0,.09) 23% 24.5%, transparent 25.5%), ";
+  function paper(x, y, z, s, rz, rx, cls) {
+    var p = el("span", "bin-paper " + (cls || ""), binBody, "left:" + x + "px;top:" + y + "px;transform:translateZ(" + (z + s / 2) + "px) rotateZ(" + rz + "deg) rotateX(" + rx + "deg)");
+    ["", "rotateX(90deg)", "rotateY(90deg)"].forEach(function (r, i) {
+      el("i", "bin-sheet", p, "left:" + -s / 2 + "px;top:" + -s / 2 + "px;width:" + s + "px;height:" + s + "px;transform:" + r + " rotateZ(" + i * 37 + "deg);clip-path:" + CRUMPLE[i] + ";background:" + CREASE + shade("var(--bin-paper)", [0.97, 0.86, 0.78][i]));
+    });
+  }
+  function mesh(k) {
+    return "repeating-linear-gradient(60deg, " + shade("var(--bin-wire)", k) + " 0 1.6px, transparent 1.6px 9px), repeating-linear-gradient(-60deg, " + shade("var(--bin-wire)", k) + " 0 1.6px, transparent 1.6px 9px)";
+  }
+  el("i", "bin-floor", binBody, "left:" + -R0 + "px;top:" + -R0 + "px;width:" + 2 * R0 + "px;height:" + 2 * R0 + "px;transform:translateZ(1px)");
+  paper(-14, 6, 2, 46, 20, 10);
+  paper(18, -10, 2, 40, -30, 50);
+  paper(-4, -22, 30, 42, 70, -20);
+  paper(10, 14, 36, 38, 10, 30, "jostle");
+  paper(-16, -6, 64, 36, -50, 60, "jostle late");
+  // the mesh seen from inside, darker, then the outside with its rolled rim and foot
+  shell(binBody, { z: 0, h: BIN.h, r0: R0 - 1.5, r1: R1 - 1.5, n: 28, inner: true, bg: mesh });
+  shell(binBody, { z: 0, h: BIN.h, r0: R0, r1: R1, n: 28, bg: function (k) {
+    return "linear-gradient(" + shade("var(--bin-wire)", k + 0.1) + " 0 9px, transparent 9px calc(100% - 12px), " + shade("var(--bin-wire)", k - 0.05) + " calc(100% - 12px)), " + mesh(k);
+  } });
   var binLink = stage.querySelector(".thing.bin");
   if (binLink) {
     room.appendChild(binLink);
     binLink.style.cssText = "left:" + (BIN.x - 18) + "px;top:" + (BIN.y + BIN.d + 8) + "px;width:" + (BIN.w + 36) + "px;height:" + (BIN.h + 40) + "px;--bz:" + (FLOOR + BIN.h + 34) + "px";
+    // pointed at, or reached by keyboard, it rocks on its foot and the sheets in it jostle,
+    // settling (bin-rock, room.css). Not under reduced motion.
+    var rockBin = function () {
+      if (reducedMotion()) return;
+      bin.classList.remove("rock");
+      void bin.offsetWidth;
+      bin.classList.add("rock");
+    };
+    binLink.addEventListener("mouseenter", rockBin);
+    binLink.addEventListener("focus", function () {
+      if (binLink.matches(":focus-visible")) rockBin();
+    });
+    binBody.addEventListener("animationend", function (e) {
+      if (e.target === binBody) bin.classList.remove("rock");
+    });
   }
 
   var jar = stage.querySelector(".thing.jar");

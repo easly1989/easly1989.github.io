@@ -38,8 +38,7 @@
   --chair-leg: #2c3338;
   --chair-mesh: #353e45;
   --tie: #b3343c;
-  --bin: #8c9499;
-  --bin-rim: #6f787d;
+  --bin-wire: #3a4045;
   --bin-in: #2a2f33;
   --bin-paper: #f1eee6;
 }
@@ -53,8 +52,7 @@
     --chair-leg: #1e2428;
     --chair-mesh: #262d32;
     --tie: #a52f37;
-    --bin: #566066;
-    --bin-rim: #424b50;
+    --bin-wire: #23282b;
     --bin-in: #14181a;
     --bin-paper: #b9b6ae;
   }
@@ -1122,6 +1120,79 @@ html:not(.iso) .strip {
 .iso .thing.bin:focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 3px;
+}
+/* its body: a round mesh shell in strips, crumpled sheets of three crossing planes */
+.iso .wastebasket,
+.iso .wastebasket span,
+.iso .wastebasket i {
+  position: absolute;
+  display: block;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+.iso .wastebasket,
+.iso .bin-body,
+.iso .bin-paper {
+  width: 0;
+  height: 0;
+}
+.iso .bin-body {
+  left: 0;
+  top: 0;
+  transform-origin: 0 0 0;
+}
+.iso .wastebasket .bin-wall {
+  left: 0;
+  top: 0;
+  transform-origin: 50% 0;
+}
+.iso .bin-floor {
+  border-radius: 50%;
+  background: var(--bin-in);
+}
+/* pointed at: it rocks on its foot and the sheets on top jostle, settling */
+.iso .wastebasket.rock .bin-body {
+  animation: bin-rock 0.9s ease-out both;
+}
+.iso .wastebasket.rock .jostle {
+  animation: bin-jostle 0.7s ease-out both;
+}
+.iso .wastebasket.rock .jostle.late {
+  animation-delay: 0.08s;
+}
+@keyframes bin-rock {
+  0% {
+    transform: none;
+  }
+  20% {
+    transform: rotate3d(1, -1, 0, 5deg);
+  }
+  45% {
+    transform: rotate3d(1, -1, 0, -3deg);
+  }
+  70% {
+    transform: rotate3d(1, -1, 0, 1.5deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+@keyframes bin-jostle {
+  0%,
+  100% {
+    translate: 0 0 0;
+  }
+  30% {
+    translate: 0 0 22px;
+  }
+  60% {
+    translate: 0 0 4px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .iso:where(:not(.motion-ok)) .wastebasket.rock :is(.bin-body, .jostle) {
+    animation: none;
+  }
 }
 
 /* ---- the tie over the chair's back, the way to the plain home (room.js) ------------- */
