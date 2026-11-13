@@ -1,0 +1,36 @@
+{
+  "title": "Archive — Carlo Ruggiero",
+  "description": "Public projects by Carlo Ruggiero that he no longer maintains, each with its repository on GitHub.",
+  "summary": "Public projects I no longer maintain, each with its repository on GitHub.",
+  "status": "No longer maintained.",
+  "name": "Archive",
+  "lede": "Public projects I no longer maintain. The code is still on GitHub.",
+  "sections": [
+    {
+      "id": "repos",
+      "heading": "Repositories",
+      "contacts": [
+        {
+          "label": "ffxiv_act_dfassist",
+          "href": "https://github.com/easly1989/ffxiv_act_dfassist",
+          "text": "A Duty Finder Assist plugin for ACT, based on devunt's DFAssist. C#."
+        },
+        {
+          "label": "ffxiv_actor",
+          "href": "https://github.com/easly1989/ffxiv_actor",
+          "text": "A C# application that installs ACT and several plugins for Final Fantasy XIV, based on eai04191's Actor."
+        },
+        {
+          "label": "coordinator-monitor",
+          "href": "https://github.com/easly1989/coordinator-monitor",
+          "text": "A Claude Code mod: one pane for every local session, its subagents, and the permissions and questions that wait for you. TypeScript."
+        },
+        {
+          "label": "git-svn-merge",
+          "href": "https://github.com/easly1989/git-svn-merge",
+          "text": "A Python script that merges Git branches into an SVN trunk, with interactive conflict resolution."
+        }
+      ]
+    }
+  ]
+}

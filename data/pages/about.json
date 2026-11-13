@@ -1,7 +1,7 @@
 {
   "title": "About — Carlo Ruggiero",
   "description": "Carlo Ruggiero is a software developer with more than a decade of experience, currently a Full Stack Software Developer at TeamSystem. He builds self-hosted web apps and cross-platform mobile apps, mostly in Go.",
-  "summary": "A software developer. CloudBank, Social Contacts Sync, the ASF plugins, Planora, Nutreek, Cupid and coordinator-monitor.",
+  "summary": "A software developer. CloudBank, Social Contacts Sync, the ASF plugins, Planora, Nutreek and Cupid.",
   "status": "Full Stack Software Developer at TeamSystem.",
   "name": "Carlo Ruggiero",
   "lede": "I'm a passionate software developer with more than a decade of experience. I build self-hosted web apps and cross-platform mobile apps, mostly in Go.",
@@ -40,7 +40,7 @@
     {
       "id": "built",
       "heading": "What I've built",
-      "projects": ["cloudbank", "social-contacts-sync", "asf-plugins", "planora", "nutreek", "cupid", "coordinator-monitor"]
+      "projects": ["cloudbank", "social-contacts-sync", "asf-plugins", "planora", "nutreek", "cupid"]
     },
     {
       "id": "touch",

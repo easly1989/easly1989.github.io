@@ -367,6 +367,7 @@ def foot():
         '  <nav class="foot" aria-label="More">',
         '    <a href="about.html">About</a>',
         '    <a href="donate.html">Donate</a>',
+        '    <a href="archive.html">Archive</a>',
         f'    <a href="{GITHUB}" rel="noopener">GitHub</a>',
         "  </nav>",
         *MOTION,

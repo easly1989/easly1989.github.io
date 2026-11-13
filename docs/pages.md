@@ -43,7 +43,6 @@ The pairs are made by `view-transition-name`, one per page and unique on it; in 
 | `.jar .jar-idea` | `planora.html` `.label-sheet` | `planora` |
 | `.thing.envelope` | `cupid.html` `.env` | `cupid` |
 | `.thing.pager` | `asf-plugins.html` `.label-sheet` | `asf` |
-| `.thing.plush` | `coordinator-monitor.html` `.label-sheet` | `crab` |
 | `.mug .cup`, the coffee | `donate.html` `.spill .cup`, `.spill .puddle` | `mug`, `puddle` |
 | `.camera .film` | `about.html` `.instant` | `photo` |
 | `.pc .glass` | `terminal.html` `.crt` | `crt` |

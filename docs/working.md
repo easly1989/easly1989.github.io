@@ -54,7 +54,7 @@ command during an earlier redesign; nothing was committed, so they had to be reb
   `willy-review.js` (`?room&review`, a page for checking his clips); `assets/willy.glb`, built
   by `cat-src/` from a licensed model whose sources stay out of the repo (`cat-src/README.md`);
   three.js in `vendor/three`.
-- `about.html`, `asf-plugins.html`, `cloudbank.html`, `coordinator-monitor.html`, `cupid.html`,
+- `about.html`, `archive.html`, `asf-plugins.html`, `cloudbank.html`, `cupid.html`,
   `donate.html`, `nutreek.html`, `planora.html`, `social-contacts-sync.html`: the playful
   pages. `asf-notifier.html` is only a redirect to `asf-plugins.html#asf-notifier`. Each links
   `styles.css` and keeps its own layout in a small inline `<style>`, and any behaviour only it
@@ -64,9 +64,9 @@ command during an earlier redesign; nothing was committed, so they had to be reb
   opening moves where `morph.js` does not play them, and CloudBank's version from `versions.json`.
 - `terminal.html` and `crt.js`: the console behind the old computer, and the sounds both make.
 - The project marks: `logo.svg` (CloudBank, and the favicon of the pages about the person),
-  `asf-notifier.svg`, `asf-pluginconfig.svg`, `coordinator-monitor.svg`, `cupid.svg`,
+  `asf-notifier.svg`, `asf-pluginconfig.svg`, `cupid.svg`,
   `nutreek.svg`, `planora.svg`, `social-contacts-sync.svg`. `assets/` holds the screenshots,
-  `carlo.jpg`, the photos, the radio, the mouse and the crab (`assets/plush/README.md`).
+  `carlo.jpg`, the photos, the radio and the mouse.
 - `data/projects/`: one JSON file per project with every fact the pages show about it;
-  `tools/sync.py` writes them in (`tools/README.md`); `data/pages/`: what the professional About
-  and Donate say; `checks/`: the checks.
+  `tools/sync.py` writes them in (`tools/README.md`); `data/pages/`: what the professional About,
+  Donate and Archive say; `checks/`: the checks.

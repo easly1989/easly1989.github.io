@@ -198,7 +198,7 @@ for path in sorted((ROOT / "data" / "projects").glob("*.json")):
         found += problems(m, MEMBER, f"{path.stem}/{m.get('id')}")
     check(not found, f"{path.name} has every field, well formed", found)
     data[path.stem] = d
-check(len(data) >= 7, f"a data file per project ({len(data)})")
+check(len(data) >= 6, f"a data file per project ({len(data)})")
 
 
 # ---- the pages about the person: data/pages/<name>.json, each pro/<name>.html ------------------
@@ -259,7 +259,7 @@ for path in sorted((ROOT / "data" / "pages").glob("*.json")):
     d = json.loads(path.read_text(encoding="utf-8"))
     check(not page_problems(d, f"pages/{path.stem}"), f"pages/{path.name} has every field, well formed", page_problems(d, f"pages/{path.stem}"))
     people[path.stem] = d
-check(set(people) == {"about", "donate"}, f"a data file for the professional About and Donate ({', '.join(people)})")
+check(set(people) == {"about", "donate", "archive"}, f"a data file for the professional About, Donate and Archive ({', '.join(people)})")
 listed = [pid for s in people.get("about", {}).get("sections", []) for pid in s.get("projects", [])]
 check(sorted(listed) == sorted(data), "the professional About lists every project, once",
       [f"lists {listed}"] if sorted(listed) != sorted(data) else [])
@@ -315,7 +315,7 @@ check(not extra, "no page has a block it is not meant to have, or one twice", [f
 
 # ---- the licence: in the status line, and as the page's prose names it ---------------------
 LICENCE = re.compile(r"\b(?:AGPL|LGPL|GPL|MPL|MIT|BSD|Apache)(?:[- ]\d+(?:\.\d+)*)?(?:-or-later|-only)?(?: with the Commons Clause)?")
-ELSEWHERE = {"coordinator-monitor.html": {"MIT"}}  # the credits for adapted work
+ELSEWHERE = {}  # page -> licences its prose may name beyond its own, the credits for adapted work
 for pid, p in projects.items():
     lic = p.get("licence")
     if lic is not None:
@@ -385,8 +385,9 @@ loose = [f"{page}: {a}" for page, t in list(pro.items()) + [("index.html", home_
          for a in re.findall(r'<a\b[^>]*href="https?:[^>]*>', t) if 'rel="noopener"' not in a]
 check(not loose, 'every link from them out of the site carries rel="noopener"', loose)
 # the site's nav on each: Projects, About, Donate, the page itself marked (none on a project's)
+NAVIGATED = {"about", "donate"}  # the people pages the nav names; the Archive is reached from the footer
 NAV = re.compile(r'<nav class="site" aria-label="Site">(.*?)</nav>', re.S)
-navs = {f"pro/{i}.html": (t, f"{i}.html" if i in people else None) for i, t in pro.items()}
+navs = {f"pro/{i}.html": (t, f"{i}.html" if i in NAVIGATED else None) for i, t in pro.items()}
 navs["index.html"] = (home_pro, "index.html")
 off = []
 for page, (t, me) in navs.items():
@@ -395,6 +396,14 @@ for page, (t, me) in navs.items():
     if [n for _, _, n in items] != ["Projects", "About", "Donate"] or [h for h, c, _ in items if c] != ([me] if me else []):
         off.append(page)
 check(not off, "every professional page, and the home, has the site's nav, its own page marked", off)
+# the Archive: the professional pages and the home lead to it from their footers, and the playful
+# page lists the very repositories the data does, each a link out with rel="noopener"
+no_foot = [page for page, (t, _) in navs.items() if 'href="archive.html"' not in t and 'href="pro/archive.html"' not in t]
+check(not no_foot, "every professional page, and the home, has the Archive in its footer", no_foot)
+repos = [c for s in people.get("archive", {}).get("sections", []) for c in s.get("contacts", [])]
+shown = {m[0]: m[1] for m in re.findall(r'<a href="(https://github\.com/[^"]+)" rel="noopener"[^>]*>\s*<b>[^<]*</b>\s*<span>([^<]*)</span>', pages.get("archive.html", ""))}
+wrong = [c["label"] for c in repos if shown.get(c["href"]) is None or html.unescape(shown[c["href"]]).strip() != c["text"]]
+check(repos and not wrong and len(shown) == len(repos), f"archive.html lists the data's {len(repos)} repositories, each linked out with its text", wrong)
 unshown = [f"pro/{pid}.html: {s['file']}" for pid, d in data.items()
            for s in [s for m in [d] + d.get("members", []) for s in m.get("screenshots", [])]
            if f'src="../{s["file"]}"' not in pro.get(pid, "")]

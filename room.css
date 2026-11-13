@@ -38,6 +38,10 @@
   --chair-leg: #2c3338;
   --chair-mesh: #353e45;
   --tie: #b3343c;
+  --bin: #8c9499;
+  --bin-rim: #6f787d;
+  --bin-in: #2a2f33;
+  --bin-paper: #f1eee6;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -49,6 +53,10 @@
     --chair-leg: #1e2428;
     --chair-mesh: #262d32;
     --tie: #a52f37;
+    --bin: #566066;
+    --bin-rim: #424b50;
+    --bin-in: #14181a;
+    --bin-paper: #b9b6ae;
   }
   .iso .floor-plane {
     filter: brightness(0.55);
@@ -158,7 +166,6 @@
 .iso .thing.jar,
 .iso .thing.envelope,
 .iso .thing.pager,
-.iso .thing.plush,
 .iso .mug .cup,
 .iso .mug .puddle,
 .iso .camera .film,
@@ -1023,59 +1030,6 @@ html:not(.iso) .strip {
   translate: 0 0 14px;
   transform: scale(1.5) rotate(-3deg);
 }
-/* coordinator-monitor's crab, hung high on the back wall by its cup (room.js): its link is the
-   box round the toy below the cup, a hair off the wall; pointed at, it swings rather than lifting
-   (room-plush.js), and its name is on its tag */
-.iso .on-wall.hung > .thing.plush,
-.iso .on-wall.hung > .thing.plush:hover,
-.iso .on-wall.hung > .thing.plush:focus-visible {
-  position: absolute;
-  left: 0;
-  top: 56px;
-  width: 95px;
-  height: 110px;
-  translate: 0 0 2px;
-  transform: none;
-}
-.iso .thing.plush .label {
-  display: none;
-}
-.iso .thing.plush .plush-hit {
-  position: absolute;
-  left: -10px;
-  top: -16px;
-  width: 175px;
-  height: 170px;
-}
-/* its picture on the wall, where the model's canvas goes (assets/plush/plush.js, ON_WALL) */
-.iso .thing.plush .plush-pic {
-  width: 216px;
-  height: 216px;
-  background-image: url("assets/plush/plush-wall.png");
-  pointer-events: none;
-}
-/* tugged, the picture bounces on its cord: pulled down and back, twice, smaller */
-.iso .thing.plush.tugged .plush-pic {
-  animation: plush-tug 0.48s linear;
-}
-@keyframes plush-tug {
-  0%,
-  100% {
-    translate: 0 0;
-  }
-  12% {
-    translate: 0 7px;
-  }
-  34% {
-    translate: 0 -3px;
-  }
-  56% {
-    translate: 0 3px;
-  }
-  78% {
-    translate: 0 -1px;
-  }
-}
 
 /* ---- the photos the camera took: on the wall, or stuck on the computer ---------------- */
 .iso .snap {
@@ -1149,6 +1103,25 @@ html:not(.iso) .strip {
   height: 14px;
   background: rgba(240, 231, 204, 0.85);
   rotate: -3deg;
+}
+
+/* ---- the wastebasket in the floor's corner, the way to the archive (room.js) --------- */
+.iso .thing.bin,
+.iso .thing.bin:hover,
+.iso .thing.bin:focus-visible {
+  position: absolute;
+  display: block;
+  transform-origin: 50% 0;
+  transform: translateZ(var(--bz)) rotateX(-90deg);
+  translate: none;
+  border-radius: 10px;
+}
+.iso .thing.bin .label {
+  display: none;
+}
+.iso .thing.bin:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
 }
 
 /* ---- the tie over the chair's back, the way to the plain home (room.js) ------------- */

@@ -4,7 +4,7 @@
 
 - **The professional home**, the default for everyone on every device: a plain page
   with the name, one line, the reach links, a ruled row per project, About and a footer,
-  a professional page per project, `pro/<id>.html`, and the professional About and Donate,
+  a professional page per project, `pro/<id>.html`, and the professional About, Donate and Archive,
   `pro/about.html` and `pro/donate.html`.
 - **The room**, which a reader chooses from it: the bench, a cutting mat with one
   object per project, lying on a desk in an isometric room lit by a WebGL light pass,
@@ -61,7 +61,7 @@ first frame (`#room-ready` holds it), and framed to the window: it scales until 
 button in it fits with a margin. A new link in the room must sit inside that box, or the room
 is drawn smaller at every size: check `checks/framing.py` and the scale at 1280×720, 1440×900
 and 1920×1080. `room-light.js` is the light pass (it follows what moves, `MOVERS`),
-`room-mouse.js` the computer's mouse, `room-plush.js` the crab on the wall, `radio.js` the radio
+`room-mouse.js` the computer's mouse, `radio.js` the radio
 on the shelf (it carries on from page to page in a visit to the room), `photos.js` the camera's
 photos.
 
@@ -71,21 +71,17 @@ Each project is one object on the bench, and picking it up plays a move before i
 (`morph.js`): it rises straight up, turns to face the reader and morphs into its page's
 counterpart. The mug tips over and its coffee floods the view (the way to Donate), the instant
 camera fires its flash and ejects a print (the way to About), the sticky note peels off into
-the Write to me sheet, and the felt crab (Claude stuff), hung on the back wall by its suction
-cup, is tugged by its cord and bounces. Pointing at an object, or focusing it, brings out a
+the Write to me sheet. Pointing at an object, or focusing it, brings out a
 paper tag with its name. Shift, Ctrl or Cmd-click and reduced motion skip the move and just
 navigate. Coming back through the back/forward cache puts every object down again.
 
-A room object is `<a class="thing">` with `data-open="<move>"` and `data-open-ms`. The crab
-(`.thing.plush`) is drawn live by `room-plush.js` in a canvas flat on the wall, lit again by the
-room's light pass; without WebGL 2 its picture shows instead. Its canvas must stay short of the
-room's corner, and its link is the box round the toy but for the top of its far edge, which
-would make the room's frame smaller (`.plush-hit` makes up the 44 px). It is named "Claude
-stuff" and leads to `coordinator-monitor.html` for now. Pointing it at a hub page later means its
-`href` in `index.html`, the words that describe where it leads (its `aria-label` and small line,
-`home` in `data/projects/coordinator-monitor.json`, and the contact sheet's option), and the new
-page's morph entries (`morph.js` PAIRS and POSE, the page's `view-transition-name: crab`,
-`checks/moves.py`).
+A room object is `<a class="thing">` with `data-open="<move>"` and `data-open-ms`.
+The wastebasket on the floor by the right wall (`.thing.bin`, "Archive") is the way to
+`archive.html`, the public projects I no longer maintain. Its body is drawn by `room.js` like the
+chair's, and its link is one plane in front of it, as the tie's is, so it must stay inside the
+room's frame (`checks/framing.py`). It has no move and no morph: it is a plain link. The
+professional pages reach the same list through `pro/archive.html` (`data/pages/archive.json`), and
+`archive.html` lists by hand the repositories the data lists, which `checks/data.py` holds to it.
 
 The loose desk items (pencil, eraser, clip, coin) are scenery, with no behaviour.
 

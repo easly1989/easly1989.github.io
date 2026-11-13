@@ -9,11 +9,8 @@ that leaves content hidden unless something else runs.
 Non-user-triggered motion is Willy, the opening moves and the page transitions. Decoration does
 not loop forever: the mug's steam puffs three times and stops. The one exception, asked for: the
 pager's screen in the room changes its message every 8 to 25 s and runs a long one to its end
-and back; under reduced motion it shows one message, still, and in a hidden tab it waits. The
-crab on the room's wall swings a few times as the room arrives (about 2.5 s) and when it is
-pointed at, and comes to rest; once any object's move starts, or the computer is switched on, it
-settles in a few frames and stays still until the move is over. Under reduced motion it never
-moves. Willy's peek on the professional home moves only in answer to a mouse or the keyboard.
+and back; under reduced motion it shows one message, still, and in a hidden tab it waits.
+Willy's peek on the professional home moves only in answer to a mouse or the keyboard.
 
 **A reader may animate anyway.** "Under reduced motion" means: the browser asks for it and the
 reader did not choose otherwise. The choice is `localStorage` `site:motion` `"1"`, set by a button

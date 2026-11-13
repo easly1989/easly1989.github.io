@@ -18,7 +18,6 @@ ROOM.holdLight(new Promise((r) => (ready = r)));
 async function start() {
   await ROOM.ready;
   await ROOM.landed(); // (starting takes the main thread for a while, and the morph would stop for it)
-  await ROOM.plush?.settled; // (its picture is one of the room's faces only where its model is not drawn)
   THREE = await import("three");
   const stage = document.querySelector(".stage");
   const cv = document.createElement("canvas");
@@ -259,11 +258,11 @@ async function start() {
       if (!movers.has(f.mover)) movers.set(f.mover, { key: "", faces: [] });
       movers.get(f.mover).faces.push(f);
     }
-  // and the models drawn in canvases of their own, the mouse (room-mouse.js) and the plush
-  // (room-plush.js), each while it is there (its body), as solid as they are, where it is now;
+  // and the model drawn in a canvas of its own, the mouse (room-mouse.js), while it is there
+  // (its body), as solid as it is, where it is now;
   // and gone again with its body. Each is in the projector's beam by its sphere (its middle and
   // its size), or, without one, by 40 px round its origin (the mouse's)
-  const MODELS = [ROOM.mouse, ROOM.plush].filter(Boolean),
+  const MODELS = [ROOM.mouse].filter(Boolean),
     models = new Map();
   function follow() {
     let moved = false;
@@ -311,8 +310,6 @@ async function start() {
           was = at(me.matrix);
         me.matrix.copy(m);
         moved = true;
-        // (only swinging, the plush: a hair either way, its shadows left as they were until it rests)
-        if (mb.swinging) continue;
         cast = true;
         if (inBeam(was, r) || inBeam(at(m), r)) beam = true;
       }

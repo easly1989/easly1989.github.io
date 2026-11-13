@@ -2,8 +2,9 @@
 
 One page per project, `pro/<id>.html`, in the professional home's style (`../pro.css`). The
 professional home (`../index.html`, when the reader has not chosen the room) has one row per
-project, and each row leads here. Beside them are the professional About and Donate,
-`about.html` and `donate.html`. These pages never link to the playful pages.
+project, and each row leads here. Beside them are the professional About, Donate and Archive,
+`about.html`, `donate.html` and `archive.html` (the public projects I no longer maintain, reached
+from a row on the home and from every footer). These pages never link to the playful pages.
 
 **Every page here is generated.** `python tools/sync.py` writes each one whole from
 `data/projects/<id>.json`; do not edit them by hand, since the next run puts them back.
