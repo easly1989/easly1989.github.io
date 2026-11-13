@@ -119,8 +119,10 @@ export function moves(w, P, surfaces) {
     const m = moments[moments.length - 1];
     return m.at(m.dur);
   }
-  // the height of the highest surface under x, y that is no higher than z
-  const under = (x, y, z) => Math.max(0, ...surfaces.filter((s) => s.z <= z && x >= s.x0 && x <= s.x1 && y >= s.y0 && y <= s.y1).map((s) => s.z));
+  // the height of the highest surface under x, y that is no higher than z; or the floor, off the
+  // desk's front edge (room.js, ROOM.floor)
+  const floor = Math.min(0, globalThis.ROOM?.floor ?? 0);
+  const under = (x, y, z) => Math.max(z < 0 ? floor : 0, ...surfaces.filter((s) => s.z <= z && x >= s.x0 && x <= s.x1 && y >= s.y0 && y <= s.y1).map((s) => s.z));
   // him at a moment of a show: in his place (his root riding above the arc in the air, his
   // shadow on what is under him), and every clip set to its moment by hand
   // from, the pose he was in a moment ago, fades into p over k, 0 to 1, where a reaction cuts into
