@@ -1,0 +1,214 @@
+diff --git a/room.css b/room.css
+index e68234d..fc769b0 100644
+--- a/room.css
++++ b/room.css
+@@ -2594,3 +2594,83 @@ html:not(.iso) .strip {
+     9px 3px 0 -2px #2a2a2a;
+   pointer-events: none;
+ }
++
++/* ---- PROTOTYPE: wastebasket variants (?bin=a|b|c) ---- */
++:root {
++  --bin-wire: #3a4045;
++  --bin-enamel: #e3d7bd;
++  --bin-chrome: #b9bfc3;
++  --bin-weave: #b88752;
++  --bin-weave-in: #5b3f22;
++}
++@media (prefers-color-scheme: dark) {
++  :root {
++    --bin-wire: #23282b;
++    --bin-enamel: #9b8f76;
++    --bin-chrome: #7d8488;
++    --bin-weave: #7d5a35;
++    --bin-weave-in: #3a2814;
++  }
++}
++.iso .bin3, .iso .bin3 span, .iso .bin3 i, .iso .bin-web {
++  position: absolute; display: block; transform-style: preserve-3d; pointer-events: none;
++}
++.iso .bin3 { width: 0; height: 0; }
++.iso .bin-body { left: 0; top: 0; width: 0; height: 0; transform-origin: 0 0 0; }
++.iso .bin3 .bin-wall { left: 0; top: 0; transform-origin: 50% 0; }
++.iso .bin3 .bin-disc { border-radius: 50%; }
++.iso .bin3 .bin-paper { width: 0; height: 0; }
++.iso .bin-hinge { left: 0; top: 0; width: 0; height: 0; }
++.iso .bin-lid { left: 0; top: 0; width: 0; height: 0; transform: rotate3d(1, 0, 0, 7deg); transform-origin: 0 0 0; }
++.iso .bin-knob { left: -14px; width: 28px; height: 12px; border-radius: 6px 6px 2px 2px; background: color-mix(in srgb, var(--bin-chrome) 70%, black); transform-origin: 50% 0; }
++.iso .bin-pedal { left: 0; top: 0; width: 0; height: 0; }
++.iso .bin-web {
++  width: 150px; height: 120px; transform-origin: 0 0;
++  background:
++    radial-gradient(circle at 100% 0, transparent 0 18px, rgba(255,255,255,.35) 18.5px 19.5px, transparent 20px 38px, rgba(255,255,255,.3) 38.5px 39.5px, transparent 40px 60px, rgba(255,255,255,.25) 60.5px 61.5px, transparent 62px 86px, rgba(255,255,255,.2) 86.5px 87.5px, transparent 88px),
++    repeating-conic-gradient(from 180deg at 100% 0, rgba(255,255,255,.3) 0 0.6deg, transparent 0.6deg 15deg);
++  clip-path: polygon(100% 0, 0 0, 100% 100%);
++  -webkit-mask: radial-gradient(circle at 100% 0, #000 70%, transparent 100%);
++}
++/* A: pointed at, it rocks on its foot and the loose sheets in it jostle */
++.iso .bin-a.poked .bin-body { animation: bin-rock 0.9s ease-out both; }
++.iso .bin-a.poked .jostle { animation: bin-jostle 0.7s ease-out both; }
++.iso .bin-a.poked .j2 { animation-delay: 0.08s; }
++@keyframes bin-rock {
++  0% { transform: none; }
++  20% { transform: rotate3d(1, -1, 0, 5deg); }
++  45% { transform: rotate3d(1, -1, 0, -3deg); }
++  70% { transform: rotate3d(1, -1, 0, 1.5deg); }
++  100% { transform: none; }
++}
++@keyframes bin-jostle {
++  0%, 100% { translate: 0 0 0; }
++  30% { translate: 0 0 22px; }
++  60% { translate: 0 0 4px; }
++}
++/* B: pointed at, the pedal goes down and the lid swings up on its hinge, and back */
++.iso .bin-b .bin-lid { transition: transform 0.45s cubic-bezier(0.5, 0, 0.75, 0); }
++.iso .bin-b.poked .bin-lid { transform: rotate3d(1, 0, 0, 72deg); transition: transform 0.55s var(--ease-spring); }
++.iso .bin-b .bin-pedal { transition: transform 0.3s ease-out; }
++.iso .bin-b.poked .bin-pedal { transform: rotateZ(45deg) translateY(48px) translateZ(-5px) rotateX(-8deg); }
++.iso .bin-b .poke { transition: translate 0.5s var(--ease-spring) 0.15s; }
++.iso .bin-b.poked .poke { translate: 0 0 26px; }
++/* C: pointed at, the sheet on top hops out and drops back, the basket gives a little */
++.iso .bin-c.poked .hop { animation: bin-hop 0.9s ease-out both; }
++.iso .bin-c.poked .bin-body { animation: bin-give 0.9s ease-out both; }
++@keyframes bin-hop {
++  0% { translate: 0 0 0; rotate: 0deg; }
++  35% { translate: 6px 6px 70px; rotate: 0 0 1 40deg; }
++  70% { translate: 0 0 0; rotate: 0 0 1 70deg; }
++  82% { translate: 0 0 10px; }
++  100% { translate: 0 0 0; rotate: 0 0 1 80deg; }
++}
++@keyframes bin-give {
++  0%, 60% { transform: none; }
++  72% { transform: scale3d(1.02, 1.02, 0.97); }
++  86% { transform: scale3d(0.995, 0.995, 1.01); }
++  100% { transform: none; }
++}
++@media (prefers-reduced-motion: reduce) {
++  :where(html:not(.motion-ok)) .iso .bin3 *, :where(html:not(.motion-ok)) .iso .bin3 { animation: none !important; transition: none !important; }
++}
+diff --git a/room.js b/room.js
+index dda1065..1c8328c 100644
+--- a/room.js
++++ b/room.js
+@@ -180,19 +180,112 @@
+   // way to the archive, the projects I no longer maintain. Its body is drawn here, like the
+   // chair's; its link (the bench's .thing.bin) is one plane in front of it, as the tie's is, with
+   // the tag of every object. It stands beside the desk's right end, out of Willy's way.
+-  var BIN = { x: 1235, y: 1000, w: 110, d: 110, h: 190 };
+-  var bin = el("span", "rbox bin", room, "left:" + BIN.x + "px;top:" + BIN.y + "px;width:" + BIN.w + "px;height:" + BIN.d + "px");
+-  box(bin, { x: 0, y: 0, w: BIN.w, d: BIN.d, z: FLOOR, h: BIN.h, color: "var(--bin)" });
+-  box(bin, { x: -6, y: -6, w: BIN.w + 12, d: BIN.d + 12, z: FLOOR + BIN.h, h: 14, color: "var(--bin-rim)" });
+-  box(bin, { x: 8, y: 8, w: BIN.w - 16, d: BIN.d - 16, z: FLOOR + BIN.h + 14, h: 1, color: "var(--bin-in)" });
+-  [[18, 22, 34, 20], [52, 40, 30, -35], [30, 58, 28, 50]].forEach(function (b) {
+-    var ball = el("span", "rbox", bin, "left:" + b[0] + "px;top:" + b[1] + "px;width:" + b[2] + "px;height:" + b[2] + "px;transform:rotateZ(" + b[3] + "deg)");
+-    box(ball, { x: 0, y: 0, w: b[2], d: b[2], z: FLOOR + BIN.h + 15, h: b[2] * 0.9, color: "var(--bin-paper)", r: 8 });
+-  });
++  var BIN = { x: 1222, y: 1000, w: 110, d: 110, h: 200 };
++  var V = (new URLSearchParams(location.search).get("bin") || "a").toLowerCase();
++  var BC = { x: BIN.x + 55, y: BIN.y + 55 };
++  var bin = el("span", "bin3 bin-" + V, room, "left:" + BC.x + "px;top:" + BC.y + "px;transform:translateZ(" + FLOOR + "px)");
++  var body = el("span", "bin-body", bin);
++  // a round shell standing on z = 0, r0 at its foot and r1 at its top, h high, in n upright
++  // strips, each lit as the way it faces (as the mug's wall is); bg(lit) is a strip's paint
++  function shell(host, o) {
++    var t = Math.atan((o.r1 - o.r0) / o.h), len = o.h / Math.cos(t);
++    var w1 = 2 * o.r1 * Math.sin(Math.PI / o.n) + 0.8, w0 = 2 * o.r0 * Math.sin(Math.PI / o.n) + 0.8;
++    var L = (50 - (50 * w0) / w1).toFixed(2), R = (50 + (50 * w0) / w1).toFixed(2);
++    for (var i = 0; i < o.n; i++) {
++      var a = (i * 360) / o.n, lit = 0.82 + 0.13 * Math.cos(((a - 135) * Math.PI) / 180);
++      var s = el("i", "bin-wall " + (o.cls || ""), host, "width:" + w1.toFixed(1) + "px;height:" + len.toFixed(1) + "px;margin-left:" + (-w1 / 2).toFixed(1) + "px;transform:translateZ(" + (o.z + o.h) + "px) rotateZ(" + a + "deg) translateY(" + o.r1 + "px) rotateX(" + (-90 - (t * 180) / Math.PI).toFixed(2) + "deg);clip-path:polygon(0 0, 100% 0, " + R + "% 100%, " + L + "% 100%);background:" + o.bg(o.inner ? lit - 0.3 : lit, a));
++      s.dataset.round = "0 0";
++    }
++  }
++  function disc(host, r, z, bg, cls) {
++    return el("i", "bin-disc " + (cls || ""), host, "left:" + -r + "px;top:" + -r + "px;width:" + 2 * r + "px;height:" + 2 * r + "px;transform:translateZ(" + z + "px);background:" + bg);
++  }
++  // a sheet crumpled into a ball: three crossing planes, each cut ragged and creased, so it
++  // reads as a ball from any side, as the light pass shades it
++  var CRUMPLE = [
++    "polygon(50% 0, 66% 9%, 88% 8%, 92% 30%, 100% 50%, 90% 68%, 86% 90%, 64% 92%, 48% 100%, 30% 90%, 10% 88%, 9% 66%, 0 46%, 11% 28%, 14% 8%, 34% 10%)",
++    "polygon(46% 0, 70% 6%, 92% 14%, 96% 38%, 100% 58%, 88% 78%, 74% 96%, 50% 92%, 28% 100%, 12% 84%, 2% 62%, 8% 40%, 0 22%, 22% 10%)",
++    "polygon(54% 0, 78% 12%, 98% 26%, 90% 48%, 98% 72%, 80% 88%, 58% 100%, 38% 90%, 16% 94%, 8% 72%, 0 52%, 10% 30%, 24% 6%)",
++  ];
++  function paper(host, x, y, z, s, rz, rx, cls) {
++    var p = el("span", "bin-paper " + (cls || ""), host, "left:" + x + "px;top:" + y + "px;transform:translateZ(" + (z + s / 2) + "px) rotateZ(" + rz + "deg) rotateX(" + rx + "deg)");
++    var crease = "linear-gradient(118deg, transparent 38%, rgba(0,0,0,.13) 39% 41%, transparent 42%), linear-gradient(32deg, transparent 58%, rgba(0,0,0,.1) 59% 60.5%, transparent 61.5%), linear-gradient(200deg, transparent 22%, rgba(0,0,0,.09) 23% 24.5%, transparent 25.5%), ";
++    ["", "rotateX(90deg)", "rotateY(90deg)"].forEach(function (r, i) {
++      el("i", "bin-sheet", p, "left:" + -s / 2 + "px;top:" + -s / 2 + "px;width:" + s + "px;height:" + s + "px;transform:" + r + " rotateZ(" + i * 37 + "deg);clip-path:" + CRUMPLE[i] + ";background:" + crease + shade("var(--bin-paper)", [0.97, 0.86, 0.78][i]));
++    });
++    return p;
++  }
++  var H = BIN.h;
++  if (V === "a") {
++    // A: a wire-mesh office basket, black, its rim and foot rolled solid; the sheets inside
++    // show through the mesh
++    var R0 = 46, R1 = 60;
++    disc(body, R0, 1, "var(--bin-in)");
++    paper(body, -14, 6, 2, 46, 20, 10);
++    paper(body, 18, -10, 2, 40, -30, 50);
++    paper(body, -4, -22, 30, 42, 70, -20);
++    paper(body, 10, 14, 36, 38, 10, 30, "jostle j1");
++    paper(body, -16, -6, 64, 36, -50, 60, "jostle j2");
++    shell(body, { z: 0, h: H, r0: R0 - 1.5, r1: R1 - 1.5, n: 28, inner: true, bg: function (k) { return "repeating-linear-gradient(60deg, " + shade("var(--bin-wire)", k) + " 0 1.6px, transparent 1.6px 9px), repeating-linear-gradient(-60deg, " + shade("var(--bin-wire)", k) + " 0 1.6px, transparent 1.6px 9px)"; } });
++    shell(body, { z: 0, h: H, r0: R0, r1: R1, n: 28, bg: function (k) { return "linear-gradient(" + shade("var(--bin-wire)", k + 0.1) + " 0 9px, transparent 9px calc(100% - 12px), " + shade("var(--bin-wire)", k - 0.05) + " calc(100% - 12px)), repeating-linear-gradient(60deg, " + shade("var(--bin-wire)", k) + " 0 1.6px, transparent 1.6px 9px), repeating-linear-gradient(-60deg, " + shade("var(--bin-wire)", k) + " 0 1.6px, transparent 1.6px 9px)"; } });
++  } else if (V === "b") {
++    // B: a cream enamel pedal bin, as old as the radio, its lid shut on a sheet that keeps it
++    // ajar; pointed at, the pedal goes down and the lid swings up
++    var RB = 54;
++    disc(body, RB - 2, 1, "var(--bin-in)");
++    paper(body, -10, 4, 2, 50, 20, 10);
++    paper(body, 14, -14, 40, 46, -30, 50);
++    paper(body, -12, -10, 90, 48, 60, -20);
++    paper(body, 8, 10, 132, 44, 10, 30);
++    paper(body, -6, -4, 168, 40, -50, 60, "poke");
++    shell(body, { z: 0, h: H, r0: RB - 1.5, r1: RB - 1.5, n: 30, inner: true, bg: function (k) { return shade("var(--bin-enamel)", k); } });
++    shell(body, { z: 0, h: H, r0: RB, r1: RB, n: 30, bg: function (k) { return "linear-gradient(" + shade("var(--bin-chrome)", k + 0.08) + " 0 6px, " + shade("var(--bin-enamel)", k) + " 6px calc(100% - 18px), " + shade("var(--bin-chrome)", k - 0.05) + " calc(100% - 18px))"; } });
++    // the pedal, at the front
++    var ped = el("span", "bin-pedal", body, "transform:rotateZ(45deg) translateY(" + (RB - 6) + "px)");
++    box(ped, { x: -16, y: 0, w: 32, d: 34, z: 8, h: 7, color: "var(--bin-chrome)" });
++    // the lid, hinged at the back, towards the corner
++    var hinge = el("span", "bin-hinge", body, "transform:translateZ(" + H + "px) rotateZ(45deg) translateY(" + -RB + "px)");
++    var lid = el("span", "bin-lid", hinge);
++    for (var li = 0; li <= 6; li++) disc(lid, RB + 2 - (li > 4 ? (li - 4) * 6 : 0), li * 2 + (li > 4 ? (li - 4) * 3 : 0), shade("var(--bin-chrome)", 0.72 + li * 0.045)).style.marginTop = RB + "px";
++    el("i", "bin-knob", lid, "transform:translateY(" + (RB * 2 - 10) + "px) translateZ(18px) rotateX(-90deg)");
++  } else {
++    // C: a wicker basket, the desk's own warm brown, full past its rim; one sheet missed it and
++    // lies on the floor, and a cobweb joins it to the wall
++    var C0 = 44, C1 = 64, HC = 180;
++    disc(body, C0, 1, "var(--bin-weave-in)");
++    paper(body, -12, 6, 2, 46, 20, 10);
++    paper(body, 16, -12, 40, 44, -30, 50);
++    paper(body, -12, -10, 86, 46, 60, -20);
++    paper(body, 12, 8, 126, 44, 10, 30);
++    paper(body, -22, -14, 150, 42, -50, 60);
++    paper(body, 8, -6, 168, 40, 25, -40, "hop");
++    var weave = function (k) {
++      return "repeating-linear-gradient(90deg, rgba(40,20,0,.28) 0 2px, transparent 2px 13px), repeating-linear-gradient(0deg, " + shade("var(--bin-weave)", k - 0.12) + " 0 2px, " + shade("var(--bin-weave)", k) + " 2px 7px, " + shade("var(--bin-weave)", k + 0.06) + " 7px 9px)";
++    };
++    shell(body, { z: 0, h: HC, r0: C0 - 2, r1: C1 - 2, n: 28, inner: true, bg: weave });
++    shell(body, { z: 0, h: HC, r0: C0, r1: C1, n: 28, bg: weave });
++    // the braided rim
++    shell(body, { z: HC - 14, h: 16, r0: C1 + 1, r1: C1 + 3, n: 28, cls: "braid", bg: function (k) { return "repeating-linear-gradient(60deg, " + shade("var(--bin-weave)", k - 0.15) + " 0 3px, " + shade("var(--bin-weave)", k + 0.04) + " 3px 9px)"; } });
++    paper(bin, -40, 92, 0, 40, 40, 20, "fallen");
++    el("i", "bin-web", room, "left:" + (RIGHT - 2) + "px;top:" + (BC.y - 70) + "px;transform:translateZ(" + (FLOOR + HC + 40) + "px) rotateZ(90deg) rotateX(-90deg)");
++  }
+   var binLink = stage.querySelector(".thing.bin");
+   if (binLink) {
+     room.appendChild(binLink);
+     binLink.style.cssText = "left:" + (BIN.x - 18) + "px;top:" + (BIN.y + BIN.d + 8) + "px;width:" + (BIN.w + 36) + "px;height:" + (BIN.h + 40) + "px;--bz:" + (FLOOR + BIN.h + 34) + "px";
++    // pointed at, or reached by keyboard: A rocks and its sheets jostle, B opens, C's top
++    // sheet hops; not under reduced motion
++    var poke = function () {
++      if (reducedMotion()) return;
++      bin.classList.remove("poked");
++      void bin.offsetWidth;
++      bin.classList.add("poked");
++    };
++    binLink.addEventListener("mouseenter", poke);
++    binLink.addEventListener("focus", poke);
++    binLink.addEventListener("mouseleave", function () {
++      bin.classList.remove("poked");
++    });
+   }
+ 
+   var jar = stage.querySelector(".thing.jar");
