@@ -114,5 +114,20 @@ wandering and grooming are not announced. Under reduced motion he is still until
 changes pose at once. Peekaboo (#71) adds its reaction as a solo one in the same list.
 `checks/willy-pet.py` covers it.
 
+He is never in the way (`bothered()` in `willy-life.js`, wired in `willy-room.js`). A project
+object he walks over (`ROOM.lows()`) that the pointer is on or that has focus is never where he
+goes, with 40 px to spare round it. If he sits or lies on one, focus gets him up and off it at
+once, to the nearest free spot that is on no project object; the pointer resting 1.5 s on it does
+so seven times in ten, and if he stays, he stays until the pointer has left and come back. The
+link is clickable through him all along. Clicked three times in 5 s he trots off to a free spot
+far from where he was ("Willy moves away from you."), and now and then leaves instead; clicked
+five times he has had enough: he walks to the nearest stretch of the desk's front edge he can
+leap from, clear of the chair, leaps down to the floor (`ROOM.floor`), trots out of the window,
+and 25 to 35 s later comes back the same way, landing where he left ("Willy is back."). Leaving is
+also one of his everyday actions, rarely and at most once in 2 minutes. Sitting or lying down on a
+project object is said on the live line ("Willy sits on the CloudBank ledger."); what he does
+because the reader pestered him is said even within the line's 1.5 s. `checks/willy-way.py`
+covers it.
+
 On the professional home he is the drawing peeking in (The professional home, above). He is on no
 other page: the playful pages have no cat.

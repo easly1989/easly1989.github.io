@@ -20,6 +20,7 @@ python checks/dark.py
 python checks/peek.py
 python checks/willy-flips.py
 python checks/willy-pet.py
+python checks/willy-way.py
 python checks/motion.py
 python checks/data.py
 ```
@@ -110,6 +111,14 @@ of motion that forgets it measures a room in which Willy only sleeps.
   line, a click elsewhere is not, and his label never changes; with the choice to animate anyway
   he is petted four times mid-action, the line speaks each time and nothing throws. Headless; about
   a minute.
+
+- `willy-way.py` — Willy never in the way: sent to sit on the CloudBank ledger (through the
+  room's `willy` hook, as he would go on his own), it is said on the live line and a click on him
+  there reaches the ledger's link; focusing the ledger gets him up at once and off it, three times
+  of three, and while it has focus he never settles on it; the pointer resting on it moves him off
+  at least twice in six (seven in ten, by chance); clicked three times in 5 s he moves away, and
+  clicked five times he leaps off the desk's front edge to the floor, goes out of the window and
+  is back on the desk after more than 15 s, each said on the line. Headless; about three minutes.
 
 - `motion.py` — the reader's choice to animate anyway (`motion.js`), under reduced motion: with
   no choice the footer's button offers it and nothing of Willy's peek moves; clicked, it is pressed,

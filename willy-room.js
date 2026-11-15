@@ -27,7 +27,7 @@ live()
 const LOOK_ABOUT = [3, 7];
 
 async function live() {
-  const [{ willy }, { planner }, { moves }, { pick, everyday, reactions, react }] = await Promise.all([import("./willy.js"), import("./willy-paths.js"), import("./willy-moves.js"), import("./willy-life.js")]);
+  const [{ willy }, { planner }, { moves }, { pick, everyday, reactions, react, bothered }] = await Promise.all([import("./willy.js"), import("./willy-paths.js"), import("./willy-moves.js"), import("./willy-life.js")]);
   await ROOM.ready;
   await ROOM.landed(); // (setting him up takes the main thread for a while, and the morph would stop for it)
   const w = await willy(room, stage);
@@ -47,9 +47,10 @@ async function live() {
   voice.className = "vh willy-live";
   voice.setAttribute("aria-live", "polite");
   document.body.append(voice);
+  // (but what he does because the reader pestered him, said even so)
   let spoke = 0;
-  const announce = (text) => {
-    if (performance.now() - spoke < 1500) return;
+  const announce = (text, always = false) => {
+    if (performance.now() - spoke < 1500 && !always) return;
     spoke = performance.now();
     voice.textContent = "";
     setTimeout(() => (voice.textContent = text), 60);
@@ -168,11 +169,35 @@ async function live() {
     return;
   }
 
+  // Never in the way. The project objects he walks over (ROOM.lows()): one the reader points at or
+  // has focused is never where he goes; on one he sits or lies on, the pointer resting a moment
+  // usually moves him off, and focus always does, at once. Clicked again and again he moves away;
+  // clicked a lot he has had enough, and leaves off the desk's front edge for half a minute.
+  const OBJECTS = ROOM.lows().filter((o) => o.el && (o.el.matches("a[href]") || o.el.querySelector("a[href]")));
+  const named = (o) => {
+    const k = ["ledger", "agenda", "pager", "cards", "envelope"].find((c) => o.el.classList.contains(c));
+    return "the " + o.name + (k ? " " + k : "");
+  };
+  let pointed = null,
+    focused = null;
+  const avoid = () => [pointed, focused].filter(Boolean);
+  // the object he is on, at p, or null
+  const onObject = (p) => (p && p.z === SURF.desk.z ? OBJECTS.find((o) => p.x >= o.x0 && p.x <= o.x1 && p.y >= o.y0 && p.y <= o.y1) || null : null);
+  const MOVING = /^(walk|trot|run|sneak|chase|jump|turn|crouch)/;
+  const RESTING = (clip) => (/^(sleep|curl|uncurl|wake)/.test(clip) ? "sleep" : /^(lie|loaf|knead-lie|pet-lie|roll-over)/.test(clip) ? "lie" : /^(sit|pet-sit|groom|chatter)/.test(clip) ? "sit" : null);
+  const BOTHER = bothered({ w, P, M, SURF, avoid, objects: OBJECTS });
+  const PESTER = { within: 5000, away: 3, gone: 5, goneSometimes: 0.25 }; // ms, clicks
+  const REST_PTR = 1500, // ms the pointer rests before he may move
+    MOVES_OFF = 0.7; // how often he does
+  let clicks = [],
+    fleeing = false, // moving away from the reader, until that show ends
+    settledOn = null; // the object he last sat or lay down on, while he is still on it
+
   // looking about where he is a while
   const lookingAbout = (at) => [M.hold("idle", [at.x, at.y, at.heading], at.surface, between(LOOK_ABOUT) - M.dur("idle"), true)];
   // what he does next, from at, and where he ends up: one of his everyday actions he can do
   // there and now; or, if none can be, he looks about where he is
-  const ACTIONS = everyday({ w, P, M, SURF }),
+  const ACTIONS = everyday({ w, P, M, SURF, avoid }),
     ran = {};
   let done = null;
   async function next(at) {
@@ -261,13 +286,96 @@ async function live() {
   // it. In the air it waits for the landing. Meanwhile the next trip is not found, nor the frames
   // run: the answer is worked out first, and he carries on if there is none.
   const FADE = 0.3; // s
-  petted = () => (pending = true);
-  async function answering(time) {
+  petted = () => {
+    const now = performance.now();
+    clicks = clicks.filter((c) => now - c < PESTER.within).concat(now);
+    pending = "pet";
+  };
+  // what he does about what the reader did, from p: pestered, he moves away or leaves; petted, he
+  // answers (answer()); asked off the object he is on, he gets off it
+  async function bother(kind, p) {
+    if (kind.visit) return here(p) && BOTHER.visit(here(p), RESTING(p.clip), kind.visit, 60);
+    if (kind === "off") {
+      const o = onObject(p);
+      return o && (pointed === o || focused === o) && !MOVING.test(p.clip) ? BOTHER.off(here(p), RESTING(p.clip)) : null;
+    }
+    // (once he has had enough, nothing stops him)
+    if (fleeing === "gone") return null;
+    const n = clicks.length,
+      at = here(p);
+    if (at && (n >= PESTER.gone || (n >= PESTER.away && !fleeing && Math.random() < PESTER.goneSometimes))) {
+      const r = await BOTHER.gone(at, RESTING(p.clip));
+      if (r) {
+        clicks = [];
+        ran.leave = performance.now() / 1000; // (and he does not leave again on his own soon)
+        announce("Willy has had enough, and leaves for a while.", true);
+        return { ...r, fleeing: "gone" };
+      }
+    }
+    // (moving away already, he carries on)
+    if (fleeing && n < PESTER.gone) return null;
+    if (at && n >= PESTER.away) {
+      const r = await BOTHER.away(at, RESTING(p.clip));
+      if (r) {
+        announce("Willy moves away from you.", true);
+        return { ...r, fleeing: true };
+      }
+    }
+    return answer(p);
+  }
+  // where p is, as an action starts from it; or null, off every surface (on the floor)
+  const here = (p) => {
+    const s = ROOM.surfaces.find((s) => Math.abs(s.z - p.z) < 0.5);
+    return s ? { surface: s.name, x: p.x, y: p.y, heading: ((p.h % 360) + 360) % 360 } : null;
+  };
+  // The object the pointer rests on, or that has focus: if he sits or lies on it, focus moves
+  // him off at once, and the pointer, still a moment, mostly does; if he stays, he stays until
+  // the pointer has left it and come back.
+  let resting = 0,
+    tried = false;
+  const ask = () => {
+    if (!pending) pending = "off";
+  };
+  // (the pointer still a moment on the object, with him down on it)
+  const still = () => {
+    clearTimeout(resting);
+    if (tried) return;
+    resting = setTimeout(() => {
+      const p = M.now(show, Math.min(t, total)),
+        o = onObject(p);
+      if (!o || o !== pointed || MOVING.test(p.clip)) return;
+      tried = true;
+      if (Math.random() < MOVES_OFF) ask();
+    }, REST_PTR);
+  };
+  for (const o of OBJECTS) {
+    o.el.addEventListener("pointerenter", () => {
+      pointed = o;
+      tried = false;
+    });
+    o.el.addEventListener("pointermove", still);
+    o.el.addEventListener("pointerleave", () => {
+      clearTimeout(resting);
+      if (pointed === o) pointed = null;
+    });
+    o.el.addEventListener("focusin", () => {
+      focused = o;
+      ask();
+    });
+    o.el.addEventListener("focusout", () => {
+      if (focused === o) focused = null;
+    });
+  }
+  // (for the checks, checks/willy-way.py: where he is, and off to sit on a project object, by
+  // name, as he would on his own)
+  room.willy = { now: () => M.now(show, Math.min(t, total)), on: () => onObject(M.now(show, Math.min(t, total)))?.name || null, visit: (name) => (pending = { visit: OBJECTS.find((o) => o.name === name) }) };
+  async function answering(kind) {
     const p = M.now(show, Math.min(t, total));
-    const r = await answer(p).catch((e) => (console.warn("Willy stays:", e), null));
+    const r = await bother(kind, p).catch((e) => (console.warn("Willy stays:", e), null));
     if (r) {
       says.classList.remove("on");
       saying = 0;
+      fleeing = r.fleeing || false;
       ({ to: at, moments: show } = r);
       total = show.reduce((k, m) => k + m.dur, 0);
       t = 0;
@@ -281,8 +389,9 @@ async function live() {
   // next trip is found while he holds his last pose (the page's frames go on meanwhile)
   function frame(time) {
     if (pending && t < total && !/^jump/.test(M.now(show, t).clip)) {
+      const kind = pending;
       pending = false;
-      answering(time);
+      answering(kind);
       return;
     }
     const dt = last == null ? 0 : Math.min(0.05, (time - last) / 1000);
@@ -296,6 +405,7 @@ async function live() {
       w.draw(0);
       track();
       blend = null;
+      fleeing = false;
       // (an action that fails leaves him looking about where he is, rather than frozen)
       next(at)
         .catch((e) => {
@@ -326,6 +436,15 @@ async function live() {
       if (m.blink) w.blink(m.blink);
       if (m.twitch) w.twitch();
       if (m.act) m.act();
+      if (m.line) announce(m.line, true);
+      // sitting or lying down on a project object, said as he first settles on it
+      const on = onObject(p),
+        down = /^(sit|lie|sleep)$/.test(p.clip) && on;
+      if (down && down !== settledOn) announce("Willy " + (p.clip === "sit" ? "sits" : "lies down") + " on " + named(down) + ".");
+      if (down || !on) settledOn = down || null;
+      // and moved off it, at once if it has focus, or soon if the pointer rests on it
+      if (down && focused === down) ask();
+      else if (down && pointed === down) still();
     }
     if (time > lookAt) {
       w.look(gaze(p));

@@ -7,7 +7,8 @@
 // (willy-moves.js), or null when it cannot be done this time (no room for it, say). A moment may
 // carry cues for when it starts: say, [text, ms] in a bubble over his head; look, a point in the
 // room, "reader", "around" (somewhere about him) or null; blink, s of a slow blink; twitch, an ear;
-// act, something done to the room as it starts (the mouse knocked).
+// act, something done to the room as it starts (the mouse knocked); line, what the live line says.
+import { arc } from "./willy-paths.js";
 
 // one of actions, or null: where, the surface he is on; now, s; ran, when each last ran, s;
 // last, the one he did last; skip, those already tried this time that could not be done
@@ -24,8 +25,8 @@ export function pick(actions, { where, now, ran = {}, last = null, skip = new Se
 }
 
 // what the actions and the reactions are made of, for Willy w, his planner P and his moves M in a
-// room of surfaces SURF
-function kit({ w, P, M, SURF }) {
+// room of surfaces SURF, kept off the places avoid() names
+function kit({ w, P, M, SURF, avoid = () => [] }) {
   const between = ([a, b]) => a + Math.random() * (b - a),
     one = (list) => list[Math.floor(Math.random() * list.length)],
     xyh = (s, p) => ({ surface: s, x: p[0], y: p[1], heading: p[2] }),
@@ -38,15 +39,87 @@ function kit({ w, P, M, SURF }) {
     hold = (clip, at, extra = 0, loop = false) => M.hold(clip, here(at), at.surface, extra, loop),
     // a clip held looping for about s seconds
     stay = (clip, at, s) => hold(clip, at, Math.max(0, s - M.dur(clip)), true);
+  // whether to is clear of the places avoid() names, with room for him round it
+  const AVOID_BY = 40;
+  const clear = (to) => to.surface !== "desk" || !avoid().some((r) => to.x > r.x0 - AVOID_BY && to.x < r.x1 + AVOID_BY && to.y > r.y0 - AVOID_BY && to.y < r.y1 + AVOID_BY);
   // somewhere free on the desk, at least far px from at
   function spot(at, clip = "idle", far = 200) {
     for (let n = 0; n < 30; n++) {
       const p = P.spot("desk", clip);
       const to = p && xyh("desk", p);
-      if (to && free(to) && (at.surface !== "desk" || Math.hypot(to.x - at.x, to.y - at.y) >= far)) return to;
+      if (to && clear(to) && free(to) && (at.surface !== "desk" || Math.hypot(to.x - at.x, to.y - at.y) >= far)) return to;
     }
     return null;
   }
+
+  // Off the desk's front edge and out of the frame, for about s seconds, and back the same way:
+  // he walks to the nearest stretch of the edge he can leap from, clear of the chair, leaps down
+  // to the floor, trots out of the window, and later trots back, leaps up and lands where he
+  // left. lines are what the live line says as he goes and as he is back. Or null.
+  const FRONT_OUT = 260; // px past the edge he lands, on the floor
+  async function leaving(at, s, lines, gait = "walk") {
+    const D = SURF.desk,
+      floor = window.ROOM.floor,
+      H = 270; // facing the reader
+    const edges = [];
+    // (a grid's step back from the very edge: the planner ends a walk on its grid, up to 10 px
+    // either way, willy-paths.js)
+    const ok = (e) => fits(e, "walk") && fits(e, "idle") && clear(e);
+    for (let x = D.x0 + 120; x <= D.x1 - 120; x += 40)
+      for (let y = D.y1 - 60; y > D.y1 - 220; y -= 10) {
+        const e = xyh("desk", [x, y - 20, H]);
+        if (ok(xyh("desk", [x, y, H])) && ok(e)) {
+          edges.push(e);
+          break;
+        }
+      }
+    const downFrom = (e) => ({ from: [e.x, e.y, 0], to: [e.x, D.y1 + FRONT_OUT, floor], h0: H, h1: H });
+    // (clear air on the way down: the desk's legs, the chair; checked for every stretch before
+    // any route is looked for, as most routes cost far more)
+    const clearAir = (e) => {
+      const down = downFrom(e);
+      for (let f = 0.1; f < 0.96; f += 0.1) {
+        const q = arc(down, f);
+        if (!w.fits(q[0], q[1], q[2], H, "jump-air", { at: f, past: ["desk"] })) return false;
+      }
+      return w.fits(down.to[0], down.to[1], floor, H, "walk");
+    };
+    const near = edges.filter(clearAir).sort((a, b) => Math.hypot(a.x - at.x, a.y - at.y) - Math.hypot(b.x - at.x, b.y - at.y));
+    for (const e of near.slice(0, 6)) {
+      const down = downFrom(e);
+      // out of the window: on along the floor until all of him is below its bottom edge
+      let out = down.to[1];
+      while (out < down.to[1] + 3000 && window.ROOM.toScreen(e.x, out, floor + 200)[1] < innerHeight + 40) out += 50;
+      const route = at.surface === e.surface && at.x === e.x && at.y === e.y ? [] : await M.go(at, e);
+      if (!route) continue;
+      const trot = (from, to, h) => floorTrot([e.x, from, h], [e.x, to, h], floor);
+      const up = { from: [e.x, down.to[1], floor], to: [e.x, e.y, 0], h0: 90, h1: 90 };
+      const leap = M.jumping(down),
+        there = trot(down.to[1], out, H),
+        gone = M.hold("idle", [e.x, out, H], "desk", Math.max(0, s - 2 * there.dur)),
+        back = trot(out, down.to[1], 90),
+        home = M.jumping(up);
+      gone.at = ((g) => (t) => ({ ...g(t), z: floor }))(gone.at);
+      if (lines[0]) cue(leap[0], { line: lines[0] });
+      cue(home[2], { line: lines[1] });
+      const to = xyh("desk", [e.x, e.y, 90]);
+      return { to, moments: [...M.legs(route, gait), ...turnTo(e, H), ...leap, there, gone, back, ...home, stay("idle", to, 0.6)] };
+    }
+    return null;
+  }
+  // a turn on the spot to face h, if he is not facing it
+  const turnTo = (at, h) => {
+    const d = ((((h - at.heading + 180) % 360) + 360) % 360) - 180;
+    return Math.abs(d) < 1 ? [] : M.turning(here(at), d, at.surface);
+  };
+  // a trot in a straight line on the floor, from [x, y, h] to [x, y]
+  const floorTrot = (a, b, floor) => {
+    const len = Math.hypot(b[0] - a[0], b[1] - a[1]),
+      SPEED = 250,
+      STRIDE = 244.1,
+      d = M.dur("trot");
+    return { dur: len / SPEED, at: (t) => { const k = Math.min(1, t / (len / SPEED)); return { x: a[0] + (b[0] - a[0]) * k, y: a[1] + (b[1] - a[1]) * k, z: floor, h: a[2], clip: "trot", time: ((len * k) / STRIDE * d) % d }; } };
+  };
   // there from at, in that gait, and what he does there; or null
   async function going(at, to, gait, then) {
     const there = to && then(to),
@@ -77,12 +150,14 @@ function kit({ w, P, M, SURF }) {
   }
   const sitting = (at, s, c = {}) => settled(at, ["sit", { clip: "sit-idle", s, cue: c }, "sit-from"]);
 
-  return { between, one, xyh, here, fits, free, cue, hold, stay, spot, going, done, sitting, settled };
+  return { between, one, xyh, here, fits, free, cue, hold, stay, spot, going, done, sitting, settled, clear, leaving, turnTo };
 }
 
-// the actions, for Willy w, his planner P and his moves M in a room of surfaces SURF
-export function everyday({ w, P, M, SURF }) {
-  const { between, one, xyh, here, fits, free, cue, hold, stay, spot, going, done, sitting, settled } = kit({ w, P, M, SURF });
+// the actions, for Willy w, his planner P and his moves M in a room of surfaces SURF; avoid()
+// names the places on the desk he does not go to now (willy-room.js: an object the reader points
+// at or has focused)
+export function everyday({ w, P, M, SURF, avoid }) {
+  const { between, one, xyh, here, fits, free, cue, hold, stay, spot, going, done, sitting, settled, clear, leaving } = kit({ w, P, M, SURF, avoid });
   return [
     { n: "wander", w: 10, where: ["desk"], run: (at) => going(at, spot(at), "walk", (to) => [stay("idle", to, between([0.6, 1.5]))]) },
     { n: "trot", w: 4, where: ["desk"], run: (at) => going(at, spot(at, "sit"), "trot", (to) => sitting(to, between([1.5, 3]))) },
@@ -153,7 +228,7 @@ export function everyday({ w, P, M, SURF }) {
           ahead = (k) => [at.x + Math.cos(r) * 150 * k, at.y - Math.sin(r) * 150 * k];
         if (![0.5, 1].every((k) => w.fits(...ahead(k), SURF.desk.z, at.heading, "walk", { on: SURF.desk }))) return null;
         const to = xyh("desk", [...ahead(1), at.heading]);
-        const then = sitting(to, 1);
+        const then = clear(to) && sitting(to, 1);
         return then && { to, moments: [...M.pouncing(here(at), 150, "desk"), ...then] };
       },
     },
@@ -183,7 +258,7 @@ export function everyday({ w, P, M, SURF }) {
           if (!fits(from, "walk") || !fits(from, "crouch")) continue;
           if (![0.5, 1].every((k) => w.fits(...ahead(k), SURF.desk.z, heading, "walk", { on: SURF.desk }))) continue;
           const land = xyh("desk", [...ahead(1), heading]),
-            then = sitting(land, between([1.5, 2.5]));
+            then = clear(land) && sitting(land, between([1.5, 2.5]));
           if (!then) continue;
           cue(then[0], { act: () => mouse.knock(heading), look: [mx, my, mz] });
           return going(at, from, "walk", (to) => {
@@ -227,7 +302,7 @@ export function everyday({ w, P, M, SURF }) {
         while (d < 400 && w.fits(at.x + Math.cos(r) * (d + 20), at.y - Math.sin(r) * (d + 20), SURF.desk.z, h, "walk", { on: SURF.desk })) d += 20;
         if (d < 160) return null;
         const to = xyh("desk", [at.x + Math.cos(r) * d, at.y - Math.sin(r) * d, h]);
-        const then = sitting(to, 1.2);
+        const then = clear(to) && sitting(to, 1.2);
         return then && { to, moments: [...M.walking([here(at), [at.x, at.y, h], here(to)], "desk", { d: 0 }, "sneak"), ...then] };
       },
     },
@@ -259,7 +334,66 @@ export function everyday({ w, P, M, SURF }) {
     },
     { n: "chatter at the birds", w: 3, where: ["perch"], run: (at) => done(at, settled(at, ["sit", { clip: "chatter", s: 0, cue: { look: "window", say: ["ek-ek-ek", 1600] } }, "sit-from"])) },
     { n: "back to the desk", w: 10, where: ["perch", "shelf"], run: (at) => going(at, spot(at, "sit"), "walk", (to) => sitting(to, between([3, 8]))) },
+    // now and then, off the desk's front edge and out of the frame a while, and back
+    { n: "leave", w: 2, cool: 120, where: ["desk"], run: (at) => leaving(at, between([15, 35]), ["Willy leaves for a while.", "Willy is back."]) },
   ];
+}
+
+// Never in the way: what he does when the reader wants him elsewhere, each { to, moments } or
+// null, from the pose p he was caught in at at (getting up first, if he is down). pestered a
+// little, off to the free spot on the desk furthest from where he is; pestered a lot, off the
+// front edge for half a minute; moved off, to the nearest free spot clear of what avoid() names,
+// when the object he is on is pointed at or focused.
+export function bothered({ w, P, M, SURF, avoid, objects = [] }) {
+  const { between, xyh, hold, stay, spot, going, sitting, clear, leaving, free } = kit({ w, P, M, SURF, avoid });
+  const UP = { sleep: "wake", lie: "lie-from", sit: "sit-from" };
+  // getting up from how he was caught, as a moment, or none
+  const up = (at, rest) => (rest && UP[rest] ? [hold(UP[rest], at)] : []);
+  const after = (at, rest, r) => r && { to: r.to, moments: [...up(at, rest), ...r.moments] };
+  return {
+    async away(at, rest) {
+      const far = [];
+      for (let n = 0; n < 12; n++) {
+        const to = spot(at, "sit", 300);
+        if (to) far.push(to);
+      }
+      far.sort((a, b) => Math.hypot(b.x - at.x, b.y - at.y) - Math.hypot(a.x - at.x, a.y - at.y));
+      for (const to of far.slice(0, 4)) {
+        const r = await going(at, to, "trot", (to) => sitting(to, between([1.5, 3]), { look: "around" }));
+        if (r) return after(at, rest, r);
+      }
+      return null;
+    },
+    async gone(at, rest) {
+      return after(at, rest, await leaving(at, between([25, 35]), [null, "Willy is back."], "trot"));
+    },
+    async off(at, rest) {
+      const near = [];
+      for (let n = 0; n < 80 && near.length < 12; n++) {
+        const p = P.spot("desk", "sit");
+        const to = p && xyh("desk", p);
+        // (and onto none of the others: he would only be in the way there)
+        const then = to && clear(to) && !objects.some((r) => to.x >= r.x0 && to.x <= r.x1 && to.y >= r.y0 && to.y <= r.y1) && free(to) && sitting(to, between([2, 4]), { look: "reader" });
+        if (then) near.push({ to, then });
+      }
+      near.sort((a, b) => Math.hypot(a.to.x - at.x, a.to.y - at.y) - Math.hypot(b.to.x - at.x, b.to.y - at.y));
+      for (const { to, then } of near.slice(0, 8)) {
+        const r = await going(at, to, "walk", () => then);
+        if (r) return after(at, rest, r);
+      }
+      return null;
+    },
+    // (for the checks: to a spot on the box r, there to sit s seconds; or null)
+    async visit(at, rest, r, s) {
+      for (let n = 0; n < 200; n++) {
+        const to = xyh("desk", [Math.round(r.x0 + Math.random() * (r.x1 - r.x0)), Math.round(r.y0 + Math.random() * (r.y1 - r.y0)), Math.round(Math.random() * 24) * 15]);
+        const there = free(to) && sitting(to, s);
+        const go = there && (await going(at, to, "walk", () => there));
+        if (go) return after(at, rest, go);
+      }
+      return null;
+    },
+  };
 }
 
 // How he answers being petted: the click, or Enter on his button. One of fourteen reactions, picked
