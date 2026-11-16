@@ -504,13 +504,15 @@
   }
   // the room-space box round an element and everything in it (z up from the mat)
   var BODYLESS = /\b(shade|anchor|burst|cam-out|film|pc-mouse-cord|pg-msg)\b/;
-  function bounds(root) {
+  // (but the parts skip(e) says are not this thing's)
+  function bounds(root, skip) {
     var b = { x0: 1e9, y0: 1e9, z0: 1e9, x1: -1e9, y1: -1e9, z1: -1e9, parts: [] },
       memo = new Map();
     [root].concat([].slice.call(root.querySelectorAll("*"), 0, 600)).forEach(function (e) {
       // the blurred shadow on the mat is light, not body, and so is the flash's burst; the
       // camera's print waits inside it; the pager's message runs on past its screen, clipped
       if (!(e instanceof HTMLElement) || !e.offsetWidth || BODYLESS.test(e.className)) return;
+      if (skip && skip(e)) return;
       if (e.closest(".pc-mouse")) return; // (its patch stands for it: mouse-patch)
       if (getComputedStyle(e).visibility === "hidden") return;
       var m = toStage(e, memo);
@@ -1982,6 +1984,30 @@
     { name: "perch", z: PERCH.z + 26, x0: PERCH.x, y0: BACK, x1: PERCH.x + PERCH.w, y1: BACK + PERCH.d, of: ".perch, .perch-fleece" },
     { name: "shelf", z: SHELF.z, x0: RIGHT - SHELF.w, y0: SHELF.y, x1: RIGHT, y1: SHELF.y + SHELF.d, of: ".wall-shelf, .shelf-bracket" },
   ];
+  // the keyboard's own parts, its keys and the rim round it: low enough to walk over, it is a
+  // thing of its own, apart from the case
+  function keyboard(e) {
+    return !!kb && (kb.contains(e) || (e.classList.contains("rim") && e.parentNode === pcCase));
+  }
+  // (and the case's: neither its own box nor the shadow under it, which reach under the keyboard)
+  function pcBody(e) {
+    return e !== pcCase && !e.classList.contains("floor") && !keyboard(e);
+  }
+  // the computer's top, with Cupid's letter on it, the warm monitor he sleeps on, square to the
+  // room though the case stands a little turned: half way between its corners, so that at them he
+  // hangs over its edge a little, as a cat on a monitor does. The case still hides him behind it
+  // (cover), though he stands on it.
+  var pcTop = pcCase && pcCase.querySelector(".top");
+  if (pcTop) {
+    var tm = toStage(pcTop),
+      tq = [[0, 0], [pcTop.offsetWidth, 0], [pcTop.offsetWidth, pcTop.offsetHeight], [0, pcTop.offsetHeight]].map(function (c) {
+        var p = tm.transformPoint(new DOMPoint(c[0], c[1], 0));
+        return [p.x, p.y];
+      }),
+      xs = tq.map(function (p) { return p[0]; }).sort(function (a, b) { return a - b; }),
+      ys = tq.map(function (p) { return p[1]; }).sort(function (a, b) { return a - b; });
+    SURFACES.push({ name: "top", z: Math.ceil(bounds(pcCase, function (e) { return !pcBody(e); }).z1), x0: Math.round((xs[0] + xs[1]) / 2), y0: Math.round((ys[0] + ys[1]) / 2), x1: Math.round((xs[2] + xs[3]) / 2), y1: Math.round((ys[2] + ys[3]) / 2), of: ".pc", cover: true });
+  }
   var JUMPS = [180, 0]
     .map(function (h) {
       return { a: "desk", b: "perch", to: [PERCH.x + PERCH.w / 2, BACK + PERCH.d / 2], heading: h };
@@ -1992,6 +2018,14 @@
         return { a: "desk", b: "shelf", to: [RIGHT - SHELF.w / 2, (SHELF.y + 66 + RAD.y) / 2], heading: h };
       }),
     );
+  // up onto the computer's top, from beside it, from in front of it or from behind it
+  SURFACES.filter(function (s) {
+    return s.name === "top";
+  }).forEach(function (s) {
+    [180, 90, 270].forEach(function (h) {
+      JUMPS.push({ a: "desk", b: "top", to: [(s.x0 + s.x1) / 2, (s.y0 + s.y1) / 2], heading: h });
+    });
+  });
   // what Willy walks over rather than round: anything this low on the desk, a book, an
   // envelope, a card, as a cat does; he stands on its top
   var LOW = 50;
@@ -2007,10 +2041,12 @@
           var of = SURFACES.filter(function (s) {
             return s.of && e.matches(s.of);
           })[0];
-          return { b: bounds(e), name: named(e), of: of && of.name, e: e };
+          // (the computer's case without its keyboard, which is low enough to walk over)
+          return { b: e === pcCase && kb ? bounds(e, function (e) { return !pcBody(e); }) : bounds(e), name: named(e), of: of && of.name, e: e };
         });
+      if (pcCase && kb) all.push({ b: bounds(pcCase, function (e) { return !keyboard(e); }), name: "the keyboard", e: kb });
       lows = all.filter(function (o) {
-        return !o.of && Math.abs(o.b.z0) < 2 && o.b.z1 <= LOW; // standing on the desk, not under it
+        return !o.of && Math.abs(o.b.z0) < 3 && o.b.z1 <= LOW; // standing on the desk, not under it (the keyboard's rim, a hair into the desk)
       });
       solids = all.filter(function (o) {
         return lows.indexOf(o) < 0;
@@ -2101,7 +2137,9 @@
     return solid()
       .filter(function (o) {
         var b = o.b;
-        if (o.of) return false;
+        // (what he stands on hides nothing of him, but the computer's case, which he is on
+        // only at its top)
+        if (o.of && !(SURFACES.some(function (s) { return s.name === o.of && s.cover; }) && b.z1 > w.z0 + 1)) return false;
         var front = b.x1 <= w.x0 || b.y0 >= w.y1 || b.z0 >= w.z1,
           behind = b.x0 >= w.x1 || b.y1 <= w.y0 || b.z1 <= w.z0;
         return front && behind ? depth(b) > depth(w) : front;

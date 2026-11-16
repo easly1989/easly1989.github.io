@@ -393,9 +393,15 @@ export async function willy(room, stage, src = "assets/willy.glb") {
     // a slow blink, s long; an ear turned
     blink: (s) => life?.blink(s),
     twitch: () => life?.twitch(),
+    // the desk's front edge his tail hangs over while he rests ({ y, z }: drape()), or none
+    tail(edge) {
+      if (life) life.edge = edge;
+    },
     // where he is on the screen, in the viewport's px: the box round him, and whether a point
-    // is on him (his bones, as thick as he is). As he was last drawn.
-    area() {
+    // is on him (his bones, as thick as he is). As he was last drawn. With seen, only of what of
+    // him shows: not what stands in front of him hides (half behind the computer, the box goes
+    // round the half that shows; all of him hidden, round all of him).
+    area(seen = false) {
       const r = cv.getBoundingClientRect(),
         k = r.width / W,
         v = new THREE.Vector3(),
@@ -404,16 +410,21 @@ export async function willy(room, stage, src = "assets/willy.glb") {
         bn.getWorldPosition(v).project(cam);
         pts.set(bn, [r.left + ((v.x + 1) / 2) * r.width, r.top + ((1 - v.y) / 2) * r.height]);
       }
+      const hulls = seen ? window.ROOM.before(shape(size.idle, at.x, at.y, at.z, at.heading, 0)) : [],
+        hidden = ([x, y]) => hulls.some((h) => inside(h, x, y)),
+        shown = [...pts.values()].filter((p) => !hidden(p));
       const R = GIRTH * k,
-        all = [...pts.values()],
+        all = shown.length ? shown : [...pts.values()],
         segs = bones.filter((bn) => pts.has(bn.parent)).map((bn) => [pts.get(bn.parent), pts.get(bn)]);
       return {
         left: Math.min(...all.map((p) => p[0])) - R,
         top: Math.min(...all.map((p) => p[1])) - R,
         right: Math.max(...all.map((p) => p[0])) + R,
         bottom: Math.max(...all.map((p) => p[1])) + R,
+        // (and the tip of his tail, for checks/willy-props.py: over the desk's front edge)
+        tip: pts.get(model.getObjectByName(THREE.PropertyBinding.sanitizeNodeName("tail.7"))) || null,
         hit(x, y) {
-          return segs.some(([[ax, ay], [bx, by]]) => {
+          return !hidden([x, y]) && segs.some(([[ax, ay], [bx, by]]) => {
             const dx = bx - ax,
               dy = by - ay,
               q = dx * dx + dy * dy ? Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy))) : 0;
@@ -618,6 +629,9 @@ const BREATH = { awake: [0.45, 1.5], asleep: [0.28, 2.5] }; // a second, degrees
 const SWAY = { awake: [0.25, 4], asleep: [0.15, 1], lag: 0.7, flick: [5, 14], flickDeg: 25 }; // a second, degrees, rad a bone, s apart, degrees
 const TWITCH = { every: [3, 9], deg: 30 }; // s apart, degrees
 const BLINK = { every: [2.5, 7], s: 0.16, deg: 60 }; // s apart, s it takes, degrees the lids close
+// his tail over the desk's front edge (drape()): px past the edge it goes down, above the desk it
+// lies, and on from the edge as it hangs; s it takes to fall there; its swing, a second and px
+const HANG = { over: 4, lie: 3, under: 8, ease: 0.6, swing: [0.3, 14] };
 function alive(model, holder) {
   const bone = (n) => model.getObjectByName(THREE.PropertyBinding.sanitizeNodeName(n));
   const B = {
@@ -651,8 +665,44 @@ function alive(model, holder) {
   };
   // how far through a quick there and back he is, 0 to 1 and back, s after it began
   const pulse = (s, len) => (s < 0 || s > len ? 0 : Math.sin((Math.PI * s) / len));
+  // His tail laid along a line, k of the way from the clip's own (1, all the way): from its root
+  // across the desk to its front edge, over it, and down it, the hanging part swinging
+  // a little. Each bone turned in turn, root first, to point at where the line is as far along it
+  // as the bone's end is along the tail. here is where he stands,
+  // edge { y, z } the front edge in room px (his world's y runs the other way).
+  let hang = 0,
+    edge = null;
+  function drape({ y, z }, here, k) {
+    const V = THREE.Vector3,
+      root = B.tail[0].getWorldPosition(new V()),
+      out = here[1] - y - HANG.over,
+      lie = z - here[2] + HANG.lie,
+      x = root.x,
+      swing = Math.sin(2 * Math.PI * HANG.swing[0] * clock) * HANG.swing[1];
+    const line = [root, new V(x, out, lie), new V(x + swing, out - HANG.under, lie - 400)];
+    const along = (s) => {
+      for (let i = 1; i < line.length; i++) {
+        const d = line[i].distanceTo(line[i - 1]);
+        if (s <= d || i === line.length - 1) return line[i - 1].clone().lerp(line[i], s / d);
+        s -= d;
+      }
+    };
+    let s = 0,
+      len = 0;
+    B.tail.forEach((b, i) => {
+      const a = b.getWorldPosition(new V()),
+        end = i + 1 < B.tail.length ? B.tail[i + 1].getWorldPosition(new V()) : a.clone().add(new V(0, 1, 0).applyQuaternion(b.getWorldQuaternion(new THREE.Quaternion())).multiplyScalar(len));
+      len = end.distanceTo(a);
+      s += len;
+      const to = end.sub(a),
+        aim = along(s).sub(a),
+        axis = to.clone().cross(aim);
+      if (axis.lengthSq() > 1e-9) move(b, axis.normalize(), to.angleTo(aim) * k);
+    });
+  }
   return {
     target: null, // where he looks, in room px, or nowhere
+    edge: null, // the desk's front edge his tail hangs over, while he rests ({ y, z }), or none
     // a blink now, of s seconds (a slow one is a cat's smile), and an ear turned now
     blink(s) {
       blinkAt = clock;
@@ -695,6 +745,10 @@ function alive(model, holder) {
         const k = flick ? pulse(clock - flick.at, 0.45) : 0;
         B.tail.forEach((b, i) => move(b, up, (a * Math.sin(2 * Math.PI * f * clock - i * SWAY.lag) + (i >= 4 && flick ? flick.side * k * SWAY.flickDeg * (i - 3) / 3 : 0)) * deg));
       }
+      // sitting at the desk's front edge, his tail over it, hanging, swinging a little
+      if (this.edge) edge = this.edge;
+      hang += ((this.edge && resting ? 1 : 0) - hang) * (1 - Math.exp(-dt / HANG.ease));
+      if (hang > 0.01 && edge) drape(edge, here, hang);
       if (sleeping) return;
       // an ear turned back a moment, now and then, one at a time
       if (clock > earAt) {
@@ -734,6 +788,20 @@ function alive(model, holder) {
       move(B.head, across, -pitch * weight * (1 - LOOK.neck));
     },
   };
+}
+
+// whether x, y is inside the convex outline h, in order round it (room.js, before())
+function inside(h, x, y) {
+  let sign = 0;
+  for (let i = 0; i < h.length; i++) {
+    const [ax, ay] = h[i],
+      [bx, by] = h[(i + 1) % h.length],
+      c = (bx - ax) * (y - ay) - (by - ay) * (x - ax);
+    if (!c) continue;
+    if (sign && Math.sign(c) !== sign) return false;
+    sign = Math.sign(c);
+  }
+  return h.length > 2;
 }
 
 // that room where he stands, as the room measures its own things (room.js, bounds()): turned

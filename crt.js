@@ -169,9 +169,10 @@
       for (var s = 0; s < secs - 0.05; s += 0.04) hiss(t + s, 0.03, 0.06, 2400 + Math.random() * 1200, 2);
       hiss(t + secs, 0.05, 0.25, 600, 1);
     },
-    key: function () {
+    // (v, how loud, 1 unless said: softer for a cat's paw)
+    key: function (v) {
       if (!audio()) return;
-      hiss(ctx.currentTime, 0.02, 0.08, 2600 + Math.random() * 1400, 2.5);
+      hiss(ctx.currentTime, 0.02, 0.08 * (v == null ? 1 : v), 2600 + Math.random() * 1400, 2.5);
     },
     beep: function () {
       if (!audio()) return;

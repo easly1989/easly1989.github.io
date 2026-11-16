@@ -24,6 +24,17 @@ export function pick(actions, { where, now, ran = {}, last = null, skip = new Se
   return options[options.length - 1];
 }
 
+// The old computer, as Willy knows it. Its monitor is warm while it is on and for WARM s after it
+// went off (off, s, when it last did; null if it has not this visit).
+export const WARM = 180;
+export const warm = ({ on, off }, now) => on || (off != null && now - off < WARM);
+// How far from the desk's front edge he sits there at most, px, his tail still over it.
+export const EDGE_BY = 110;
+// What his paws type on its keyboard: punctuation and the space bar only, so that nothing he
+// types ever spells a word; in bursts, as a paw comes down and slides, n keys of them.
+export const PAW_KEYS = ";'[],./\\=- ";
+export const paws = (n, rand = Math.random) => [...Array(n)].map(() => PAW_KEYS[Math.floor(rand() * PAW_KEYS.length)]).join("");
+
 // what the actions and the reactions are made of, for Willy w, his planner P and his moves M in a
 // room of surfaces SURF, kept off the places avoid() names
 function kit({ w, P, M, SURF, avoid = () => [] }) {
@@ -41,7 +52,7 @@ function kit({ w, P, M, SURF, avoid = () => [] }) {
     stay = (clip, at, s) => hold(clip, at, Math.max(0, s - M.dur(clip)), true);
   // whether to is clear of the places avoid() names, with room for him round it
   const AVOID_BY = 40;
-  const clear = (to) => to.surface !== "desk" || !avoid().some((r) => to.x > r.x0 - AVOID_BY && to.x < r.x1 + AVOID_BY && to.y > r.y0 - AVOID_BY && to.y < r.y1 + AVOID_BY);
+  const clear = (to) => !avoid().some((r) => (r.surface || "desk") === to.surface && to.x > r.x0 - AVOID_BY && to.x < r.x1 + AVOID_BY && to.y > r.y0 - AVOID_BY && to.y < r.y1 + AVOID_BY);
   // somewhere free on the desk, at least far px from at
   function spot(at, clip = "idle", far = 200) {
     for (let n = 0; n < 30; n++) {
@@ -145,7 +156,7 @@ function kit({ w, P, M, SURF, avoid = () => [] }) {
   function settled(at, [down, ...rest]) {
     const up = rest.pop(),
       fit = (to) => [down, ...rest.map((m) => m.clip), up].every((c) => fits(to, c)),
-      to = (at.surface === "perch" ? NEAR : [[0, 0]]).map(([dx, dy]) => ({ ...at, x: at.x + dx, y: at.y + dy })).find(fit);
+      to = (at.surface === "perch" || at.surface === "top" ? NEAR : [[0, 0]]).map(([dx, dy]) => ({ ...at, x: at.x + dx, y: at.y + dy })).find(fit);
     return to ? [sliding(down, at, to), ...rest.map((m) => cue(stay(m.clip, to, m.s), m.cue || {})), sliding(up, to, at)] : null;
   }
   const sitting = (at, s, c = {}) => settled(at, ["sit", { clip: "sit-idle", s, cue: c }, "sit-from"]);
@@ -156,7 +167,7 @@ function kit({ w, P, M, SURF, avoid = () => [] }) {
 // the actions, for Willy w, his planner P and his moves M in a room of surfaces SURF; avoid()
 // names the places on the desk he does not go to now (willy-room.js: an object the reader points
 // at or has focused)
-export function everyday({ w, P, M, SURF, avoid }) {
+export function everyday({ w, P, M, SURF, avoid, pc = null }) {
   const { between, one, xyh, here, fits, free, cue, hold, stay, spot, going, done, sitting, settled, clear, leaving } = kit({ w, P, M, SURF, avoid });
   return [
     { n: "wander", w: 10, where: ["desk"], run: (at) => going(at, spot(at), "walk", (to) => [stay("idle", to, between([0.6, 1.5]))]) },
@@ -333,9 +344,113 @@ export function everyday({ w, P, M, SURF, avoid }) {
       },
     },
     { n: "chatter at the birds", w: 3, where: ["perch"], run: (at) => done(at, settled(at, ["sit", { clip: "chatter", s: 0, cue: { look: "window", say: ["ek-ek-ek", 1600] } }, "sit-from"])) },
-    { n: "back to the desk", w: 10, where: ["perch", "shelf"], run: (at) => going(at, spot(at, "sit"), "walk", (to) => sitting(to, between([3, 8]))) },
+    { n: "back to the desk", w: 10, where: ["perch", "shelf", "top"], run: (at) => going(at, spot(at, "sit"), "walk", (to) => sitting(to, between([3, 8]))) },
     // now and then, off the desk's front edge and out of the frame a while, and back
     { n: "leave", w: 2, cool: 120, where: ["desk"], run: (at) => leaving(at, between([15, 35]), ["Willy leaves for a while.", "Willy is back."]) },
+    // The computer and the desk's front edge (#71). On the keyboard he sits along it, and with
+    // the computer on his paws type a little on its screen; on its top, while the monitor is
+    // warm, he curls up and sleeps; behind it he is half hidden a while; at the front edge he
+    // sits and looks at the reader.
+    {
+      n: "sit on the keyboard",
+      w: 2,
+      cool: 120,
+      where: ["desk"],
+      run: async (at) => {
+        const k = pc && pc.keyboard();
+        if (!k) return null;
+        for (let n = 0; n < 60; n++) {
+          const to = xyh("desk", [Math.round(between([k.x0 + 40, k.x1 - 40])), Math.round(between([k.y0 + 30, k.y1 - 30])), one([12, 192])]);
+          if (!clear(to) || !["walk", "idle", "sit", "sit-idle", "sit-from", "knead"].every((c) => fits(to, c))) continue;
+          const on = pc && pc.ready();
+          const r = await going(at, to, "walk", (to) => {
+            const s = sitting(to, between([4, 8]), { look: "reader" });
+            if (!s) return null;
+            if (!on) return [cue(s[0], { line: "Willy sits on the keyboard." }), ...s.slice(1)];
+            // (standing, his paws coming down on the keys, then sitting on them)
+            const tap = cue(stay("knead", to, between([2.5, 4])), { line: "Willy sits on the keyboard, and types.", act: () => pc.type(2.5) });
+            return [tap, ...s];
+          });
+          if (r) return r;
+        }
+        return null;
+      },
+    },
+    {
+      n: "sleep on the warm monitor",
+      w: 3,
+      cool: 120,
+      where: ["desk"],
+      run: async (at) => {
+        if (!pc || !pc.warm() || !SURF.top) return null;
+        for (const hop of P.hops("desk", "top")) {
+          const to = xyh("top", [hop.to[0], hop.to[1], hop.h1]);
+          if (!clear(to)) continue;
+          const m = settled(to, ["sleep", { clip: "sleep-idle", s: between([20, 45]) }, "wake"]);
+          if (m) {
+            cue(m[0], { line: "Willy curls up on the warm monitor." });
+            const r = await going(at, to, "walk", () => m);
+            if (r) return r;
+          }
+        }
+        return null;
+      },
+    },
+    {
+      n: "behind the monitor",
+      w: 1,
+      cool: 120,
+      where: ["desk"],
+      run: async (at) => {
+        const c = pc && pc.behind();
+        if (!c) return null;
+        for (let n = 0; n < 60; n++) {
+          const to = xyh("desk", [Math.round(between([c.x0, c.x1])), Math.round(between([c.y0, c.y1])), one([0, 180, 270])]);
+          if (!clear(to)) continue;
+          const lie = settled(to, ["lie", { clip: "loaf", s: between([8, 15]), cue: { look: "reader", line: "Willy slips behind the monitor." } }, "lie-from"]);
+          const m = lie || sitting(to, between([6, 10]), { look: "reader", line: "Willy slips behind the monitor." });
+          const r = m && (await going(at, to, "sneak", () => m));
+          if (r) return r;
+        }
+        return null;
+      },
+    },
+    {
+      n: "sit at the edge",
+      w: 2,
+      cool: 120,
+      where: ["desk"],
+      run: async (at) => {
+        // (along the edge, his head turned to the reader: so his tail reaches over it; facing
+        // the reader he could sit no nearer it than his tail is long)
+        const D = SURF.desk,
+          H = one([0, 180]);
+        const edges = [];
+        for (let x = D.x0 + 120; x <= D.x1 - 120; x += 40)
+          // (his front paws at the edge: as near it as he fits, sitting, which is about this far)
+          for (let y = D.y1 - 20; y >= D.y1 - 260; y -= 5) {
+            const e = xyh("desk", [x, y, H]);
+            const ok = (e) => clear(e) && ["walk", "idle", "sit", "sit-idle", "sit-from"].every((c) => fits(e, c));
+            if (ok(e)) {
+              // (a grid's half step back, where the planner may end his walk, willy-paths.js)
+              const back = xyh("desk", [x, y - 10, H]);
+              // (and no farther from it than his tail can still hang over)
+              if (ok(back) && y >= D.y1 - EDGE_BY) edges.push(back);
+              break;
+            }
+          }
+        // (one of the nearer stretches; failing those, the farther ones)
+        edges.sort((a, b) => Math.hypot(a.x - at.x, a.y - at.y) - Math.hypot(b.x - at.x, b.y - at.y));
+        for (const e of [...edges.slice(0, 10).sort(() => Math.random() - 0.5), ...edges.slice(10)].slice(0, 14)) {
+          const r = await going(at, e, "walk", (to) => {
+            const s = sitting(to, between([5, 10]), { look: "reader", tail: { y: D.y1, z: D.z } });
+            return s && [cue(s[0], { line: "Willy sits at the edge of the desk." }), ...s.slice(1)];
+          });
+          if (r) return r;
+        }
+        return null;
+      },
+    },
   ];
 }
 
@@ -373,7 +488,7 @@ export function bothered({ w, P, M, SURF, avoid, objects = [] }) {
         const p = P.spot("desk", "sit");
         const to = p && xyh("desk", p);
         // (and onto none of the others: he would only be in the way there)
-        const then = to && clear(to) && !objects.some((r) => to.x >= r.x0 && to.x <= r.x1 && to.y >= r.y0 && to.y <= r.y1) && free(to) && sitting(to, between([2, 4]), { look: "reader" });
+        const then = to && clear(to) && !objects.some((r) => !r.surface && to.x >= r.x0 && to.x <= r.x1 && to.y >= r.y0 && to.y <= r.y1) && free(to) && sitting(to, between([2, 4]), { look: "reader" });
         if (then) near.push({ to, then });
       }
       near.sort((a, b) => Math.hypot(a.to.x - at.x, a.to.y - at.y) - Math.hypot(b.to.x - at.x, b.to.y - at.y));
@@ -410,12 +525,12 @@ export function reactions({ w, P, M, SURF }) {
   // standing here a while, as he is: what he does from a moment he was caught in
   const idle = (at, s, c = {}) => cue(stay("idle", at, s), c);
   return [
-    { n: "open one eye", w: 1, where: ["perch"], solo: true, when: (c) => !!c.rest, line: "Willy opens one eye.", run: (at, c) => (fits(at, c.rest === "sleep" ? "sleep-idle" : "loaf") ? [cue(stay(c.rest === "sleep" ? "sleep-idle" : "loaf", at, 2.4), { blink: 1.8 })] : null) },
+    { n: "open one eye", w: 1, where: ["perch", "top"], solo: true, when: (c) => !!c.rest, line: "Willy opens one eye.", run: (at, c) => (fits(at, c.rest === "sleep" ? "sleep-idle" : "loaf") ? [cue(stay(c.rest === "sleep" ? "sleep-idle" : "loaf", at, 2.4), { blink: 1.8 })] : null) },
     { n: "look down", w: 1, where: ["shelf"], solo: true, line: "Willy turns and looks down at you.", run: (at) => (fits(at, "look-down") ? [cue(stay("look-down", at, between([3, 5])), { look: "reader" })] : null) },
     {
       n: "purr",
       w: 8,
-      where: ["desk", "perch"],
+      where: ["desk", "perch", "top"],
       line: "Willy purrs.",
       run: (at, c) => {
         const cues = { look: "reader", say: ["prrr", 1800] };
@@ -424,7 +539,7 @@ export function reactions({ w, P, M, SURF }) {
     },
     { n: "meow at you", w: 6, where: ["desk", "perch"], line: "Willy meows at you.", run: (at) => done(at, sitting(at, 1.5, { look: "reader", say: [one(["mew", "mrrp?", "meow"]), 1200] })) },
     { n: "chirp", w: 5, where: ["desk", "perch"], line: "Willy chirps.", run: (at) => done(at, sitting(at, 1.2, { look: "reader", say: [one(["brrp!", "prrp?"]), 900], twitch: true })) },
-    { n: "slow blink", w: 6, where: ["desk", "perch"], line: "Willy gives you a slow blink.", run: (at) => done(at, sitting(at, 2.6, { look: "reader", blink: 1.3 })) },
+    { n: "slow blink", w: 6, where: ["desk", "perch", "top"], line: "Willy gives you a slow blink.", run: (at) => done(at, sitting(at, 2.6, { look: "reader", blink: 1.3 })) },
     { n: "headbutt", w: 6, where: ["desk", "perch", "shelf"], line: "Willy headbutts your hand.", run: (at, c) => (!c.rest && fits(at, "pet") ? [cue(hold("pet", at), { look: "reader" }), idle(at, 0.3)] : null) },
     {
       n: "belly trap",
@@ -436,7 +551,7 @@ export function reactions({ w, P, M, SURF }) {
         return done(at, roll && [...roll, ...(fits(at, "swat-right") ? [cue(hold("swat-right", at), { look: "reader" })] : [])]);
       },
     },
-    { n: "ignore you", w: 5, where: ["desk", "perch", "shelf"], line: "Willy ignores you.", run: (at, c) => (c.rest ? null : [idle(at, between([2, 3.5]), { look: "around" }), idle(at, 0.3, { look: null })]) },
+    { n: "ignore you", w: 5, where: ["desk", "perch", "shelf", "top"], line: "Willy ignores you.", run: (at, c) => (c.rest ? null : [idle(at, between([2, 3.5]), { look: "around" }), idle(at, 0.3, { look: null })]) },
     {
       // (he stops first, so the walk's first step does not jump from the pose he was caught in)
       n: "walk off",
@@ -451,8 +566,8 @@ export function reactions({ w, P, M, SURF }) {
     },
     { n: "pointed grooming", w: 5, where: ["desk", "perch"], line: "Willy grooms himself, pointedly.", run: (at) => done(at, settled(at, ["sit", { clip: "groom", s: between([3, 4.5]), cue: { look: "around" } }, "sit-from"])) },
     { n: "knead", w: 3, where: ["desk", "perch"], line: "Willy kneads.", run: (at, c) => (!c.rest && fits(at, "knead") ? [cue(stay("knead", at, between([2.5, 4])), { say: ["prr", 1500] })] : null) },
-    { n: "yawn", w: 4, where: ["desk", "perch", "shelf"], line: "Willy yawns.", run: (at, c) => (!c.rest && fits(at, "yawn") ? [cue(hold("yawn", at), { say: ["*yawn*", 1300] })] : null) },
-    { n: "stare", w: 4, where: ["desk", "perch", "shelf"], line: "Willy stares at you.", run: (at, c) => (c.rest ? null : [idle(at, between([2.5, 4]), { look: "reader" }), idle(at, 0.3, { look: null })]) },
+    { n: "yawn", w: 4, where: ["desk", "perch", "shelf", "top"], line: "Willy yawns.", run: (at, c) => (!c.rest && fits(at, "yawn") ? [cue(hold("yawn", at), { say: ["*yawn*", 1300] })] : null) },
+    { n: "stare", w: 4, where: ["desk", "perch", "shelf", "top"], line: "Willy stares at you.", run: (at, c) => (c.rest ? null : [idle(at, between([2.5, 4]), { look: "reader" }), idle(at, 0.3, { look: null })]) },
     { n: "sneeze", w: 3, where: ["desk", "perch", "shelf"], line: "Willy sneezes.", run: (at, c) => (!c.rest && fits(at, "shake") ? [cue(hold("shake", at), { say: ["tchi!", 900] })] : null) },
     {
       n: "rub and leave fur",

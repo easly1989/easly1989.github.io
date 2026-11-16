@@ -129,5 +129,20 @@ project object is said on the live line ("Willy sits on the CloudBank ledger.");
 because the reader pestered him is said even within the line's 1.5 s. `checks/willy-way.py`
 covers it.
 
+He has props (#71, `everyday()` in `willy-life.js`, each at most once in 2 minutes). He sits on
+the computer's keyboard (`ROOM.lows()`, "the keyboard"); with the computer waiting at its prompt
+his paws knead the keys first, and `index.html` shows what they press after the prompt:
+punctuation and spaces only, 24 at most, never Enter, each key's sound softer than the reader's.
+It is never said nor kept, and goes before the reader's own keys when the computer is used. He
+sleeps curled on the computer's top, Cupid's letter on it (the surface `top` in `room.js`), while
+its monitor is warm: on, or off for less than 3 minutes (`warm()`); the letter there is a project
+object like the others. He slips behind the monitor, half hidden, where his focus ring goes round
+only what shows of him (`area(true)`) and a click on the computer stays the computer's. He sits
+at the desk's front edge along it, his head turned to the reader and his tail over the edge,
+hanging and swinging a little: its bones are laid along a line by code (`drape()` in
+`willy.js`), not by a clip, and not under reduced motion. The planner jumping down from a
+surface first looks for a landing he can turn round in, so he never lands in a pocket by the
+computer's case. `checks/willy-props.py` covers it.
+
 On the professional home he is the drawing peeking in (The professional home, above). He is on no
 other page: the playful pages have no cat.

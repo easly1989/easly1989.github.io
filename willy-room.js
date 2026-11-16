@@ -27,7 +27,7 @@ live()
 const LOOK_ABOUT = [3, 7];
 
 async function live() {
-  const [{ willy }, { planner }, { moves }, { pick, everyday, reactions, react, bothered }] = await Promise.all([import("./willy.js"), import("./willy-paths.js"), import("./willy-moves.js"), import("./willy-life.js")]);
+  const [{ willy }, { planner }, { moves }, { pick, everyday, reactions, react, bothered, warm, paws }] = await Promise.all([import("./willy.js"), import("./willy-paths.js"), import("./willy-moves.js"), import("./willy-life.js")]);
   await ROOM.ready;
   await ROOM.landed(); // (setting him up takes the main thread for a while, and the morph would stop for it)
   const w = await willy(room, stage);
@@ -67,9 +67,12 @@ async function live() {
   touch.setAttribute("aria-label", "Willy. You can pet him!");
   touch.hidden = true;
   document.body.append(touch);
+  touch.addEventListener("focus", () => track());
   let area = null;
+  // (with his focus ring on him, round only what of him shows: half behind the computer, the
+  // half that does)
   const track = () => {
-    area = w.area();
+    area = w.area(document.activeElement === touch);
     const out = !(area.right > 0 && area.left < innerWidth && area.bottom > 0 && area.top < innerHeight);
     touch.hidden = out || ![area.left, area.top, area.right, area.bottom].every(Number.isFinite);
     if (!touch.hidden) Object.assign(touch.style, { left: area.left + "px", top: area.top + "px", width: area.right - area.left + "px", height: area.bottom - area.top + "px" });
@@ -84,7 +87,8 @@ async function live() {
     "click",
     (e) => {
       // (a click with no press behind it, from the keyboard or a screen reader, is on its target)
-      if (e.target !== touch && !(e.detail > 0 && area && !touch.hidden && area.hit(e.clientX, e.clientY))) return;
+      // (on what of him shows: a click on the computer is the computer's, he behind it or not)
+      if (e.target !== touch && !(e.detail > 0 && area && !touch.hidden && area.hit(e.clientX, e.clientY) && w.area(true).hit(e.clientX, e.clientY))) return;
       e.preventDefault();
       e.stopPropagation();
       petted();
@@ -174,6 +178,9 @@ async function live() {
   // usually moves him off, and focus always does, at once. Clicked again and again he moves away;
   // clicked a lot he has had enough, and leaves off the desk's front edge for half a minute.
   const OBJECTS = ROOM.lows().filter((o) => o.el && (o.el.matches("a[href]") || o.el.querySelector("a[href]")));
+  // and Cupid's letter, on the computer's top: all of the top, where he sleeps on the warm monitor
+  const letter = SURF.top && document.querySelector(".pc .thing.envelope");
+  if (letter) OBJECTS.push({ name: "Cupid", el: letter, surface: "top", x0: SURF.top.x0 - 60, y0: SURF.top.y0 - 60, x1: SURF.top.x1 + 60, y1: SURF.top.y1 + 60 });
   const named = (o) => {
     const k = ["ledger", "agenda", "pager", "cards", "envelope"].find((c) => o.el.classList.contains(c));
     return "the " + o.name + (k ? " " + k : "");
@@ -182,7 +189,7 @@ async function live() {
     focused = null;
   const avoid = () => [pointed, focused].filter(Boolean);
   // the object he is on, at p, or null
-  const onObject = (p) => (p && p.z === SURF.desk.z ? OBJECTS.find((o) => p.x >= o.x0 && p.x <= o.x1 && p.y >= o.y0 && p.y <= o.y1) || null : null);
+  const onObject = (p) => (p && OBJECTS.find((o) => p.z === SURF[o.surface || "desk"].z && p.x >= o.x0 && p.x <= o.x1 && p.y >= o.y0 && p.y <= o.y1)) || null;
   const MOVING = /^(walk|trot|run|sneak|chase|jump|turn|crouch)/;
   const RESTING = (clip) => (/^(sleep|curl|uncurl|wake)/.test(clip) ? "sleep" : /^(lie|loaf|knead-lie|pet-lie|roll-over)/.test(clip) ? "lie" : /^(sit|pet-sit|groom|chatter)/.test(clip) ? "sit" : null);
   const BOTHER = bothered({ w, P, M, SURF, avoid, objects: OBJECTS });
@@ -193,11 +200,39 @@ async function live() {
     fleeing = false, // moving away from the reader, until that show ends
     settledOn = null; // the object he last sat or lay down on, while he is still on it
 
+  // The old computer (index.html runs it), for his actions there: whether it waits at its prompt,
+  // whether its monitor is still warm, where its keyboard is and the desk behind it, and his paws
+  // on its keys for s seconds, a few keys at a time (it shows them after its prompt, and makes
+  // their sound, softly).
+  const box = document.querySelector(".pc");
+  let pcOn = !!box && box.classList.contains("on"),
+    pcOff = null; // s, when it last went off
+  if (box)
+    new MutationObserver(() => {
+      const on = box.classList.contains("on");
+      if (pcOn && !on) pcOff = performance.now() / 1000;
+      pcOn = on;
+    }).observe(box, { attributes: true, attributeFilter: ["class"] });
+  const pc = box && {
+    ready: () => box.classList.contains("ready") && !box.classList.contains("typing"),
+    warm: () => warm({ on: box.classList.contains("on"), off: pcOff }, performance.now() / 1000),
+    keyboard: () => ROOM.lows().find((o) => o.name === "the keyboard") || null,
+    behind: () => SURF.top && { x0: SURF.top.x0, x1: SURF.top.x1, y0: SURF.desk.y0 + 60, y1: SURF.top.y0 - 60 },
+    type(s) {
+      const end = performance.now() + s * 1000;
+      const tap = () => {
+        if (performance.now() > end) return;
+        box.dispatchEvent(new CustomEvent("paw", { detail: paws(1 + Math.floor(Math.random() * 4)) }));
+        setTimeout(tap, between([250, 700]));
+      };
+      tap();
+    },
+  };
   // looking about where he is a while
   const lookingAbout = (at) => [M.hold("idle", [at.x, at.y, at.heading], at.surface, between(LOOK_ABOUT) - M.dur("idle"), true)];
   // what he does next, from at, and where he ends up: one of his everyday actions he can do
   // there and now; or, if none can be, he looks about where he is
-  const ACTIONS = everyday({ w, P, M, SURF, avoid }),
+  const ACTIONS = everyday({ w, P, M, SURF, avoid, pc }),
     ran = {};
   let done = null;
   async function next(at) {
@@ -295,6 +330,13 @@ async function live() {
   // answers (answer()); asked off the object he is on, he gets off it
   async function bother(kind, p) {
     if (kind.visit) return here(p) && BOTHER.visit(here(p), RESTING(p.clip), kind.visit, 60);
+    if (kind.act) {
+      const a = ACTIONS.find((a) => a.n === kind.act),
+        at = here(p);
+      const r = a && at && a.where.includes(at.surface) && (await a.run(at));
+      if (r) (ran[a.n] = performance.now() / 1000), (done = a.n);
+      return r && r.moments.length ? r : null;
+    }
     if (kind === "off") {
       const o = onObject(p);
       return o && (pointed === o || focused === o) && !MOVING.test(p.clip) ? BOTHER.off(here(p), RESTING(p.clip)) : null;
@@ -366,9 +408,16 @@ async function live() {
       if (focused === o) focused = null;
     });
   }
-  // (for the checks, checks/willy-way.py: where he is, and off to sit on a project object, by
-  // name, as he would on his own)
-  room.willy = { now: () => M.now(show, Math.min(t, total)), on: () => onObject(M.now(show, Math.min(t, total)))?.name || null, visit: (name) => (pending = { visit: OBJECTS.find((o) => o.name === name) }) };
+  // (for the checks, checks/willy-way.py and willy-props.py: where he is, off to sit on a project
+  // object, by name, one of his everyday actions, by name, now, as he would on his own, and
+  // where the tip of his tail is on the screen)
+  room.willy = {
+    now: () => M.now(show, Math.min(t, total)),
+    on: () => onObject(M.now(show, Math.min(t, total)))?.name || null,
+    visit: (name) => (pending = { visit: OBJECTS.find((o) => o.name === name) }),
+    act: (name) => (pending = { act: name }),
+    tip: () => w.area().tip,
+  };
   async function answering(kind) {
     const p = M.now(show, Math.min(t, total));
     const r = await bother(kind, p).catch((e) => (console.warn("Willy stays:", e), null));
@@ -435,12 +484,14 @@ async function live() {
       if (m.say) say(...m.say);
       if (m.blink) w.blink(m.blink);
       if (m.twitch) w.twitch();
+      w.tail(m.tail || null);
       if (m.act) m.act();
       if (m.line) announce(m.line, true);
       // sitting or lying down on a project object, said as he first settles on it
       const on = onObject(p),
         down = /^(sit|lie|sleep)$/.test(p.clip) && on;
-      if (down && down !== settledOn) announce("Willy " + (p.clip === "sit" ? "sits" : "lies down") + " on " + named(down) + ".");
+      // (on the computer's top, the action says it: the warm monitor)
+      if (down && down !== settledOn && !down.surface) announce("Willy " + (p.clip === "sit" ? "sits" : "lies down") + " on " + named(down) + ".");
       if (down || !on) settledOn = down || null;
       // and moved off it, at once if it has focus, or soon if the pointer rests on it
       if (down && focused === down) ask();

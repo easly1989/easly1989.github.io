@@ -21,6 +21,7 @@ python checks/peek.py
 python checks/willy-flips.py
 python checks/willy-pet.py
 python checks/willy-way.py
+python checks/willy-props.py
 python checks/motion.py
 python checks/data.py
 ```
@@ -119,6 +120,15 @@ of motion that forgets it measures a room in which Willy only sleeps.
   at least twice in six (seven in ten, by chance); clicked three times in 5 s he moves away, and
   clicked five times he leaps off the desk's front edge to the floor, goes out of the window and
   is back on the desk after more than 15 s, each said on the line. Headless; about three minutes.
+
+- `willy-props.py` — Willy and the computer and the desk's front edge, each action asked of him
+  through the room's `willy` hook (`act`), as he would choose it on his own: with the computer
+  never on he stays off its top; on, he sleeps on its warm top and gets down again by himself;
+  on the keyboard his paws type after the prompt only punctuation and spaces, 24 at most, and
+  when the reader uses the computer the prompt shows only what the reader types; behind the
+  monitor, focused, his focus ring goes round only what shows of him; at the front edge he sits
+  along it, no more than 120 px from it, the last bone of his tail below the edge on the screen.
+  Each is said on the live line. Headless; about four minutes.
 
 - `motion.py` — the reader's choice to animate anyway (`motion.js`), under reduced motion: with
   no choice the footer's button offers it and nothing of Willy's peek moves; clicked, it is pressed,
