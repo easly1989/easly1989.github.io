@@ -2177,6 +2177,7 @@ SYSTEM HALTED.</span>
           [2500, ""],
           [2600, "carlo@bench:~$ ", true],
         ];
+        var PROMPT = lines[lines.length - 1][1];
         function store(area, key, value) {
           try {
             if (value) window[area].setItem(key, value);
@@ -2297,8 +2298,10 @@ SYSTEM HALTED.</span>
             location.href = "terminal.html";
           };
           if (reduced) return go();
-          // a few keys go down, then the screen takes the whole window
+          // a few keys go down, then the screen takes the whole window (what Willy's paws typed
+          // there goes first: it never reaches the terminal)
           var prompt = boot.querySelector(".cur");
+          prompt.textContent = PROMPT;
           pc.classList.add("typing");
           "tty".split("").forEach(function (c, i) {
             later(function () {
@@ -2310,6 +2313,24 @@ SYSTEM HALTED.</span>
         }
         [].forEach.call(uses, function (b) {
           b.addEventListener("click", use);
+        });
+        // Willy's paws on the keys (willy-room.js): while it waits at its prompt, what they press
+        // shows after it, punctuation and spaces only and never more than a line, and each key
+        // sounds, softly. Nothing of it is said, nor kept.
+        var PAWED = /[^;'\[\],.\/\\=\- ]/g,
+          LINE = 24;
+        pc.addEventListener("paw", function (e) {
+          if (!pc.classList.contains("ready") || pc.classList.contains("typing")) return;
+          var prompt = boot.querySelector(".cur"),
+            room = LINE - (prompt.textContent.length - PROMPT.length),
+            keys = String(e.detail || "").replace(PAWED, "").slice(0, Math.max(0, room));
+          keys.split("").forEach(function (c, i) {
+            later(function () {
+              if (!pc.classList.contains("ready") || pc.classList.contains("typing")) return;
+              prompt.textContent += c;
+              CRT.key(0.4);
+            }, 70 * i);
+          });
         });
         if (fried()) {
           store("sessionStorage", "pc:on", "");
