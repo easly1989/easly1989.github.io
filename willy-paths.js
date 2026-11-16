@@ -250,28 +250,31 @@ export function planner({ surfaces, jumps, fits }) {
     return found.get(k);
   }
   function hop(j, lo, hi, up) {
-    for (let n = 0; n <= 18; n++) {
-      const slide = (n % 2 ? -5 : 5) * Math.ceil(n / 2); // 0, -5, 5, -10 ... to 45 either way
-      const f = ahead(j.heading);
-      const top = [j.to[0] + f[0] * slide, j.to[1] + f[1] * slide, hi.z];
-      if (!fit(hi, top[0], top[1], j.heading, "idle")) continue;
-      // (far and wide last: round what stands in front of a shelf against the wall)
-      for (const d of [240, 280, 200, 320, 160, 360, 120, 400, 440])
-        for (const turn of [30, -30, 45, -45, 60, -60, 75, -75, 90, -90, 15, -15, 105, -105, 120, -120, 135, -135, 150, -150]) {
-          // up, he comes from behind the way he lands facing; down, he leaps off ahead
-          const g = ahead(j.heading + (up ? 180 : 0) + turn);
-          const bottom = [top[0] + g[0] * d, top[1] + g[1] * d, lo.z];
-          if (up) {
-            const one = { a: lo.name, b: hi.name, from: bottom, to: top, h0: toward(bottom, top), h1: j.heading };
-            if (works(one, lo, hi, up)) return [one];
-          } else
-            // and he may twist in the air, landing facing some other way than he flew
-            for (const twist of [0, 30, -30, 60, -60, 90, -90]) {
-              const one = { a: hi.name, b: lo.name, from: top, to: bottom, h0: j.heading, h1: toward(top, bottom) + twist };
+    // (down, first a landing he can turn all the way round in: one he fits only as he lands, as
+    // in a corner by the computer's case, is a pocket no walk leaves; then any, as before)
+    for (const open of up ? [false] : [true, false])
+      for (let n = 0; n <= 18; n++) {
+        const slide = (n % 2 ? -5 : 5) * Math.ceil(n / 2); // 0, -5, 5, -10 ... to 45 either way
+        const f = ahead(j.heading);
+        const top = [j.to[0] + f[0] * slide, j.to[1] + f[1] * slide, hi.z];
+        if (!fit(hi, top[0], top[1], j.heading, "idle")) continue;
+        // (far and wide last: round what stands in front of a shelf against the wall)
+        for (const d of [240, 280, 200, 320, 160, 360, 120, 400, 440])
+          for (const turn of [30, -30, 45, -45, 60, -60, 75, -75, 90, -90, 15, -15, 105, -105, 120, -120, 135, -135, 150, -150]) {
+            // up, he comes from behind the way he lands facing; down, he leaps off ahead
+            const g = ahead(j.heading + (up ? 180 : 0) + turn);
+            const bottom = [top[0] + g[0] * d, top[1] + g[1] * d, lo.z];
+            if (up) {
+              const one = { a: lo.name, b: hi.name, from: bottom, to: top, h0: toward(bottom, top), h1: j.heading };
               if (works(one, lo, hi, up)) return [one];
-            }
-        }
-    }
+            } else if (!open || [...Array(DIRS).keys()].every((k) => fit(lo, bottom[0], bottom[1], k * ARC, "turn")))
+              // and he may twist in the air, landing facing some other way than he flew
+              for (const twist of [0, 30, -30, 60, -60, 90, -90]) {
+                const one = { a: hi.name, b: lo.name, from: top, to: bottom, h0: j.heading, h1: toward(top, bottom) + twist };
+                if (works(one, lo, hi, up)) return [one];
+              }
+          }
+      }
     return [];
   }
   function works(j, lo, hi, up) {
