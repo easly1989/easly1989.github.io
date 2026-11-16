@@ -267,6 +267,13 @@ async function start() {
   function follow() {
     let moved = false;
     for (const [e, mv] of movers) {
+      // (one taken out of the room, fallen out of its frame (room-fall.js): its faces to nothing)
+      if (!e.isConnected) {
+        for (const f of mv.faces) for (const p of f.q) p.set(0, 0, -1e5);
+        movers.delete(e);
+        moved = true;
+        continue;
+      }
       const m = ROOM.toStage(e),
         key = m.toString();
       if (key === mv.key) continue;
@@ -606,7 +613,7 @@ void main() {
   });
   const wake = (ms) => (ev) => {
     // (the pager's message runs along its screen and moves nothing that takes the light)
-    if (!ev.target.closest || !ev.target.closest(MOVERS) || ev.target.closest(".pg-msg")) return;
+    if (ev.type !== "falling" && (!ev.target.closest || !ev.target.closest(MOVERS) || ev.target.closest(".pg-msg"))) return;
     until = Math.max(until, performance.now() + ms);
     if (!ticking) {
       ticking = true;
@@ -615,6 +622,7 @@ void main() {
   };
   stage.addEventListener("transitionrun", wake(1200));
   stage.addEventListener("animationstart", wake(3000));
+  stage.addEventListener("falling", wake(200)); // (sent from the stage itself, for each frame of a fall)
   const flicker = () => {
     if (flickers && !ticking) {
       ticking = true;
@@ -687,7 +695,7 @@ const SKIP = /\b(shade|anchor|burst|hit-plane|window-light|beam-corner|radio-lam
 const MAY = ".window .sky, .window .pane, .pc .glass, .neon h1, .plexi, .light-switch, .light-switch *";
 const GLOWS = ".window .sky, .window .pane, .pc.on .glass, .neon h1, .plexi, .lights-off .light-switch, .lights-off .light-switch *, .dawn .light-switch, .dawn .light-switch *";
 const CUT = ".plant .leaves"; // cut to the shape of the drawing it holds
-const MOVERS = ".thing, .pc-mouse, .chair-tie"; // what moves, with its faces (the tie, as it is put on)
+const MOVERS = ".thing, .pc-mouse, .chair-tie, .loose"; // what moves, with its faces (the tie, as it is put on; the odds and ends, as they fall)
 const BIG = 4e6; // px², a wall or the floor: lit, and casting nothing, since nothing is behind it
 const probe = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
 const colours = new Map();

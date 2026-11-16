@@ -27,9 +27,11 @@ live()
 const LOOK_ABOUT = [3, 7];
 
 async function live() {
-  const [{ willy }, { planner }, { moves }, { pick, everyday, reactions, react, bothered, warm, paws }] = await Promise.all([import("./willy.js"), import("./willy-paths.js"), import("./willy-moves.js"), import("./willy-life.js")]);
+  const [{ willy }, { planner }, { moves }, { pick, everyday, reactions, react, bothered, warm, paws }, { fall }] = await Promise.all([import("./willy.js"), import("./willy-paths.js"), import("./willy-moves.js"), import("./willy-life.js"), import("./room-fall.js")]);
   await ROOM.ready;
   await ROOM.landed(); // (setting him up takes the main thread for a while, and the morph would stop for it)
+  // what he can knock off the desk, and how it falls (room-fall.js); nothing under reduced motion
+  room.fall = fall(ROOM, reducedMotion);
   const w = await willy(room, stage);
   const P = planner({ surfaces: ROOM.surfaces, jumps: ROOM.jumps, fits: w.fits });
   const M = moves(w, P, ROOM.surfaces);

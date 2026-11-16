@@ -541,6 +541,29 @@ dialog[open].sheet-dialog {
   background: radial-gradient(circle at 40% 35%, #f3dc8b, #c49b2e 70%);
   box-shadow: inset 0 0 0 3px rgba(0, 0, 0, 0.12);
 }
+/* a crown cap, its crimped rim round a red top */
+.bottle-cap {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, #d8332b 0 9px, #b8241e 9px 10px, #d8332b 10px 12px, transparent 12.5px),
+    repeating-conic-gradient(#b8241e 0 10deg, #8e1a15 10deg 20deg);
+}
+/* a USB stick: a black body, its grey plug narrower */
+.usb-stick {
+  width: 66px;
+  height: 22px;
+  background: linear-gradient(90deg, #2a2a2c 0 72%, #9ea4a8 72% 74%, #c7ccd0 74%);
+  clip-path: polygon(0 12%, 3% 0, 74% 0, 74% 18%, 100% 18%, 100% 82%, 74% 82%, 74% 100%, 3% 100%, 0 88%);
+}
+/* a rubber band, dropped in a loose loop */
+.rubber-band {
+  width: 44px;
+  height: 34px;
+  border: 3px solid #d9bf8c;
+  border-radius: 48% 52% 44% 56% / 55% 45% 55% 45%;
+}
 /* What Willy says, in a bubble over his head (willy-room.js). */
 .cat-says {
   position: absolute;
