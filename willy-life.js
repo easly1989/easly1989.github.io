@@ -35,6 +35,59 @@ export const EDGE_BY = 110;
 export const PAW_KEYS = ";'[],./\\=- ";
 export const paws = (n, rand = Math.random) => [...Array(n)].map(() => PAW_KEYS[Math.floor(rand() * PAW_KEYS.length)]).join("");
 
+// Knocking things off the desk (#72). Sitting, his paw sweeps across in front of him, PAW_AT px
+// ahead (willy.js: the wrist of the paw that moves, in sit-paw-left and sit-paw-right, measured on
+// the model): from SWEEP[0] px on one side of his middle to SWEEP[1] px on the other, a ball
+// PAW px round (room-fall.js) pushing what it meets. So he sits beside a thing, side on to the
+// edge, and each sweep moves it about TAP px towards the edge, until it goes over.
+export const PAW_AT = 92;
+export const SWEEP = [-22, 27];
+export const PAW = 12;
+export const TAP = SWEEP[1] - SWEEP[0] - 3; // (it starts 3 px clear of his paw)
+// The edges he pushes from: the front one, towards the reader, and the left side; behind the desk
+// is the wall, and on the right the chair, which nothing falls through (room-fall.js).
+export const EDGES = {
+  front: { n: [0, 1], at: (D) => D.y1 },
+  left: { n: [-1, 0], at: (D) => -D.x0 },
+};
+const deg = (r) => (r * 180) / Math.PI;
+// He cannot sit nearer the edge than about 60 px, so the sweep that takes a thing over is a quick
+// one, played FAST times as fast from SWIPE[0] s to SWIPE[1] s of the clip: the thing slides on
+// about SLIDE px after his paw has left it.
+export const FAST = 2.5;
+export const SWIPE = [0.85, 2.1];
+export const SLIDE = 20;
+// Where he sits to paw thing { x, y, hx, hy, yaw } towards the edge named, the paw that sweeps
+// that way ("right": his right side to the edge, so his left paw sweeps; "left": the other) on
+// the desk D, back px further from the edge than he would be (so his paw meets it later in its
+// sweep, and moves it less): { x, y, heading, clip, falls }, falls whether this sweep, a quick
+// one, takes it over the edge.
+export function pawSpot(thing, edge, side, D, back = 0) {
+  const { n, at } = EDGES[edge],
+    c = Math.cos(thing.yaw),
+    s = Math.sin(thing.yaw);
+  // how far the thing reaches towards the edge from its middle
+  const reach = thing.hx * Math.abs(c * n[0] + s * n[1]) + thing.hy * Math.abs(-s * n[0] + c * n[1]);
+  // his heading: the edge on his right (his right is (sin h, cos h) in the room) or his left
+  const h = side === "right" ? (Math.round(deg(Math.atan2(n[0], n[1]))) + 360) % 360 : (Math.round(deg(Math.atan2(-n[0], -n[1]))) + 360) % 360,
+    r = (h * Math.PI) / 180,
+    f = [Math.cos(r), -Math.sin(r)];
+  // the thing's middle across him, towards the edge: its back just clear of where his paw starts
+  const across = SWEEP[0] + PAW + 3 + reach + back;
+  const x = Math.round(thing.x - PAW_AT * f[0] - across * n[0]),
+    y = Math.round(thing.y - PAW_AT * f[1] - across * n[1]);
+  const towards = thing.x * n[0] + thing.y * n[1];
+  return { x, y, heading: h, clip: side === "right" ? "sit-paw-right" : "sit-paw-left", falls: towards + TAP - back + SLIDE > at(D) + 4 };
+}
+// the paw that moves in a clip, if it is one where he paws at something
+export const PAWING = { "sit-paw-right": "left", "sit-paw-left": "right", "swat-left": "left", "swat-right": "right" };
+// what each of the odds and ends is called, for the live line
+const CALLED = { pencil: "pencil", eraser: "eraser", clip: "paper clip", coin: "coin", "bottle-cap": "bottle cap", "usb-stick": "USB stick", "rubber-band": "rubber band", "plant-leaf": "leaf" };
+export const called = (e) => "the " + (CALLED[[...e.classList].find((k) => CALLED[k])] || "thing");
+// at most this many things off the desk each visit; and how near the edge a thing must be
+export const KNOCKS = 3;
+export const NEAR_EDGE = 170;
+
 // what the actions and the reactions are made of, for Willy w, his planner P and his moves M in a
 // room of surfaces SURF, kept off the places avoid() names
 function kit({ w, P, M, SURF, avoid = () => [] }) {
@@ -167,9 +220,176 @@ function kit({ w, P, M, SURF, avoid = () => [] }) {
 // the actions, for Willy w, his planner P and his moves M in a room of surfaces SURF; avoid()
 // names the places on the desk he does not go to now (willy-room.js: an object the reader points
 // at or has focused)
-export function everyday({ w, P, M, SURF, avoid, pc = null }) {
+export function everyday({ w, P, M, SURF, avoid, pc = null, desk = null }) {
   const { between, one, xyh, here, fits, free, cue, hold, stay, spot, going, done, sitting, settled, clear, leaving } = kit({ w, P, M, SURF, avoid });
+  // a part of a clip, from t0 s to t1 s of it, at at, played k times as fast
+  const part = (clip, at, t0, t1, k = 1) => {
+    const m = hold(clip, at);
+    return { dur: (t1 - t0) / k, at: (t) => m.at(t0 + t * k) };
+  };
+  const D = SURF.desk;
+
+  // Knocking a thing off, a sweep of his paw at a time: he sits beside it, side on to the edge
+  // it is nearest, and paws it towards the edge; until it goes over he gets up, steps after it
+  // and paws again (again: willy-room.js runs this next, before anything else), four times at
+  // most. Before the sweep that takes it over he often looks at the reader first. desk (willy-
+  // room.js) has the things, where each lies, how many have fallen this visit, and the line to
+  // say once the one he aims at falls (room-fall.js tells it).
+  let aim = null; // { el, taps }
+  // to by the edge (n, the way out over it), from at, and then: too near the edge to turn round
+  // in, it is walked into the way he faces there, from a little back and away from the edge,
+  // where he can; or null
+  async function edgeward(at, to, n, then) {
+    const there = then(to),
+      direct = there && (await M.go(at, to));
+    if (direct) return { to, moments: [...M.legs(direct, "walk"), ...there] };
+    if (!there) return null;
+    const r = (to.heading * Math.PI) / 180,
+      f = [Math.cos(r), -Math.sin(r)];
+    for (const [back, away] of [[80, 40], [110, 60], [70, 25]]) {
+      const from = [to.x - back * f[0] - away * n[0], to.y - back * f[1] - away * n[1]],
+        h = (Math.round(deg(Math.atan2(-(to.y - from[1]), to.x - from[0]))) + 360) % 360,
+        turn = ((((to.heading - h + 180) % 360) + 360) % 360) - 180;
+      if (![...Array(11).keys()].every((i) => w.fits(from[0] + ((to.x - from[0]) * i) / 10, from[1] + ((to.y - from[1]) * i) / 10, D.z, h + (turn * i) / 10, "walk", { on: D }))) continue;
+      const route = await M.go(at, xyh("desk", [Math.round(from[0]), Math.round(from[1]), h]));
+      if (route) return { to, moments: [...M.legs(route, "walk"), ...M.walking([[from[0], from[1], h], [to.x, to.y, to.heading]], "desk"), ...there] };
+    }
+    return null;
+  }
+  const lying = (p) => p && !p.fell && p.still && p.z > -2 && p.z < 16;
+  async function knock(at) {
+    if (!desk || desk.fallen() >= KNOCKS) return (aim = null);
+    const tries = [];
+    for (const el of aim && aim.el.isConnected ? [aim.el] : desk.things()) {
+      const p = desk.where(el);
+      if (aim) console.warn("DBG aim", JSON.stringify(p));
+      if (!lying(p)) continue;
+      for (const edge of Object.keys(EDGES)) {
+        const { n, at: edgeAt } = EDGES[edge],
+          left = edgeAt(D) - (p.x * n[0] + p.y * n[1]);
+        if (left < 0 || left > NEAR_EDGE || (edge === "front" && desk.byChair(p.x))) continue;
+        // (from where his paw meets it soonest; else, near the edge, from further back)
+        for (const side of ["right", "left"]) tries.push({ el, p, n, spots: [0, 10, 20, 30].map((back) => pawSpot(p, edge, side, D, back)) });
+      }
+    }
+    // (the nearest first, each way round in turn at random)
+    tries.sort((a, b) => Math.hypot(a.spots[0].x - at.x, a.spots[0].y - at.y) - Math.hypot(b.spots[0].x - at.x, b.spots[0].y - at.y) + (Math.random() - 0.5) * 80);
+    for (const { el, p, n, spots } of tries.slice(0, 10)) {
+      const s = spots.find((s) => clear(xyh("desk", [s.x, s.y, s.heading])) && [s.clip, "walk", "idle", "sit", "sit-idle", "sit-from"].every((c) => fits(xyh("desk", [s.x, s.y, s.heading]), c)));
+      if (aim) console.warn("DBG spot", JSON.stringify(s), JSON.stringify(at));
+      if (!s) continue;
+      const to = xyh("desk", [s.x, s.y, s.heading]),
+        it = [p.x, p.y, 0],
+        look = s.falls && Math.random() < 0.5,
+        line = "Willy " + (look ? "looks at you, then pushes " : "pushes ") + called(el) + " off the desk.",
+        d = M.dur(s.clip);
+      // sitting down beside it, looking at it (or, before the last sweep, often at the reader),
+      // pawing it, the last time quickly, and watching where it went
+      const sweep = s.falls ? [part(s.clip, to, 0, SWIPE[0]), part(s.clip, to, SWIPE[0], SWIPE[1], FAST), part(s.clip, to, SWIPE[1], d)] : [part(s.clip, to, 0, d)];
+      cue(sweep[0], { look: it, act: () => desk.aim(el, line) });
+      const r = await edgeward(at, to, n, (to) => [
+        hold("sit", to),
+        look ? cue(stay("sit-idle", to, between([1.6, 2.4])), { look: "reader" }) : cue(stay("sit-idle", to, between([0.5, 1.2])), { look: it }),
+        ...sweep,
+        // (and after it, over the edge, where it went)
+        cue(stay("sit-idle", to, between([0.8, 1.6])), { look: s.falls ? [p.x + n[0] * 250, p.y + n[1] * 250, -300] : it }),
+        hold("sit-from", to),
+      ]);
+      if (aim) console.warn("DBG route", !!r);
+      if (!r) continue;
+      const taps = aim && aim.el === el ? aim.taps + 1 : 1;
+      aim = s.falls || taps >= 4 ? null : { el, taps };
+      return { ...r, again: aim ? "push something off" : null };
+    }
+    return (aim = null);
+  }
+
+  // Tapping the mug or the jar: he walks up to it, rises a paw and pats it, and it wobbles; it
+  // stays where it is (it is one of the projects).
+  const REACH = 125; // px ahead of him his paw comes down, swatting
+  async function tap(at) {
+    if (!desk) return null;
+    for (const pot of desk.pots().sort(() => Math.random() - 0.5)) {
+      const cx = (pot.x0 + pot.x1) / 2,
+        cy = (pot.y0 + pot.y1) / 2,
+        R = Math.max(pot.x1 - pot.x0, pot.y1 - pot.y0) / 2 + REACH;
+      const round = [...Array(16).keys()].map((i) => (i * Math.PI) / 8).sort(() => Math.random() - 0.5);
+      for (const a of round) {
+        const x = Math.round(cx + Math.cos(a) * R),
+          y = Math.round(cy - Math.sin(a) * R),
+          heading = Math.round((deg(a) + 180) % 360);
+        const to = xyh("desk", [x, y, heading]);
+        if (!clear(to) || !["walk", "idle"].every((c) => fits(to, c))) continue;
+        const clip = one(["swat-left", "swat-right"]),
+          hit = 0.62; // (s into the swat, as the paw comes down on it)
+        const r = await going(at, to, "walk", (to) => [
+          cue(stay("idle", to, between([0.6, 1.2])), { look: [cx, cy, 60] }),
+          part(clip, to, 0, hit),
+          cue(part(clip, to, hit, M.dur(clip)), { act: () => desk.wobble(pot.el, [cx - x, cy - y]), line: "Willy taps the " + pot.name + ". It wobbles." }),
+          cue(stay("idle", to, between([1, 1.8])), { look: [cx, cy, 60] }),
+        ]);
+        if (r) return r;
+      }
+    }
+    return null;
+  }
+
+  // His present: a leaf off the plant on the shelf. He goes up to the shelf, along it to the
+  // plant, nuzzles it and pulls a leaf off, comes back down to the desk with it and puts it down
+  // in front of him, and sits and looks at the reader. Then it is one of the odds and ends on the
+  // desk: he may knock it off later. Once a visit.
+  let gave = false;
+  async function present(at) {
+    if (!desk || gave || !SURF.shelf) return null;
+    const plant = desk.plant();
+    if (!plant) return null;
+    // along the shelf, facing the plant, his mouth at its leaves
+    const sh = SURF.shelf,
+      x = Math.round((sh.x0 + sh.x1) / 2);
+    for (const y of [plant.y + 130, plant.y + 140, plant.y + 150, plant.y + 120, plant.y + 160]) {
+      const by = xyh("shelf", [x, Math.round(y), 90]);
+      if (!["walk", "idle", "pet", "shake"].every((c) => fits(by, c))) continue;
+      // and somewhere on the desk to put it down: a free spot, with room on the desk's own top
+      // in front of him
+      for (let n = 0; n < 12; n++) {
+        const to = spot(by, "sit", 0);
+        if (!to) break;
+        const r0 = (to.heading * Math.PI) / 180,
+          ahead = [to.x + Math.cos(r0) * 120, to.y - Math.sin(r0) * 120];
+        if (ahead[0] < D.x0 + 40 || ahead[0] > D.x1 - 40 || ahead[1] < D.y0 + 40 || ahead[1] > D.y1 - 40 || window.ROOM.ground(ahead[0], ahead[1], 0) > 0.5) continue;
+        if (!["eat", "sit", "sit-idle", "sit-from"].every((c) => fits(to, c))) continue;
+        const there = await going(at, by, "walk", (by) => [
+          cue(stay("idle", by, between([0.8, 1.4])), { look: [plant.x, plant.y, plant.z] }),
+          hold("pet", by),
+          cue(hold("shake", by), { act: () => desk.leaf.take() }),
+        ]);
+        if (!there) continue;
+        const back = await M.go(by, to);
+        if (!back) continue;
+        const e = M.dur("eat"),
+          sit = sitting(to, between([2.5, 4]), { look: "reader" });
+        if (!sit) continue;
+        gave = true;
+        return {
+          to,
+          moments: [
+            ...there.moments,
+            ...M.legs(back, "walk"),
+            part("eat", to, 0, e * 0.45),
+            cue(part("eat", to, e * 0.45, e), { act: () => desk.leaf.drop(), line: "Willy brings you a leaf." }),
+            ...sit,
+          ],
+        };
+      }
+    }
+    return null;
+  }
+
   return [
+    // knocking things off, tapping the mug and the jar, and his present (#72)
+    { n: "push something off", w: 2, cool: 180, where: ["desk"], run: knock },
+    { n: "tap the mug", w: 2, cool: 150, where: ["desk"], run: tap },
+    { n: "bring a leaf", w: 1, cool: 120, where: ["desk"], run: present },
     { n: "wander", w: 10, where: ["desk"], run: (at) => going(at, spot(at), "walk", (to) => [stay("idle", to, between([0.6, 1.5]))]) },
     { n: "trot", w: 4, where: ["desk"], run: (at) => going(at, spot(at, "sit"), "trot", (to) => sitting(to, between([1.5, 3]))) },
     {

@@ -199,6 +199,13 @@ export async function willy(room, stage, src = "assets/willy.glb") {
   const legs = LEGS.map((l) => l.map((n) => model.getObjectByName(THREE.PropertyBinding.sanitizeNodeName(n))));
   const legged = legs.every((l) => l.every(Boolean));
   const skull = model.getObjectByName("Head");
+  // his front paws and the tip of his tongue, in the room, where he stands now (stand())
+  const paws = [0, 1].map((i) => (legged ? legs[i][3] : skull)),
+    tongue = model.getObjectByName("tongue4") || skull;
+  const inRoom = (bone) => {
+    const v = bone.getWorldPosition(new THREE.Vector3());
+    return [here[0] + v.x, here[1] - v.y, here[2] + v.z];
+  };
   const bones = [];
   model.traverse((o) => o.isBone && bones.push(o));
   // what of him the moon is looked for on: his head and along his back
@@ -433,6 +440,9 @@ export async function willy(room, stage, src = "assets/willy.glb") {
         },
       };
     },
+    // where a front paw ("left" or "right") and his mouth are, in room px, as he was last drawn
+    paw: (side) => inRoom(paws[side === "left" ? 0 : 1]),
+    mouth: () => inRoom(tongue),
     // where the top of his head is on the screen, in the viewport's px
     head() {
       const v = skull.getWorldPosition(new THREE.Vector3());
