@@ -2701,18 +2701,22 @@ html:not(.iso) .strip {
   display: none;
 }
 .iso .plant-leaf {
-  width: 44px;
-  height: 20px;
+  width: 60px;
+  height: 27px;
 }
+/* (the plant's own green, its rim and vein lighter, so that it reads on the cutting mat) */
 .iso .plant-leaf svg {
   display: block;
   width: 100%;
   height: 100%;
   fill: #4f8a3c;
+  stroke: #8cc46a;
+  stroke-width: 1.5;
+  overflow: visible;
 }
 .iso .plant-leaf .vein {
   fill: none;
-  stroke: #3b6a2c;
+  stroke: #a6d487;
   stroke-width: 1.5;
 }
 .iso .plant-leaf.carried {

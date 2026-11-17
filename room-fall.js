@@ -51,6 +51,13 @@ export function fall(ROOM, reducedMotion) {
   const paw = new Body({ mass: 0, type: Body.KINEMATIC, material: pad, allowSleep: false });
   paw.addShape(new Sphere(PAW / U));
   let pawing = false;
+  // a flick (flick()): the thing his paw is to send off as it first touches it, how fast; and
+  // once it has, the flick to give it after this step
+  let flicking = null,
+    flicked = null;
+  paw.addEventListener("collide", (ev) => {
+    if (flicking && ev.body === flicking.b) (flicked = flicking), (flicking = null);
+  });
 
   // where a thing lies as its element has it: its middle, its half sizes on the desk, its turn
   function measured(e) {
@@ -117,6 +124,11 @@ export function fall(ROOM, reducedMotion) {
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
     world.step(STEP, dt, 8);
+    if (flicked) {
+      flicked.b.velocity.copy(flicked.vel);
+      flicked.b.angularVelocity.copy(flicked.spin);
+      flicked = null;
+    }
     let awake = false,
       moved = null;
     for (const [e, o] of bodies) {
@@ -175,6 +187,7 @@ export function fall(ROOM, reducedMotion) {
       if (!p) {
         if (pawing) world.removeBody(paw);
         pawing = false;
+        flicking = null;
         return;
       }
       if (reducedMotion()) return;
@@ -191,6 +204,16 @@ export function fall(ROOM, reducedMotion) {
         k = 1 / Math.max(1 / 240, dt);
       paw.velocity.set((to.x - paw.position.x) * k, (to.y - paw.position.y) * k, (to.z - paw.position.z) * k);
       for (const o of bodies.values()) if (o.b.sleepState === Body.SLEEPING && o.b.position.distanceTo(to) < (PAW + Math.max(o.w, o.h) * o.s[0]) / U) o.b.wakeUp(), (o.shown = true);
+    },
+    // the next time his paw touches the thing e (while he paws), it is flicked: given the
+    // velocity vel, room px/s, and a spin in turns/s, as push() gives them; whether it can be
+    flick(e, vel, spin = [0, 0, 0]) {
+      if (reducedMotion()) return false;
+      make();
+      const o = bodies.get(e);
+      if (!o) return false;
+      flicking = { b: o.b, vel: v(...vel), spin: new Vec3(...spin.map((s) => s * 2 * Math.PI)) };
+      return true;
     },
     // where the thing e lies: its middle in room px, its half sizes along its own x and y, its
     // turn about z (radians), and whether it still lies on the desk; or null, gone

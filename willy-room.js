@@ -251,7 +251,11 @@ async function live() {
     where: (e) => room.fall.where(e),
     fallen: () => room.fall.state().fell.length,
     byChair: (x) => !!chairX && x > chairX[0] && x < chairX[1],
-    aim: (el, line) => (aimed = { el, line }),
+    // what he paws at now, the line once it falls, and, for a flick, how fast it is sent off
+    aim(el, line, flick = null) {
+      aimed = { el, line };
+      if (flick) room.fall.flick(el, flick, [0, 0, between([-1.5, 1.5])]);
+    },
     pots: () =>
       [["mug", ".thing.mug", ".cup"], ["jar", ".thing.jar", ".glass"]].flatMap(([name, sel, body]) => {
         const el = stage.querySelector(sel),
@@ -297,8 +301,8 @@ async function live() {
         e.className = "loose plant-leaf";
         e.setAttribute("aria-hidden", "true");
         e.innerHTML = LEAF;
-        e.style.left = Math.round(x - 22) + "px";
-        e.style.top = Math.round(y - 10) + "px";
+        e.style.left = Math.round(x - 30) + "px";
+        e.style.top = Math.round(y - 13) + "px";
         e.style.setProperty("--r", Math.round(between([-60, 60])) + "deg");
         (stage.querySelector(".loose")?.parentElement || stage).append(e);
       },
@@ -325,9 +329,9 @@ async function live() {
   const lookingAbout = (at) => [M.hold("idle", [at.x, at.y, at.heading], at.surface, between(LOOK_ABOUT) - M.dur("idle"), true)];
   // what he does next, from at, and where he ends up: one of his everyday actions he can do
   // there and now; or, if none can be, he looks about where he is
-  room.__dbg = { w, desk, SURF, P, M }; // SCRATCH
   const ACTIONS = everyday({ w, P, M, SURF, avoid, pc, desk }),
     ran = {};
+  room.__dbg = { w, desk, SURF, P, M, ACTIONS }; // SCRATCH
   let done = null,
     again = null; // an action that goes on: the next sweep of his paw at what he is knocking off
   async function next(at) {
