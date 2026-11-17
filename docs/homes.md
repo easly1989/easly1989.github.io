@@ -89,7 +89,14 @@ link. The professional pages reach the same list through `pro/archive.html`
 (`data/pages/archive.json`), and `archive.html` lists by hand the repositories the data lists,
 which `checks/data.py` holds to it.
 
-The loose desk items (pencil, eraser, clip, coin) are scenery, with no behaviour.
+The loose desk items, the odds and ends, are a pool of seven (pencil, eraser, clip, coin, bottle
+cap, USB stick, rubber band) in `index.html`; `room.js` keeps three to five of them on each visit,
+at random (all seven with `?odds`). They can fall (`room-fall.js`, with cannon-es in
+`vendor/cannon-es/`): the desk, the walls, the floor and every solid or low thing but the chair
+are fixed boxes in a physics world, and a pushed thing becomes a body that follows it through a
+`matrix3d` on its element, sleeps once still and is taken out of the room once out of the frame.
+The world steps only while something moves, and under reduced motion a push is refused. Nothing
+pushes them yet: Willy will (#72).
 
 ## Willy
 

@@ -22,6 +22,7 @@ python checks/willy-flips.py
 python checks/willy-pet.py
 python checks/willy-way.py
 python checks/willy-props.py
+python checks/willy-fall.py
 python checks/motion.py
 python checks/data.py
 ```
@@ -129,6 +130,14 @@ of motion that forgets it measures a room in which Willy only sleeps.
   monitor, focused, his focus ring goes round only what shows of him; at the front edge he sits
   along it, no more than 120 px from it, the last bone of his tail below the edge on the screen.
   Each is said on the live line. Headless; about four minutes.
+
+- `willy-fall.py` — what falls in the room: cannon-es is in `vendor/` with its licence, under
+  100 KB gzipped; each visit draws three to five of the seven odds and ends, and `?odds` shows all
+  seven; before a push the physics does not run and every body sleeps; the eraser pushed over the
+  desk's front edge falls, its element following its body by `matrix3d`, and is taken out of the
+  room once out of the frame, while the coin stays where it was, asleep, and the physics stops;
+  under reduced motion a push is refused and nothing falls; nothing throws. Through the room's
+  `fall` hook (`push`, `state`), as Willy will push things in 72-B. Headless; about a minute.
 
 - `motion.py` — the reader's choice to animate anyway (`motion.js`), under reduced motion: with
   no choice the footer's button offers it and nothing of Willy's peek moves; clicked, it is pressed,

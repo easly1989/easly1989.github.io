@@ -103,7 +103,7 @@
         document.write(
           '<script type="importmap">{"imports":{"three":"./vendor/three/build/three.module.min.js",' +
             '"./vendor/three/build/three.core.js":"./vendor/three/build/three.core.min.js",' +
-            '"three/addons/":"./vendor/three/examples/jsm/"}}</scr' + 'ipt>' +
+            '"three/addons/":"./vendor/three/examples/jsm/","cannon-es":"./vendor/cannon-es/cannon-es.js"}}</scr' + 'ipt>' +
             '<script type="module" src="' + (new URLSearchParams(location.search).has("review") ? "willy-review.js" : "willy-room.js") + '"></scr' + 'ipt>' +
             '<script type="module" src="room-light.js"></scr' + 'ipt>' +
             '<script type="module" src="room-mouse.js"></scr' + 'ipt>',
@@ -2052,6 +2052,9 @@
           <span class="loose eraser" style="left: 380px; top: 812px; --r: 12deg" aria-hidden="true"></span>
           <span class="loose clip" style="left: 784px; top: 290px; --r: 30deg" aria-hidden="true"></span>
           <span class="loose coin" style="left: 1060px; top: 560px" aria-hidden="true"></span>
+          <span class="loose bottle-cap" style="left: 900px; top: 700px" aria-hidden="true"></span>
+          <span class="loose usb-stick" style="left: 600px; top: 760px; --r: -8deg" aria-hidden="true"></span>
+          <span class="loose rubber-band" style="left: 260px; top: 640px; --r: 20deg" aria-hidden="true"></span>
           <div class="pc">
             <span class="floor" aria-hidden="true"></span>
             <span class="top" aria-hidden="true"></span>

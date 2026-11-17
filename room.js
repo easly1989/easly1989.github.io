@@ -447,8 +447,15 @@
   if (lens)
     for (var l = 1; l <= 8; l++) el("span", "slice", lens, "inset:0;border-radius:50%;background:" + shade("#2a2a2a", 0.9 - l / 30) + ";transform:translateZ(" + -l * 2 + "px)");
 
+  // the odds and ends: a pool of seven, three to five of them drawn on each visit, the rest
+  // taken out of the room (all seven with ?odds, for looking at them)
+  (function draw() {
+    var pool = [].slice.call(stage.querySelectorAll(".loose"));
+    var keep = /[?&]odds\b/.test(location.search) ? pool.length : 3 + Math.floor(Math.random() * 3);
+    while (pool.length > keep) pool.splice(Math.floor(Math.random() * pool.length), 1)[0].remove();
+  })();
   // loose things: copies of their own face stacked up, so the art runs down the sides
-  var LOOSE = { pencil: 10, eraser: 12, coin: 4, clip: 2 };
+  var LOOSE = { pencil: 10, eraser: 12, coin: 4, clip: 2, "bottle-cap": 6, "usb-stick": 8, "rubber-band": 1 };
   [].forEach.call(stage.querySelectorAll(".loose"), function (o) {
     var h =
       LOOSE[
@@ -2261,6 +2268,18 @@
     ground: ground,
     // the floor's height, where Willy lands off the desk's front edge
     floor: FLOOR,
+    // the desk's top and the faces of the walls, and every solid or low thing in the room but the
+    // chair as its box: what the falling things meet (room-fall.js)
+    desk: DESK,
+    walls: { back: BACK, right: RIGHT },
+    boxes: function () {
+      solid();
+      return solids.concat(lows).filter(function (o) {
+        return o.name !== "the chair";
+      }).map(function (o) {
+        return { name: o.name, x0: o.b.x0, y0: o.b.y0, z0: o.b.z0, x1: o.b.x1, y1: o.b.y1, z1: o.b.z1 };
+      });
+    },
     // what is low enough to walk over, each by name, how high and where on the desk, and its
     // element
     lows: function () {
