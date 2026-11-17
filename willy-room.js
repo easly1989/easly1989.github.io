@@ -274,6 +274,13 @@ async function live() {
       el.classList.add("wobble");
       el.addEventListener("animationend", (e) => e.target === el && el.classList.remove("wobble"));
     },
+    // whether a point on the desk's top shows: not where the computer stands in front of it
+    seen(x, y) {
+      const pc = document.querySelector(".pc"),
+        r = pc && pc.getBoundingClientRect(),
+        [sx, sy] = ROOM.toScreen(x, y, SURF.desk.z);
+      return !r || sx < r.left - 20 || sx > r.right + 20 || sy < r.top - 20 || sy > r.bottom + 20;
+    },
     plant() {
       const pot = room.querySelector(".plant");
       if (!pot || !pot.querySelector(".leaves path:not(.taken)")) return null;

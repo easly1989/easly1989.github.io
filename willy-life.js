@@ -390,13 +390,14 @@ export function everyday({ w, P, M, SURF, avoid, pc = null, desk = null }) {
       const by = xyh("shelf", [x, Math.round(y), 90]);
       if (!["walk", "idle", "pet", "shake"].every((c) => fits(by, c))) continue;
       // and somewhere on the desk to put it down: a free spot, with room on the desk's own top
-      // in front of him
-      for (let n = 0; n < 12; n++) {
+      // in front of him, clear of the books, towards the front of the desk and not behind the
+      // computer, where the reader sees it
+      for (let n = 0; n < 40; n++) {
         const to = spot(by, "sit", 0);
         if (!to) break;
         const r0 = (to.heading * Math.PI) / 180,
           ahead = [to.x + Math.cos(r0) * 120, to.y - Math.sin(r0) * 120];
-        if (ahead[0] < D.x0 + 40 || ahead[0] > D.x1 - 40 || ahead[1] < D.y0 + 40 || ahead[1] > D.y1 - 40 || window.ROOM.ground(ahead[0], ahead[1], 0) > 0.5) continue;
+        if (ahead[0] < D.x0 + 40 || ahead[0] > D.x1 - 40 || ahead[1] < D.y0 + (D.y1 - D.y0) * 0.6 || ahead[1] > D.y1 - 40 || [[0, 0], [50, 0], [-50, 0], [0, 50], [0, -50]].some(([dx, dy]) => window.ROOM.ground(ahead[0] + dx, ahead[1] + dy, 0) > 0.5) || !desk.seen(ahead[0], ahead[1])) continue;
         if (!["eat", "sit", "sit-idle", "sit-from"].every((c) => fits(to, c))) continue;
         const there = await going(at, by, "walk", (by) => [
           cue(stay("idle", by, between([0.8, 1.4])), { look: [plant.x, plant.y, plant.z] }),
