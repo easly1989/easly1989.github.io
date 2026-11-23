@@ -73,6 +73,6 @@ Chrome skips page transitions at random; load lazy images before measuring (`doc
 - `docs/data.md`: data files, versions and releases, adding a project, the nav.
 - `docs/content.md`: voice, Donate and attribution, the CloudBank demo.
 - `docs/design.md`: typefaces, colours, markup and accessibility conventions.
-- Domain docs, single-context: `CONTEXT.md`, and `docs/adr/` once created
+- Domain docs, single-context: `GLOSSARY.md`, and `docs/adr/` once created
   (`docs/agents/domain.md`). Issues: GitHub Issues on `easly1989/easly1989.github.io` via `gh`
   (`docs/agents/issue-tracker.md`). Token tools: CBM declined (2026-10-17).
