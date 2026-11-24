@@ -7,7 +7,7 @@
     <title>Nutreek — Self-hosted weekly nutrition planner · Carlo Ruggiero</title>
     <meta
       name="description"
-      content="Nutreek is a self-hosted weekly nutrition planner: meal plans, macros per meal, day and week, offline OpenFoodFacts search, a barcode scanner, adaptive TDEE, weight and hydration tracking, and a coach mode. Installable on your phone."
+      content="Nutreek is a self-hosted weekly nutrition planner: meal plans with macros per meal, day and week, offline OpenFoodFacts search, a barcode scanner, a shopping list that can show a connected store's prices, a week shared with up to six other people, reminders, adaptive TDEE, weight and hydration tracking, and a coach mode. Installable on your phone."
     />
     <!-- /data -->
     <meta name="theme-color" content="#22594b" media="(prefers-color-scheme: light)" />
@@ -176,7 +176,7 @@
       <main>
         <section class="paper label-sheet" style="--c: var(--nutreek)">
           <img class="mark" src="nutreek.svg" alt="" width="56" height="56" />
-          <p class="state"><!-- data:nutreek.state --><span data-release="easly1989/nutreek">Shipping, v2.2.0</span>. Open source under AGPL-3.0. Self-hosted.<!-- /data --></p>
+          <p class="state"><!-- data:nutreek.state --><span data-release="easly1989/nutreek">Shipping, v3.0.0</span>. Open source under AGPL-3.0. Self-hosted.<!-- /data --></p>
           <h1><!-- data:nutreek.name -->Nutreek<!-- /data --></h1>
           <p class="lede">
             <!-- data:nutreek.lede -->
@@ -234,8 +234,9 @@
                 </p>
                 <p style="color: var(--paper-ink-2); font-size: 0.92rem">
                   It runs natively as a single Go binary, or as one Docker container. SQLite is
-                  embedded, so there is no separate database to operate. The interface is in English
-                  and Italian, in light and dark, and installs on a phone like an app.
+                  embedded, so there is no separate database to operate. The interface is rows and
+                  rules instead of cards, in English and Italian, in light and dark, and installs on
+                  a phone like an app.
                 </p>
                 <span class="folio">Monday</span>
               </section>
@@ -244,8 +245,8 @@
                 <h2>The week, one day at a time</h2>
                 <div class="shots">
                 <figure class="shot" style="--r: -1.2deg">
-                  <img width="1280" height="853" src="assets/nutreek-week.png" alt="Nutreek week view: day tabs with calories, the day's meals with macros, a calorie ring, water and a workout" loading="lazy" />
-                  <figcaption>The meals with their macros, and beside them the calorie ring, water and workouts.</figcaption>
+                  <img width="1280" height="853" src="assets/nutreek-week.png" alt="Nutreek week view: day tabs with calories, the day's meals with their times and macros, a calorie ring and the protein, carbs and fat bars" loading="lazy" />
+                  <figcaption>The day's meals with their times and macros, and beside them the calorie ring.</figcaption>
                 </figure>
                 <figure class="shot" style="--r: 1.5deg">
                   <img width="1280" height="853" src="assets/nutreek-week-dark.png" alt="The week view in dark mode" loading="lazy" />
@@ -261,11 +262,11 @@
                 <div class="day"><b>Wednesday</b><span></span></div>
                 <h2>Features</h2>
                 <ul class="rows">
-                  <li><b>Weekly plans</b><span>A calorie ring and macros per meal, day and week, water and workouts, cheat meals, and one-click copy from the previous week.</span></li>
-                  <li><b>Ingredients</b><span>A local copy of OpenFoodFacts, updated daily: full-text search offline, with product photos.</span></li>
-                  <li><b>Barcode scanner</b><span>Scan a pack from any food picker: your own ingredients first, then the local OpenFoodFacts copy.</span></li>
-                  <li><b>On your phone</b><span>Installs as an app, with a bottom bar. Light, dark or system, in four colours.</span></li>
-                  <li><b>Recipes and templates</b><span>Recipes from ingredients or imported from a URL (schema.org/Recipe), with a photo and quantities you edit in place, in grams or pieces; weekly templates applied in one click.</span></li>
+                  <li><b>Weekly plans</b><span>A calorie ring and macros per meal, day and week. Meals have a time; move a row or swap its ingredient. Cheat meals, and one-click copy of last week.</span></li>
+                  <li><b>Ingredients and scanner</b><span>A local OpenFoodFacts copy, updated daily: offline full-text search with photos, and a barcode scanner in every food picker.</span></li>
+                  <li><b>Recipes and templates</b><span>Built from ingredients or imported from a URL, with a photo you can hide in the list; weekly templates in one click.</span></li>
+                  <li><b>Shopping list</b><span>One list for the week and what you add by hand: by name, category or your own order. Tick what you already have.</span></li>
+                  <li><b>On your phone</b><span>Installs as an app with a four-destination bottom bar, and, over HTTPS, sends reminders for water, training and meals, even when closed.</span></li>
                 </ul>
                 <span class="folio">Wednesday</span>
               </section>
@@ -273,11 +274,11 @@
                 <div class="day"><b>Thursday</b><span></span></div>
                 <h2>More features</h2>
                 <ul class="rows">
-                  <li><b>Auto plan generator</b><span>A greedy planner builds a whole week from meal variants to hit your macro targets.</span></li>
-                  <li><b>Adaptive TDEE</b><span>Estimates your real energy needs from your weight and intake trend, and suggests target updates.</span></li>
-                  <li><b>Weight, hydration, workouts</b><span>Daily tracking with trend charts, a workout log with calories burned and a weekly dashboard.</span></li>
-                  <li><b>Coach mode</b><span>A plan library, client assignment, frozen plan history and a coach dashboard.</span></li>
-                  <li><b>Shopping list and REST API</b><span>The week's shopping grouped by aisle, with a cart and a two-column print, and a bearer-token REST API.</span></li>
+                  <li><b>Household</b><span>Up to six other people share your week, each with a calorie goal and no login. Quantities scale to the goal, and the shopping list adds everyone up.</span></li>
+                  <li><b>Stores</b><span>Connect a grocery store with a click (Conad comes with Nutreek): its products appear in the ingredient search, and the shopping list shows indicative prices.</span></li>
+                  <li><b>Auto plan and adaptive TDEE</b><span>A greedy planner builds a week from meal variants to hit your macros, and your real energy needs are estimated from your weight and intake trend.</span></li>
+                  <li><b>Weight, hydration, workouts</b><span>Daily tracking with trend charts, and a workout log with activities of your own and an estimate of the calories burned.</span></li>
+                  <li><b>Coach mode and API</b><span>A plan library, client assignment and a coach dashboard, and a bearer-token REST API.</span></li>
                 </ul>
                 <span class="folio">Thursday</span>
               </section>
@@ -290,7 +291,7 @@
                 <div class="shots">
                   <figure class="shot" style="--r: -2deg"><img width="1280" height="853" src="assets/nutreek-scanner.png" alt="The barcode scanner open over the food picker" loading="lazy" /><figcaption>The barcode scanner, from the food picker.</figcaption></figure>
                   <figure class="shot" style="--r: 1.5deg"><img width="1280" height="853" src="assets/nutreek-barcode.png" alt="The scanned product ready to add" loading="lazy" /><figcaption>The scanned product: pick the grams, see the calories.</figcaption></figure>
-                  <figure class="shot" style="--r: 1deg"><img width="1920" height="1280" src="assets/nutreek-phone.png" alt="Three phone screens: the week, the scanner and the shopping list" loading="lazy" /><figcaption>On the phone, with the bottom bar.</figcaption></figure>
+                  <figure class="shot" style="--r: 1deg"><img width="1920" height="1280" src="assets/nutreek-phone.png" alt="Three phone screens: the week, the scanner and the shopping list" loading="lazy" /><figcaption>On the phone, with four destinations in the bottom bar.</figcaption></figure>
                   <figure class="shot" style="--r: -1.5deg"><img width="1280" height="853" src="assets/nutreek-recipes.png" alt="Recipe list with calories and macros per serving" loading="lazy" /><figcaption>Recipes, with macros per serving.</figcaption></figure>
                 </div>
                 <span class="folio">Friday</span>
@@ -299,8 +300,8 @@
                 <div class="day"><b>Saturday</b><span></span></div>
                 <h2>Planning ahead</h2>
                 <div class="shots">
-                  <figure class="shot" style="--r: 1.5deg"><img width="1280" height="853" src="assets/nutreek-plan.png" alt="Nutrition plan with the variants of breakfast and lunch" loading="lazy" /><figcaption>The plan: variants for each meal.</figcaption></figure>
-                  <figure class="shot" style="--r: -1deg"><img width="1280" height="853" src="assets/nutreek-shopping.png" alt="Shopping list grouped by aisle" loading="lazy" /><figcaption>The shopping list, by aisle.</figcaption></figure>
+                  <figure class="shot" style="--r: 1.5deg"><img width="1280" height="853" src="assets/nutreek-plan.png" alt="Nutrition plan with the variants of each meal as closed rows, the first one open" loading="lazy" /><figcaption>The plan: variants for each meal, open on a tap.</figcaption></figure>
+                  <figure class="shot" style="--r: -1deg"><img width="1280" height="853" src="assets/nutreek-shopping.png" alt="Shopping list with a Group by switch: None, Category or My order" loading="lazy" /><figcaption>The shopping list: by name, by category or in your order.</figcaption></figure>
                   <figure class="shot" style="--r: -2deg"><img width="1280" height="853" src="assets/nutreek-stats.png" alt="Statistics in dark mode with estimated energy needs" loading="lazy" /><figcaption>Statistics and adaptive TDEE.</figcaption></figure>
                   <figure class="shot" style="--r: 1deg"><img width="1280" height="853" src="assets/nutreek-coach.png" alt="Coach panel with a client and the plan library" loading="lazy" /><figcaption>The coach panel and plan library.</figcaption></figure>
                 </div>
