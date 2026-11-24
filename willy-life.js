@@ -405,6 +405,7 @@ export function everyday({ w, P, M, SURF, avoid, pc = null, desk = null }) {
       // and somewhere on the desk to put it down: a free spot, with room on the desk's own top
       // in front of him, clear of the books, towards the front of the desk and not behind the
       // computer, where the reader sees it
+      let there; // (the way to him, up on the shelf, is the same for each of the places to put it down)
       for (let n = 0; n < 40; n++) {
         // (somewhere in the front of the desk, facing about the reader's way)
         const to = xyh("desk", [Math.round(between([D.x0 + 120, D.x1 - 120])), Math.round(between([D.y0 + (D.y1 - D.y0) * 0.65, D.y1 - 200])), one([240, 270, 300])]);
@@ -413,12 +414,12 @@ export function everyday({ w, P, M, SURF, avoid, pc = null, desk = null }) {
           ahead = [to.x + Math.cos(r0) * 120, to.y - Math.sin(r0) * 120];
         if (ahead[0] < D.x0 + 40 || ahead[0] > D.x1 - 40 || ahead[1] < D.y0 + (D.y1 - D.y0) * 0.6 || ahead[1] > D.y1 - 40 || [[0, 0], [50, 0], [-50, 0], [0, 50], [0, -50]].some(([dx, dy]) => window.ROOM.ground(ahead[0] + dx, ahead[1] + dy, 0) > 0.5) || !desk.seen(ahead[0], ahead[1])) continue;
         if (!["eat", "sit", "sit-idle", "sit-from"].every((c) => fits(to, c))) continue;
-        const there = await going(at, by, "walk", (by) => [
+        if (there === undefined) there = await going(at, by, "walk", (by) => [
           cue(stay("idle", by, between([0.8, 1.4])), { look: [plant.x, plant.y, plant.z] }),
           hold("pet", by),
           cue(hold("shake", by), { act: () => desk.leaf.take() }),
         ]);
-        if (!there) continue;
+        if (!there) break; // (the shelf cannot be reached from here: the next place along it)
         // (from where he cannot get back down, the next place along the shelf)
         const back = await M.go(by, to);
         if (!back) break;

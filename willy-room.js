@@ -246,6 +246,7 @@ async function live() {
   });
   let carried = null; // the leaf in his mouth
   const LEAF = '<svg viewBox="0 0 44 20" aria-hidden="true"><path d="M1 10C10 1 30 0 43 10 30 20 10 19 1 10z" /><path class="vein" d="M3 10H40" /></svg>';
+  const mat = stage.querySelector(".loose")?.parentElement || stage; // (what the odds and ends lie in, found while some are still there)
   const desk = {
     things: () => [...stage.querySelectorAll(".loose")],
     where: (e) => room.fall.where(e),
@@ -272,7 +273,7 @@ async function live() {
       el.classList.remove("wobble");
       void el.offsetWidth;
       el.classList.add("wobble");
-      el.addEventListener("animationend", (e) => e.target === el && el.classList.remove("wobble"));
+      el.addEventListener("animationend", (e) => e.target === el && el.classList.remove("wobble"), { once: true });
     },
     // whether a point on the desk's top shows: not where the computer stands in front of it
     seen(x, y) {
@@ -298,6 +299,14 @@ async function live() {
         carried.innerHTML = LEAF;
         room.append(carried);
       },
+      // put back, if the show he carried it in was cut short: onto the plant, out of his mouth
+      lose() {
+        if (!carried) return;
+        carried.remove();
+        carried = null;
+        const taken = [...room.querySelectorAll(".plant .leaves path.taken")];
+        if (taken.length) taken[taken.length - 1].classList.remove("taken");
+      },
       // and out of it, onto the desk below his mouth: one of the odds and ends from now on
       drop() {
         if (!carried) return;
@@ -311,7 +320,8 @@ async function live() {
         e.style.left = Math.round(x - 30) + "px";
         e.style.top = Math.round(y - 13) + "px";
         e.style.setProperty("--r", Math.round(between([-60, 60])) + "deg");
-        (stage.querySelector(".loose")?.parentElement || stage).append(e);
+        e.style.filter = "none";
+        mat.append(e);
       },
     },
   };
@@ -540,6 +550,7 @@ async function live() {
     paw("", 0);
     const r = await bother(kind, p).catch((e) => (console.warn("Willy stays:", e), null));
     if (r) {
+      desk.leaf.lose();
       says.classList.remove("on");
       saying = 0;
       fleeing = r.fleeing || false;
@@ -631,7 +642,7 @@ async function live() {
       carry();
       drawn = key;
     }
-    paw(p.clip, dt);
+    paw(p.clip, dt || 1 / 60);
     if (k === 1) blend = null;
     if (saying) {
       if (time > saying) {
