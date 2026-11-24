@@ -5,6 +5,9 @@ a deploy, and a release is a tag on the `main` that was live at that moment.
 
 ## Unreleased
 
+- **Nutreek 3.0.0:** the page and its professional page follow the release: new screenshots of the
+  rebuilt interface, and the features now cover Household, Stores, reminders, workouts of your
+  own and the shopping list's new groupings.
 - **Archive:** a page of the public projects I no longer maintain (ffxiv_act_dfassist,
   ffxiv_actor, coordinator-monitor and git-svn-merge), each linked to its repository on GitHub. In
   the room it is a wastebasket on the floor by the right wall; on the professional pages it is a
