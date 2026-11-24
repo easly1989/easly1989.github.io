@@ -2665,3 +2665,64 @@ html:not(.iso) .strip {
     9px 3px 0 -2px #2a2a2a;
   pointer-events: none;
 }
+
+/* ---- what Willy knocks about (#72, willy-room.js) ---------------------------------- */
+/* tapped by his paw, the mug or the jar rocks on its foot, away from it, and settles */
+.iso .thing.wobble {
+  transform-origin: 50% 50% calc(-1 * var(--h3, 0px));
+  animation: wobble 1s ease-out;
+}
+@keyframes wobble {
+  0%,
+  100% {
+    transform: none;
+  }
+  16% {
+    transform: rotate3d(var(--wobble-x, 1), var(--wobble-y, 0), 0, 6deg);
+  }
+  38% {
+    transform: rotate3d(var(--wobble-x, 1), var(--wobble-y, 0), 0, -3.5deg);
+  }
+  60% {
+    transform: rotate3d(var(--wobble-x, 1), var(--wobble-y, 0), 0, 1.8deg);
+  }
+  80% {
+    transform: rotate3d(var(--wobble-x, 1), var(--wobble-y, 0), 0, -0.6deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .iso:where(:not(.motion-ok)) .thing.wobble {
+    animation: none;
+  }
+}
+/* his present: a leaf off the plant, the one it no longer has; in his mouth, held by its stalk,
+   and then on the desk with the odds and ends */
+.iso .plant .leaves path.taken {
+  display: none;
+}
+.iso .plant-leaf {
+  width: 60px;
+  height: 27px;
+}
+/* (the plant's own green, its rim and vein lighter, so that it reads on the cutting mat) */
+.iso .plant-leaf svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: #4f8a3c;
+  stroke: #8cc46a;
+  stroke-width: 1.5;
+  overflow: visible;
+}
+.iso .plant-leaf .vein {
+  fill: none;
+  stroke: #a6d487;
+  stroke-width: 1.5;
+}
+.iso .plant-leaf.carried {
+  position: absolute;
+  left: 0;
+  top: -10px;
+  transform-origin: 0 50%;
+  pointer-events: none;
+}

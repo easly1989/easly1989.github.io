@@ -27,7 +27,7 @@ live()
 const LOOK_ABOUT = [3, 7];
 
 async function live() {
-  const [{ willy }, { planner }, { moves }, { pick, everyday, reactions, react, bothered, warm, paws }, { fall }] = await Promise.all([import("./willy.js"), import("./willy-paths.js"), import("./willy-moves.js"), import("./willy-life.js"), import("./room-fall.js")]);
+  const [{ willy }, { planner }, { moves }, { pick, everyday, reactions, react, bothered, warm, paws, PAWING, PAW }, { fall }] = await Promise.all([import("./willy.js"), import("./willy-paths.js"), import("./willy-moves.js"), import("./willy-life.js"), import("./room-fall.js")]);
   await ROOM.ready;
   await ROOM.landed(); // (setting him up takes the main thread for a while, and the morph would stop for it)
   // what he can knock off the desk, and how it falls (room-fall.js); nothing under reduced motion
@@ -230,14 +230,138 @@ async function live() {
       tap();
     },
   };
+  // What is on the desk for him to knock off, tap or bring (willy-life.js, #72): the odds and ends
+  // and where each lies (room-fall.js), how many have fallen this visit, the mug and the jar, which
+  // only wobble, and the plant on the shelf he takes a leaf from. The front edge in front of the
+  // chair is not one he pushes from: nothing that falls meets the chair (room-fall.js).
+  const corners = (e) => {
+    const m = ROOM.toStage(e);
+    return [[0, 0], [e.offsetWidth, 0], [e.offsetWidth, e.offsetHeight], [0, e.offsetHeight]].map(([a, b]) => m.transformPoint(new DOMPoint(a, b, 0)));
+  };
+  const chairEl = room.querySelector(".chair"),
+    chairX = chairEl ? ((xs) => [Math.min(...xs) - 80, Math.max(...xs) + 80])(corners(chairEl).map((p) => p.x)) : null;
+  let aimed = null; // the thing he is pawing at, and what the line says once it falls
+  stage.addEventListener("knocked", (e) => {
+    if (aimed && e.detail === aimed.el) announce(aimed.line, true), (aimed = null);
+  });
+  let carried = null; // the leaf in his mouth
+  const LEAF = '<svg viewBox="0 0 44 20" aria-hidden="true"><path d="M1 10C10 1 30 0 43 10 30 20 10 19 1 10z" /><path class="vein" d="M3 10H40" /></svg>';
+  const mat = stage.querySelector(".loose")?.parentElement || stage; // (what the odds and ends lie in, found while some are still there)
+  const desk = {
+    things: () => [...stage.querySelectorAll(".loose")],
+    where: (e) => room.fall.where(e),
+    fallen: () => room.fall.state().fell.length,
+    byChair: (x) => !!chairX && x > chairX[0] && x < chairX[1],
+    // what he paws at now, the line once it falls, and, for a flick, how fast it is sent off
+    aim(el, line, flick = null) {
+      aimed = { el, line };
+      if (flick) room.fall.flick(el, flick, [0, 0, between([-1.5, 1.5])]);
+    },
+    pots: () =>
+      [["mug", ".thing.mug", ".cup"], ["jar", ".thing.jar", ".glass"]].flatMap(([name, sel, body]) => {
+        const el = stage.querySelector(sel),
+          b = el && el.querySelector(body);
+        if (!b || !b.offsetWidth) return [];
+        const c = corners(b);
+        return [{ name, el, x0: Math.min(...c.map((p) => p.x)), x1: Math.max(...c.map((p) => p.x)), y0: Math.min(...c.map((p) => p.y)), y1: Math.max(...c.map((p) => p.y)) }];
+      }),
+    // the mug or the jar el rocks on its foot, away from a paw that came from dir, [x, y]
+    wobble(el, [dx, dy]) {
+      const n = Math.hypot(dx, dy) || 1;
+      el.style.setProperty("--wobble-x", (-dy / n).toFixed(3));
+      el.style.setProperty("--wobble-y", (dx / n).toFixed(3));
+      el.classList.remove("wobble");
+      void el.offsetWidth;
+      el.classList.add("wobble");
+      el.addEventListener("animationend", (e) => e.target === el && el.classList.remove("wobble"), { once: true });
+    },
+    // whether a point on the desk's top shows: not where the computer stands in front of it
+    seen(x, y) {
+      const pc = document.querySelector(".pc"),
+        r = pc && pc.getBoundingClientRect(),
+        [sx, sy] = ROOM.toScreen(x, y, SURF.desk.z);
+      return !r || sx < r.left - 20 || sx > r.right + 20 || sy < r.top - 20 || sy > r.bottom + 20;
+    },
+    plant() {
+      const pot = room.querySelector(".plant");
+      if (!pot || !pot.querySelector(".leaves path:not(.taken)")) return null;
+      const c = corners(pot);
+      return { x: (c[0].x + c[2].x) / 2, y: (c[0].y + c[2].y) / 2, z: SURF.shelf ? SURF.shelf.z + 120 : 280 };
+    },
+    leaf: {
+      // off the plant (one of its leaves gone from it) and into his mouth
+      take() {
+        const left = [...room.querySelectorAll(".plant .leaves path:not(.taken)")];
+        if (left.length) left[left.length - 1].classList.add("taken");
+        carried = document.createElement("span");
+        carried.className = "plant-leaf carried";
+        carried.setAttribute("aria-hidden", "true");
+        carried.innerHTML = LEAF;
+        room.append(carried);
+      },
+      // put back, if the show he carried it in was cut short: onto the plant, out of his mouth
+      lose() {
+        if (!carried) return;
+        carried.remove();
+        carried = null;
+        const taken = [...room.querySelectorAll(".plant .leaves path.taken")];
+        if (taken.length) taken[taken.length - 1].classList.remove("taken");
+      },
+      // and out of it, onto the desk below his mouth: one of the odds and ends from now on
+      drop() {
+        if (!carried) return;
+        const [x, y] = w.mouth();
+        carried.remove();
+        carried = null;
+        const e = document.createElement("span");
+        e.className = "loose plant-leaf";
+        e.setAttribute("aria-hidden", "true");
+        e.innerHTML = LEAF;
+        e.style.left = Math.round(x - 30) + "px";
+        e.style.top = Math.round(y - 13) + "px";
+        e.style.setProperty("--r", Math.round(between([-60, 60])) + "deg");
+        e.style.filter = "none";
+        mat.append(e);
+      },
+    },
+  };
+  // the leaf where his mouth is, hanging from it, the way he faces
+  const carry = () => {
+    if (!carried) return;
+    const [x, y, z] = w.mouth(),
+      h = M.now(show, Math.min(t, total)).h;
+    carried.style.transform = "translate3d(" + x + "px," + y + "px," + z + "px) rotateZ(" + -h + "deg) rotateY(-70deg)";
+  };
+  // his paw, a ball in the room's physics while he paws at something (willy-life.js, PAWING)
+  let pawing = false;
+  const paw = (clip, dt) => {
+    const side = PAWING[clip];
+    if (!side && !pawing) return;
+    pawing = !!side;
+    const q = side && w.paw(side);
+    room.fall.paw(q ? [q[0], q[1], q[2] - PAW] : null, dt);
+  };
+
   // looking about where he is a while
   const lookingAbout = (at) => [M.hold("idle", [at.x, at.y, at.heading], at.surface, between(LOOK_ABOUT) - M.dur("idle"), true)];
   // what he does next, from at, and where he ends up: one of his everyday actions he can do
   // there and now; or, if none can be, he looks about where he is
-  const ACTIONS = everyday({ w, P, M, SURF, avoid, pc }),
+  const ACTIONS = everyday({ w, P, M, SURF, avoid, pc, desk }),
     ran = {};
-  let done = null;
+  let done = null,
+    again = null; // an action that goes on: the next sweep of his paw at what he is knocking off
   async function next(at) {
+    const on = again && ACTIONS.find((a) => a.n === again);
+    again = null;
+    if (on && on.where.includes(at.surface)) {
+      const r = await on.run(at);
+      if (r && r.moments.length) {
+        ran[on.n] = performance.now() / 1000;
+        done = on.n;
+        again = r.again || null;
+        return r;
+      }
+    }
     const skip = new Set();
     for (let tries = 0; tries < 8; tries++) {
       const a = pick(ACTIONS, { where: at.surface, now: performance.now() / 1000, ran, last: done, skip });
@@ -246,6 +370,7 @@ async function live() {
       if (r && r.moments.length) {
         ran[a.n] = performance.now() / 1000;
         done = a.n;
+        again = r.again || null;
         return r;
       }
       skip.add(a.n);
@@ -336,7 +461,7 @@ async function live() {
       const a = ACTIONS.find((a) => a.n === kind.act),
         at = here(p);
       const r = a && at && a.where.includes(at.surface) && (await a.run(at));
-      if (r) (ran[a.n] = performance.now() / 1000), (done = a.n);
+      if (r) (ran[a.n] = performance.now() / 1000), (done = a.n), (again = r.again || null);
       return r && r.moments.length ? r : null;
     }
     if (kind === "off") {
@@ -422,8 +547,10 @@ async function live() {
   };
   async function answering(kind) {
     const p = M.now(show, Math.min(t, total));
+    paw("", 0);
     const r = await bother(kind, p).catch((e) => (console.warn("Willy stays:", e), null));
     if (r) {
+      desk.leaf.lose();
       says.classList.remove("on");
       saying = 0;
       fleeing = r.fleeing || false;
@@ -455,6 +582,8 @@ async function live() {
       M.pose(show[show.length - 1].at(show[show.length - 1].dur));
       w.draw(0);
       track();
+      carry();
+      paw("", 0);
       blend = null;
       fleeing = false;
       // (an action that fails leaves him looking about where he is, rather than frozen)
@@ -510,8 +639,10 @@ async function live() {
       M.pose(p, blend && blend.from, k);
       w.draw(0);
       track();
+      carry();
       drawn = key;
     }
+    paw(p.clip, dt || 1 / 60);
     if (k === 1) blend = null;
     if (saying) {
       if (time > saying) {
