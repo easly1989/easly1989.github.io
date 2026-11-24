@@ -23,6 +23,7 @@ python checks/willy-pet.py
 python checks/willy-way.py
 python checks/willy-props.py
 python checks/willy-fall.py
+python checks/willy-push.py
 python checks/motion.py
 python checks/data.py
 ```
@@ -138,6 +139,13 @@ of motion that forgets it measures a room in which Willy only sleeps.
   room once out of the frame, while the coin stays where it was, asleep, and the physics stops;
   under reduced motion a push is refused and nothing falls; nothing throws. Through the room's
   `fall` hook (`push`, `state`), as Willy will push things in 72-B. Headless; about a minute.
+- `willy-push.py` — Willy pushes things (#72-B), each action asked of him through the room's `willy`
+  hook: he paws an odd or end towards the desk's edge until it goes over, and the live line says so
+  (with a look at the reader first now and then); he taps the mug or the jar, which wobbles and
+  stays where it is; he brings a leaf off the plant, which then lies on the desk among the odds and
+  ends, once a visit; three things at most go over the edge in a visit; under reduced motion
+  nothing is pushed. A visit whose odds and ends lie nowhere near an edge has nothing for him to
+  push, so the check opens a new visit, up to four times. Headless; several minutes.
 
 - `motion.py` — the reader's choice to animate anyway (`motion.js`), under reduced motion: with
   no choice the footer's button offers it and nothing of Willy's peek moves; clicked, it is pressed,
