@@ -25,6 +25,7 @@ python checks/willy-props.py
 python checks/willy-fall.py
 python checks/willy-push.py
 python checks/willy-prop-actions.py
+python checks/willy-box.py
 python checks/motion.py
 python checks/data.py
 ```
@@ -153,6 +154,11 @@ of motion that forgets it measures a room in which Willy only sleeps.
   sun falls on the desk (by day), and stares up at the neon sign from the shelf. A visit may have
   no room for one, so each is asked up to three times, with a new visit between; under reduced
   motion none of it happens; nothing throws. Headless; several minutes.
+- `willy-box.py` — Willy's box (#70-E): a cardboard box stands open on the desk, solid to the odds
+  and ends and to what falls, but not low enough to walk over, with none of them inside it. Asked
+  for, he goes up to it from the side, hops over its wall and sits in it (`sit in his box`) or lies
+  in it (`lie in his box`), facing the reader, says "Willy hops into his box.", then hops out and
+  walks off; under reduced motion none of it happens; nothing throws. Headless; several minutes.
 
 - `motion.py` — the reader's choice to animate anyway (`motion.js`), under reduced motion: with
   no choice the footer's button offers it and nothing of Willy's peek moves; clicked, it is pressed,
