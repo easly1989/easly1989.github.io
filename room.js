@@ -2098,7 +2098,7 @@
     return [
       { name: "room", at: [DESK.x + 200, BACK + 250, 1600], color: "#fff1dc", power: dark ? 0 : 1, reach: 0 },
       // (and the daylight it lets in, fill, and how soft its shadows are: windowLight())
-      { name: "window", at: [WIN.along + WIN.w / 2, BACK - 1000, WIN.top - WIN.h / 2 + 1000 * HIGH], color: sky.colour, power: (dark ? 1 : 0.35) * sky.beam, reach: 0, fill: sky.fill, soft: sky.soft },
+      { name: "window", at: [WIN.along + WIN.w / 2, BACK - 1000, WIN.top - WIN.h / 2 + 1000 * HIGH], color: sky.colour, power: (dark ? 1 : 0.35) * sky.beam, reach: 0, fill: sky.fill, soft: sky.soft, day: !!sky.day },
       { name: "screen", at: spots.screen, color: "#c8ffd2", power: pc.classList.contains("on") ? 1 : 0, reach: 700 },
       { name: "radio", at: spots.radio, color: "#ffcd96", power: lamp.classList.contains("lit") ? 1 : 0, reach: 450 },
       { name: "projector", at: [LAMP.x, LAMP.y, LAMP.z], color: "#ffe6c0", power: cast.classList.contains("lit") ? 1 : 0, reach: 400 },

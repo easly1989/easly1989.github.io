@@ -344,7 +344,7 @@ export function everyday({ w, P, M, SURF, avoid, pc = null, desk = null }) {
   // up to a pot (desk.pots(): the mug or the jar), as near as he fits, facing it, and then
   // away from it again, with what he does there (moments(to, pot, c)); the clips named must
   // fit where he stands; or null
-  async function atPot(at, pots, need, moments) {
+  async function atPot(at, pots, need, moments, reach = REACH) {
     if (!desk) return null;
     for (const pot of pots.sort(() => Math.random() - 0.5)) {
       const cx = (pot.x0 + pot.x1) / 2,
@@ -353,7 +353,7 @@ export function everyday({ w, P, M, SURF, avoid, pc = null, desk = null }) {
       const round = [...Array(16).keys()].map((i) => (i * Math.PI) / 8).sort(() => Math.random() - 0.5);
       for (const a of round) {
         const heading = Math.round((deg(a) + 180) % 360);
-        for (const R of [...Array(Math.floor((REACH - 60) / 10) + 1).keys()].map((i) => half + 60 + i * 10)) {
+        for (const R of [...Array(Math.floor((reach - 60) / 10) + 1).keys()].map((i) => half + 60 + i * 10)) {
           const to = xyh("desk", [Math.round(cx + Math.cos(a) * R), Math.round(cy - Math.sin(a) * R), heading]);
           if (!clear(to) || !["walk", "idle", ...need].every((c) => fits(to, c))) continue;
           // he must be able to walk on from where he stands: the planner gives up on a place
@@ -397,12 +397,26 @@ export function everyday({ w, P, M, SURF, avoid, pc = null, desk = null }) {
       cue(stay("idle", to, between([0.6, 1.2])), { look: [cx, cy, 110] }),
       cue(hold("drink", to), { look: [cx, cy, 110], line: "Willy sniffs the mug, and dips his face in it." }),
       cue(stay("idle", to, between([0.8, 1.4])), { look: [cx, cy, 110] }),
-    ]);
+    ], 180);
 
   // What he does with the room's other props (ROOM.props(): boxes by kind), each found when it is
   // wanted: on a book (it is low, he stands on its top) he paws at a page, or lies down; he lies
   // against the camera; by day he naps where the sun falls on the desk; and from the shelf he
   // stares at the neon sign.
+  // and from there a few steps straight on, away from it, to somewhere he can turn round in: the
+  // planner gives up on a place that close to a prop; { p, moments }, or null
+  function stepAway(to, angles = [...Array(16).keys()].map((i) => (i * Math.PI) / 8).sort(() => Math.random() - 0.5)) {
+    for (const a of angles)
+      for (const away of [90, 140, 200]) {
+        const x2 = Math.round(to.x + Math.cos(a) * away),
+          y2 = Math.round(to.y - Math.sin(a) * away),
+          h2 = toward([to.x, to.y], [x2, y2]),
+          p = xyh("desk", [x2, y2, h2]);
+        if (clear(p) && free(p) && straight([to.x, to.y, to.heading], [x2, y2, h2])) return { p, moments: M.walking([[to.x, to.y, to.heading], [x2, y2, h2]], "desk") };
+      }
+    return null;
+  }
+  const thenAway = (r, off) => r && { to: off.p, moments: [...r.moments, ...off.moments] };
   let props = null;
   const prop = (k) => (props ||= window.ROOM.props())[k];
   const BOOKS = { ledger: "the CloudBank ledger", agenda: "the Nutreek agenda" };
@@ -413,8 +427,10 @@ export function everyday({ w, P, M, SURF, avoid, pc = null, desk = null }) {
       if (!b) continue;
       for (const h of shuffled([0, 90, 180, 270])) {
         const to = xyh("desk", [Math.round((b.x0 + b.x1) / 2), Math.round((b.y0 + b.y1) / 2), h]);
-        if (!clear(to) || !clips.every((c) => fits(to, c))) continue;
-        const r = await going(at, to, "walk", (to) => then(to, BOOKS[k]));
+        if (!clear(to) || !["walk", ...clips].every((c) => fits(to, c))) continue;
+        const off = stepAway(to);
+        if (!off) continue;
+        const r = thenAway(await going(at, to, "walk", (to) => then(to, BOOKS[k])), off);
         if (r) return r;
       }
     }
@@ -435,15 +451,19 @@ export function everyday({ w, P, M, SURF, avoid, pc = null, desk = null }) {
     const sides = (g) => [[c.x1 + g, cy, 90], [c.x1 + g, cy, 270], [c.x0 - g, cy, 90], [c.x0 - g, cy, 270], [cx, c.y1 + g, 0], [cx, c.y1 + g, 180], [cx, c.y0 - g, 0], [cx, c.y0 - g, 180]];
     for (const [x, y, h] of [55, 80, 105, 130].flatMap((g) => shuffled(sides(g)))) {
       const to = xyh("desk", [Math.round(x), Math.round(y), h]);
-      if (!clear(to) || !["lie", "loaf", "lie-from"].every((k) => fits(to, k))) continue;
-      const m = settled(to, ["lie", { clip: "loaf", s: between([8, 16]) }, "lie-from"]);
-      const r = m && (await going(at, to, "walk", () => [cue(m[0], { line: "Willy lies down against the camera." }), ...m.slice(1)]));
+      if (!clear(to) || !["walk", "lie", "loaf", "lie-from"].every((k) => fits(to, k))) continue;
+      // (away from the camera, then)
+      const off = stepAway(to, [Math.atan2(-(to.y - cy), to.x - cx)]) || stepAway(to);
+      const m = off && settled(to, ["lie", { clip: "loaf", s: between([8, 16]) }, "lie-from"]);
+      const r = m && thenAway(await going(at, to, "walk", () => [cue(m[0], { line: "Willy lies down against the camera." }), ...m.slice(1)]), off);
       if (r) return r;
     }
     return null;
   }
   async function inTheSun(at) {
-    if (document.documentElement.dataset.sky === "night") return null;
+    // (the window's light is the sun's: by day, and strong enough to throw a patch)
+    const sun = window.ROOM.lights().find((l) => l.name === "window");
+    if (!sun || !sun.day || sun.power < 0.1) return null;
     const D = SURF.desk;
     for (let n = 0; n < 80; n++) {
       const to = xyh("desk", [Math.round(between([D.x0 + 100, D.x1 - 100])), Math.round(between([D.y0 + 60, D.y1 - 200])), one([0, 90, 180, 270])]);
