@@ -2726,3 +2726,18 @@ html:not(.iso) .strip {
   transform-origin: 0 50%;
   pointer-events: none;
 }
+/* Willy's box: cardboard standing open on the desk (room.js, NEST), its floor the cardboard and one
+   flap folded out and drooping over its front */
+.iso .nest-floor,
+.iso .nest-flap {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+}
+.iso .nest-floor {
+  background: #b48c58;
+}
+.iso .nest-flap {
+  transform-origin: 50% 0;
+  background: #bf965f;
+}

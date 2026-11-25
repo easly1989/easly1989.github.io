@@ -308,6 +308,21 @@
     if (film) out.appendChild(film);
   }
 
+  // ---- Willy's box: a cardboard box standing open on the desk, one flap folded out ----------
+  // Four walls round an empty inside, which he hops into over the wall and sits or lies in, his
+  // head out over the rim (willy-life.js). The flap and the floor take no room of their own
+  // (BODYLESS), and the container has no size, so that no part of it fills the inside.
+  var NEST = { x: 166, y: -146, w: 262, d: 258, h: 90, t: 6, color: "#c9a26b" };
+  var nest = el("span", "rbox nest", room, "left:" + NEST.x + "px;top:" + NEST.y + "px;width:0;height:0");
+  nest.setAttribute("aria-hidden", "true");
+  nest.setAttribute("aria-label", "Willy's box");
+  el("span", "nest-floor", nest, "left:" + NEST.t + "px;top:" + NEST.t + "px;width:" + (NEST.w - 2 * NEST.t) + "px;height:" + (NEST.d - 2 * NEST.t) + "px;transform:translateZ(5px)");
+  [[0, 0, NEST.w, NEST.t], [0, 0, NEST.t, NEST.d], [NEST.w - NEST.t, 0, NEST.t, NEST.d], [0, NEST.d - NEST.t, NEST.w, NEST.t]].forEach(function (p) {
+    box(nest, { x: p[0], y: p[1], w: p[2], d: p[3], z: 0, h: NEST.h, color: NEST.color, cls: "nest-wall" }).setAttribute("aria-label", "Willy's box");
+  });
+  // the front flap, folded out and drooping, over the front wall's top edge
+  el("span", "nest-flap", nest, "left:" + NEST.t + "px;top:" + NEST.d + "px;width:" + (NEST.w - 2 * NEST.t) + "px;height:74px;transform:translateZ(" + NEST.h + "px) rotateX(-38deg)");
+
   // ---- objects: a face at its height, a body below it, a shadow on the mat -------
   var SPEC = {
     ledger: { h: 30, step: 2, kind: "book", page: "#efe7d3", cover: "var(--cloudbank)", r: "6px 12px 12px 6px" },
@@ -510,7 +525,7 @@
     return m;
   }
   // the room-space box round an element and everything in it (z up from the mat)
-  var BODYLESS = /\b(shade|anchor|burst|cam-out|film|pc-mouse-cord|pg-msg)\b/;
+  var BODYLESS = /\b(shade|anchor|burst|cam-out|film|pc-mouse-cord|pg-msg|nest-floor|nest-flap)\b/;
   // (but the parts skip(e) says are not this thing's)
   function bounds(root, skip) {
     var b = { x0: 1e9, y0: 1e9, z0: 1e9, x1: -1e9, y1: -1e9, z1: -1e9, parts: [] },
@@ -581,7 +596,7 @@
   // what nothing may go into: the computer, the project objects on the desk, the desk's
   // legs and the chair
   function obstacles() {
-    return [].filter.call(stage.querySelectorAll(".pc, .desk-leg, .chair, .thing"), function (e) {
+    return [].filter.call(stage.querySelectorAll(".pc, .desk-leg, .chair, .thing, .nest-wall"), function (e) {
       return !(e.classList.contains("thing") && e.closest(".on-wall, .pc"));
     });
   }
@@ -633,6 +648,10 @@
     var fixed = obstacles().map(function (e) {
       return { el: e, b: bounds(e), name: named(e) };
     });
+    // (and nothing lies inside the box's walls: the walls alone leave its inside free for him)
+    var inner = { x0: NEST.x + NEST.t, x1: NEST.x + NEST.w - NEST.t, y0: NEST.y + NEST.t, y1: NEST.y + NEST.d - NEST.t, z0: 0, z1: NEST.h };
+    inner.parts = [{ x0: inner.x0, x1: inner.x1, y0: inner.y0, y1: inner.y1, q: [[inner.x0, inner.y0], [inner.x1, inner.y0], [inner.x1, inner.y1], [inner.x0, inner.y1]] }];
+    fixed.push({ el: nest, b: inner, name: "Willy's box" });
     var tall = [].map.call(stage.querySelectorAll(".pc, .thing.jar, .thing.mug"), screenBox);
     [].forEach.call(stage.querySelectorAll(".loose"), function (e) {
       if (again && !faults(e, fixed, false).length) return fixed.push({ el: e, b: bounds(e), name: named(e) });
@@ -2296,6 +2315,11 @@
       });
       var n = room.querySelector(".navwall");
       if (n) put("nav", n);
+      var nst = room.querySelector(".nest");
+      if (nst) {
+        put("nest", nst);
+        out.nest.inside = { x0: nst.offsetLeft + NEST.t, x1: nst.offsetLeft + NEST.w - NEST.t, y0: nst.offsetTop + NEST.t, y1: nst.offsetTop + NEST.d - NEST.t, h: NEST.h }; // (what is inside its walls)
+      }
       return out;
     },
     // what is low enough to walk over, each by name, how high and where on the desk, and its

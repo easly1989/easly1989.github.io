@@ -481,6 +481,85 @@ export function everyday({ w, P, M, SURF, avoid, pc = null, desk = null }) {
     return to && going(at, to, "walk", (to) => [cue(stay("idle", to, between([4, 8])), { look: [(n.x0 + n.x1) / 2, (n.y0 + n.y1) / 2, (n.z0 + n.z1) / 2], line: "Willy stares up at the neon sign." })]);
   }
 
+  // His box (ROOM.props().nest): he goes up to it from the side, hops over its wall into it, turned
+  // to face the reader, and sits or lies in it a while, his head over the rim; then hops out the
+  // way he came, and a few steps on. A hop is his own arc over the wall (the planner knows none so
+  // high), from the clip he leaps from to the clip he lands from.
+  const hopping = (a, b, apex, air = 0.55) => {
+    const up = M.dur("jump-up"),
+      land = M.dur("jump-land");
+    return [
+      { dur: up, at: (t) => ({ x: a.x, y: a.y, z: D.z, h: a.heading, clip: "jump-up", time: t }) },
+      {
+        dur: air,
+        at: (t, f = t / air) => ({ x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f, z: D.z + 4 * apex * f * (1 - f), h: a.heading + turnOf(a.heading, b.heading) * f, clip: "jump-air", time: f * M.dur("jump-air") }),
+      },
+      { dur: land, at: (t) => ({ x: b.x, y: b.y, z: D.z, h: b.heading, clip: "jump-land", time: t }) },
+    ];
+  };
+  // (not where a low thing lies: the hop and the walk on know no height but the desk's)
+  const bare = (p) => window.ROOM.ground(p.x, p.y, 0) < 1;
+  // Out of it from where he is inside it, if something cut his visit short there (the planner has
+  // no way out of a box: he hops out over a wall, to the side he can stand at); or null
+  async function leaveBox(at) {
+    const n = prop("nest");
+    if (!n) return null;
+    for (const [side, y] of shuffled([-1, 1].flatMap((s) => [70, 40, 20].map((d) => [s, n.y1 - d])))) {
+      const wall = side < 0 ? n.x0 : n.x1,
+        out = (d, h) => xyh("desk", [Math.round(wall + side * d), Math.round(y), h]),
+        land = out(120, (side < 0 ? 180 : 0)),
+        gone = out(250, (side < 0 ? 180 : 0));
+      if (!clear(gone) || !free(gone) || !bare(land) || !bare(gone)) continue;
+      return {
+        to: gone,
+        moments: [stay("crouch", at, 0.6), ...hopping(at, land, 140), ...M.walking([[land.x, land.y, land.heading], [gone.x, gone.y, gone.heading]], "desk"), stay("idle", gone, 0.6)],
+      };
+    }
+    return null;
+  }
+  async function inTheBox(at, sit) {
+    const n = prop("nest"),
+      I = n && n.inside;
+    if (!I) return null;
+    const cx = (I.x0 + I.x1) / 2,
+      cy = (I.y0 + I.y1) / 2,
+      rest = sit ? "sit-idle" : "loaf";
+    // where he rests, in the middle of it as near as he fits, facing the reader
+    let to = null;
+    for (let r = 0; r <= 110 && !to; r += 10)
+      for (let a = 0; a < 360 && !to; a += 30) {
+        const p = xyh("desk", [Math.round(cx + Math.cos((a * Math.PI) / 180) * r), Math.round(cy + Math.sin((a * Math.PI) / 180) * r), 270]);
+        if (fits(p, rest)) to = p;
+      }
+    if (!to) return null;
+    // from the left of it or from the right, whichever he can stand at, towards its front, away from
+    // the desk's back edge, which is too near to turn round in
+    for (const [side, y] of shuffled([-1, 1].flatMap((s) => [70, 40, 20].map((d) => [s, n.y1 - d])))) {
+      const h = side < 0 ? 0 : 180, // (towards it)
+        wall = side < 0 ? n.x0 : n.x1,
+        out = (d, h) => xyh("desk", [Math.round(wall + side * d), Math.round(y), h]);
+      const from = out(170, h),
+        gone = out(250, (h + 180) % 360),
+        land = out(120, (h + 180) % 360);
+      if (!clear(from) || !["walk", "idle", "crouch"].every((c) => fits(from, c)) || !clear(gone) || !free(gone) || !bare(land) || !bare(gone)) continue;
+      const m = sit ? [hold("sit", to), stay("sit-idle", to, between([6, 14])), hold("sit-from", to)] : [hold("lie", to), stay("loaf", to, between([8, 16])), hold("lie-from", to)];
+      const hopIn = hopping(from, to, 140);
+      cue(hopIn[0], { line: "Willy hops into his box." });
+      const r = await going(at, from, "walk", (from) => [
+        cue(stay("idle", from, between([0.6, 1.2])), { look: [cx, cy, 60] }),
+        stay("crouch", from, 0.6),
+        ...hopIn,
+        ...m,
+        stay("crouch", to, 0.6),
+        ...hopping(to, land, 140),
+        ...M.walking([[land.x, land.y, land.heading], [gone.x, gone.y, gone.heading]], "desk"),
+        stay("idle", gone, 0.6),
+      ]);
+      if (r) return { ...r, to: gone };
+    }
+    return null;
+  }
+
   // His present: a leaf off the plant on the shelf. He goes up to the shelf, along it to the
   // plant, nuzzles it and pulls a leaf off, comes back down to the desk with it and puts it down
   // in front of him, and sits and looks at the reader. Then it is one of the odds and ends on the
@@ -551,6 +630,10 @@ export function everyday({ w, P, M, SURF, avoid, pc = null, desk = null }) {
     { n: "lie against the camera", w: 2, cool: 200, where: ["desk"], run: againstTheCamera },
     { n: "nap in the sun", w: 3, cool: 200, where: ["desk"], run: inTheSun },
     { n: "stare at the neon", w: 2, cool: 200, where: ["desk"], run: atTheNeon },
+    { n: "sit in his box", w: 2, cool: 240, where: ["desk"], run: (at) => inTheBox(at, true) },
+    { n: "lie in his box", w: 1, cool: 240, where: ["desk"], run: (at) => inTheBox(at, false) },
+    // (not one he picks: the way out of it, when he is in it at the end of a show: willy-room.js)
+    { n: "leave his box", w: 0, where: [], run: leaveBox },
     { n: "wander", w: 10, where: ["desk"], run: (at) => going(at, spot(at), "walk", (to) => [stay("idle", to, between([0.6, 1.5]))]) },
     { n: "trot", w: 4, where: ["desk"], run: (at) => going(at, spot(at, "sit"), "trot", (to) => sitting(to, between([1.5, 3]))) },
     {

@@ -346,11 +346,22 @@ async function live() {
   const lookingAbout = (at) => [M.hold("idle", [at.x, at.y, at.heading], at.surface, between(LOOK_ABOUT) - M.dur("idle"), true)];
   // what he does next, from at, and where he ends up: one of his everyday actions he can do
   // there and now; or, if none can be, he looks about where he is
+  // whether x, y is inside his box's walls
+  let boxInside; // (where it stands is fixed: found once)
+  const inBox = ({ x, y }) => {
+    const I = (boxInside ??= ROOM.props().nest?.inside || null);
+    return !!I && x > I.x0 && x < I.x1 && y > I.y0 && y < I.y1;
+  };
   const ACTIONS = everyday({ w, P, M, SURF, avoid, pc, desk }),
     ran = {};
   let done = null,
     again = null; // an action that goes on: the next sweep of his paw at what he is knocking off
   async function next(at) {
+    // (shut in his box, which the planner has no way out of, by a show cut short in it: out of it first)
+    if (inBox(at)) {
+      const r = await ACTIONS.find((a) => a.n === "leave his box").run(at);
+      if (r && r.moments.length) return r;
+    }
     const on = again && ACTIONS.find((a) => a.n === again);
     again = null;
     if (on && on.where.includes(at.surface)) {
@@ -402,7 +413,7 @@ async function live() {
   let at = null;
   for (let n = 0; n < 50 && !at; n++) {
     const p = P.spot("desk", "idle");
-    if (p && free(xyh("desk", p))) at = xyh("desk", p);
+    if (p && free(xyh("desk", p)) && !inBox({ x: p[0], y: p[1] })) at = xyh("desk", p);
   }
   if (!at) throw new Error("no room on the desk");
   // what he looks at as he rests, now and then something else: one of the room's sources that is
