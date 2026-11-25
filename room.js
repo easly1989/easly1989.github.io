@@ -2280,6 +2280,24 @@
         return { name: o.name, x0: o.b.x0, y0: o.b.y0, z0: o.b.z0, x1: o.b.x1, y1: o.b.y1, z1: o.b.z1 };
       });
     },
+    // what Willy has business with, by kind: the objects of SPEC (ledger, agenda, camera, mug,
+    // jar...) and the neon navigation, each as its box in room px and its element
+    props: function () {
+      var out = {};
+      var put = function (k, e) {
+        var b = bounds(e);
+        out[k] = { x0: b.x0, y0: b.y0, z0: b.z0, x1: b.x1, y1: b.y1, z1: b.z1, el: e };
+      };
+      [].forEach.call(stage.querySelectorAll(".thing"), function (t) {
+        var k = Object.keys(SPEC).filter(function (k) {
+          return t.classList.contains(k);
+        })[0];
+        if (k) put(k, t);
+      });
+      var n = room.querySelector(".navwall");
+      if (n) put("nav", n);
+      return out;
+    },
     // what is low enough to walk over, each by name, how high and where on the desk, and its
     // element
     lows: function () {
