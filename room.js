@@ -2098,7 +2098,7 @@
     return [
       { name: "room", at: [DESK.x + 200, BACK + 250, 1600], color: "#fff1dc", power: dark ? 0 : 1, reach: 0 },
       // (and the daylight it lets in, fill, and how soft its shadows are: windowLight())
-      { name: "window", at: [WIN.along + WIN.w / 2, BACK - 1000, WIN.top - WIN.h / 2 + 1000 * HIGH], color: sky.colour, power: (dark ? 1 : 0.35) * sky.beam, reach: 0, fill: sky.fill, soft: sky.soft },
+      { name: "window", at: [WIN.along + WIN.w / 2, BACK - 1000, WIN.top - WIN.h / 2 + 1000 * HIGH], color: sky.colour, power: (dark ? 1 : 0.35) * sky.beam, reach: 0, fill: sky.fill, soft: sky.soft, day: !!sky.day },
       { name: "screen", at: spots.screen, color: "#c8ffd2", power: pc.classList.contains("on") ? 1 : 0, reach: 700 },
       { name: "radio", at: spots.radio, color: "#ffcd96", power: lamp.classList.contains("lit") ? 1 : 0, reach: 450 },
       { name: "projector", at: [LAMP.x, LAMP.y, LAMP.z], color: "#ffe6c0", power: cast.classList.contains("lit") ? 1 : 0, reach: 400 },
@@ -2279,6 +2279,24 @@
       }).map(function (o) {
         return { name: o.name, x0: o.b.x0, y0: o.b.y0, z0: o.b.z0, x1: o.b.x1, y1: o.b.y1, z1: o.b.z1 };
       });
+    },
+    // what Willy has business with, by kind: the objects of SPEC (ledger, agenda, camera, mug,
+    // jar...) and the neon navigation, each as its box in room px and its element
+    props: function () {
+      var out = {};
+      var put = function (k, e) {
+        var b = bounds(e);
+        out[k] = { x0: b.x0, y0: b.y0, z0: b.z0, x1: b.x1, y1: b.y1, z1: b.z1, el: e };
+      };
+      [].forEach.call(stage.querySelectorAll(".thing"), function (t) {
+        var k = Object.keys(SPEC).filter(function (k) {
+          return t.classList.contains(k);
+        })[0];
+        if (k) put(k, t);
+      });
+      var n = room.querySelector(".navwall");
+      if (n) put("nav", n);
+      return out;
     },
     // what is low enough to walk over, each by name, how high and where on the desk, and its
     // element

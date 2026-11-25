@@ -90,8 +90,8 @@ try:
     PUSH = re.compile(r"^Willy (looks at you, then )?pushes the (pencil|eraser|paper clip|coin|bottle cap|USB stick|rubber band|leaf) off the desk\.$")
     before = b.js(FALL + ".fell.length")
     pushed = False
-    for visit in range(4):
-        pushed = act(b, "push something off", "window.__lines.some((l) => /off the desk\\.$/.test(l))", 40, 4)
+    for visit in range(8):
+        pushed = act(b, "push something off", "window.__lines.some((l) => /off the desk\\.$/.test(l))", 40, 3)
         if pushed:
             break
         # (a visit whose odds and ends lie nowhere near an edge has nothing for him to push: a new one)

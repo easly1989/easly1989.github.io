@@ -341,18 +341,21 @@ export function everyday({ w, P, M, SURF, avoid, pc = null, desk = null }) {
   // (his paw, swatting, reaches 100 to 160 px ahead of him: he stands as near as he fits,
   // facing it, its middle no further than REACH px past its side)
   const REACH = 180;
-  async function tap(at) {
+  // up to a pot (desk.pots(): the mug or the jar), as near as he fits, facing it, and then
+  // away from it again, with what he does there (moments(to, pot, c)); the clips named must
+  // fit where he stands; or null
+  async function atPot(at, pots, need, moments, reach = REACH) {
     if (!desk) return null;
-    for (const pot of desk.pots().sort(() => Math.random() - 0.5)) {
+    for (const pot of pots.sort(() => Math.random() - 0.5)) {
       const cx = (pot.x0 + pot.x1) / 2,
         cy = (pot.y0 + pot.y1) / 2,
         half = Math.max(pot.x1 - pot.x0, pot.y1 - pot.y0) / 2;
       const round = [...Array(16).keys()].map((i) => (i * Math.PI) / 8).sort(() => Math.random() - 0.5);
       for (const a of round) {
         const heading = Math.round((deg(a) + 180) % 360);
-        for (const R of [...Array(Math.floor((REACH - 60) / 10) + 1).keys()].map((i) => half + 60 + i * 10)) {
+        for (const R of [...Array(Math.floor((reach - 60) / 10) + 1).keys()].map((i) => half + 60 + i * 10)) {
           const to = xyh("desk", [Math.round(cx + Math.cos(a) * R), Math.round(cy - Math.sin(a) * R), heading]);
-          if (!clear(to) || !["walk", "idle"].every((c) => fits(to, c))) continue;
+          if (!clear(to) || !["walk", "idle", ...need].every((c) => fits(to, c))) continue;
           // he must be able to walk on from where he stands: the planner gives up on a place
           // that close to the pot, so he is walked straight back from it, away from the pot
           // (as at the desk's edge), and that is looked for first
@@ -368,20 +371,114 @@ export function everyday({ w, P, M, SURF, avoid, pc = null, desk = null }) {
             }
           }
           if (!off) continue;
-          const { x, y } = to;
-          const clip = one(["swat-left", "swat-right"]),
-            hit = 0.62; // (s into the swat, as the paw comes down on it)
-          const r = await going(at, to, "walk", (to) => [
-            cue(stay("idle", to, between([0.6, 1.2])), { look: [cx, cy, 60] }),
-            part(clip, to, 0, hit),
-            cue(part(clip, to, hit, M.dur(clip)), { act: () => desk.wobble(pot.el, [cx - x, cy - y]), line: "Willy taps the " + pot.name + ". It wobbles." }),
-            cue(stay("idle", to, between([1, 1.8])), { look: [cx, cy, 60] }),
-          ]);
+          const r = await going(at, to, "walk", (to) => moments(to, pot, { cx, cy, x: to.x, y: to.y }));
           if (r) return { to: off.p, moments: [...r.moments, ...off.moments] };
         }
       }
     }
     return null;
+  }
+  const tap = (at) =>
+    desk &&
+    atPot(at, desk.pots(), [], (to, pot, { cx, cy, x, y }) => {
+      const clip = one(["swat-left", "swat-right"]),
+        hit = 0.62; // (s into the swat, as the paw comes down on it)
+      return [
+        cue(stay("idle", to, between([0.6, 1.2])), { look: [cx, cy, 60] }),
+        part(clip, to, 0, hit),
+        cue(part(clip, to, hit, M.dur(clip)), { act: () => desk.wobble(pot.el, [cx - x, cy - y]), line: "Willy taps the " + pot.name + ". It wobbles." }),
+        cue(stay("idle", to, between([1, 1.8])), { look: [cx, cy, 60] }),
+      ];
+    });
+  // The mug: he sniffs it and dips his face in it (the jar he only taps).
+  const sniff = (at) =>
+    desk &&
+    atPot(at, desk.pots().filter((p) => p.name === "mug"), ["drink"], (to, pot, { cx, cy }) => [
+      cue(stay("idle", to, between([0.6, 1.2])), { look: [cx, cy, 110] }),
+      cue(hold("drink", to), { look: [cx, cy, 110], line: "Willy sniffs the mug, and dips his face in it." }),
+      cue(stay("idle", to, between([0.8, 1.4])), { look: [cx, cy, 110] }),
+    ], 180);
+
+  // What he does with the room's other props (ROOM.props(): boxes by kind), each found when it is
+  // wanted: on a book (it is low, he stands on its top) he paws at a page, or lies down; he lies
+  // against the camera; by day he naps where the sun falls on the desk; and from the shelf he
+  // stares at the neon sign.
+  // and from there a few steps straight on, away from it, to somewhere he can turn round in: the
+  // planner gives up on a place that close to a prop; { p, moments }, or null
+  function stepAway(to, angles = [...Array(16).keys()].map((i) => (i * Math.PI) / 8).sort(() => Math.random() - 0.5)) {
+    for (const a of angles)
+      for (const away of [90, 140, 200]) {
+        const x2 = Math.round(to.x + Math.cos(a) * away),
+          y2 = Math.round(to.y - Math.sin(a) * away),
+          h2 = toward([to.x, to.y], [x2, y2]),
+          p = xyh("desk", [x2, y2, h2]);
+        if (clear(p) && free(p) && straight([to.x, to.y, to.heading], [x2, y2, h2])) return { p, moments: M.walking([[to.x, to.y, to.heading], [x2, y2, h2]], "desk") };
+      }
+    return null;
+  }
+  const thenAway = (r, off) => r && { to: off.p, moments: [...r.moments, ...off.moments] };
+  let props = null;
+  const prop = (k) => (props ||= window.ROOM.props())[k];
+  const BOOKS = { ledger: "the CloudBank ledger", agenda: "the Nutreek agenda" };
+  const shuffled = (list) => [...list].sort(() => Math.random() - 0.5);
+  async function onBook(at, clips, then) {
+    for (const k of shuffled(Object.keys(BOOKS))) {
+      const b = prop(k);
+      if (!b) continue;
+      for (const h of shuffled([0, 90, 180, 270])) {
+        const to = xyh("desk", [Math.round((b.x0 + b.x1) / 2), Math.round((b.y0 + b.y1) / 2), h]);
+        if (!clear(to) || !["walk", ...clips].every((c) => fits(to, c))) continue;
+        const off = stepAway(to);
+        if (!off) continue;
+        const r = thenAway(await going(at, to, "walk", (to) => then(to, BOOKS[k])), off);
+        if (r) return r;
+      }
+    }
+    return null;
+  }
+  const pawAtAPage = (at) => {
+    const clip = one(["sit-paw-left", "sit-paw-right"]);
+    return onBook(at, ["sit", "sit-from", clip], (to, name) => [hold("sit", to), cue(hold(clip, to), { line: "Willy paws at a page of " + name + "." }), stay("sit-idle", to, between([1, 2])), hold("sit-from", to)]);
+  };
+  const lieOnABook = (at) => onBook(at, ["lie", "loaf", "lie-from"], (to) => settled(to, ["lie", { clip: "loaf", s: between([8, 16]) }, "lie-from"]));
+  async function againstTheCamera(at) {
+    const c = prop("camera");
+    if (!c) return null;
+    const cx = (c.x0 + c.x1) / 2,
+      cy = (c.y0 + c.y1) / 2;
+    // (along its side, his back to it, as near as he fits lying down: that takes about 90 px
+    // across, and more to roll onto his side)
+    const sides = (g) => [[c.x1 + g, cy, 90], [c.x1 + g, cy, 270], [c.x0 - g, cy, 90], [c.x0 - g, cy, 270], [cx, c.y1 + g, 0], [cx, c.y1 + g, 180], [cx, c.y0 - g, 0], [cx, c.y0 - g, 180]];
+    for (const [x, y, h] of [55, 80, 105, 130].flatMap((g) => shuffled(sides(g)))) {
+      const to = xyh("desk", [Math.round(x), Math.round(y), h]);
+      if (!clear(to) || !["walk", "lie", "loaf", "lie-from"].every((k) => fits(to, k))) continue;
+      // (away from the camera, then)
+      const off = stepAway(to, [Math.atan2(-(to.y - cy), to.x - cx)]) || stepAway(to);
+      const m = off && settled(to, ["lie", { clip: "loaf", s: between([8, 16]) }, "lie-from"]);
+      const r = m && thenAway(await going(at, to, "walk", () => [cue(m[0], { line: "Willy lies down against the camera." }), ...m.slice(1)]), off);
+      if (r) return r;
+    }
+    return null;
+  }
+  async function inTheSun(at) {
+    // (the window's light is the sun's: by day, and strong enough to throw a patch)
+    const sun = window.ROOM.lights().find((l) => l.name === "window");
+    if (!sun || !sun.day || sun.power < 0.1) return null;
+    const D = SURF.desk;
+    for (let n = 0; n < 80; n++) {
+      const to = xyh("desk", [Math.round(between([D.x0 + 100, D.x1 - 100])), Math.round(between([D.y0 + 60, D.y1 - 200])), one([0, 90, 180, 270])]);
+      if (!window.ROOM.moonlit(to.x, to.y, 0) || !clear(to) || !free(to)) continue;
+      const m = settled(to, ["sleep", { clip: "sleep-idle", s: between([15, 35]) }, "wake"]);
+      const r = m && (await going(at, to, "walk", () => [cue(m[0], { line: "Willy naps in the sun." }), ...m.slice(1)]));
+      if (r) return r;
+    }
+    return null;
+  }
+  async function atTheNeon(at) {
+    const n = prop("nav"),
+      hop = P.hops("desk", "shelf")[0],
+      to = n && hop && xyh("shelf", [hop.to[0], hop.to[1], hop.h1]);
+    return to && going(at, to, "walk", (to) => [cue(stay("idle", to, between([4, 8])), { look: [(n.x0 + n.x1) / 2, (n.y0 + n.y1) / 2, (n.z0 + n.z1) / 2], line: "Willy stares up at the neon sign." })]);
   }
 
   // His present: a leaf off the plant on the shelf. He goes up to the shelf, along it to the
@@ -447,6 +544,13 @@ export function everyday({ w, P, M, SURF, avoid, pc = null, desk = null }) {
     { n: "push something off", w: 2, cool: 180, where: ["desk"], run: knock },
     { n: "tap the mug", w: 2, cool: 150, where: ["desk"], run: tap },
     { n: "bring a leaf", w: 1, cool: 120, where: ["desk"], run: present },
+    // his props (#70-E)
+    { n: "sniff the mug", w: 2, cool: 200, where: ["desk"], run: sniff },
+    { n: "paw at a page", w: 2, cool: 200, where: ["desk"], run: pawAtAPage },
+    { n: "lie on a book", w: 3, cool: 150, where: ["desk"], run: lieOnABook },
+    { n: "lie against the camera", w: 2, cool: 200, where: ["desk"], run: againstTheCamera },
+    { n: "nap in the sun", w: 3, cool: 200, where: ["desk"], run: inTheSun },
+    { n: "stare at the neon", w: 2, cool: 200, where: ["desk"], run: atTheNeon },
     { n: "wander", w: 10, where: ["desk"], run: (at) => going(at, spot(at), "walk", (to) => [stay("idle", to, between([0.6, 1.5]))]) },
     { n: "trot", w: 4, where: ["desk"], run: (at) => going(at, spot(at, "sit"), "trot", (to) => sitting(to, between([1.5, 3]))) },
     {
