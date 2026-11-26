@@ -379,13 +379,6 @@
       vib.stop(t + len + 0.05);
       hiss(t, len * 0.8, 0.015, 3000, 2);
     },
-    // a chirp: two quick rising notes
-    chirp: function () {
-      if (!touched || muted || !audio()) return;
-      var t = ctx.currentTime;
-      tone("sine", 900, 1500, t, 0.08, 0.06, 0.005);
-      tone("sine", 1250, 1800, t + 0.1, 0.07, 0.06, 0.005);
-    },
     muted: function () {
       return muted;
     },

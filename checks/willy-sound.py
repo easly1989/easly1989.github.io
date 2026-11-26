@@ -57,7 +57,7 @@ def open_room(b, base, reduced):
         return False
     time.sleep(2)
     # (each effect counted as it is asked for, whether it can be heard or not)
-    b.js("window.__snd = {}; for (const k of ['mew', 'purr', 'chirp', 'thud']) { const f = CRT[k]; CRT[k] = function (...a) { __snd[k] = (__snd[k] || 0) + 1; return f.apply(CRT, a); }; }")
+    b.js("window.__snd = {}; for (const k of ['mew', 'purr', 'thud']) { const f = CRT[k]; CRT[k] = function (...a) { __snd[k] = (__snd[k] || 0) + 1; return f.apply(CRT, a); }; }")
     b.js("window.__e = []; addEventListener('error', (e) => __e.push(e.message)); addEventListener('unhandledrejection', (e) => __e.push(String(e.reason)));")
     return True
 

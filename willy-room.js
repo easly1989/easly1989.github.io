@@ -472,8 +472,7 @@ async function live() {
   };
   const mewing = (text, ms) =>
     effect((crt) => {
-      if (/^(brrp|prrp)/.test(text)) crt.chirp();
-      else if (/^prr/.test(text)) crt.purr(ms / 1000);
+      if (/^prr+$/.test(text)) crt.purr(ms / 1000);
       else if (/^(mew|meow|mrrp)/.test(text)) crt.mew();
     });
   const say = (text, ms) => {
