@@ -343,13 +343,41 @@
       var t = ctx.currentTime;
       for (var s = 0; s < (secs || 1.5); s += 0.04) hiss(t + s, 0.05, 0.1 + Math.random() * 0.03, 130 + Math.random() * 60, 1.4, "lowpass");
     },
-    // a mew: two glides of a voice
+    // a mew, "mi-aow": a buzzing voice that rises then falls, its vowel opening from "ee" to "ow" (two
+    // formant filters sliding), with a little breath on top
     mew: function () {
       if (!touched || muted || !audio()) return;
-      var t = ctx.currentTime;
-      tone("triangle", 620, 900, t, 0.2, 0.06, 0.03);
-      tone("triangle", 900, 520, t + 0.2, 0.3, 0.06, 0.01);
-      hiss(t, 0.45, 0.02, 1800, 2);
+      var t = ctx.currentTime,
+        len = 0.55;
+      var o = ctx.createOscillator();
+      o.type = "sawtooth";
+      o.frequency.setValueAtTime(420, t);
+      o.frequency.exponentialRampToValueAtTime(760, t + 0.16);
+      o.frequency.exponentialRampToValueAtTime(540, t + len);
+      var vib = ctx.createOscillator(),
+        depth = ctx.createGain();
+      vib.frequency.value = 7;
+      depth.gain.value = 14;
+      vib.connect(depth);
+      depth.connect(o.frequency);
+      var g = envelope(t, 0.34, len, 0.05);
+      [
+        [400, 900, 5],
+        [2400, 1400, 6],
+      ].forEach(function (f) {
+        var b = ctx.createBiquadFilter();
+        b.type = "bandpass";
+        b.Q.value = f[2];
+        b.frequency.setValueAtTime(f[0], t);
+        b.frequency.exponentialRampToValueAtTime(f[1], t + 0.22);
+        o.connect(b);
+        b.connect(g);
+      });
+      o.start(t);
+      vib.start(t);
+      o.stop(t + len + 0.05);
+      vib.stop(t + len + 0.05);
+      hiss(t, len * 0.8, 0.015, 3000, 2);
     },
     // a chirp: two quick rising notes
     chirp: function () {
