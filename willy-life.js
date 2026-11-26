@@ -646,8 +646,42 @@ export function everyday({ w, P, M, SURF, avoid, pc = null, desk = null }) {
     return null;
   }
 
+  // The plant off the shelf: he goes up to it as he does for the leaf, along the shelf (too narrow
+  // for a swat: a butt of his head, as he nuzzles it), and sends it towards the shelf's near end,
+  // where it goes over (willy-room.js, desk.tipPlant, and room-fall.js) and falls to the desk. He
+  // watches it, and comes back down. Once, while it stands on the shelf.
+  async function knockPlant(at) {
+    if (!desk || !SURF.shelf) return null;
+    const plant = desk.plant();
+    if (!plant) return null;
+    const sh = SURF.shelf,
+      x = Math.round((sh.x0 + sh.x1) / 2),
+      butt = M.dur("pet");
+    const ys = [...P.hops("desk", "shelf").map((h) => h.to[1]), ...P.hops("shelf", "desk").map((h) => h.from[1]), ...[...Array(80).keys()].map((i) => plant.y + 110 + i * 2)];
+    for (const y of ys.filter((y) => y > plant.y + 100 && y < plant.y + 270)) {
+      const by = xyh("shelf", [x, Math.round(y), 90]);
+      if (!["walk", "idle", "pet"].every((k) => fits(by, k))) continue;
+      // and down to the front of the desk afterwards, away from where it lands
+      let to;
+      for (let n = 0; n < 40 && !to; n++) {
+        const p = xyh("desk", [Math.round(between([D.x0 + 120, D.x1 - 120])), Math.round(between([D.y0 + (D.y1 - D.y0) * 0.65, D.y1 - 200])), one([240, 270, 300])]);
+        if (clear(p) && free(p)) to = p;
+      }
+      const there = to && (await going(at, by, "walk", (by) => [
+        cue(stay("idle", by, between([0.8, 1.4])), { look: [plant.x, plant.y, plant.z] }),
+        part("pet", by, 0, butt * 0.5),
+        cue(part("pet", by, butt * 0.5, butt), { act: () => desk.tipPlant(), line: "Willy butts the plant off the shelf." }),
+        cue(stay("idle", by, between([1.8, 2.6])), { look: [plant.x - 60, plant.y - 300, 0] }),
+      ]));
+      const back = there && (await M.go(by, to));
+      if (back) return { to, moments: [...there.moments, ...M.legs(back, "walk")] };
+    }
+    return null;
+  }
+
   return [
     // knocking things off, tapping the mug and the jar, and his present (#72)
+    { n: "knock the plant off", w: 1, cool: 300, where: ["desk"], run: knockPlant },
     { n: "push something off", w: 2, cool: 180, where: ["desk"], run: knock },
     { n: "tap the mug", w: 2, cool: 150, where: ["desk"], run: tap },
     { n: "bring a leaf", w: 1, cool: 120, where: ["desk"], run: present },

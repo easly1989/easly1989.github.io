@@ -28,6 +28,7 @@ python checks/willy-prop-actions.py
 python checks/willy-box.py
 python checks/willy-fly.py
 python checks/willy-sound.py
+python checks/willy-plant.py
 python checks/motion.py
 python checks/data.py
 ```
@@ -172,6 +173,11 @@ of motion that forgets it measures a room in which Willy only sleeps.
   left to its own switch; Willy's mew and the thud of something fallen off the desk go through the
   same effects (each counted as it is asked for, not heard), which wait until the reader has pressed
   or typed; under reduced motion he makes none; nothing throws. Headless; a minute or two.
+- `willy-plant.py` — the plant knocked off the shelf (#72-C): asked to, he butts it off its end; the pot
+  lands on the desk with a crack, comes to rest on its side with its leaves on it, spills its soil, and
+  is one of the room's solids where it lies (his routes are measured again); no leaf can be brought from
+  a plant that has gone; under reduced motion it stays on the shelf; nothing throws. Headless; a few
+  minutes.
 
 - `motion.py` — the reader's choice to animate anyway (`motion.js`), under reduced motion: with
   no choice the footer's button offers it and nothing of Willy's peek moves; clicked, it is pressed,

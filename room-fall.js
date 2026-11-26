@@ -14,6 +14,7 @@ const G = 130; // 9.8 m/s² in units/s²
 const STEP = 1 / 120;
 const PAW = 12; // px, the paw's radius
 const BELOW = -20; // px under the desk's top: what is lower has fallen off it
+const POT = 58; // px, the plant's pot is this tall (room.js, its box)
 
 export function fall(ROOM, reducedMotion) {
   const stage = ROOM.stage,
@@ -45,7 +46,9 @@ export function fall(ROOM, reducedMotion) {
   fixed(new Plane(), v(walls.right, 0, 0)).quaternion.setFromEuler(0, -Math.PI / 2, 0); // (facing -x)
   const d = ROOM.desk;
   fixed(new Box(v(d.w / 2, d.d / 2, d.t / 2)), v(d.x + d.w / 2, d.y + d.d / 2, -d.t / 2));
-  for (const o of ROOM.boxes()) fixed(new Box(v(Math.max(1, (o.x1 - o.x0) / 2), Math.max(1, (o.y1 - o.y0) / 2), Math.max(1, (o.z1 - o.z0) / 2))), v((o.x0 + o.x1) / 2, (o.y0 + o.y1) / 2, (o.z0 + o.z1) / 2));
+  // (each by its element: the plant's stands for it until it is tipped off the shelf, tip())
+  const twins = new Map();
+  for (const o of ROOM.boxes()) twins.set(o.el, fixed(new Box(v(Math.max(1, (o.x1 - o.x0) / 2), Math.max(1, (o.y1 - o.y0) / 2), Math.max(1, (o.z1 - o.z0) / 2))), v((o.x0 + o.x1) / 2, (o.y0 + o.y1) / 2, (o.z0 + o.z1) / 2)));
 
   // his paw: moved by him, not by what it meets; in the world only while he paws
   const paw = new Body({ mass: 0, type: Body.KINEMATIC, material: pad, allowSleep: false });
@@ -139,13 +142,20 @@ export function fall(ROOM, reducedMotion) {
       awake ||= !asleep;
       show(e, o);
       moved = e;
+      // (the pot, come to rest where it lies once it has landed, and each time it comes to rest again
+      // if something moves it: said, for the soil and the room's solids, willy-room.js)
+      if (o.pot && !asleep) o.rested = false;
+      else if (o.pot && o.landed && !o.rested) {
+        o.rested = true;
+        stage.dispatchEvent(new CustomEvent("rested", { detail: e }));
+      }
       // (off the desk: said once, for the live line, willy-room.js)
       if (!o.fell && o.b.position.z * U < BELOW) {
         o.fell = true;
         fell.push(e);
         stage.dispatchEvent(new CustomEvent("knocked", { detail: e }));
       }
-      if (gone(o.b.position, Math.max(o.w, o.h) * o.s[0])) {
+      if (!o.pot && gone(o.b.position, Math.max(o.w, o.h) * o.s[0])) {
         world.removeBody(o.b);
         bodies.delete(e);
         e.remove();
@@ -177,6 +187,34 @@ export function fall(ROOM, reducedMotion) {
       o.shown = true;
       o.b.velocity.copy(v(...vel));
       o.b.angularVelocity.set(...spin.map((s) => s * 2 * Math.PI));
+      run();
+      return true;
+    },
+    // the plant's pot e, off the shelf (it is not one of the odds and ends): the box that stood for
+    // it goes, and it is a body from here on, as heavy as it looks, sent off with vel (room px/s) and
+    // a spin (turns/s); whether it was. Its first hard landing is said ("landed", for the crack), and
+    // when it has come to rest, "rested" (for the soil).
+    tip(e, vel, spin = [0, 0, 0]) {
+      if (reducedMotion() || bodies.has(e)) return false;
+      const twin = twins.get(e);
+      if (twin) world.removeBody(twin);
+      const w = e.offsetWidth,
+        h = e.offsetHeight,
+        c = ROOM.toStage(e).transformPoint(new DOMPoint(w / 2, h / 2, POT / 2));
+      const b = new Body({ mass: 3, material: thing, allowSleep: true, sleepSpeedLimit: 0.08, sleepTimeLimit: 0.4, linearDamping: 0.05, angularDamping: 0.1 });
+      b.addShape(new Box(v(w / 2, h / 2, POT / 2)));
+      b.position.copy(v(c.x, c.y, c.z + 0.5));
+      world.addBody(b);
+      const o = { b, w, h, t: POT, s: [1, 1, 1], base: null, shown: true, pot: true };
+      // (off the shelf and down: a landing that is hard, not the first touch of the shelf's edge)
+      b.addEventListener("collide", (ev) => {
+        if (o.landed || b.position.z * U > 140 || Math.abs(ev.contact.getImpactVelocityAlongNormal()) < 4) return;
+        o.landed = true;
+        stage.dispatchEvent(new CustomEvent("landed", { detail: e }));
+      });
+      bodies.set(e, o);
+      b.velocity.copy(v(...vel));
+      b.angularVelocity.set(...spin.map((s) => s * 2 * Math.PI));
       run();
       return true;
     },
@@ -223,7 +261,7 @@ export function fall(ROOM, reducedMotion) {
       if (o) {
         const p = o.b.position,
           q = o.b.quaternion;
-        return { x: p.x * U, y: p.y * U, z: p.z * U, hx: (o.w * o.s[0]) / 2, hy: (o.h * o.s[1]) / 2, yaw: Math.atan2(2 * (q.w * q.z + q.x * q.y), 1 - 2 * (q.y * q.y + q.z * q.z)), still: o.b.sleepState === Body.SLEEPING, fell: !!o.fell };
+        return { x: p.x * U, y: p.y * U, z: p.z * U, hx: (o.w * o.s[0]) / 2, hy: (o.h * o.s[1]) / 2, yaw: Math.atan2(2 * (q.w * q.z + q.x * q.y), 1 - 2 * (q.y * q.y + q.z * q.z)), up: [2 * (q.x * q.z + q.w * q.y), 2 * (q.y * q.z - q.w * q.x), 1 - 2 * (q.x * q.x + q.y * q.y)], still: o.b.sleepState === Body.SLEEPING, fell: !!o.fell };
       }
       const { sx, sy, w, h, c, yaw } = measured(e);
       return { x: c.x, y: c.y, z: c.z, hx: (w * sx) / 2, hy: (h * sy) / 2, yaw, still: true, fell: false };

@@ -338,6 +338,17 @@
       tone("sine", 120, 44, t, 0.2, 0.45, 0.004);
       hiss(t, 0.08, 0.16, 240, 0.7, "lowpass");
     },
+    // a pot hitting the desk and cracking: the knock of it, then a few bright shards
+    crack: function () {
+      if (!touched || muted || !audio()) return;
+      var t = ctx.currentTime;
+      tone("sine", 170, 60, t, 0.15, 0.5, 0.003);
+      hiss(t, 0.06, 0.35, 2600, 1.1);
+      [0.03, 0.07, 0.12, 0.2].forEach(function (d, i) {
+        tone("triangle", 2400 + i * 450, 1800 + i * 300, t + d, 0.05, 0.08, 0.002);
+        hiss(t + d, 0.04, 0.12, 4200, 3);
+      });
+    },
     // a cat purring, for secs: a low rumble in pulses
     purr: function (secs) {
       if (!touched || muted || !audio()) return;

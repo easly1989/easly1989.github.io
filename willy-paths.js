@@ -295,6 +295,11 @@ export function planner({ surfaces, jumps, fits }) {
   const length = (pts) => pts.reduce((n, p, i) => (i ? n + Math.hypot(p[0] - pts[i - 1][0], p[1] - pts[i - 1][1]) : 0), 0);
 
   return {
+    // what fits() said, and the jumps worked out from it: the room has changed
+    forget() {
+      Object.keys(memo).forEach((k) => delete memo[k]);
+      found.clear();
+    },
     walk: (s, from, to) => walk(named[s], from, to),
     // from { surface, x, y, heading } to { surface, x, y, heading? }: a list of legs, each
     // { walk: points } or { jump: hop }, or null. Between surfaces, the shorter ways are the
