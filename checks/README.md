@@ -28,6 +28,7 @@ python checks/willy-prop-actions.py
 python checks/willy-box.py
 python checks/willy-fly.py
 python checks/willy-sound.py
+python checks/willy-toys.py
 python checks/motion.py
 python checks/data.py
 ```
@@ -172,6 +173,12 @@ of motion that forgets it measures a room in which Willy only sleeps.
   left to its own switch; Willy's mew and the thud of something fallen off the desk go through the
   same effects (each counted as it is asked for, not heard), which wait until the reader has pressed
   or typed; under reduced motion he makes none; nothing throws. Headless; a minute or two.
+- `willy-toys.py` — his toys (#70-C): two to four a visit (`?toys` for all five, `?toys=yarn,bag` for
+  those), each a labelled button inside the window, none on another, round which he walks and not over;
+  pressed, by a click or by Enter, each shows its effect for a moment and says so on the live line, the
+  treat bag spills three treats where he can come to them; asked to, he bats a toy, rolls on his back
+  with the yarn and eats a treat; a toy the reader presses he may come to; under reduced motion the
+  effect is shown, still; nothing throws. Headless; several minutes.
 
 - `motion.py` — the reader's choice to animate anyway (`motion.js`), under reduced motion: with
   no choice the footer's button offers it and nothing of Willy's peek moves; clicked, it is pressed,

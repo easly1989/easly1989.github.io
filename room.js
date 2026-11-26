@@ -525,7 +525,7 @@
     return m;
   }
   // the room-space box round an element and everything in it (z up from the mat)
-  var BODYLESS = /\b(shade|anchor|burst|cam-out|film|pc-mouse-cord|pg-msg|nest-floor|nest-flap)\b/;
+  var BODYLESS = /\b(shade|anchor|burst|cam-out|film|pc-mouse-cord|pg-msg|nest-floor|nest-flap|toy)\b/; // (the toy: its picture stands for itself, its footprint is its body)
   // (but the parts skip(e) says are not this thing's)
   function bounds(root, skip) {
     var b = { x0: 1e9, y0: 1e9, z0: 1e9, x1: -1e9, y1: -1e9, z1: -1e9, parts: [] },
@@ -596,7 +596,7 @@
   // what nothing may go into: the computer, the project objects on the desk, the desk's
   // legs and the chair
   function obstacles() {
-    return [].filter.call(stage.querySelectorAll(".pc, .desk-leg, .chair, .thing, .nest-wall"), function (e) {
+    return [].filter.call(stage.querySelectorAll(".pc, .desk-leg, .chair, .thing, .nest-wall, .toyspot"), function (e) {
       return !(e.classList.contains("thing") && e.closest(".on-wall, .pc"));
     });
   }
@@ -644,7 +644,9 @@
     return r;
   }
   // again: only what the words, once their fonts are in, now run into moves; the rest stays put
-  function spread(again) {
+  // (what stands in the way of a thing put on the desk: the solid things and Willy's box, with the
+  // loose things and toys put down so far added by whoever is placing them)
+  function inTheWay() {
     var fixed = obstacles().map(function (e) {
       return { el: e, b: bounds(e), name: named(e) };
     });
@@ -652,25 +654,37 @@
     var inner = { x0: NEST.x + NEST.t, x1: NEST.x + NEST.w - NEST.t, y0: NEST.y + NEST.t, y1: NEST.y + NEST.d - NEST.t, z0: 0, z1: NEST.h };
     inner.parts = [{ x0: inner.x0, x1: inner.x1, y0: inner.y0, y1: inner.y1, q: [[inner.x0, inner.y0], [inner.x1, inner.y0], [inner.x1, inner.y1], [inner.x0, inner.y1]] }];
     fixed.push({ el: nest, b: inner, name: "Willy's box" });
-    var tall = [].map.call(stage.querySelectorAll(".pc, .thing.jar, .thing.mug"), screenBox);
+    return fixed;
+  }
+  var tallOnes = function () {
+    return [].map.call(stage.querySelectorAll(".pc, .thing.jar, .thing.mug"), screenBox);
+  };
+  // e put where it goes into nothing in fixed and is not behind the tall things (screen boxes), at
+  // random, a turn up to 40 degrees either way; the next thing is judged against it too
+  function put(e, fixed, tall, again) {
+    if (again && !faults(e, fixed, false).length) return fixed.push({ el: e, b: bounds(e), name: named(e) });
+    for (var tries = 0; tries < 200; tries++) {
+      var x = DESK_TOP.x0 + 40 + Math.random() * (DESK_TOP.x1 - DESK_TOP.x0 - 80) - e.offsetWidth / 2;
+      var y = DESK_TOP.y0 + 40 + Math.random() * (DESK_TOP.y1 - DESK_TOP.y0 - 80) - e.offsetHeight / 2;
+      setAt(e, { x: Math.round(x), y: Math.round(y), r: Math.round(Math.random() * 80 - 40) });
+      if (faults(e, fixed, false).length) continue;
+      var sb = screenBox(e);
+      var cx = (sb.l + sb.r) / 2,
+        cy = (sb.t + sb.b) / 2;
+      // with some room to spare, so that nothing sits half behind a rim either
+      var behind = tall.some(function (t) {
+        return cx > t.l - 10 && cx < t.r + 10 && cy > t.t - 10 && cy < t.b + 10;
+      });
+      if (!behind) break;
+    }
+    if (tries === 200) console.warn("[room] no free place for " + named(e) + ": " + faults(e, fixed, false).join("; "));
+    fixed.push({ el: e, b: bounds(e), name: named(e) });
+  }
+  function spread(again) {
+    var fixed = inTheWay(),
+      tall = tallOnes();
     [].forEach.call(stage.querySelectorAll(".loose"), function (e) {
-      if (again && !faults(e, fixed, false).length) return fixed.push({ el: e, b: bounds(e), name: named(e) });
-      for (var tries = 0; tries < 200; tries++) {
-        var x = DESK_TOP.x0 + 40 + Math.random() * (DESK_TOP.x1 - DESK_TOP.x0 - 80) - e.offsetWidth / 2;
-        var y = DESK_TOP.y0 + 40 + Math.random() * (DESK_TOP.y1 - DESK_TOP.y0 - 80) - e.offsetHeight / 2;
-        setAt(e, { x: Math.round(x), y: Math.round(y), r: Math.round(Math.random() * 80 - 40) });
-        if (faults(e, fixed, false).length) continue;
-        var sb = screenBox(e);
-        var cx = (sb.l + sb.r) / 2,
-          cy = (sb.t + sb.b) / 2;
-        // with some room to spare, so that nothing sits half behind a rim either
-        var behind = tall.some(function (t) {
-          return cx > t.l - 10 && cx < t.r + 10 && cy > t.t - 10 && cy < t.b + 10;
-        });
-        if (!behind) break;
-      }
-      if (tries === 200) console.warn("[room] no free place for " + named(e) + ": " + faults(e, fixed, false).join("; "));
-      fixed.push({ el: e, b: bounds(e), name: named(e) });
+      put(e, fixed, tall, again);
     });
   }
 
@@ -1813,8 +1827,9 @@
     MAX = 1.15,
     MIN = ROOM_FIT.min,
     BASE = { x: 179, y: 73 }; // the stage's own offsets (room.css)
+  // (but not the toys, which are put down inside the frame it makes: willy-toys.js)
   function usable() {
-    return [].filter.call(fit.querySelectorAll("a[href], button, [tabindex]:not([tabindex='-1'])"), function (e) {
+    return [].filter.call(fit.querySelectorAll("a[href], button:not(.toy), [tabindex]:not([tabindex='-1'])"), function (e) {
       if (e.closest("[hidden], [inert]")) return false;
       var cs = getComputedStyle(e);
       if (cs.visibility === "hidden" || cs.display === "none") return false;
@@ -2072,7 +2087,7 @@
         });
       if (pcCase && kb) all.push({ b: bounds(pcCase, function (e) { return !keyboard(e); }), name: "the keyboard", e: kb });
       lows = all.filter(function (o) {
-        return !o.of && Math.abs(o.b.z0) < 3 && o.b.z1 <= LOW; // standing on the desk, not under it (the keyboard's rim, a hair into the desk)
+        return !o.of && Math.abs(o.b.z0) < 3 && o.b.z1 <= LOW && !(o.e && o.e.classList.contains("toyspot")); // standing on the desk, not under it (the keyboard's rim, a hair into the desk); not a toy, which he goes round
       });
       solids = all.filter(function (o) {
         return lows.indexOf(o) < 0;
@@ -2323,6 +2338,23 @@
         out.nest.inside = { x0: nst.offsetLeft + NEST.t, x1: nst.offsetLeft + NEST.w - NEST.t, y0: nst.offsetTop + NEST.t, y1: nst.offsetTop + NEST.d - NEST.t, h: NEST.h }; // (what is inside its walls)
       }
       return out;
+    },
+    // the screen box the room is framed to, as it is now: round everything usable in it but the toys (the
+    // toys stay inside it, so that no size of window puts one out of the frame)
+    usableBox: function () {
+      var u = union(usable());
+      return { left: u.l, top: u.t, right: u.r, bottom: u.b };
+    },
+    // a thing e, new in the room (a toy), put down on the desk where it goes into nothing and is not
+    // behind the computer, the jar or the mug, as the loose things are; the room's solids are
+    // measured again with it in them
+    place: function (e) {
+      var fixed = inTheWay();
+      [].forEach.call(stage.querySelectorAll(".loose"), function (o) {
+        fixed.push({ el: o, b: bounds(o), name: named(o) });
+      });
+      put(e, fixed, tallOnes(), false);
+      solids = lows = null;
     },
     // what is low enough to walk over, each by name, how high and where on the desk, and its
     // element

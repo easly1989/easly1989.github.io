@@ -27,10 +27,11 @@ live()
 const LOOK_ABOUT = [3, 7];
 
 async function live() {
-  const [{ willy }, { planner }, { moves }, { pick, everyday, reactions, react, bothered, warm, paws, PAWING, PAW }, { fall }] = await Promise.all([import("./willy.js"), import("./willy-paths.js"), import("./willy-moves.js"), import("./willy-life.js"), import("./room-fall.js")]);
+  const [{ willy }, { planner }, { moves }, { pick, everyday, reactions, react, bothered, warm, paws, PAWING, PAW }, { fall }, { toys }] = await Promise.all([import("./willy.js"), import("./willy-paths.js"), import("./willy-moves.js"), import("./willy-life.js"), import("./room-fall.js"), import("./willy-toys.js")]);
   await ROOM.ready;
   await ROOM.landed(); // (setting him up takes the main thread for a while, and the morph would stop for it)
-  // what he can knock off the desk, and how it falls (room-fall.js); nothing under reduced motion
+  // what he can knock off the desk, and how it falls (room-fall.js); nothing under reduced motion. It meets the
+  // toys too, which are put down later: rebox().
   room.fall = fall(ROOM, reducedMotion);
   const w = await willy(room, stage);
   const P = planner({ surfaces: ROOM.surfaces, jumps: ROOM.jumps, fits: w.fits });
@@ -42,6 +43,9 @@ async function live() {
   // planner's 16 headings): one he could only walk into, nose first, is a pocket no route leaves
   const free = (to) => fits(to, "walk") && [...Array(16).keys()].every((i) => fits({ ...to, heading: i * 22.5 }, "turn"));
   const between = ([a, b]) => a + Math.random() * (b - a);
+  // his toys, put down on the desk (willy-toys.js); they are settled where he can come to them once his actions
+  // are made, below, and before anything falls, which meets them (room-fall.js)
+  const toy = (room.toys = toys({ room, stage, ROOM, announce: (text, always) => announce(text, always) }));
 
   // The live line: one polite line, a few words a time, for what concerns the reader and no more.
   // Cleared first, so that the same words twice still speak; at most one in a second and a half.
@@ -262,6 +266,8 @@ async function live() {
       fur(at, true, bare);
     },
     things: () => [...stage.querySelectorAll(".loose")],
+    // his toys (willy-toys.js): each where it lies, one pressed or batted, the treats on the desk
+    toys: toy,
     where: (e) => room.fall.where(e),
     fallen: () => room.fall.state().fell.length,
     byChair: (x) => !!chairX && x > chairX[0] && x < chairX[1],
@@ -415,6 +421,7 @@ async function live() {
   };
   const ACTIONS = everyday({ w, P, M, SURF, avoid, pc, desk }),
     ran = {};
+
   let done = null,
     again = null; // an action that goes on: the next sweep of his paw at what he is knocking off
   async function next(at) {
@@ -490,6 +497,10 @@ async function live() {
     if (p && free(xyh("desk", p)) && !inBox({ x: p[0], y: p[1] })) at = xyh("desk", p);
   }
   if (!at) throw new Error("no room on the desk");
+  // his toys go where he can walk to them from here, and what falls meets them there
+  await toy.settle(ACTIONS.canStand, (to) => M.go(at, to).then(Boolean), at, () => P.forget());
+  P.forget();
+  room.fall.rebox();
   // what he looks at as he rests, now and then something else: one of the room's sources that is
   // on (the window, the screen, the radio's lamp, the projector's lens), the reader, out of the
   // screen, or nothing
@@ -534,11 +545,26 @@ async function live() {
   // it. In the air it waits for the landing. Meanwhile the next trip is not found, nor the frames
   // run: the answer is worked out first, and he carries on if there is none.
   const FADE = 0.3; // s
+  let pettedAt = 0,
+    lastToy = { el: null, at: 0 };
   petted = () => {
     const now = performance.now();
     clicks = clicks.filter((c) => now - c < PESTER.within).concat(now);
     pending = "pet";
+    pettedAt = now;
   };
+  // A toy the reader pressed (willy-toys.js): he may notice and come to play with it (willy-life.js, "play
+  // with a toy"), by chance: less when he is asleep, was just petted, or the same toy was pressed a
+  // moment ago, and never over what the reader has just asked of him. Not while he sleeps for want of motion.
+  stage.addEventListener("toytouch", (e) => {
+    const { spot, by } = e.detail,
+      now = performance.now();
+    const again = lastToy.el === spot && now - lastToy.at < 10000;
+    lastToy = { el: spot, at: now };
+    if (by !== "reader" || pending || reducedMotion()) return;
+    const asleep = RESTING(M.now(show, Math.min(t, total)).clip) === "sleep";
+    if (Math.random() < 0.5 * (asleep ? 0.1 : 1) * (now - pettedAt < 20000 ? 0.3 : 1) * (again ? 0.3 : 1)) pending = { act: "play with a toy", toy: spot };
+  });
   // what he does about what the reader did, from p: pestered, he moves away or leaves; petted, he
   // answers (answer()); asked off the object he is on, he gets off it
   async function bother(kind, p) {
@@ -546,7 +572,7 @@ async function live() {
     if (kind.act) {
       const a = ACTIONS.find((a) => a.n === kind.act),
         at = here(p);
-      const r = a && at && a.where.includes(at.surface) && (await a.run(at));
+      const r = a && at && a.where.includes(at.surface) && (await a.run(at, kind));
       if (r) (ran[a.n] = performance.now() / 1000), (done = a.n), (again = r.again || null);
       return r && r.moments.length ? r : null;
     }
