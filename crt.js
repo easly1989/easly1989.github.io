@@ -9,16 +9,23 @@
   var noise = null;
   var playing = null;
   var muted = false;
+  var mews = null; // the promise of Willy's mew recordings, once asked for
   try {
     muted = localStorage.getItem("pc:mute") === "1";
   } catch (e) {}
 
   // Browsers start audio only after a gesture; the first key or click wakes it.
+  var touched = false; // whether the reader has pressed or typed in this page (the room's own effects wait for that)
   function wake() {
     if (ctx && ctx.state === "suspended") ctx.resume();
   }
-  addEventListener("pointerdown", wake, true);
-  addEventListener("keydown", wake, true);
+  function press() {
+    // (a real activation, where the browser says: Escape, or a touch not yet lifted, is none)
+    touched = touched || !navigator.userActivation || navigator.userActivation.hasBeenActive;
+    wake();
+  }
+  addEventListener("pointerdown", press, true);
+  addEventListener("keydown", press, true);
 
   function audio() {
     if (!ctx) {
@@ -318,6 +325,56 @@
         bus.disconnect();
       }, 500);
       playing = null;
+    },
+    // The room's own effects, Willy's and what falls; each plays only once the reader has pressed or
+    // typed (a page that is silent until then has no sound to start late), and not while muted.
+    heard: function () {
+      return touched;
+    },
+    // something soft landing on the floor, out of sight
+    thud: function () {
+      if (!touched || muted || !audio()) return;
+      var t = ctx.currentTime;
+      tone("sine", 120, 44, t, 0.2, 0.45, 0.004);
+      hiss(t, 0.08, 0.16, 240, 0.7, "lowpass");
+    },
+    // a cat purring, for secs: a low rumble in pulses
+    purr: function (secs) {
+      if (!touched || muted || !audio()) return;
+      var t = ctx.currentTime;
+      for (var s = 0; s < (secs || 1.5); s += 0.04) hiss(t + s, 0.05, 0.1 + Math.random() * 0.03, 130 + Math.random() * 60, 1.4, "lowpass");
+    },
+    // a mew: one of three recordings (assets/sounds/), fetched the first time one is wanted; a failed
+    // fetch leaves him silent
+    mew: function () {
+      if (!touched || muted || !audio()) return;
+      mews =
+        mews ||
+        Promise.all(
+          [1, 2, 3].map(function (n) {
+            return fetch("assets/sounds/mew-" + n + ".mp3")
+              .then(function (r) {
+                return r.arrayBuffer();
+              })
+              .then(function (b) {
+                return ctx.decodeAudioData(b);
+              })
+              .catch(function () {
+                return null;
+              });
+          })
+        );
+      mews.then(function (all) {
+        all = all.filter(Boolean);
+        if (!all.length || muted) return;
+        var s = ctx.createBufferSource(),
+          g = ctx.createGain();
+        s.buffer = all[Math.floor(Math.random() * all.length)];
+        g.gain.value = 0.675;
+        s.connect(g);
+        g.connect(out);
+        s.start();
+      });
     },
     muted: function () {
       return muted;

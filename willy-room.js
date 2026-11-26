@@ -247,6 +247,7 @@ async function live() {
     chairX = chairEl ? ((xs) => [Math.min(...xs) - 80, Math.max(...xs) + 80])(corners(chairEl).map((p) => p.x)) : null;
   let aimed = null; // the thing he is pawing at, and what the line says once it falls
   stage.addEventListener("knocked", (e) => {
+    setTimeout(() => effect((crt) => crt.thud()), 350); // (out of sight, on the floor)
     if (aimed && e.detail === aimed.el) announce(aimed.line, true), (aimed = null);
   });
   let carried = null; // the leaf in his mouth
@@ -462,7 +463,20 @@ async function live() {
     says.style.left = x + 10 + "px";
     says.style.top = y - says.offsetHeight - 6 + "px";
   };
+  // (his voice, through the computer's speaker: muted with the rest of the room's effects)
+  // (a sound that fails, or a script of another day that has none, is not his show stopping)
+  const effect = (play) => {
+    try {
+      if (window.CRT) play(window.CRT);
+    } catch (e) {}
+  };
+  const mewing = (text, ms) =>
+    effect((crt) => {
+      if (/^prr+$/.test(text)) crt.purr(ms / 1000);
+      else if (/^(mew|meow|mrrp)/.test(text)) crt.mew();
+    });
   const say = (text, ms) => {
+    mewing(text, ms);
     says.textContent = text;
     bubble();
     says.classList.add("on");
