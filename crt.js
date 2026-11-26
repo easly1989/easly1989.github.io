@@ -370,7 +370,7 @@
         var s = ctx.createBufferSource(),
           g = ctx.createGain();
         s.buffer = all[Math.floor(Math.random() * all.length)];
-        g.gain.value = 0.9;
+        g.gain.value = 0.675;
         s.connect(g);
         g.connect(out);
         s.start();
