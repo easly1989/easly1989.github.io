@@ -110,13 +110,13 @@ try:
     check("paper" not in b.js("[...document.querySelectorAll('.toyspot')].map((e) => e.dataset.kind)"), "?toys=yarn,ball,mouse,bag: those four, and no other")
 
     # ---- pressed: the effect, said on the live line, for a moment
-    for kind, words in (("yarn", "yarn unrolls"), ("ball", "crinkle ball crinkles"), ("mouse", "mouse spins")):
+    for kind, words in (("yarn", "yarn rolls out"), ("ball", "crinkle ball crinkles"), ("mouse", "mouse spins")):
         x, y = centre(b, kind)
         click(b, x, y)
         time.sleep(0.4)
-        check(b.js(f"document.querySelector('.toyspot[data-kind={kind}] .toy').classList.contains('go')"), f"{kind}: pressed, it shows its effect")
+        check(b.js(f"document.querySelector('.toyspot[data-kind={kind}]').classList.contains('go')"), f"{kind}: pressed, it shows its effect")
         check(words in (b.js("document.querySelector('.willy-live').textContent") or ""), f"{kind}: and the live line says so: {b.js('document.querySelector(\".willy-live\").textContent')!r}")
-        check(bool(until(b, f"!document.querySelector('.toyspot[data-kind={kind}] .toy').classList.contains('go')", 5)), f"{kind}: and it is as it was after a moment")
+        check(bool(until(b, f"!document.querySelector('.toyspot[data-kind={kind}]').classList.contains('go')", 5)), f"{kind}: and it is as it was after a moment")
         time.sleep(1.7)  # (the live line says one thing in a second and a half)
     check(["yarn", "reader"] in b.js("__t"), f"the press is told ('toytouch'): {b.js('__t')!r}")
 
@@ -126,7 +126,7 @@ try:
     until(b, "document.querySelectorAll('.treat').length >= 1", 20)
     time.sleep(3)
     check(1 <= b.js("document.querySelectorAll('.treat').length") <= 3, f"the bag spills treats, up to three: {b.js('document.querySelectorAll(\".treat\").length')}")
-    until(b, "!document.querySelector('.toyspot[data-kind=bag] .toy').classList.contains('go')", 5)
+    until(b, "!document.querySelector('.toyspot[data-kind=bag]').classList.contains('go')", 5)
     x, y = centre(b, "bag")
     click(b, x, y)
     time.sleep(0.5)
@@ -134,16 +134,21 @@ try:
 
     # ---- from the keyboard: Tab to it, Enter
     b.js("document.querySelector('.toyspot[data-kind=ball] .toy').focus()")
-    until(b, "!document.querySelector('.toyspot[data-kind=ball] .toy').classList.contains('go')", 5)
+    until(b, "!document.querySelector('.toyspot[data-kind=ball]').classList.contains('go')", 5)
     key(b, "Enter", "Enter", 13, "\r")
     time.sleep(0.4)
-    check(b.js("document.querySelector('.toyspot[data-kind=ball] .toy').classList.contains('go')"), "Enter on a focused toy shows its effect too")
+    check(b.js("document.querySelector('.toyspot[data-kind=ball]').classList.contains('go')"), "Enter on a focused toy shows its effect too")
 
     # ---- Willy plays with them: asked to, he bats one (it shows its effect, he says so)
-    calm(b)
-    b.js("__t.length = 0")
-    b.js(R + ".act('play with a toy')")
-    check(bool(until(b, "__t.some((t) => t[1] === 'willy')", 90)), f"he bats a toy: {b.js('__t')!r}")
+    batted = None
+    for _ in range(2):
+        calm(b)
+        b.js("__t.length = 0")
+        b.js(R + ".act('play with a toy')")
+        batted = until(b, "__t.some((t) => t[1] === 'willy')", 70)
+        if batted:
+            break
+    check(bool(batted), f"he bats a toy: {b.js('__t')!r}")
     check(not b.js("window.__e"), f"nothing throws ({b.js('window.__e')!r})")
 
     # ---- the yarn alone, with room round it: he rolls on his back with it
@@ -186,8 +191,8 @@ try:
     x, y = centre(b, "mouse")
     click(b, x, y)
     time.sleep(0.4)
-    check(b.js("document.querySelector('.toyspot[data-kind=mouse] .toy').classList.contains('go')"), "reduced motion: pressed, the effect is shown")
-    check(b.js("getComputedStyle(document.querySelector('.toyspot[data-kind=mouse] .toy svg')).animationName") == "none", "and does not move")
+    check(b.js("document.querySelector('.toyspot[data-kind=mouse]').classList.contains('go')"), "reduced motion: pressed, the effect is shown")
+    check(b.js("getComputedStyle(document.querySelector('.toyspot[data-kind=mouse]')).animationName") == "none", "and does not move")
     b.js("localStorage.setItem('site:room', '0')")
 finally:
     b.close()

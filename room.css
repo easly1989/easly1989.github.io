@@ -2783,22 +2783,31 @@ html:not(.iso) .strip {
   }
 }
 
-/* ---- Willy's toys (#70-C, willy-toys.js) ------------------------------------------------ */
-/* each stands on the desk in a footprint of its own (a floor and a top, nothing drawn on them: the
-   room's solids), and is one picture turned to face the reader, standing up from the middle of it */
-.iso .toyspot {
+/* ---- Willy's toys (#70-C, room.js draws them, willy-toys.js moves them) ------------------ */
+/* each is a .toyspot, the footprint he walks round, with its shapes drawn in it (balls of round strips,
+   boxes: the room's own, lit and shadowed by the light pass) and a button over it, one plane facing the
+   reader, with nothing painted on it */
+.iso .toyspot,
+.iso .toyspot span,
+.iso .toyspot i,
+.iso .toyspot svg.toytail {
   position: absolute;
+  display: block;
   transform-style: preserve-3d;
   pointer-events: none;
 }
-.iso .toyfoot,
-.iso .toytop {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
+.iso .toyspot .toy-body {
+  width: 0;
+  height: 0;
+  transform-origin: 0 0 0;
 }
-.iso .toytop {
-  transform: translateZ(var(--th));
+.iso .toyspot .bin-wall {
+  left: 0;
+  top: 0;
+  transform-origin: 50% 0;
+}
+.iso .toyspot .toytail {
+  overflow: visible;
 }
 .iso .toy {
   position: absolute;
@@ -2812,58 +2821,38 @@ html:not(.iso) .strip {
   pointer-events: auto;
   transform: translateZ(var(--lift)) rotateZ(45deg) rotateX(-54.7356deg);
 }
-.iso .toy svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-  transform-origin: 50% 80%;
-}
-.iso .toy:hover svg {
-  filter: brightness(1.08);
-}
 .iso .toy:focus-visible {
   outline: 3px solid #fff;
   outline-offset: 2px;
   box-shadow: 0 0 0 6px #1b1b1b;
 }
-/* the effect, once pressed: the drawing swaps for the touched one (still, under reduced motion) and
-   these play over it */
-.iso .toy-yarn.go .strand {
-  stroke-dasharray: 1 1;
-  animation: toy-strand 1.1s ease-out both;
+/* the effect, once pressed: the toy itself moves (so the light follows it), and goes back; the yarn
+   rolls out on its thread (sent by willy-toys.js: --rx, --ry the way it goes, --ax, --ay the axis it
+   turns on, --rot how far), the ball flattens and crinkles, the mouse spins, the bag tips over, the
+   paper bag rustles */
+.iso .toyspot.go[data-kind="yarn"] {
+  animation: toy-roll 2.4s ease-in-out both;
 }
-.iso .toy-yarn.go svg,
-.iso .toy-bag.go svg {
-  animation: toy-shake 0.6s ease-out;
+.iso .toyspot.go[data-kind="ball"] {
+  animation: toy-crinkle 0.7s ease-out both;
 }
-.iso .toy-ball.go svg {
-  animation: toy-crinkle 0.55s ease-out;
+.iso .toyspot.go[data-kind="mouse"] {
+  animation: toy-spin 1.1s ease-in-out both;
 }
-.iso .toy-mouse.go svg {
-  animation: toy-spin 1s ease-out;
+.iso .toyspot.go[data-kind="bag"] {
+  animation: toy-tip 2.2s ease-in-out both;
 }
-.iso .toy-paper.go svg {
-  animation: toy-crinkle 0.8s ease-in-out;
+.iso .toyspot.go[data-kind="paper"] {
+  animation: toy-rustle 0.9s ease-in-out both;
 }
-@keyframes toy-strand {
-  from {
-    stroke-dashoffset: 1;
-  }
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-@keyframes toy-shake {
+@keyframes toy-roll {
   0%,
   100% {
     transform: none;
   }
-  25% {
-    transform: rotate(-6deg);
-  }
-  60% {
-    transform: rotate(4deg);
+  42%,
+  58% {
+    transform: translate3d(var(--rx), var(--ry), 0) rotate3d(var(--ax), var(--ay), 0, var(--rot));
   }
 }
 @keyframes toy-crinkle {
@@ -2872,24 +2861,99 @@ html:not(.iso) .strip {
     transform: none;
   }
   30% {
-    transform: scale(1.12, 0.8);
+    transform: scale3d(1.2, 1.2, 0.62);
   }
   60% {
-    transform: scale(0.94, 1.06);
+    transform: scale3d(0.95, 0.95, 1.1);
   }
 }
 @keyframes toy-spin {
-  from {
-    transform: rotate(-220deg);
-  }
-  to {
+  0%,
+  100% {
     transform: none;
   }
+  50% {
+    transform: translateZ(12px) rotateZ(180deg);
+  }
+  99% {
+    transform: rotateZ(360deg);
+  }
 }
+@keyframes toy-tip {
+  0%,
+  100% {
+    transform: none;
+  }
+  25%,
+  70% {
+    transform: rotate3d(1, 0, 0, 68deg);
+  }
+}
+@keyframes toy-rustle {
+  0%,
+  100% {
+    transform: none;
+  }
+  25% {
+    transform: scale3d(1.08, 1.04, 0.82) rotateZ(-3deg);
+  }
+  55% {
+    transform: scale3d(0.96, 0.98, 1.08) rotateZ(2deg);
+  }
+}
+/* the yarn's thread, lying on the desk where the yarn was: drawn out as it rolls, and drawn in again */
+.iso .strand {
+  position: absolute;
+  width: 0;
+  height: 0;
+  transform: translateZ(1px);
+  pointer-events: none;
+}
+.iso .strand svg {
+  position: absolute;
+  left: -80px;
+  top: -80px;
+  width: 160px;
+  height: 160px;
+  overflow: visible;
+}
+.iso .strand path {
+  stroke-dasharray: 1 1;
+  animation: toy-strand 2.4s ease-in-out both;
+}
+@keyframes toy-strand {
+  0%,
+  100% {
+    stroke-dashoffset: 1;
+  }
+  42%,
+  58% {
+    stroke-dashoffset: 0;
+  }
+}
+/* under reduced motion the effect is shown still: the pose it reaches */
 @media (prefers-reduced-motion: reduce) {
-  .iso:where(:not(.motion-ok)) .toy.go svg,
-  .iso:where(:not(.motion-ok)) .toy.go .strand {
+  .iso:where(:not(.motion-ok)) .toyspot.go[data-kind],
+  .iso:where(:not(.motion-ok)) .strand path {
     animation: none;
+  }
+  .iso:where(:not(.motion-ok)) .toyspot.go[data-kind="yarn"] {
+    transform: translate3d(var(--rx), var(--ry), 0) rotate3d(var(--ax), var(--ay), 0, var(--rot));
+  }
+  .iso:where(:not(.motion-ok)) .toyspot.go[data-kind="ball"] {
+    transform: scale3d(1.2, 1.2, 0.62);
+  }
+  .iso:where(:not(.motion-ok)) .toyspot.go[data-kind="mouse"] {
+    transform: rotateZ(140deg);
+  }
+  .iso:where(:not(.motion-ok)) .toyspot.go[data-kind="bag"] {
+    transform: rotate3d(1, 0, 0, 68deg);
+  }
+  .iso:where(:not(.motion-ok)) .toyspot.go[data-kind="paper"] {
+    transform: scale3d(1.08, 1.04, 0.82);
+  }
+  .iso:where(:not(.motion-ok)) .strand path {
+    stroke-dashoffset: 0;
   }
 }
 /* a treat from the bag, a little fish lying on the desk */

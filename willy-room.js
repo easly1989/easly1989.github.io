@@ -15,6 +15,8 @@ ROOM.holdLight(new Promise((r) => (ready = r)));
 live()
   .catch((e) => {
     room.querySelectorAll("canvas.willy, canvas.willy-low, canvas.willy-shadow").forEach((c) => c.remove());
+    // (his toys are his: without him they are not there, nor the treats)
+    room.querySelectorAll(".toyspot, .treat, .strand").forEach((c) => c.remove());
     console.warn("No Willy:", e);
     // nor in the room's light pass, which draws once more without him and his shadow
     const w = ROOM.willy;
