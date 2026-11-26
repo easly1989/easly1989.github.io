@@ -83,6 +83,10 @@ try:
     check(bool(until(b, "(window.__snd || {}).mew > 0", 40)), f"he mews through the computer's speaker: {b.js(COUNT)}")
     check(b.js("CRT.heard()") is False, "and it waited for the reader (nothing was pressed)")
 
+    # ---- the three recordings of his mew are there and decode
+    ok = b.js("(async () => { try { for (const n of [1, 2, 3]) { const a = await (await fetch('assets/sounds/mew-' + n + '.mp3')).arrayBuffer(); const x = await new AudioContext().decodeAudioData(a); if (!(x.duration > 0.3)) return false; } return true; } catch (e) { return false; } })()")
+    check(ok is True, f"the three recordings of his mew load and decode: {ok!r}")
+
     # ---- what falls lands on the floor out of sight: a thud
     b.js("document.querySelector('.stage').dispatchEvent(new CustomEvent('knocked', { detail: document.body }))")
     check(bool(until(b, "(window.__snd || {}).thud > 0", 3)), f"a thud after something has fallen off the desk: {b.js(COUNT)}")

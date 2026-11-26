@@ -9,6 +9,7 @@
   var noise = null;
   var playing = null;
   var muted = false;
+  var mews = null; // the promise of Willy's mew recordings, once asked for
   try {
     muted = localStorage.getItem("pc:mute") === "1";
   } catch (e) {}
@@ -343,41 +344,37 @@
       var t = ctx.currentTime;
       for (var s = 0; s < (secs || 1.5); s += 0.04) hiss(t + s, 0.05, 0.1 + Math.random() * 0.03, 130 + Math.random() * 60, 1.4, "lowpass");
     },
-    // a mew, "mi-aow": a buzzing voice that rises then falls, its vowel opening from "ee" to "ow" (two
-    // formant filters sliding), with a little breath on top
+    // a mew: one of three recordings (assets/sounds/), fetched the first time one is wanted; a failed
+    // fetch leaves him silent
     mew: function () {
       if (!touched || muted || !audio()) return;
-      var t = ctx.currentTime,
-        len = 0.55;
-      var o = ctx.createOscillator();
-      o.type = "sawtooth";
-      o.frequency.setValueAtTime(420, t);
-      o.frequency.exponentialRampToValueAtTime(760, t + 0.16);
-      o.frequency.exponentialRampToValueAtTime(540, t + len);
-      var vib = ctx.createOscillator(),
-        depth = ctx.createGain();
-      vib.frequency.value = 7;
-      depth.gain.value = 14;
-      vib.connect(depth);
-      depth.connect(o.frequency);
-      var g = envelope(t, 0.34, len, 0.05);
-      [
-        [400, 900, 5],
-        [2400, 1400, 6],
-      ].forEach(function (f) {
-        var b = ctx.createBiquadFilter();
-        b.type = "bandpass";
-        b.Q.value = f[2];
-        b.frequency.setValueAtTime(f[0], t);
-        b.frequency.exponentialRampToValueAtTime(f[1], t + 0.22);
-        o.connect(b);
-        b.connect(g);
+      mews =
+        mews ||
+        Promise.all(
+          [1, 2, 3].map(function (n) {
+            return fetch("assets/sounds/mew-" + n + ".mp3")
+              .then(function (r) {
+                return r.arrayBuffer();
+              })
+              .then(function (b) {
+                return ctx.decodeAudioData(b);
+              })
+              .catch(function () {
+                return null;
+              });
+          })
+        );
+      mews.then(function (all) {
+        all = all.filter(Boolean);
+        if (!all.length || muted) return;
+        var s = ctx.createBufferSource(),
+          g = ctx.createGain();
+        s.buffer = all[Math.floor(Math.random() * all.length)];
+        g.gain.value = 0.9;
+        s.connect(g);
+        g.connect(out);
+        s.start();
       });
-      o.start(t);
-      vib.start(t);
-      o.stop(t + len + 0.05);
-      vib.stop(t + len + 0.05);
-      hiss(t, len * 0.8, 0.015, 3000, 2);
     },
     muted: function () {
       return muted;
