@@ -102,16 +102,21 @@ async function live() {
   // and what he does about it; or null. A little fur is left on what he stands on.
   const REACT = reactions({ w, P, M, SURF });
   const tufts = [];
-  const fur = (at) => {
+  const fur = (at, shed = false, bare = () => true) => {
+    const spread = shed ? 55 : 30;
+    let x, y;
+    for (let n = 0; n < 10; n++) {
+      [x, y] = [at.x + between([-spread, spread]), at.y + between([-spread, spread])];
+      if (bare(x, y)) break;
+      if (n === 9) return;
+    }
     const tuft = document.createElement("i");
     tuft.className = "fur-tuft";
     tuft.setAttribute("aria-hidden", "true");
-    const x = at.x + between([-30, 30]),
-      y = at.y + between([-30, 30]);
-    tuft.style.transform = "translate3d(" + x + "px," + y + "px," + (SURF[at.surface].z + 1) + "px) rotate(" + between([0, 180]) + "deg)";
+    tuft.style.transform = "translate3d(" + x + "px," + y + "px," + (SURF[at.surface].z + 1) + "px) rotate(" + between([0, 180]) + "deg) scale(" + (shed ? 1.8 : 1) + ")"; // (a little more, where he has lain)
     room.append(tuft);
     tufts.push(tuft);
-    if (tufts.length > 3) tufts.shift().remove();
+    if (tufts.length > 6) tufts.shift().remove();
   };
   let lastReaction = null;
   async function answer(p) {
@@ -248,6 +253,13 @@ async function live() {
   const LEAF = '<svg viewBox="0 0 44 20" aria-hidden="true"><path d="M1 10C10 1 30 0 43 10 30 20 10 19 1 10z" /><path class="vein" d="M3 10H40" /></svg>';
   const mat = stage.querySelector(".loose")?.parentElement || stage; // (what the odds and ends lie in, found while some are still there)
   const desk = {
+    // a little of his fur where he has lain down, on the desk
+    fur: (at) => {
+      if (at.surface !== "desk") return;
+      const bare = (x, y) => ROOM.ground(x, y, 0) < 1; // (not on a book or in a mug: it would be under it)
+      fur(at, true, bare);
+      fur(at, true, bare);
+    },
     things: () => [...stage.querySelectorAll(".loose")],
     where: (e) => room.fall.where(e),
     fallen: () => room.fall.state().fell.length,
@@ -288,6 +300,41 @@ async function live() {
       const c = corners(pot);
       return { x: (c[0].x + c[2].x) / 2, y: (c[0].y + c[2].y) / 2, z: SURF.shelf ? SURF.shelf.z + 120 : 280 };
     },
+    // A fly, through the window and about the room and out again, by day (willy-life.js): points the
+    // room's [x, y, z] it passes through at times, s from its start; drawn over the room where
+    // each is on the screen, a dot with wings, so it stays one wherever the room is looked at from.
+    fly: {
+      start(points, times) {
+        desk.fly.stop();
+        const el = document.createElement("span");
+        el.className = "fly";
+        el.setAttribute("aria-hidden", "true");
+        el.innerHTML = "<i></i><i></i>";
+        document.body.append(el);
+        flying = { el, points, times, t: 0, last: performance.now() };
+        flyFrame();
+      },
+      // where it is now in the room, or null when none flies
+      at() {
+        if (!flying) return null;
+        const { points: P, times: T } = flying,
+          t = Math.min(flying.t, T[T.length - 1]);
+        let i = 0;
+        while (i < T.length - 2 && t > T[i + 1]) i++;
+        const u = (t - T[i]) / (T[i + 1] - T[i]),
+          at = (k) => P[Math.max(0, Math.min(P.length - 1, k))],
+          // (a Catmull-Rom curve through the points, with a flutter on it)
+          q = [0, 1, 2].map((d) => {
+            const [a, b, c, e] = [at(i - 1)[d], at(i)[d], at(i + 1)[d], at(i + 2)[d]];
+            return 0.5 * (2 * b + (c - a) * u + (2 * a - 5 * b + 4 * c - e) * u * u + (3 * b - a - 3 * c + e) * u * u * u);
+          });
+        return [q[0] + Math.sin(t * 9) * 8, q[1] + Math.cos(t * 7) * 8, q[2] + Math.sin(t * 13) * 6];
+      },
+      stop() {
+        if (flying) flying.el.remove();
+        flying = null;
+      },
+    },
     leaf: {
       // off the plant (one of its leaves gone from it) and into his mouth
       take() {
@@ -324,6 +371,19 @@ async function live() {
         mat.append(e);
       },
     },
+  };
+  let flying = null; // { el, points, times, t, last }
+  const flyFrame = () => {
+    if (!flying) return;
+    // (on the show's clock: a frame counts for 0.05 s at most, as it does for him, so that the two stay together)
+    const now = performance.now();
+    flying.t += Math.min(0.05, (now - flying.last) / 1000);
+    flying.last = now;
+    const p = desk.fly.at();
+    if (flying.t > flying.times[flying.times.length - 1]) return desk.fly.stop();
+    const [x, y] = ROOM.toScreen(p[0], p[1], p[2]);
+    flying.el.style.transform = "translate(" + x.toFixed(1) + "px," + y.toFixed(1) + "px)";
+    requestAnimationFrame(flyFrame);
   };
   // the leaf where his mouth is, hanging from it, the way he faces
   const carry = () => {
@@ -430,6 +490,7 @@ async function live() {
   };
   // a point a moment's cue names, as he is at p
   const point = (look, p) => {
+    if (typeof look === "function") return look(p); // (where something that moves is now)
     if (look === "reader") return [p.x - 600, p.y + 600, 500];
     if (look === "window") return ROOM.lights().find((s) => s.name === "window")?.at || null;
     if (look === "around") {
@@ -562,6 +623,7 @@ async function live() {
     const r = await bother(kind, p).catch((e) => (console.warn("Willy stays:", e), null));
     if (r) {
       desk.leaf.lose();
+      desk.fly.stop();
       says.classList.remove("on");
       saying = 0;
       fleeing = r.fleeing || false;
@@ -639,6 +701,8 @@ async function live() {
       if (down && focused === down) ask();
       else if (down && pointed === down) still();
     }
+    // (his eyes follow what moves: a look that is a function of where he is)
+    if (typeof show[i].look === "function") w.look(show[i].look(p));
     if (time > lookAt) {
       w.look(gaze(p));
       lookAt = time + between(LOOKS) * 1000;

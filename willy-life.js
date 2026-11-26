@@ -94,7 +94,7 @@ export const NEAR_EDGE = 220;
 
 // what the actions and the reactions are made of, for Willy w, his planner P and his moves M in a
 // room of surfaces SURF, kept off the places avoid() names
-function kit({ w, P, M, SURF, avoid = () => [] }) {
+function kit({ w, P, M, SURF, avoid = () => [], desk = null }) {
   const between = ([a, b]) => a + Math.random() * (b - a),
     one = (list) => list[Math.floor(Math.random() * list.length)],
     xyh = (s, p) => ({ surface: s, x: p[0], y: p[1], heading: p[2] }),
@@ -214,7 +214,9 @@ function kit({ w, P, M, SURF, avoid = () => [] }) {
     const up = rest.pop(),
       fit = (to) => [down, ...rest.map((m) => m.clip), up].every((c) => fits(to, c)),
       to = (at.surface === "perch" || at.surface === "top" ? NEAR : [[0, 0]]).map(([dx, dy]) => ({ ...at, x: at.x + dx, y: at.y + dy })).find(fit);
-    return to ? [sliding(down, at, to), ...rest.map((m) => cue(stay(m.clip, to, m.s), m.cue || {})), sliding(up, to, at)] : null;
+    // (and once he has lain down, a little of his fur where he lies)
+    const sheds = desk && /^(lie|sleep)$/.test(down);
+    return to ? [sliding(down, at, to), ...rest.map((m, i) => cue(stay(m.clip, to, m.s), { ...(m.cue || {}), ...(sheds && i === 0 ? { act: () => (m.cue?.act?.(), desk.fur(to)) } : {}) })), sliding(up, to, at)] : null;
   }
   const sitting = (at, s, c = {}) => settled(at, ["sit", { clip: "sit-idle", s, cue: c }, "sit-from"]);
 
@@ -225,7 +227,7 @@ function kit({ w, P, M, SURF, avoid = () => [] }) {
 // names the places on the desk he does not go to now (willy-room.js: an object the reader points
 // at or has focused)
 export function everyday({ w, P, M, SURF, avoid, pc = null, desk = null }) {
-  const { between, one, xyh, here, fits, free, cue, hold, stay, spot, going, done, sitting, settled, clear, leaving } = kit({ w, P, M, SURF, avoid });
+  const { between, one, xyh, here, fits, free, cue, hold, stay, spot, going, done, sitting, settled, clear, leaving } = kit({ w, P, M, SURF, avoid, desk });
   // a part of a clip, from t0 s to t1 s of it, at at, played k times as fast
   const part = (clip, at, t0, t1, k = 1) => {
     const m = hold(clip, at);
@@ -560,6 +562,32 @@ export function everyday({ w, P, M, SURF, avoid, pc = null, desk = null }) {
     return null;
   }
 
+  // A fly, by day: it comes in at the window, and about the room, and he stands where he is and
+  // follows it with his eyes (willy-room.js, desk.fly), until it comes by in front of him, where he
+  // swats at it and misses; it goes out at the window, and he looks after it.
+  async function watchFly(at) {
+    const sun = window.ROOM.lights().find((l) => l.name === "window"),
+      win = prop("window"),
+      clip = one(["swat-left", "swat-right"]);
+    if (!desk || !win || !sun || !sun.day || sun.power < 0.1 || !fits(at, clip) || !fits(at, "idle")) return null;
+    const f = ahead(at.heading),
+      hit = 0.62, // (s into the swat, as the paw comes down)
+      through = [(win.x0 + win.x1) / 2, win.y1 + 8, (win.z0 + win.z1) / 2],
+      by = [at.x + f[0] * 130, at.y + f[1] * 130, 110], // (where it passes, in reach)
+      side = one([-1, 1]),
+      up = [by[0] + side * 260, by[1] + between([-120, 120]), 240];
+    const points = [through, [(through[0] + by[0]) / 2 + side * 120, (through[1] + by[1]) / 2, 230], by, up, through],
+      times = [0, 1.8, 3.6, 5, 8];
+    const look = () => desk.fly.at();
+    return done(at, [
+      cue(stay("idle", at, times[2] - hit), { look, act: () => desk.fly.start(points, times), line: "Willy watches a fly." }),
+      cue(part(clip, at, 0, hit), { look }),
+      cue(part(clip, at, hit, M.dur(clip)), { look, line: "Willy swats at the fly and misses." }),
+      cue(stay("idle", at, 4.2), { look }),
+      cue(stay("idle", at, 1.2), { look: "window", act: () => desk.fly.stop() }),
+    ]);
+  }
+
   // His present: a leaf off the plant on the shelf. He goes up to the shelf, along it to the
   // plant, nuzzles it and pulls a leaf off, comes back down to the desk with it and puts it down
   // in front of him, and sits and looks at the reader. Then it is one of the odds and ends on the
@@ -630,6 +658,7 @@ export function everyday({ w, P, M, SURF, avoid, pc = null, desk = null }) {
     { n: "lie against the camera", w: 2, cool: 200, where: ["desk"], run: againstTheCamera },
     { n: "nap in the sun", w: 3, cool: 200, where: ["desk"], run: inTheSun },
     { n: "stare at the neon", w: 2, cool: 200, where: ["desk"], run: atTheNeon },
+    { n: "watch a fly", w: 2, cool: 300, where: ["desk"], run: watchFly },
     { n: "sit in his box", w: 2, cool: 240, where: ["desk"], run: (at) => inTheBox(at, true) },
     { n: "lie in his box", w: 1, cool: 240, where: ["desk"], run: (at) => inTheBox(at, false) },
     // (not one he picks: the way out of it, when he is in it at the end of a show: willy-room.js)

@@ -26,6 +26,7 @@ python checks/willy-fall.py
 python checks/willy-push.py
 python checks/willy-prop-actions.py
 python checks/willy-box.py
+python checks/willy-fly.py
 python checks/motion.py
 python checks/data.py
 ```
@@ -159,6 +160,12 @@ of motion that forgets it measures a room in which Willy only sleeps.
   for, he goes up to it from the side, hops over its wall and sits in it (`sit in his box`) or lies
   in it (`lie in his box`), facing the reader, says "Willy hops into his box.", then hops out and
   walks off; under reduced motion none of it happens; nothing throws. Headless; several minutes.
+- `willy-fly.py` — the fly and the fur (#70-E): by day, asked for (`watch a fly`), a fly comes in at
+  the window and flies about the room, drawn over it on the screen all the while and always on it,
+  moving, while Willy follows it and swats at it and misses, said on the live line; then it goes out
+  and none is left. None by night. Asked to loaf, he leaves a little fur where he lies down; a new
+  visit has none, and no fly. Under reduced motion none of it happens; nothing throws. Headless;
+  a few minutes.
 
 - `motion.py` — the reader's choice to animate anyway (`motion.js`), under reduced motion: with
   no choice the footer's button offers it and nothing of Willy's peek moves; clicked, it is pressed,
