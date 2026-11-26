@@ -27,6 +27,7 @@ python checks/willy-push.py
 python checks/willy-prop-actions.py
 python checks/willy-box.py
 python checks/willy-fly.py
+python checks/willy-sound.py
 python checks/motion.py
 python checks/data.py
 ```
@@ -166,6 +167,11 @@ of motion that forgets it measures a room in which Willy only sleeps.
   and none is left. None by night. Asked to loaf, he leaves a little fur where he lies down; a new
   visit has none, and no fly. Under reduced motion none of it happens; nothing throws. Headless;
   a few minutes.
+- `willy-sound.py` — the room's sound effects (#72-C): the old computer has a labelled speaker button
+  that mutes them, in the console's own setting (`pc:mute`) and kept by a new visit, with the radio
+  left to its own switch; Willy's mew and the thud of something fallen off the desk go through the
+  same effects (each counted as it is asked for, not heard), which wait until the reader has pressed
+  or typed; under reduced motion he makes none; nothing throws. Headless; a minute or two.
 
 - `motion.py` — the reader's choice to animate anyway (`motion.js`), under reduced motion: with
   no choice the footer's button offers it and nothing of Willy's peek moves; clicked, it is pressed,

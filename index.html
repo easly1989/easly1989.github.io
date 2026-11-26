@@ -1263,7 +1263,7 @@
         background: #2b2823;
       }
       .pc .busy {
-        left: 56px;
+        left: 52px;
         top: 64px;
         width: 5px;
         height: 3px;
@@ -1322,6 +1322,37 @@
           background: #ff5a4e;
           box-shadow: 0 0 5px #ff5a4e;
         }
+      }
+      /* the speaker: a 24px target round a small grille of slits, left of the switch; muted, a slash
+         crosses it (the console's mute, the same setting) */
+      .pc .speaker {
+        right: 24px;
+        bottom: 0;
+        width: 24px;
+        height: 24px;
+        padding: 0;
+        border: 0;
+        background: none;
+        cursor: pointer;
+      }
+      .pc .speaker::before {
+        content: "";
+        position: absolute;
+        left: 14px;
+        top: 7px;
+        width: 7px;
+        height: 10px;
+        background: repeating-linear-gradient(90deg, #47423a 0 1px, transparent 1px 3px);
+      }
+      .pc .speaker[aria-pressed="false"]::after {
+        content: "";
+        position: absolute;
+        left: 11px;
+        top: 11px;
+        width: 13px;
+        height: 2px;
+        background: #8c3b30;
+        transform: rotate(-50deg);
       }
       /* the keyboard: 100 wide, 34 deep, 8 tall, in front of the case */
       .pc .kb {
@@ -2072,6 +2103,7 @@ SYSTEM HALTED.</span>
               </span>
               <span class="drive" aria-hidden="true"></span>
               <span class="busy" aria-hidden="true"></span>
+              <button class="speaker" type="button" aria-pressed="true" aria-label="Sound effects" title="Sound effects"></button>
               <button class="power" type="button" aria-pressed="false" aria-label="Old computer's power switch"></button>
             </span>
             <span class="vh" aria-live="polite"></span>
@@ -2271,6 +2303,20 @@ SYSTEM HALTED.</span>
           power.setAttribute("aria-pressed", "false");
           store("sessionStorage", "pc:on", "");
         }
+        // the speaker mutes the room's sound effects (the computer's, Willy's, what falls), not the
+        // radio: the console's own setting, kept in this browser
+        var speaker = pc.querySelector(".speaker");
+        function sound() {
+          speaker.setAttribute("aria-pressed", window.CRT && CRT.muted() ? "false" : "true");
+        }
+        sound();
+        speaker.addEventListener("click", function () {
+          if (!window.CRT) return;
+          CRT.mute(!CRT.muted());
+          sound();
+          if (!CRT.muted()) setTimeout(CRT.clack, 120); // (once its volume has come up)
+          says.textContent = CRT.muted() ? "The room's sound effects are off." : "The room's sound effects are on.";
+        });
         power.addEventListener("click", function () {
           if (fried()) {
             // someone cheated once: the light blinks red, it smokes, and that is all
@@ -2348,6 +2394,11 @@ SYSTEM HALTED.</span>
         // back from the terminal, out of the back/forward cache
         addEventListener("pageshow", function (e) {
           if (!e.persisted) return;
+          // (the console may have muted or unmuted the sound while the room was away)
+          try {
+            if (window.CRT) CRT.mute(localStorage.getItem("pc:mute") === "1");
+          } catch (err) {}
+          sound();
           if (fried()) {
             off(true);
             return broken();
