@@ -2315,6 +2315,8 @@
       });
       var n = room.querySelector(".navwall");
       if (n) put("nav", n);
+      var wn = room.querySelector(".window");
+      if (wn) put("window", wn);
       var nst = room.querySelector(".nest");
       if (nst) {
         put("nest", nst);
