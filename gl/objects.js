@@ -65,4 +65,13 @@ export const OBJECTS = {
   mouse: { label: "The mouse", ground: 500, look: 9, build: () => import("./computer.js").then((m) => m.mouse()) },
   // the three together as they stand on the desk, the keyboard in front of the case and the mouse to its right
   pc: { label: "The computer, keyboard and mouse", ground: 1500, look: 4.6, build: (r) => import("./computer.js").then((m) => m.pc(r)) },
+  // the office chair with the tie over its headrest, and the wire wastebasket (gl/furniture.js)
+  chair: { label: "The chair and its tie", ground: 900, look: 3.1, build: (r) => import("./furniture.js").then((m) => m.chair(r)) },
+  bin: { label: "The wastebasket", ground: 500, look: 3.2, build: (r) => import("./furniture.js").then((m) => m.bin(r)) },
+  // the wall with its window, the sill and the cat's perch on its chains (gl/window.js: standing on the wall's face, window's middle at the origin);
+  // the shelf, the plant and the radio with its projector (gl/shelf.js: standing on the right wall's face at the shelf's north end)
+  window: { label: "The window, the sill and the perch", ground: 1400, look: 2.4, build: (r) => import("./window.js").then((m) => m.windowSet(r)) },
+  shelf: { label: "The shelf, the plant and the radio", ground: 1000, look: 2.8, build: (r) => import("./shelf.js").then((m) => m.shelf(r)) },
+  plant: { label: "The plant", ground: 400, look: 3.4, build: () => import("./shelf.js").then((m) => m.plant()) },
+  radio: { label: "The radio", ground: 500, look: 3, build: (r) => import("./shelf.js").then((m) => m.radio(r)) },
 };

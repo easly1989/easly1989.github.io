@@ -112,7 +112,7 @@ async function start() {
   };
 
   // the walls and the floor run well past the frame at every size the room shows at
-  box(FAR, BACK - 24, FLOOR, RIGHT - FAR + 24, 24, WALL_H, M.wall).castShadow = false;
+  // (the back wall, with its window in it, is gl/window.js, below)
   box(RIGHT, BACK - 24, FLOOR, 24, DEEP + 24, WALL_H, M.wall).castShadow = false;
   box(FAR, BACK, FLOOR, RIGHT - FAR, 8, 40, M.skirting);
   box(RIGHT - 8, BACK, FLOOR, 8, DEEP, 40, M.skirting);
@@ -212,6 +212,20 @@ async function start() {
     pc.group.rotation.z = (12 * Math.PI) / 180;
     scene.add(pc.group);
     objects.pc = pc.group;
+    // each of the others at the CSS room's place (px, as the scene has them: x east, y north, from the stage's middle): the back wall with its
+    // window, sill and perch; the shelf on the right wall with the plant and the radio; the chair, turned 28 degrees clockwise from above (the
+    // CSS room's `rotateZ(28deg)`), on the floor; the wastebasket, on the floor
+    const put = async (name, x, y, z, turn = 0) => {
+      const o = await OBJECTS[name].build(renderer);
+      o.group.position.set(x, y, z);
+      o.group.rotation.z = turn;
+      scene.add(o.group);
+      objects[name] = o.group;
+    };
+    await put("window", 80, 640, 0);
+    await put("shelf", 710, -80, 0);
+    await put("chair", 90, -800, FLOOR, (-28 * Math.PI) / 180);
+    await put("bin", 625, -635, FLOOR);
   }
 
   // ---- the frame: room.js's, with the box it measured --------------------------------------------

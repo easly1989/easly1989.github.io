@@ -16,8 +16,27 @@ export const PALETTE = {
   light: { wall: "#d9d2c4", skirting: "#b9ad98", desk: "#a9774b", leg: "#8d6340", mat: "#22594b", matEdge: "#1a4a3e", line: [214, 240, 228, 0.13], line2: [214, 240, 228, 0.3], floor: 1, back: "#2a2522" },
   dark: { wall: "#4a4640", skirting: "#3a3631", desk: "#6e4c31", leg: "#573b26", mat: "#12352d", matEdge: "#0d2822", line: [214, 240, 228, 0.09], line2: [214, 240, 228, 0.2], floor: 0.55, back: "#161311" },
 };
+// what the things of the room are painted, in both schemes (room.css and styles.css)
+Object.assign(PALETTE.light, {
+  chair: "#3f4a52", chairLeg: "#2c3338", chairMesh: "#353e45", tie: "#b3343c", binWire: "#3a4045", binIn: "#2a2f33", binPaper: "#f1eee6",
+  sill: "#e6dfd2", pot: "#3c78a8", soil: "#4a3426", perch: "#9a6a3e", fleece: "#f4f0ea", radio: "#d8c7a4", skyTop: "#8fc8ec", skyLow: "#e4f3fb", roofs: "#7f97a8", night: false,
+});
+Object.assign(PALETTE.dark, {
+  chair: "#2c353b", chairLeg: "#1e2428", chairMesh: "#262d32", tie: "#a52f37", binWire: "#23282b", binIn: "#14181a", binPaper: "#b9b6ae",
+  sill: "#57524a", pot: "#2e5f86", soil: "#33251b", perch: "#6b4a2c", fleece: "#b9b4ad", radio: "#8f8064", skyTop: "#0b1433", skyLow: "#2a3863", roofs: "#10172b", night: true,
+});
 export const scheme = matchMedia("(prefers-color-scheme: dark)");
 export const pal = () => PALETTE[scheme.matches ? "dark" : "light"];
+// A material whose colour is a colour of the palette, kept as the scheme changes (the objects' own, set when they are built).
+const tinted = [];
+export function tint(material, key) {
+  material.color.set(pal()[key]);
+  tinted.push([material, key]);
+  return material;
+}
+scheme.addEventListener("change", () => {
+  for (const [m, key] of tinted) m.color.set(pal()[key]);
+});
 
 // the renderer, as the room and the workbench both want it
 export function renderer(canvas) {

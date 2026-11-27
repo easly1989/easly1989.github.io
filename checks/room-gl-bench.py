@@ -169,6 +169,45 @@ try:
     cord = b.js(f"({BOUNDS})(BENCH.group.getObjectByName('cord'))")
     check(172 < cord[0] < 184, f"the cord goes into the case's east side, which is at x = 184, a few px deep ({cord[0]:.0f})")
 
+    # ---- the chair, the wastebasket, the window, the shelf, the plant and the radio (ticket 05) ----
+    def start(name):
+        open(b, "?bench=" + name)
+        ok = wait(b, "!!(window.BENCH && BENCH.ready)")
+        time.sleep(0.5)
+        return ok
+
+    check(start("chair"), "the chair starts on the bench")
+    cb = b.js(f"({BOUNDS})(BENCH.group)")
+    check(340 <= cb[1] - cb[0] <= 390 and 340 <= cb[3] - cb[2] <= 390 and abs(cb[5] - 1022) <= 3 and -1 <= cb[4] <= 5,
+          f"the chair is on its casters, about 180 out each way from its post, and 1020 high with its tie ({[round(v) for v in cb]})")
+    check(b.js("(() => { let n = 0; BENCH.group.traverse((o) => { if (o.isMesh) n++; }); return n; })()") >= 30, "it is made of its parts: arms, casters, hub, lift, seat, armrests, five slats, lumbar pad, headrest")
+    tie = b.js(f"""(() => {{ const at = {AT}; return at([-70, -160, 910]); }})()""")
+    check(tie[0] > 100 and tie[1] < 70 and tie[2] < 70, f"the tie hangs red down the back of the chair ({tie})")
+
+    check(start("bin"), "the wastebasket starts on the bench")
+    bb2 = b.js(f"({BOUNDS})(BENCH.group)")
+    check(118 <= bb2[1] - bb2[0] <= 130 and abs(bb2[5] - 203.4) <= 3 and abs(bb2[4]) <= 1, f"the basket is 120 across its rim and 200 high on its foot ({[round(v, 1) for v in bb2]})")
+    check(b.js("(() => { let n = 0; BENCH.group.traverse((o) => { if (o.isMesh) n++; }); return n; })()") >= 9, "its wire, rim, foot, floor and five sheets of paper are there")
+
+    check(start("window"), "the window starts on the bench")
+    sky = b.js(f"""(() => {{ const at = {AT}; return at([-250, -3, 600]); }})()""")
+    check(sky[2] > sky[0] + 20 and sky[2] > 150, f"the sky is seen through the glass, blue by day ({sky})")
+    wb = b.js(f"({BOUNDS})(BENCH.group)")
+    check(wb[5] >= 2400 and wb[4] <= -500, f"the wall runs from the floor to the ceiling's height round the window ({round(wb[4])} to {round(wb[5])})")
+    check(b.js("(() => { let n = 0; BENCH.group.traverse((o) => { if (o.isInstancedMesh) n += o.count; }); return n; })()") > 100, "the perch hangs on two chains of links")
+
+    check(start("shelf"), "the shelf starts on the bench")
+    leaf = b.js(f"""(() => {{ const at = {AT}; let best = null; for (const [x, y, z] of [[-52, -38, 260], [-48, -34, 270], [-56, -30, 250], [-52, -44, 250]]) {{ const c = at([x, y, z]); if (c[1] > c[0] && c[1] > c[2]) best = c; }} return best; }})()""")
+    check(leaf is not None, f"the plant's leaves are green above its pot ({leaf})")
+    pot = b.js(f"""(() => {{ const at = {AT}; return at([-52, -66, 200]); }})()""")
+    check(pot[2] > pot[0] + 15, f"the pot is blue ({pot})")
+
+    check(start("radio"), "the radio starts on the bench")
+    rr = b.js(f"""(() => {{ const at = {AT}; return {{ dial: at([-42.5, 35, 93]), knob: at([-47, 77, 24]), grille: at([-42.5, -60, 40]) }}; }})()""")
+    check(sum(rr["dial"]) > 470 and rr["dial"][0] > 170, f"the dial is cream ({rr['dial']})")
+    check(sum(rr["knob"]) < 330, f"the knob is dark ({rr['knob']})")
+    check(sum(rr["grille"]) < sum(rr["dial"]) - 120, f"the grille is darker than the dial ({rr['grille']})")
+
     # an object that is not there lists what there is
     open(b, "?bench=nothing")
     time.sleep(2)
