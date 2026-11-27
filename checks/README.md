@@ -49,6 +49,11 @@ of motion that forgets it measures a room in which Willy only sleeps.
   home at one, which a reload keeps; nothing on the desk moves when the fonts arrive after the
   first frame.
   Headless. The other checks reach the room through `?room`, which chooses it.
+- `wip.py` — while the room is rebuilt (#160): a reader who chose the room, in a window that holds it,
+  gets the work-in-progress page (a heading, what is done, "Back to the plain version") and not the
+  room; the way back shows the professional home and takes the choice back; `?roomdev` keeps the way to
+  the room being built (`room-dev` in `localStorage`, which every other check sets for itself through
+  `cdp.py`; `?roomdev=0` takes it away); a phone gets the professional page. Headless.
 - `fps.py` — the room keeps pace with a 60 Hz display while Willy walks, in both schemes, with
   its light on and off, with the radio playing and with the computer on; he rests between walks, so a sample is taken
   again until he has walked through enough of it. It draws without vsync, so it measures what a
