@@ -112,6 +112,49 @@ try:
     time.sleep(2)
     check(b.js("!document.querySelector('#pwned') && document.body.innerText.includes('<b id=pwned>x</b>')"), "a name with markup in it is shown as text and is not markup")
 
+    # ---- the old computer (ticket 04) ----
+    BOUNDS = "(o) => { const B = new BENCH.THREE.Box3().setFromObject(o); return [B.min.x, B.max.x, B.min.y, B.max.y, B.min.z, B.max.z]; }"
+    open(b, "?bench=computer")
+    check(wait(b, "!!(window.BENCH && BENCH.ready)"), "the old computer starts on the bench")
+    time.sleep(0.5)
+    bb = b.js(f"({BOUNDS})(BENCH.group)")
+    check(366 <= bb[1] - bb[0] <= 385 and 280 <= bb[3] - bb[2] <= 300 and abs(bb[5] - 320) <= 1.5 and bb[4] >= -4,
+          f"the case is 368 px wide (the note curls 10 px off its side), 280 deep (the bezel and glass 13 more) and 320 high, on its feet ({[round(v, 1) for v in bb]})")
+    px = b.js(f"""(() => {{ const at = {AT}; return {{ glass: at([-36, -146, 204]), note: at([-185, -46, 240]), caseTop: at([0, 0, 316]), drive: at([-64, -146, 56]) }}; }})()""")
+    check(sum(px["glass"]) < 200, f"the screen is a dark tube ({px['glass']})")
+    check(px["note"][0] > 190 and px["note"][1] > 160 and px["note"][2] < 150, f"the note is yellow ({px['note']})")
+    check(sum(px["caseTop"]) > 400, f"the case is beige ({px['caseTop']})")
+    ink = b.js("""(() => { let n = 0; for (let v = -110; v <= 60; v += 4) for (let z = 150; z <= 280; z += 4) { const c = BENCH.pixel(...BENCH.project(-185, v, z)); if (c[0] < 120 && c[1] < 110) n++; } return n; })()""")
+    check(ink >= 25, f"'Write to me' and its line are written on the note, in dark ink ({ink} dark samples)")
+
+    # the keyboard: 400 by 136, 34 high at the back, sixty-four keys and a spacebar, every key with its legend
+    open(b, "?bench=keyboard")
+    check(wait(b, "!!(window.BENCH && BENCH.ready)"), "the keyboard starts on the bench")
+    time.sleep(0.5)
+    kb = b.js(f"({BOUNDS})(BENCH.group)")
+    check(abs((kb[1] - kb[0]) - 400) <= 3 and 136 <= kb[3] - kb[2] <= 144 and 38 <= kb[5] <= 45, f"the keyboard is 400 by 136 (tilted, 141 on the desk) and 34 high at the back, 42 with its keys ({[round(v, 1) for v in kb]})")
+    check(b.js("(() => { let n = 0; BENCH.group.traverse((o) => { if (o.isInstancedMesh) n = o.count; }); return n; })()") == 64, "it has sixty-four keys and a spacebar of its own")
+    leg = b.js("""(() => { const cv = BENCH.group.getObjectByName('legends').material.map.image, d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 128) n++; return n; })()""")
+    check(leg > 6000, f"the legends are painted ({leg} px of ink)")
+
+    # the mouse: 68 by 88, its nose to the back, and its cord running to the case's east side
+    open(b, "?bench=mouse")
+    check(wait(b, "!!(window.BENCH && BENCH.ready)"), "the mouse starts on the bench")
+    time.sleep(0.5)
+    mb = b.js(f"({BOUNDS})(BENCH.group.children[0])")
+    check(abs((mb[1] - mb[0]) - 68) <= 8 and abs((mb[3] - mb[2]) - 88) <= 2 and mb[4] >= -0.5 and 20 <= mb[5] <= 40, f"the mouse is about 68 by 88 and stands on z = 0 ({[round(v, 1) for v in mb]})")
+    cb = b.js(f"({BOUNDS})(BENCH.group.children[1])")
+    check(cb[3] > 255 and cb[0] < -105 and cb[2] < 50, f"its cord leaves the nose and runs 114 px west and 260 south ({[round(v, 1) for v in cb]})")
+
+    # the three together, as on the desk: the cord meets the case's east side
+    open(b, "?bench=pc")
+    check(wait(b, "!!(window.BENCH && BENCH.ready)"), "the computer, keyboard and mouse start together on the bench")
+    time.sleep(0.5)
+    parts = b.js("(() => BENCH.group.children.map((c) => [Math.round(c.position.x), Math.round(c.position.y), Math.round(c.position.z)]))()")
+    check(parts == [[0, 0, -4], [0, -240, 0], [298, -264, 0]], f"the keyboard stands 240 px in front of the case's middle, the mouse 298 to its right and 264 in front ({parts})")
+    cord = b.js(f"({BOUNDS})(BENCH.group.children[2].children[1])")
+    check(abs(cord[0] - 184) < 5, f"the cord ends at the case's east side, x = 184 ({cord[0]:.0f})")
+
     # an object that is not there lists what there is
     open(b, "?bench=nothing")
     time.sleep(2)

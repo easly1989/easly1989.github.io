@@ -67,7 +67,9 @@ z = 0, its origin at the middle of its foot) from the helpers of `gl/kit.js` (th
 turned, extruded, bevelled and swept shapes, materials, and words and pictures painted to textures in the site's
 fonts), and looked at alone on the workbench, `?roomgl&bench=<name>` (`gl/bench.js`: drag to turn the view, the wheel
 to come nearer), before they go in the room; it needs what the scene needs (a stored room choice, `room-dev`, `room-gl`,
-a window that holds the room), and the name in the address is only ever shown as text.
+a window that holds the room), and the name in the address is only ever shown as text. In the scene so far: the
+old computer with its keyboard and mouse (`gl/computer.js`, `pc` on the bench; the case's middle at (-907.46,
+76.17), turned 12 degrees counterclockwise from above, as the CSS room's `rotateZ(-12deg)`).
 
 The room is built by `room.js` from the bench's markup in `<div class="mat" hidden>`, before the
 first frame (`#room-ready` holds it), and framed to the window: it scales until every link and

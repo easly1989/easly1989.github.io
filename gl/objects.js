@@ -58,4 +58,11 @@ export const OBJECTS = {
       return { group, height: H };
     },
   },
+  // the old computer, as the CSS room has it: 368 by 280 and 320 high (gl/computer.js); `ground` is the piece of the mat the
+  // bench lays under it, px across, and `look` how far back the camera stands, in heights
+  computer: { label: "The old computer", ground: 1000, look: 3.6, build: (r) => import("./computer.js").then((m) => m.computer(r)) },
+  keyboard: { label: "The keyboard", ground: 700, look: 9, build: (r) => import("./computer.js").then((m) => m.keyboard(r)) },
+  mouse: { label: "The mouse", ground: 500, look: 9, build: () => import("./computer.js").then((m) => m.mouse()) },
+  // the three together as they stand on the desk, the keyboard in front of the case and the mouse to its right
+  pc: { label: "The computer, keyboard and mouse", ground: 1500, look: 4.6, build: (r) => import("./computer.js").then((m) => m.pc(r)) },
 };
