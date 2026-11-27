@@ -62,6 +62,12 @@ of motion that forgets it measures a room in which Willy only sleeps.
   mat, the desk, a wall and the floor are drawn in their own colours, darker in the dark scheme; without
   WebGL 2 the home is the professional page. Headless (software drawing): seams and look are judged in a
   real Chrome with a GPU.
+- `room-gl-bench.py` — the modelling workbench (#160, ticket 03), `?roomgl&bench=<name>`: an object of the room
+  alone on a piece of the mat, in the room's light, turning (still under reduced motion). For the mug: it
+  stands on z = 0 and is 124 px high; the rim is light china, the coffee dark brown, the mat green round
+  it; "Buy me a coffee" is printed in dark letters on the side that faces the camera; the handle is there when
+  turned to face it; the turntable turns where motion is allowed and no frame is drawn while it rests under
+  reduced motion; an object that is not there is said so, with the list of those that are. Headless.
 - `fps.py` — the room keeps pace with a 60 Hz display while Willy walks, in both schemes, with
   its light on and off, with the radio playing and with the computer on; he rests between walks, so a sample is taken
   again until he has walked through enough of it. It draws without vsync, so it measures what a

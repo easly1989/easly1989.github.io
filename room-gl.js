@@ -12,9 +12,8 @@
 // with soft shadows and by an environment, with ambient occlusion: the owner picked it over the room's
 // flat palette on 2026-11-27.
 
-import * as THREE from "three";
+import { THREE, pal, scheme, renderer as makeRenderer, ratio, addLight, grain, matTexture } from "./gl/kit.js";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
-import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { GTAOPass } from "three/addons/postprocessing/GTAOPass.js";
@@ -45,16 +44,7 @@ const BOX_MIDDLE = { x: -120.918 * ZOOM, y: -89.457 * ZOOM };
 
 const reduced = window.reducedMotion ? window.reducedMotion() : matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-// ---- the palette, in both colour schemes (room.css, styles.css) -------------------------------------
-const PALETTE = {
-  light: { wall: "#d9d2c4", skirting: "#b9ad98", desk: "#a9774b", leg: "#8d6340", mat: "#22594b", matEdge: "#1a4a3e", line: [214, 240, 228, 0.13], line2: [214, 240, 228, 0.3], floor: 1, back: "#2a2522" },
-  dark: { wall: "#4a4640", skirting: "#3a3631", desk: "#6e4c31", leg: "#573b26", mat: "#12352d", matEdge: "#0d2822", line: [214, 240, 228, 0.09], line2: [214, 240, 228, 0.2], floor: 0.55, back: "#161311" },
-};
-const LIGHT = { hemi: 1.1, sun: 0.9 }; // (the environment lights it too)
-const FLOOR_BOARDS =["#8a6a4c", "#7d5f43", "#8f6f50", "#7a5c41"]; // the boards' colours across the room, as the CSS gradient had them
-const scheme = matchMedia("(prefers-color-scheme: dark)");
-const pal = () => PALETTE[scheme.matches ? "dark" : "light"];
-
+const FLOOR_BOARDS = ["#8a6a4c", "#7d5f43", "#8f6f50", "#7a5c41"]; // the boards' colours across the room, as the CSS gradient had them
 // anything failing: the professional home, for this visit (the head reads the flag), and the reason said; with
 // no way to keep the flag, no reload, or it would never end
 function fail(e) {
@@ -66,18 +56,15 @@ function fail(e) {
 }
 
 async function start() {
+  // the workbench: one object alone, to be looked at up close (gl/bench.js), when ?bench= is in the address
+  const benchName = new URLSearchParams(location.search).get("bench");
+  if (benchName !== null) return (await import("./gl/bench.js")).bench(benchName);
   const canvas = document.createElement("canvas");
   canvas.className = "room-gl";
   canvas.setAttribute("aria-hidden", "true");
   document.body.prepend(canvas);
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "high-performance", preserveDrawingBuffer: true });
-  // drawn at a size the screen may not have, then scaled down: the edges come out soft; but never more than
-  // about 10 Mpx, which with the multisampled targets is most of a gigabyte
-  const ratio = () => Math.max(1, Math.min(2, Math.max(devicePixelRatio || 1, 1.5), Math.sqrt(1e7 / (innerWidth * innerHeight))));
+  const renderer = makeRenderer(canvas);
   renderer.setPixelRatio(ratio());
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFShadowMap;
-  renderer.toneMapping = THREE.NoToneMapping;
 
   let dirty = false,
     pending = false,
@@ -93,20 +80,8 @@ async function start() {
   const at = (x, y, z) => new THREE.Vector3(x - MIDDLE.x, MIDDLE.y - y, z);
 
   // ---- light ---------------------------------------------------------------------------------------
-  const hemi = new THREE.HemisphereLight(0xffffff, 0xd8ccbc, 1);
-  scene.add(hemi);
-  const sun = new THREE.DirectionalLight(0xfff1dc, 1);
-  sun.position.copy(at(-700, 1100, 2100)); // up, to the west and the south: what the camera sees of a box is lit as the CSS room lights it
-  sun.target.position.set(0, 0, 0);
-  sun.castShadow = true;
-  sun.shadow.mapSize.set(4096, 4096);
-  Object.assign(sun.shadow.camera, { left: -1500, right: 1500, top: 1500, bottom: -1500, near: 200, far: 4000 });
-  sun.shadow.bias = -0.0004;
-  sun.shadow.normalBias = 1.5;
-  sun.shadow.radius = 5;
-  scene.add(sun, sun.target);
-  scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
-  scene.environmentIntensity = 0.2;
+  // up, to the west and the south: what the camera sees of a box is lit as the CSS room lights it
+  addLight(scene, renderer, at(-700, 1100, 2100));
 
   // ---- materials: the room's colours, on surfaces with a grain and a gloss ------------------------
   const mat = (color) => new THREE.MeshStandardMaterial({ color, roughness: 0.62, metalness: 0 });
@@ -120,42 +95,9 @@ async function start() {
     matTop: mat("#fff"),
   };
 
-  // wood with a grain, the streaks running along the length of the board (a greyscale map, so that
-  // the colours stay the room's)
-  function grain(alongX) {
-    const cv = document.createElement("canvas");
-    cv.width = cv.height = 1024;
-    const g = cv.getContext("2d");
-    g.fillStyle = "#f4f4f4";
-    g.fillRect(0, 0, 1024, 1024);
-    let seed = alongX ? 7 : 13;
-    const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-    for (let i = 0; i < 320; i++) {
-      const a = rnd() * 1024,
-        len = 300 + rnd() * 724,
-        b = rnd() * 1024,
-        wob = (rnd() - 0.5) * 18;
-      g.lineWidth = 0.6 + rnd() * 2.6;
-      g.strokeStyle = rnd() < 0.8 ? `rgba(60,35,15,${0.04 + rnd() * 0.09})` : `rgba(255,240,220,${0.05 + rnd() * 0.07})`;
-      g.beginPath();
-      if (alongX) {
-        g.moveTo(b, a);
-        g.quadraticCurveTo(b + len / 2, a + wob, b + len, a);
-      } else {
-        g.moveTo(a, b);
-        g.quadraticCurveTo(a + wob, b + len / 2, a, b + len);
-      }
-      g.stroke();
-    }
-    const t = new THREE.CanvasTexture(cv);
-    t.colorSpace = THREE.SRGBColorSpace;
-    t.wrapS = t.wrapT = THREE.RepeatWrapping;
-    t.anisotropy = renderer.capabilities.getMaxAnisotropy();
-    return t;
-  }
-  M.desk.map = grain(true);
-  M.leg.map = grain(false);
-  M.floor.map = grain(false);
+  M.desk.map = grain(renderer, true);
+  M.leg.map = grain(renderer, false);
+  M.floor.map = grain(renderer, false);
   M.desk.roughness = 0.5;
   M.floor.roughness = 0.7;
 
@@ -236,31 +178,11 @@ async function start() {
   matMesh.position.set(0, 0, -MAT);
   matMesh.castShadow = matMesh.receiveShadow = true;
   scene.add(matMesh);
-  let matTexture = null;
+  let matMap = null;
   function paintMat() {
-    const p = pal(),
-      k = 2, // (px of the texture to a px of the room: the lines stay thin and crisp)
-      cv = document.createElement("canvas");
-    cv.width = MW * k;
-    cv.height = MD * k;
-    const g = cv.getContext("2d");
-    g.fillStyle = p.mat;
-    g.fillRect(0, 0, cv.width, cv.height);
-    const rgba = (c) => `rgba(${c[0]},${c[1]},${c[2]},${c[3]})`;
-    // the lines start 40 px in from the mat's top left, every 40 px thin and every 200 px thick, as the CSS room's gradients
-    for (const [step, color] of [[40, p.line], [200, p.line2]]) {
-      g.fillStyle = rgba(color);
-      for (let x = 40; x < MW; x += step) g.fillRect(x * k, 0, k, cv.height);
-      for (let y = 40; y < MD; y += step) g.fillRect(0, y * k, cv.width, k);
-    }
-    const tex = new THREE.CanvasTexture(cv);
-    tex.colorSpace = THREE.SRGBColorSpace;
-    tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
-    tex.generateMipmaps = true;
-    tex.minFilter = THREE.LinearMipmapLinearFilter;
-    if (matTexture) matTexture.dispose();
-    matTexture = tex;
-    M.matTop.map = tex;
+    if (matMap) matMap.dispose();
+    matMap = matTexture(renderer, pal(), MW, MD);
+    M.matTop.map = matMap;
     M.matTop.needsUpdate = true;
   }
 
@@ -276,8 +198,6 @@ async function start() {
     M.matTop.color.set("#fff");
     paintMat();
     scene.background = new THREE.Color(p.back);
-    hemi.intensity = LIGHT.hemi;
-    sun.intensity = LIGHT.sun;
     invalidate();
   }
 

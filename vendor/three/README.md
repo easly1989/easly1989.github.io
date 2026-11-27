@@ -9,7 +9,7 @@ in the room and the room's light (`room-light.js`). Only what they use, as publi
 
 For the room as a three.js scene (`room-gl.js`, #160) whole folders of the addons are here too, from
 the same package (`three@0.186.1` on npm, MIT): `examples/jsm/postprocessing`, `shaders`, `geometries`,
-`environments`, `math`, `lights`, `objects` and `misc`, not minified, since weight is no limit while the room is
+`environments`, `math`, `lights`, `objects`, `misc` and `controls` (the workbench's orbit), not minified, since weight is no limit while the room is
 built; trim them to what is used when it is done.
 
 `index.html` maps `three` and `three/addons/` here with an import map, and maps the module
