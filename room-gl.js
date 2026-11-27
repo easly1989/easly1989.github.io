@@ -8,8 +8,9 @@
 // is the CSS room's: orthographic, looking along (1, 1, -1) from the south-west and above, the room's
 // framing as room.js makes it (a scale of at most 1.15 and at least 0.7 that fits the box of what can be
 // used, which is frozen here as the numbers it measured: until the links exist, in ticket 11, there is
-// nothing to measure it from). ?variant=a is the flat palette of the room with soft shadows and
-// ambient occlusion, ?variant=b real materials lit from an environment.
+// nothing to measure it from). Its look is real materials (wood with a grain, a matt mat) lit by a sun
+// with soft shadows and by an environment, with ambient occlusion: the owner picked it over the room's
+// flat palette on 2026-11-27.
 
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
@@ -42,7 +43,6 @@ const FIT_FOOT = 64;
 const BOX = { w: 1595.5723, h: 884.6808 };
 const BOX_MIDDLE = { x: -120.918 * ZOOM, y: -89.457 * ZOOM };
 
-const variant = new URLSearchParams(location.search).get("variant") === "b" ? "b" : "a";
 const reduced = window.reducedMotion ? window.reducedMotion() : matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 // ---- the palette, in both colour schemes (room.css, styles.css) -------------------------------------
@@ -50,7 +50,7 @@ const PALETTE = {
   light: { wall: "#d9d2c4", skirting: "#b9ad98", desk: "#a9774b", leg: "#8d6340", mat: "#22594b", matEdge: "#1a4a3e", line: [214, 240, 228, 0.13], line2: [214, 240, 228, 0.3], floor: 1, back: "#2a2522" },
   dark: { wall: "#4a4640", skirting: "#3a3631", desk: "#6e4c31", leg: "#573b26", mat: "#12352d", matEdge: "#0d2822", line: [214, 240, 228, 0.09], line2: [214, 240, 228, 0.2], floor: 0.55, back: "#161311" },
 };
-const LIGHT = { hemi: 2.1, sun: 1.4 };
+const LIGHT = { hemi: 1.1, sun: 0.9 }; // (the environment lights it too)
 const FLOOR_BOARDS =["#8a6a4c", "#7d5f43", "#8f6f50", "#7a5c41"]; // the boards' colours across the room, as the CSS gradient had them
 const scheme = matchMedia("(prefers-color-scheme: dark)");
 const pal = () => PALETTE[scheme.matches ? "dark" : "light"];
@@ -90,14 +90,11 @@ async function start() {
   sun.shadow.normalBias = 1.5;
   sun.shadow.radius = 5;
   scene.add(sun, sun.target);
-  if (variant === "b") {
-    const pm = new THREE.PMREMGenerator(renderer);
-    scene.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture;
-    scene.environmentIntensity = 0.5;
-  }
+  scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+  scene.environmentIntensity = 0.2;
 
-  // ---- materials: the same colours either way, the surface differs ---------------------------------
-  const mat = (color, extra) => (variant === "b" ? new THREE.MeshStandardMaterial({ color, roughness: 0.62, metalness: 0, ...extra }) : new THREE.MeshLambertMaterial({ color, ...extra }));
+  // ---- materials: the room's colours, on surfaces with a grain and a gloss ------------------------
+  const mat = (color) => new THREE.MeshStandardMaterial({ color, roughness: 0.62, metalness: 0 });
   const M = {
     wall: mat("#fff"),
     skirting: mat("#fff"),
@@ -107,6 +104,45 @@ async function start() {
     matEdge: mat("#fff"),
     matTop: mat("#fff"),
   };
+
+  // wood with a grain, the streaks running along the length of the board (a greyscale map, so that
+  // the colours stay the room's)
+  function grain(alongX) {
+    const cv = document.createElement("canvas");
+    cv.width = cv.height = 1024;
+    const g = cv.getContext("2d");
+    g.fillStyle = "#f4f4f4";
+    g.fillRect(0, 0, 1024, 1024);
+    let seed = alongX ? 7 : 13;
+    const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    for (let i = 0; i < 320; i++) {
+      const a = rnd() * 1024,
+        len = 300 + rnd() * 724,
+        b = rnd() * 1024,
+        wob = (rnd() - 0.5) * 18;
+      g.lineWidth = 0.6 + rnd() * 2.6;
+      g.strokeStyle = rnd() < 0.8 ? `rgba(60,35,15,${0.04 + rnd() * 0.09})` : `rgba(255,240,220,${0.05 + rnd() * 0.07})`;
+      g.beginPath();
+      if (alongX) {
+        g.moveTo(b, a);
+        g.quadraticCurveTo(b + len / 2, a + wob, b + len, a);
+      } else {
+        g.moveTo(a, b);
+        g.quadraticCurveTo(a + wob, b + len / 2, a, b + len);
+      }
+      g.stroke();
+    }
+    const t = new THREE.CanvasTexture(cv);
+    t.colorSpace = THREE.SRGBColorSpace;
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    return t;
+  }
+  M.desk.map = grain(true);
+  M.leg.map = grain(false);
+  M.floor.map = grain(false);
+  M.desk.roughness = 0.5;
+  M.floor.roughness = 0.7;
 
   // a box standing on z, w along x, d along y, h up, as the CSS room's box() has it
   const box = (x, y, z, w, d, h, material, radius = 0) => {
@@ -293,7 +329,6 @@ async function start() {
 
   // ---- what the checks and the later tickets ask of it ----------------------------------------------
   const api = {
-    variant,
     ready: false,
     drawn: 0,
     scene,

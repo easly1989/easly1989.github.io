@@ -56,6 +56,14 @@ whatever was chosen: a phone never gets the room.
   has the focus, does the same. Coming back to the room by Back (the back/forward cache), the room
   is chosen again.
 
+**The room is being rebuilt as a three.js scene** (#160). Until it replaces the CSS room, a reader who
+chose the room gets the work-in-progress page (`html.wip`); `?roomdev` keeps the way to the CSS room in this
+browser (`room-dev` in `localStorage`), and `?roomgl` (`room-gl`) to the scene, `room-gl.js`, whose head
+route loads nothing of the CSS room and needs WebGL 2 (without it, the professional home). Its world is the
+CSS room's pixels, the stage's middle as the origin, y north, z up; its camera and its framing are the CSS
+room's (`checks/room-gl.py` holds them within 1 px); `ROOMGL.project(x, y, z)` takes a CSS room's point to the
+screen. The tickets are #161 to #175.
+
 The room is built by `room.js` from the bench's markup in `<div class="mat" hidden>`, before the
 first frame (`#room-ready` holds it), and framed to the window: it scales until every link and
 button in it fits with a margin. A new link in the room must sit inside that box, or the room
