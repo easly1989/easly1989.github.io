@@ -46,6 +46,7 @@
       (function () {
         var on = false,
           dev = false,
+          gl = false,
           box = null,
           root = document.documentElement;
         try {
@@ -68,6 +69,17 @@
             cleanDev.searchParams.delete("roomdev");
             history.replaceState(history.state, "", cleanDev.pathname + cleanDev.search + cleanDev.hash);
           }
+          // the new room, a three.js scene (issue #160): ?roomgl chooses it in this browser (for a
+          // developer, with room-dev), ?roomgl=0 takes it away; until it is complete it is the only
+          // thing that reaches it
+          var g = new URLSearchParams(location.search).get("roomgl");
+          if (g !== null) {
+            localStorage.setItem("room-gl", g === "0" ? "0" : "1");
+            var cleanGl = new URL(location.href);
+            cleanGl.searchParams.delete("roomgl");
+            history.replaceState(history.state, "", cleanGl.pathname + cleanGl.search + cleanGl.hash);
+          }
+          gl = localStorage.getItem("room-gl") === "1";
           dev = localStorage.getItem("room-dev") === "1";
           on = localStorage.getItem("site:room") === "1";
           box = JSON.parse(localStorage.getItem("room-box"));
@@ -100,6 +112,25 @@
           addEventListener("resize", function () {
             if (!fits()) location.reload();
           });
+          return;
+        }
+        if (gl) {
+          // the scene needs WebGL 2; without it the home is the professional page, as ever
+          var ok = false;
+          try {
+            ok = !!document.createElement("canvas").getContext("webgl2") && sessionStorage.getItem("room-gl-failed") !== "1";
+          } catch (e) {}
+          if (!ok) return;
+          root.classList.add("gl");
+          document.querySelector('link[href="pro.css"]').remove();
+          var glBar = document.querySelectorAll('meta[name="theme-color"]');
+          glBar[0].content = glBar[1].content = "#1d1a18";
+          document.write(
+            '<script type="importmap">{"imports":{"three":"./vendor/three/build/three.module.min.js",' +
+              '"./vendor/three/build/three.core.js":"./vendor/three/build/three.core.min.js",' +
+              '"three/addons/":"./vendor/three/examples/jsm/"}}</scr' + 'ipt>' +
+              '<script type="module" src="room-gl.js"></scr' + 'ipt>',
+          );
           return;
         }
         root.classList.add("iso");
@@ -147,6 +178,23 @@
          drawing itself, what is done, and the way back to the plain version */
       .room-wip {
         display: none;
+      }
+      /* the room as a three.js scene (room-gl.js): its canvas is all there is of it */
+      html.gl .pro,
+      html.gl .mat {
+        display: none;
+      }
+      html.gl body {
+        margin: 0;
+        background: #1d1a18;
+        overflow: hidden;
+      }
+      html.gl canvas.room-gl {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
       }
       html.wip .pro {
         display: none;
