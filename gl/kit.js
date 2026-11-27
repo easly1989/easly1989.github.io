@@ -61,14 +61,15 @@ function finish(canvas, renderer, repeat = false) {
 // Something printed or painted: `w` x `h` px of the room, drawn at `k` texture px to each (2 to 4 keeps lines and
 // letters crisp up close), by draw(ctx, k), whose units are the room's px. The fonts the site uses are waited for,
 // so that words are in their own letters and not in a stand-in.
+let fontsReady = null;
 export async function paint(renderer, w, h, draw, { k = 4, repeat = false } = {}) {
-  try {
-    // (for at most 3 s: a font file that never arrives must not keep an object from being drawn, in a stand-in)
-    await Promise.race([
-      Promise.all(['800 30px "Bricolage Grotesque"', '400 16px "Atkinson Hyperlegible"', '700 16px "Atkinson Hyperlegible"'].map((f) => document.fonts.load(f))),
-      new Promise((r) => setTimeout(r, 3000)),
-    ]);
-  } catch (e) {}
+  // (once for all that is painted, and for at most 3 s: a font file that never arrives must not keep an object from being
+  // drawn, in a stand-in)
+  fontsReady ||= Promise.race([
+    Promise.all(['800 30px "Bricolage Grotesque"', '400 16px "Atkinson Hyperlegible"', '700 16px "Atkinson Hyperlegible"'].map((f) => document.fonts.load(f))).catch(() => {}),
+    new Promise((r) => setTimeout(r, 3000)),
+  ]);
+  await fontsReady;
   const cv = document.createElement("canvas");
   cv.width = Math.round(w * k);
   cv.height = Math.round(h * k);
@@ -170,6 +171,41 @@ export function extrude(outline, depth, bevel = 0.5) {
 export function sweep(points, radius, { closed = false, radial = 16 } = {}) {
   const curve = new THREE.CatmullRomCurve3(points.map((p) => new THREE.Vector3(...p)), closed, "catmullrom", 0.5);
   return new THREE.TubeGeometry(curve, Math.max(24, points.length * 12), radius, radial, closed);
+}
+// A rounded rectangle, centred, as a Shape (`hole` another Shape, cut out of it, as a ring)
+export function roundedRect(w, h, r, hole) {
+  const s = new THREE.Shape();
+  const x = -w / 2,
+    y = -h / 2;
+  s.moveTo(x + r, y);
+  s.lineTo(x + w - r, y);
+  s.absarc(x + w - r, y + r, r, -Math.PI / 2, 0, false);
+  s.lineTo(x + w, y + h - r);
+  s.absarc(x + w - r, y + h - r, r, 0, Math.PI / 2, false);
+  s.lineTo(x + r, y + h);
+  s.absarc(x + r, y + h - r, r, Math.PI / 2, Math.PI, false);
+  s.lineTo(x, y + r);
+  s.absarc(x + r, y + r, r, Math.PI, Math.PI * 1.5, false);
+  if (hole) s.holes.push(hole);
+  return s;
+}
+// A flat piece made in its own x, y (normal +z, depth +z) turned onto a face of a thing: its x runs along the face, its y up, its
+// normal out of it; `at` is [x, y, z] of the middle of its back. Faces: "front" (looks south, x runs east), "west" (looks west, x runs
+// south, the way a reader of the west side reads), "top" (looks up, x east, y north)
+export function onFace(geometry, face, at = [0, 0, 0]) {
+  const V = (x, y, z) => new THREE.Vector3(x, y, z);
+  const basis = { front: [V(1, 0, 0), V(0, 0, 1), V(0, -1, 0)], west: [V(0, -1, 0), V(0, 0, 1), V(-1, 0, 0)], top: [V(1, 0, 0), V(0, 1, 0), V(0, 0, 1)] }[face];
+  geometry.applyMatrix4(new THREE.Matrix4().makeBasis(...basis));
+  geometry.translate(...at);
+  return geometry;
+}
+// A side view made a solid: `outline` is [y, z] points (y north, z up) of its profile, `width` long along x, centred on x = 0
+export function profile(outline, width, bevel = 0.8) {
+  const shape = new THREE.Shape(outline.map((p) => new THREE.Vector2(p[0], p[1])));
+  const g = new THREE.ExtrudeGeometry(shape, { depth: width - 2 * bevel, bevelEnabled: bevel > 0, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 2, curveSegments: 8 });
+  g.translate(0, 0, bevel - width / 2);
+  g.applyMatrix4(new THREE.Matrix4().makeBasis(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 1), new THREE.Vector3(1, 0, 0)));
+  return g;
 }
 // A mesh that casts and takes shadows
 export function mesh(geometry, material, { cast = true, receive = true } = {}) {

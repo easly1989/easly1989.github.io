@@ -41,11 +41,12 @@ export async function bench(name) {
   document.body.prepend(canvas);
   const renderer = makeRenderer(canvas);
   const scene = new THREE.Scene();
-  addLight(scene, renderer, new THREE.Vector3(-1340, -660, 2100), 700); // (where the room's sun is, from the middle of the mat)
+  const spec = OBJECTS[api.name];
+  const MW = spec.ground || 600; // the piece of the mat it stands on, px across
+  addLight(scene, renderer, new THREE.Vector3(-1340, -660, 2100), Math.max(700, MW * 0.75)); // (where the room's sun is, from the middle of the mat)
   scene.background = new THREE.Color(pal().back);
 
   // a piece of the mat to stand on, as the room's
-  const MW = 600;
   const top = new THREE.Mesh(new THREE.PlaneGeometry(MW, MW), new THREE.MeshStandardMaterial({ roughness: 0.62 }));
   top.receiveShadow = true;
   top.position.z = 0;
@@ -62,7 +63,7 @@ export async function bench(name) {
   // the object, turning on a turntable
   let built;
   try {
-    built = await OBJECTS[api.name].build(renderer);
+    built = await spec.build(renderer);
   } catch (e) {
     // (said here, to the one looking at it: this is a tool, and a failure is the point of it)
     console.warn("[bench] could not build", api.name, e);
@@ -77,12 +78,14 @@ export async function bench(name) {
   // the camera: the room's direction, but in perspective and near; the mouse turns it round the object
   const cam = new THREE.PerspectiveCamera(28, 1, 10, 5000);
   cam.up.set(0, 0, 1);
-  cam.position.set(-1, -1, 0.9).normalize().multiplyScalar(Math.max(520, height * 4));
+  cam.position.set(-1, -1, 0.9).normalize().multiplyScalar(Math.max(520, height * (spec.look || 4)));
   const controls = new OrbitControls(cam, canvas);
   controls.target.set(0, 0, height * 0.45);
   controls.enableDamping = true;
   controls.minDistance = 120;
-  controls.maxDistance = 1600;
+  controls.maxDistance = 4000;
+  cam.far = 12000;
+  cam.updateProjectionMatrix();
   controls.maxPolarAngle = Math.PI * 0.49;
   controls.update();
 

@@ -24,6 +24,15 @@ POINTS = {
 }
 OLD = "(() => { const o = {}; for (const [k, p] of Object.entries(%s)) o[k] = ROOM.toScreen(...p); return o; })()"
 NEW = "(() => { const o = {}; for (const [k, p] of Object.entries(%s)) o[k] = ROOMGL.project(...p); return o; })()"
+# points of the old computer's own frame (its units: 92 wide, 70 deep, 80 tall, four px of the room to a unit), at the CSS room and
+# in the scene: the case's corners at its foot and its top, the keyboard's front corners, the mouse's middle
+PCPTS = {
+    "case foot nw": (0, 0, 0), "case foot ne": (92, 0, 0), "case foot sw": (0, 70, 0), "case foot se": (92, 70, 0),
+    "case top nw": (0, 0, 80), "case top se": (92, 70, 80),
+    "keyboard front left": (-4, 112, 0), "keyboard front right": (96, 112, 0), "mouse": (120.5, 101, 0),
+}
+OLDPC = "(() => { const pc = document.querySelector('.pc'), m = ROOM.toStage(pc), o = {}; for (const [k, p] of Object.entries(%s)) { const q = m.transformPoint(new DOMPoint(...p)); o[k] = ROOM.toScreen(q.x, q.y, q.z); } return o; })()"
+NEWPC = "(() => { const g = ROOMGL.objects.pc, o = {}; for (const [k, p] of Object.entries(%s)) { const q = g.localToWorld(new ROOMGL.THREE.Vector3(4 * p[0] - 184, 140 - 4 * p[1], 4 * p[2])); o[k] = ROOMGL.project(q.x + 640, 440 - q.y, q.z); } return o; })()"
 READY = "!!(window.ROOMGL && window.ROOMGL.ready)"
 
 failures = []
@@ -62,6 +71,7 @@ try:
         time.sleep(1)
         old[(w, h)] = b.js(OLD % json.dumps(POINTS))
         old[(w, h, "box")] = json.loads(b.js("localStorage.getItem('room-box')"))
+        old[(w, h, "pc")] = b.js(OLDPC % json.dumps(PCPTS))
 finally:
     b.close()
 
@@ -79,6 +89,11 @@ try:
         new = b.js(NEW % json.dumps(POINTS))
         worst = max(((abs(new[k][0] - old[(w, h)][k][0]) ** 2 + abs(new[k][1] - old[(w, h)][k][1]) ** 2) ** 0.5, k) for k in POINTS)
         check(worst[0] <= 1.0, f"{w} x {h}: the same points of the room on the same pixels as the CSS room's (the worst, {worst[1]}, {worst[0]:.2f} px off)")
+        # the old computer, its keyboard and its mouse, where the CSS room has them (the case is on the desk, 4 px under the mat's top,
+        # so its top corners may differ by what 4 px up is on the screen, about 3 px)
+        pcn = b.js(NEWPC % json.dumps(PCPTS))
+        pcw = max(((abs(pcn[k][0] - old[(w, h, "pc")][k][0]) ** 2 + abs(pcn[k][1] - old[(w, h, "pc")][k][1]) ** 2) ** 0.5, k) for k in PCPTS)
+        check(pcw[0] <= 1.5, f"{w} x {h}: the computer, keyboard and mouse are where the CSS room has them (the worst, {pcw[1]}, {pcw[0]:.2f} px off)")
         box = json.loads(b.js("localStorage.getItem('room-box')"))
         ob = old[(w, h, "box")]
         check(all(abs(box[k] - ob[k]) <= 1 for k in ("w", "h", "dw", "dh")), f"{w} x {h}: the box it keeps for the head is the CSS room's ({box} against {ob})")

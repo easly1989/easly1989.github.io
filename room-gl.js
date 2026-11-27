@@ -201,6 +201,19 @@ async function start() {
     invalidate();
   }
 
+  // ---- the objects, as the CSS room puts them (gl/objects.js, each judged on the workbench first) ----------------
+  // the old computer with its keyboard and mouse, turned 12 degrees (the CSS room's `rotateZ(-12deg)`, counterclockwise from above),
+  // its case's middle at (-907.46, 76.17) of the scene, measured on the CSS room
+  const objects = {};
+  {
+    const { OBJECTS } = await import("./gl/objects.js");
+    const pc = await OBJECTS.pc.build(renderer);
+    pc.group.position.set(-907.46, 76.17, 0);
+    pc.group.rotation.z = (12 * Math.PI) / 180;
+    scene.add(pc.group);
+    objects.pc = pc.group;
+  }
+
   // ---- the frame: room.js's, with the box it measured --------------------------------------------
   let C = { x: 0, y: 0 },
     S = 1,
@@ -278,6 +291,7 @@ async function start() {
     scene,
     camera: cam,
     THREE,
+    objects,
     // the CSS room's point, where it is on the screen, px
     project(x, y, z) {
       const v = at(x, y, z).project(cam);

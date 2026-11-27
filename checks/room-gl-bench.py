@@ -112,6 +112,63 @@ try:
     time.sleep(2)
     check(b.js("!document.querySelector('#pwned') && document.body.innerText.includes('<b id=pwned>x</b>')"), "a name with markup in it is shown as text and is not markup")
 
+    # ---- the old computer (ticket 04) ----
+    BOUNDS = "(o) => { const B = new BENCH.THREE.Box3().setFromObject(o); return [B.min.x, B.max.x, B.min.y, B.max.y, B.min.z, B.max.z]; }"
+    open(b, "?bench=computer")
+    check(wait(b, "!!(window.BENCH && BENCH.ready)"), "the old computer starts on the bench")
+    time.sleep(0.5)
+    bb = b.js(f"({BOUNDS})(BENCH.group)")
+    cs = b.js(f"({BOUNDS})(BENCH.group.children[0])")
+    check(abs((cs[1] - cs[0]) - 368) <= 1 and abs((cs[3] - cs[2]) - 280) <= 1 and abs(cs[5] - 320) <= 1 and abs(cs[4]) <= 1,
+          f"the case is 368 wide, 280 deep and 320 high, on z = 0 ({[round(v, 1) for v in cs]})")
+    check(bb[1] - bb[0] <= 385 and 285 <= bb[3] - bb[2] <= 300 and bb[4] >= -1,
+          f"with the note (it curls 10 px off the side) and the bezel and glass (13 px off the front) it is no wider or deeper than that ({[round(v, 1) for v in bb]})")
+    px = b.js(f"""(() => {{ const at = {AT}; return {{ glass: at([-36, -146, 204]), note: at([-185, -46, 165]), caseTop: at([0, 0, 316]), drive: at([-64, -146, 56]) }}; }})()""")
+    check(sum(px["glass"]) < 200, f"the screen is a dark tube ({px['glass']})")
+    check(px["note"][0] > 190 and px["note"][1] > 160 and px["note"][2] < 150, f"the note is yellow ({px['note']})")
+    check(sum(px["caseTop"]) > 400, f"the case is beige ({px['caseTop']})")
+    ink = b.js("""(() => { let n = 0; for (let v = -125; v <= 35; v += 4) for (let z = 200; z <= 280; z += 3) { const c = BENCH.pixel(...BENCH.project(-185, v, z)); if (c[0] < 120 && c[1] < 110) n++; } return n; })()""")
+    check(ink >= 25, f"'Write to me' and its line are written on the note, in dark ink ({ink} dark samples)")
+
+    # the keyboard: 400 by 136, 34 high at the back, sixty-four keys and a spacebar, every key with its legend
+    open(b, "?bench=keyboard")
+    check(wait(b, "!!(window.BENCH && BENCH.ready)"), "the keyboard starts on the bench")
+    time.sleep(0.5)
+    kb = b.js(f"({BOUNDS})(BENCH.group)")
+    check(abs((kb[1] - kb[0]) - 400) <= 3 and 136 <= kb[3] - kb[2] <= 140 and 26 <= kb[5] <= 34, f"the keyboard is 400 by 136 and 10 px high at the front, 22 at the back, about 30 with its keys ({[round(v, 1) for v in kb]})")
+    # its legends read the right way on the screen: the left of the sheet is on the left, its top up
+    lo = b.js("""(() => { const g = BENCH.group.getObjectByName('legends').geometry, p = g.attributes.position, uv = g.attributes.uv;
+        const at = (u, v) => { let best = 0, d = 9; for (let i = 0; i < uv.count; i++) { const e = Math.abs(uv.getX(i) - u) + Math.abs(uv.getY(i) - v); if (e < d) { d = e; best = i; } }
+          const w = new BENCH.THREE.Vector3(p.getX(best), p.getY(best), p.getZ(best)).applyMatrix4(BENCH.group.getObjectByName('legends').matrixWorld); return BENCH.project(w.x, w.y, w.z); };
+        const l = at(0, 0.5), r = at(1, 0.5), t = at(0.5, 1), u = at(0.5, 0); return { left: l[0], right: r[0], top: t[1], low: u[1] }; })()""")
+    check(lo["left"] < lo["right"] - 100 and lo["top"] < lo["low"] + 200 and lo["top"] != lo["low"], f"the legends are not mirrored: their left is on the screen's left ({lo})")
+    check(b.js("(() => { let n = 0; BENCH.group.traverse((o) => { if (o.isInstancedMesh) n = o.count; }); return n; })()") == 64, "it has sixty-four keys and a spacebar of its own")
+    leg = b.js("""(() => { const cv = BENCH.group.getObjectByName('legends').material.map.image, d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 128) n++; return n; })()""")
+    check(leg > 6000, f"the legends are painted ({leg} px of ink)")
+
+    # the mouse: 68 by 88, its nose to the back, and its cord running to the case's east side
+    open(b, "?bench=mouse")
+    check(wait(b, "!!(window.BENCH && BENCH.ready)"), "the mouse starts on the bench")
+    time.sleep(0.5)
+    check(b.js("BENCH.camera.position.length() < 2500"), "the camera stands near it, not far off, and it is in view")
+    mv = b.js(f"""(() => {{ const at = {AT}; const s = BENCH.project(0, 0, 14); return [s, at([0, 0, 25])]; }})()""")
+    check(120 < mv[0][0] < 1320 and 100 < mv[0][1] < 800 and sum(mv[1]) > 380, f"the mouse is in the middle of the window, beige ({mv})")
+    mb = b.js(f"({BOUNDS})(BENCH.group.children[0])")
+    check(abs((mb[1] - mb[0]) - 68) <= 3 and abs((mb[3] - mb[2]) - 88) <= 2 and mb[4] >= -0.5 and 24 <= mb[5] <= 30, f"the mouse is 68 by 88 and 27 high, standing on z = 0 ({[round(v, 1) for v in mb]})")
+    # it is smooth: the surface has the rings of a dome, not the few faces of a model
+    check(b.js("BENCH.group.children[0].geometry.attributes.position.count") > 2000, "its surface is smooth: made of more than two thousand points")
+    cb = b.js(f"({BOUNDS})(BENCH.group.getObjectByName('cord'))")
+    check(cb[3] > 255 and cb[0] < -105 and cb[2] < 50, f"its cord leaves the nose and runs 114 px west and 260 south ({[round(v, 1) for v in cb]})")
+
+    # the three together, as on the desk: the cord meets the case's east side
+    open(b, "?bench=pc")
+    check(wait(b, "!!(window.BENCH && BENCH.ready)"), "the computer, keyboard and mouse start together on the bench")
+    time.sleep(0.5)
+    parts = b.js("(() => BENCH.group.children.map((c) => [Math.round(c.position.x), Math.round(c.position.y), Math.round(c.position.z)]))()")
+    check(parts == [[0, 0, -4], [0, -240, 0], [298, -264, 0]], f"the keyboard stands 240 px in front of the case's middle, the mouse 298 to its right and 264 in front ({parts})")
+    cord = b.js(f"({BOUNDS})(BENCH.group.getObjectByName('cord'))")
+    check(172 < cord[0] < 184, f"the cord goes into the case's east side, which is at x = 184, a few px deep ({cord[0]:.0f})")
+
     # an object that is not there lists what there is
     open(b, "?bench=nothing")
     time.sleep(2)

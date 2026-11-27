@@ -58,7 +58,9 @@ of motion that forgets it measures a room in which Willy only sleeps.
   `localStorage`; `?roomgl=0` takes it away): it
   starts and draws, and the CSS room does not; eleven points of the room (the mat's, the desk's, the walls',
   the floor's, a chair's) land within 1 px of where the CSS room puts them at 1280×720, 1366×768, 1440×900,
-  1920×1080 and 2560×1080, and again after a resize; the box it keeps for the head is the CSS room's; the
+  1920×1080 and 2560×1080 (and at 1200×1000, bound by width, and at 2560×1440, the largest scale), and again
+  after a resize; the old computer, its keyboard and its mouse (#164) are where the CSS room has them,
+  nine points of their own frame within 1.5 px at each size; the box it keeps for the head is the CSS room's; the
   mat, the desk, a wall and the floor are drawn in their own colours, darker in the dark scheme; without
   WebGL 2 the home is the professional page. Headless (software drawing): seams and look are judged in a
   real Chrome with a GPU.
@@ -67,7 +69,11 @@ of motion that forgets it measures a room in which Willy only sleeps.
   stands on z = 0 and is 124 px high; the rim is light china, the coffee dark brown, the mat green round
   it; "Buy me a coffee" is printed in dark letters on the side that faces the camera; the handle is there when
   turned to face it; the turntable turns where motion is allowed and no frame is drawn while it rests under
-  reduced motion; an object that is not there is said so, with the list of those that are. Headless.
+  reduced motion; a name with markup in it is shown as text; an object that is not there is said so, with the
+  list of those that are. The old computer (#164): the case is 368 wide, 280 deep and 320 high on its feet, the
+  screen a dark tube, the note yellow with "Write to me" and its line in dark ink; the keyboard is 400 by 136 with
+  sixty-four keys and a spacebar and its legends painted; the mouse is 68 by 88 with its cord running 114 px west
+  and 260 south; the three together stand where the desk has them and the cord meets the case's east side. Headless.
 - `fps.py` — the room keeps pace with a 60 Hz display while Willy walks, in both schemes, with
   its light on and off, with the radio playing and with the computer on; he rests between walks, so a sample is taken
   again until he has walked through enough of it. It draws without vsync, so it measures what a
