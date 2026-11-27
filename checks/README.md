@@ -54,6 +54,14 @@ of motion that forgets it measures a room in which Willy only sleeps.
   room; the way back shows the professional home and takes the choice back; `?roomdev` keeps the way to
   the room being built (`room-dev` in `localStorage`, which every other check sets for itself through
   `cdp.py`; `?roomdev=0` takes it away); a phone gets the professional page. Headless.
+- `room-gl.py` — the room as a three.js scene (#160, ticket 02), reached with `?roomgl` (`room-gl` in
+  `localStorage`; `?roomgl=0` takes it away): it
+  starts and draws, and the CSS room does not; eleven points of the room (the mat's, the desk's, the walls',
+  the floor's, a chair's) land within 1 px of where the CSS room puts them at 1280×720, 1366×768, 1440×900,
+  1920×1080 and 2560×1080, and again after a resize; the box it keeps for the head is the CSS room's; the
+  mat, the desk, a wall and the floor are drawn in their own colours, darker in the dark scheme; without
+  WebGL 2 the home is the professional page. Headless (software drawing): seams and look are judged in a
+  real Chrome with a GPU.
 - `fps.py` — the room keeps pace with a 60 Hz display while Willy walks, in both schemes, with
   its light on and off, with the radio playing and with the computer on; he rests between walks, so a sample is taken
   again until he has walked through enough of it. It draws without vsync, so it measures what a
