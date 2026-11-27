@@ -74,13 +74,14 @@ export async function chair() {
   const tie = std("tie", 0.55);
   const tx = cx(100);
   group.add(at(mesh(roundedBox(18, 34, 2, 0.6, 1), tie), tx, cy(297), TOP));
-  const knot = mesh(extrude([[-9, 0], [9, 0], [13, -32], [-13, -32]].map(([x, z]) => [x, z]), 8, 1.2), tie);
+  group.add(at(mesh(roundedBox(18, 2, 34, 0.6, 1), tie), tx, cy(315), TOP - 33)); // (the strip from the top down the headrest's front)
+  const knot = mesh(extrude([[-13, 0], [13, 0], [7.3, -32], [-7.3, -32]], 8, 1.2), tie);
   knot.rotation.x = Math.PI / 2; // (its outline stands up, its thickness runs south)
-  knot.position.set(tx, cy(314) - 8, TOP - 30);
+  knot.position.set(tx, cy(314), TOP - 30);
   group.add(knot);
-  const blade = mesh(extrude([[-6, 0], [6, 0], [23, -143], [0, -170], [-23, -143]], 3, 0.8), tie);
+  const blade = mesh(extrude([[-9, 0], [9, 0], [23, -143], [0, -170], [-23, -143]], 3, 0.8), tie);
   blade.rotation.x = Math.PI / 2;
-  blade.position.set(tx, cy(318) - 3, TOP - 60);
+  blade.position.set(tx, cy(318), TOP - 60);
   group.add(blade);
   group.userData = { tie: [blade, knot] };
   return { group, height: TOP + 2 };
@@ -105,6 +106,8 @@ function wireTexture(renderer) {
   const t = new THREE.CanvasTexture(cv);
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
   t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  t.generateMipmaps = false; // (a thin wire averaged over a mip level falls under the cut-off and thins out)
+  t.minFilter = THREE.LinearFilter;
   return t;
 }
 // a sheet of paper crumpled into a ball: a sphere pushed in and out by a few folds, seeded so that it is the same each time

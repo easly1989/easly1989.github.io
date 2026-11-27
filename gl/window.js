@@ -48,7 +48,7 @@ function skyline(g, w, h, roofs, r) {
 
 export async function windowSet(renderer) {
   const group = new THREE.Group();
-  const wall = std("wall", 0.95);
+  const wall = std("wall", 0.62); // (as the right wall's)
   // the wall: four slabs round the opening (the frame covers the cut), 24 px thick
   const slab = (x0, x1, z0, z1) => {
     const m = mesh(roundedBox(x1 - x0, 24, z1 - z0, 0.01, 1), wall, { cast: false });
@@ -140,7 +140,7 @@ export async function windowSet(renderer) {
   group.add(fleece);
   // the chains: links of a gold wire, 6 px apart, each turned a quarter from the last, from the wall (just over the frame) to the board's front corner
   const gold = new THREE.MeshStandardMaterial({ color: "#c9a24a", roughness: 0.35, metalness: 0.9 });
-  for (const x of [-170, 166]) {
+  for (const x of [-168, 168]) {
     const top = WIN.top + 16;
     const a = new THREE.Vector3(x, -2, top),
       b = new THREE.Vector3(x, -(PERCH.d - 8) - 2, PERCH.z);

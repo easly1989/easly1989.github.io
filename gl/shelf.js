@@ -80,10 +80,10 @@ export async function radio(renderer) {
     g.fillRect(70, 12, 3, 30);
     g.fillStyle = "#5a4a36";
     g.beginPath();
-    g.roundRect(100, 56, 100, 56, 8);
+    g.roundRect(100, 48, 100, 64, 8);
     g.fill();
     g.fillStyle = "#8a7556";
-    for (let x = 103; x < 198; x += 7) g.fillRect(x, 58, 4, 52);
+    for (let x = 103; x < 198; x += 7) g.fillRect(x, 50, 4, 60);
     g.fillStyle = "#4a2a22";
     g.beginPath();
     g.arc(18, 66, 4.5, 0, Math.PI * 2);
@@ -106,7 +106,7 @@ export async function radio(renderer) {
     n.position.set(-4.2, 0, 6);
     k.add(n);
     k.rotation.x = i ? 0.5 : -1.0;
-    k.position.set(-46, 105 - u, 24);
+    k.position.set(-46, 105 - u, 31);
     group.add(k);
   });
   // the projector on top: a toothed wheel 84 across and 8 thick, and on it a wedge 52 by 60, 32 high at the room's side and 14 at the wall's,
@@ -124,6 +124,7 @@ export async function radio(renderer) {
     return m;
   };
   const wheel = mesh(new THREE.CylinderGeometry(42, 42, 8, 48), projMat());
+  wheel.material.color.set("#6f5e4c"); // (a brown plate, as the CSS room's wheel)
   wheel.rotation.x = Math.PI / 2;
   wheel.position.set(0, 0, -4);
   const wedgeGeo = extrude([[0, 0], [52, 0], [52, 14], [0, 32]], 60, 0.8);

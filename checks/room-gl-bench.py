@@ -197,19 +197,19 @@ try:
     check(b.js("(() => { let n = 0; BENCH.group.traverse((o) => { if (o.isInstancedMesh) n += o.count; }); return n; })()") > 100, "the perch hangs on two chains of links")
 
     check(start("shelf"), "the shelf starts on the bench")
-    leaf = b.js(f"""(() => {{ const at = {AT}; let best = null; for (const [x, y, z] of [[-52, -38, 260], [-48, -34, 270], [-56, -30, 250], [-52, -44, 250]]) {{ const c = at([x, y, z]); if (c[1] > c[0] && c[1] > c[2]) best = c; }} return best; }})()""")
+    leaf = b.js(f"""(() => {{ const at = {AT}; let best = null; for (const [x, y, z] of [[-52, -38, 260], [-48, -34, 270], [-56, -30, 250], [-52, -44, 250]]) {{ const c = at([x, y, z]); if (c[1] - c[2] > 40 && c[1] > c[0] + 25) best = c; }} return best; }})()""")
     check(leaf is not None, f"the plant's leaves are green above its pot ({leaf})")
     pot = b.js(f"""(() => {{ const at = {AT}; return at([-52, -66, 200]); }})()""")
     check(pot[2] > pot[0] + 15, f"the pot is blue ({pot})")
 
     check(start("radio"), "the radio starts on the bench")
     rr = b.js(f"""(() => {{ const at = {AT}; return {{ dial: at([-42.5, 35, 93]), knob: at([-47, 77, 24]), grille: at([-42.5, -60, 40]) }}; }})()""")
-    check(sum(rr["dial"]) > 470 and rr["dial"][0] > 170, f"the dial is cream ({rr['dial']})")
+    check(sum(rr["dial"]) > 470 and rr["dial"][0] > 170 and rr["dial"][2] > 140, f"the dial is cream ({rr['dial']})")
     check(sum(rr["knob"]) < 330, f"the knob is dark ({rr['knob']})")
     check(sum(rr["grille"]) < sum(rr["dial"]) - 120, f"the grille is darker than the dial ({rr['grille']})")
     # the tuning dial runs the whole length of the face: cream near the north end (u 20) and near the south end (u 190), not only part way
     dl = b.js(f"""(() => {{ const at = {AT}; return [at([-42.5, 105 - 20, 93]), at([-42.5, 105 - 190, 93])]; }})()""")
-    check(all(sum(c) > 470 and c[0] > 170 for c in dl), f"the dial takes all the length of the radio's face ({dl})")
+    check(all(sum(c) > 470 and c[0] > 170 and c[2] > 140 for c in dl), f"the dial takes all the length of the radio's face ({dl})")
     # the projector: out of the radio only while it plays; off, it is in, turned a half turn and a quarter back, and cut at the top; on, it is out and
     # turned 45 degrees; under reduced motion at once, where motion is allowed in 0.8 s
     p0 = b.js("BENCH.radio.pose()")

@@ -36,8 +36,8 @@ NEWPC = "(() => { const g = ROOMGL.objects.pc, o = {}; for (const [k, p] of Obje
 # the other things of the room (#165, #164): a point of each in the CSS room's own element (selector, a point of its frame) and the same
 # point in the scene (the object, its point in the object's frame: x east, y north, z up, from the origin the object's file says)
 ITEMS = {
-    "window top left": (".on-wall.window > .window", (0, 0, 0), "window", (-300, 0, 660)),
-    "window bottom right": (".on-wall.window > .window", (600, 380, 0), "window", (300, 0, 280)),
+    "window top left": (".on-wall.window > .window", (0, 0, 0), "window", (-300, -2, 660)),
+    "window bottom right": (".on-wall.window > .window", (600, 380, 0), "window", (300, -2, 280)),
     "plant pot top": (".plant", (28, 28, 58), "shelf", (-52, -38, 228)),
     "radio top": (".radio", (42, 105, 120), "shelf", (-54, -585, 290)),
     "chair seat": (".chair", (170, 145, -260), "chair", (0, 15, 300)),
