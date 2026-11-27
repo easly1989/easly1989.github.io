@@ -346,36 +346,55 @@ export function everyday({ w, P, M, SURF, avoid, pc = null, desk = null }) {
   // up to a pot (desk.pots(): the mug or the jar), as near as he fits, facing it, and then
   // away from it again, with what he does there (moments(to, pot, c)); the clips named must
   // fit where he stands; or null
-  async function atPot(at, pots, need, moments, reach = REACH) {
+  // each place beside a pot he can stand at, facing it (the nearest first, each way round in turn at
+  // random): { to, off, a, cx, cy }, where off is where he is walked straight back to from it
+  function* stands(pot, need, reach = REACH) {
+    const cx = (pot.x0 + pot.x1) / 2,
+      cy = (pot.y0 + pot.y1) / 2,
+      half = Math.max(pot.x1 - pot.x0, pot.y1 - pot.y0) / 2;
+    const round = [...Array(16).keys()].map((i) => (i * Math.PI) / 8).sort(() => Math.random() - 0.5);
+    for (const a of round) {
+      const heading = Math.round((deg(a) + 180) % 360);
+      for (const R of [...Array(Math.floor((reach - 60) / 10) + 1).keys()].map((i) => half + 60 + i * 10)) {
+        const to = xyh("desk", [Math.round(cx + Math.cos(a) * R), Math.round(cy - Math.sin(a) * R), heading]);
+        if (!clear(to) || !["walk", "idle", ...need].every((c) => fits(to, c))) continue;
+        // he must be able to walk on from where he stands: the planner gives up on a place
+        // that close to the pot, so he is walked straight back from it, away from the pot
+        // (as at the desk's edge), and that is looked for first
+        for (const away of [90, 140, 200]) {
+          const x2 = Math.round(to.x + Math.cos(a) * away),
+            y2 = Math.round(to.y - Math.sin(a) * away),
+            h2 = toward([to.x, to.y], [x2, y2]),
+            p = xyh("desk", [x2, y2, h2]);
+          if (clear(p) && free(p) && straight([to.x, to.y, to.heading], [x2, y2, h2])) {
+            yield { to, off: { p, moments: M.walking([[to.x, to.y, to.heading], [x2, y2, h2]], "desk") }, cx, cy, a };
+            break;
+          }
+        }
+      }
+    }
+  }
+  // the first places to stand beside a thing at cx, cy, half px across (up to three; willy-toys.js puts a toy,
+  // and a treat, only where there is one he can walk to)
+  const canStand = (cx, cy, half, need, reach) => {
+    const out = [];
+    for (const s of stands({ x0: cx - half, x1: cx + half, y0: cy - half, y1: cy + half }, need, reach)) if (out.push(s) >= 3) break;
+    return out;
+  };
+  async function atPot(at, pots, need, moments, reach = REACH, tries = Infinity) {
     if (!desk) return null;
     for (const pot of pots.sort(() => Math.random() - 0.5)) {
-      const cx = (pot.x0 + pot.x1) / 2,
-        cy = (pot.y0 + pot.y1) / 2,
-        half = Math.max(pot.x1 - pot.x0, pot.y1 - pot.y0) / 2;
-      const round = [...Array(16).keys()].map((i) => (i * Math.PI) / 8).sort(() => Math.random() - 0.5);
-      for (const a of round) {
-        const heading = Math.round((deg(a) + 180) % 360);
-        for (const R of [...Array(Math.floor((reach - 60) / 10) + 1).keys()].map((i) => half + 60 + i * 10)) {
-          const to = xyh("desk", [Math.round(cx + Math.cos(a) * R), Math.round(cy - Math.sin(a) * R), heading]);
-          if (!clear(to) || !["walk", "idle", ...need].every((c) => fits(to, c))) continue;
-          // he must be able to walk on from where he stands: the planner gives up on a place
-          // that close to the pot, so he is walked straight back from it, away from the pot
-          // (as at the desk's edge), and that is looked for first
-          let off = null;
-          for (const away of [90, 140, 200]) {
-            const x2 = Math.round(to.x + Math.cos(a) * away),
-              y2 = Math.round(to.y - Math.sin(a) * away),
-              h2 = toward([to.x, to.y], [x2, y2]),
-              p = xyh("desk", [x2, y2, h2]);
-            if (clear(p) && free(p) && straight([to.x, to.y, to.heading], [x2, y2, h2])) {
-              off = { p, moments: M.walking([[to.x, to.y, to.heading], [x2, y2, h2]], "desk") };
-              break;
-            }
-          }
-          if (!off) continue;
-          const r = await going(at, to, "walk", (to) => moments(to, pot, { cx, cy, x: to.x, y: to.y }));
-          if (r) return { to: off.p, moments: [...r.moments, ...off.moments] };
-        }
+      let n = 0;
+      const failed = {};
+      for (const { to, off, cx, cy, a } of stands(pot, need, reach)) {
+        // (the toys' actions, with a number of tries, give up on a place after that many, and on a way round the pot
+        // after two: a walk that cannot be found takes a while to give up; the others try them all)
+        if (n >= tries) break;
+        if (tries < Infinity && failed[a] >= 2) continue;
+        n++;
+        const r = await going(at, to, "walk", (to) => moments(to, pot, { cx, cy, x: to.x, y: to.y }));
+        if (r) return { to: off.p, moments: [...r.moments, ...off.moments] };
+        failed[a] = (failed[a] || 0) + 1;
       }
     }
     return null;
@@ -646,6 +665,42 @@ export function everyday({ w, P, M, SURF, avoid, pc = null, desk = null }) {
     return null;
   }
 
+  // His toys (willy-toys.js, #70-C): he goes up to one as near as he fits, facing it, and bats it (it shows
+  // its effect) or, with the yarn, rolls onto his back beside it; and eats the treats the bag has spilled.
+  // From the reader's press (willy-room.js) it is the toy they pressed (c.toy) that he plays with.
+  const playable = (c, kinds) => (desk ? desk.toys.list().filter((t) => (c?.toy ? t.el === c.toy : !t.spot.busy) && (!kinds || kinds.includes(t.kind))) : []);
+  const play = (at, c) =>
+    atPot(at, playable(c), [], (to, t, { cx, cy }) => {
+      const clip = one(["swat-left", "swat-right"]),
+        hit = 0.62;
+      return [
+        cue(stay("idle", to, between([0.6, 1.2])), { look: [cx, cy, 40], line: "Willy notices the " + t.name + "." }),
+        part(clip, to, 0, hit),
+        cue(part(clip, to, hit, M.dur(clip)), { act: () => desk.toys.touch(t.spot), line: "Willy bats the " + t.name + "." }),
+        cue(stay("idle", to, between([1, 1.8])), { look: [cx, cy, 40] }),
+      ];
+    }, REACH, 12);
+  const rollWithYarn = (at, c) =>
+    atPot(at, playable(c, ["yarn"]), ["lie", "roll-over", "lie-from"], (to, t, { cx, cy }) => {
+      const roll = settled(to, ["lie", { clip: "roll-over", s: 0 }, "lie-from"]);
+      if (!roll) return null;
+      cue(roll[0], { act: () => desk.toys.touch(t.spot), line: "Willy rolls onto his back with the yarn." });
+      return [cue(stay("idle", to, between([0.6, 1.2])), { look: [cx, cy, 30] }), ...roll, cue(stay("idle", to, between([0.8, 1.4])), { look: [cx, cy, 30] })];
+    }, 300, 12); // (rolling over takes room: from further off)
+  const eatTreat = (at) =>
+    desk &&
+    atPot(
+      at,
+      desk.toys.treats().map((t) => ({ name: "treat", el: t.el, x0: t.x - 12, x1: t.x + 12, y0: t.y - 7, y1: t.y + 7 })),
+      ["eat"],
+      (to, t, { cx, cy }) => {
+        const d = M.dur("eat");
+        return [cue(stay("idle", to, between([0.5, 1])), { look: [cx, cy, 0] }), part("eat", to, 0, d * 0.45), cue(part("eat", to, d * 0.45, d), { act: () => desk.toys.eat(t.el), line: "Willy eats a treat." }), stay("idle", to, between([0.6, 1.2]))];
+      },
+      240,
+      12,
+    );
+
   // The plant off the shelf: he goes up to it as he does for the leaf, along the shelf (too narrow
   // for a swat: a butt of his head, as he nuzzles it), and sends it towards the shelf's near end,
   // where it goes over (willy-room.js, desk.tipPlant, and room-fall.js) and falls to the desk. He
@@ -679,7 +734,11 @@ export function everyday({ w, P, M, SURF, avoid, pc = null, desk = null }) {
     return null;
   }
 
-  return [
+  const actions = [
+    // his toys (#70-C)
+    { n: "play with a toy", w: 3, cool: 120, where: ["desk"], run: play },
+    { n: "roll with the yarn", w: 2, cool: 200, where: ["desk"], run: rollWithYarn },
+    { n: "eat a treat", w: 4, cool: 60, where: ["desk"], run: eatTreat },
     // knocking things off, tapping the mug and the jar, and his present (#72)
     { n: "knock the plant off", w: 1, cool: 300, where: ["desk"], run: knockPlant },
     { n: "push something off", w: 2, cool: 180, where: ["desk"], run: knock },
@@ -979,6 +1038,8 @@ export function everyday({ w, P, M, SURF, avoid, pc = null, desk = null }) {
       },
     },
   ];
+  // (and, for willy-room.js, where a toy can be put: canStand)
+  return Object.assign(actions, { canStand });
 }
 
 // Never in the way: what he does when the reader wants him elsewhere, each { to, moments } or

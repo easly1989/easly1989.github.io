@@ -46,9 +46,15 @@ export function fall(ROOM, reducedMotion) {
   fixed(new Plane(), v(walls.right, 0, 0)).quaternion.setFromEuler(0, -Math.PI / 2, 0); // (facing -x)
   const d = ROOM.desk;
   fixed(new Box(v(d.w / 2, d.d / 2, d.t / 2)), v(d.x + d.w / 2, d.y + d.d / 2, -d.t / 2));
-  // (each by its element: the plant's stands for it until it is tipped off the shelf, tip())
+  // (each by its element: the plant's stands for it until it is tipped off the shelf, tip(); all of them
+  // again when the room is measured again, rebox(): the toys have been put down)
   const twins = new Map();
-  for (const o of ROOM.boxes()) twins.set(o.el, fixed(new Box(v(Math.max(1, (o.x1 - o.x0) / 2), Math.max(1, (o.y1 - o.y0) / 2), Math.max(1, (o.z1 - o.z0) / 2))), v((o.x0 + o.x1) / 2, (o.y0 + o.y1) / 2, (o.z0 + o.z1) / 2)));
+  const reboxed = () => {
+    for (const b of twins.values()) world.removeBody(b);
+    twins.clear();
+    for (const o of ROOM.boxes()) twins.set(o.el, fixed(new Box(v(Math.max(1, (o.x1 - o.x0) / 2), Math.max(1, (o.y1 - o.y0) / 2), Math.max(1, (o.z1 - o.z0) / 2))), v((o.x0 + o.x1) / 2, (o.y0 + o.y1) / 2, (o.z0 + o.z1) / 2)));
+  };
+  reboxed();
 
   // his paw: moved by him, not by what it meets; in the world only while he paws
   const paw = new Body({ mass: 0, type: Body.KINEMATIC, material: pad, allowSleep: false });
@@ -176,6 +182,8 @@ export function fall(ROOM, reducedMotion) {
   const named = (e) => [...e.classList].find((c) => c !== "loose");
 
   return {
+    // the room's things measured again (the toys, once they are down): the boxes they make are the world's
+    rebox: reboxed,
     // push the thing e: its middle given a velocity in room px/s, and a spin, in turns/s round
     // each axis; whether it was
     push(e, vel, spin = [0, 0, 0]) {

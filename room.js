@@ -193,7 +193,7 @@
   // cut to taper (clip-path) costs a layer of its own, and with the radio on, frames drop
   function shell(host, o) {
     var t = Math.atan((o.r1 - o.r0) / o.h), len = o.h / Math.cos(t);
-    var w1 = 2 * o.r1 * Math.sin(Math.PI / o.n) + 0.8;
+    var w1 = 2 * Math.max(o.r0, o.r1) * Math.sin(Math.PI / o.n) + 0.8; // (wide enough at the wider end, a ball's upper half too)
     for (var i = 0; i < o.n; i++) {
       var a = (i * 360) / o.n, lit = 0.82 + 0.13 * Math.cos(((a - 135) * Math.PI) / 180);
       var s = el("i", "bin-wall", host, "width:" + w1.toFixed(1) + "px;height:" + len.toFixed(1) + "px;margin-left:" + (-w1 / 2).toFixed(1) + "px;transform:translateZ(" + (o.z + o.h) + "px) rotateZ(" + a + "deg) translateY(" + o.r1 + "px) rotateX(" + (-90 - (t * 180) / Math.PI).toFixed(2) + "deg);background:" + o.bg(o.inner ? lit - 0.3 : lit));
@@ -525,7 +525,7 @@
     return m;
   }
   // the room-space box round an element and everything in it (z up from the mat)
-  var BODYLESS = /\b(shade|anchor|burst|cam-out|film|pc-mouse-cord|pg-msg|nest-floor|nest-flap)\b/;
+  var BODYLESS = /\b(shade|anchor|burst|cam-out|film|pc-mouse-cord|pg-msg|nest-floor|nest-flap|toy)\b/; // (the toy: its picture stands for itself, its footprint is its body)
   // (but the parts skip(e) says are not this thing's)
   function bounds(root, skip) {
     var b = { x0: 1e9, y0: 1e9, z0: 1e9, x1: -1e9, y1: -1e9, z1: -1e9, parts: [] },
@@ -596,7 +596,7 @@
   // what nothing may go into: the computer, the project objects on the desk, the desk's
   // legs and the chair
   function obstacles() {
-    return [].filter.call(stage.querySelectorAll(".pc, .desk-leg, .chair, .thing, .nest-wall"), function (e) {
+    return [].filter.call(stage.querySelectorAll(".pc, .desk-leg, .chair, .thing, .nest-wall, .toyspot"), function (e) {
       return !(e.classList.contains("thing") && e.closest(".on-wall, .pc"));
     });
   }
@@ -644,7 +644,9 @@
     return r;
   }
   // again: only what the words, once their fonts are in, now run into moves; the rest stays put
-  function spread(again) {
+  // (what stands in the way of a thing put on the desk: the solid things and Willy's box, with the
+  // loose things and toys put down so far added by whoever is placing them)
+  function inTheWay() {
     var fixed = obstacles().map(function (e) {
       return { el: e, b: bounds(e), name: named(e) };
     });
@@ -652,25 +654,140 @@
     var inner = { x0: NEST.x + NEST.t, x1: NEST.x + NEST.w - NEST.t, y0: NEST.y + NEST.t, y1: NEST.y + NEST.d - NEST.t, z0: 0, z1: NEST.h };
     inner.parts = [{ x0: inner.x0, x1: inner.x1, y0: inner.y0, y1: inner.y1, q: [[inner.x0, inner.y0], [inner.x1, inner.y0], [inner.x1, inner.y1], [inner.x0, inner.y1]] }];
     fixed.push({ el: nest, b: inner, name: "Willy's box" });
-    var tall = [].map.call(stage.querySelectorAll(".pc, .thing.jar, .thing.mug"), screenBox);
-    [].forEach.call(stage.querySelectorAll(".loose"), function (e) {
-      if (again && !faults(e, fixed, false).length) return fixed.push({ el: e, b: bounds(e), name: named(e) });
-      for (var tries = 0; tries < 200; tries++) {
-        var x = DESK_TOP.x0 + 40 + Math.random() * (DESK_TOP.x1 - DESK_TOP.x0 - 80) - e.offsetWidth / 2;
-        var y = DESK_TOP.y0 + 40 + Math.random() * (DESK_TOP.y1 - DESK_TOP.y0 - 80) - e.offsetHeight / 2;
-        setAt(e, { x: Math.round(x), y: Math.round(y), r: Math.round(Math.random() * 80 - 40) });
-        if (faults(e, fixed, false).length) continue;
-        var sb = screenBox(e);
-        var cx = (sb.l + sb.r) / 2,
-          cy = (sb.t + sb.b) / 2;
-        // with some room to spare, so that nothing sits half behind a rim either
-        var behind = tall.some(function (t) {
-          return cx > t.l - 10 && cx < t.r + 10 && cy > t.t - 10 && cy < t.b + 10;
+    return fixed;
+  }
+  var tallOnes = function () {
+    return [].map.call(stage.querySelectorAll(".pc, .thing.jar, .thing.mug"), screenBox);
+  };
+  // e put where it goes into nothing in fixed and is not behind the tall things (screen boxes), at
+  // random, a turn up to 40 degrees either way; the next thing is judged against it too
+  function put(e, fixed, tall, again) {
+    if (again && !faults(e, fixed, false).length) return fixed.push({ el: e, b: bounds(e), name: named(e) });
+    for (var tries = 0; tries < 200; tries++) {
+      var x = DESK_TOP.x0 + 40 + Math.random() * (DESK_TOP.x1 - DESK_TOP.x0 - 80) - e.offsetWidth / 2;
+      var y = DESK_TOP.y0 + 40 + Math.random() * (DESK_TOP.y1 - DESK_TOP.y0 - 80) - e.offsetHeight / 2;
+      setAt(e, { x: Math.round(x), y: Math.round(y), r: Math.round(Math.random() * 80 - 40) });
+      if (faults(e, fixed, false).length) continue;
+      var sb = screenBox(e);
+      var cx = (sb.l + sb.r) / 2,
+        cy = (sb.t + sb.b) / 2;
+      // with some room to spare, so that nothing sits half behind a rim either
+      var behind = tall.some(function (t) {
+        return cx > t.l - 10 && cx < t.r + 10 && cy > t.t - 10 && cy < t.b + 10;
+      });
+      if (!behind) break;
+    }
+    if (tries === 200) console.warn("[room] no free place for " + named(e) + ": " + faults(e, fixed, false).join("; "));
+    fixed.push({ el: e, b: bounds(e), name: named(e) });
+  }
+  // ---- Willy's toys, drawn here (what they do is willy-toys.js, once he is there) ---------------
+  // Two to four of five each visit, from the yarn, the crinkle ball, the catnip mouse, the treat bag and,
+  // now and then, the paper bag (all of them with ?toys, those named with ?toys=yarn,bag), drawn in the
+  // room's own shapes like everything on the desk, so that the light pass lights them and they cast
+  // shadows: balls of round strips, boxes. Each is a .toyspot (the footprint he walks round, its
+  // faces the room's solids) and a button, one plane over it, which stays inert until he is there to
+  // answer it. Without him they are taken out again (willy-room.js).
+  var TOYS = {
+    yarn: { name: "yarn", w: 56, d: 56, h: 52, o: "28px 28px 26px", btn: [84, 74] },
+    ball: { name: "crinkle ball", w: 52, d: 52, h: 44, o: "26px 26px 0px", btn: [78, 68] },
+    mouse: { name: "catnip mouse", w: 52, d: 92, h: 36, o: "26px 46px 0px", btn: [96, 80] },
+    bag: { name: "treat bag", w: 48, d: 36, h: 58, o: "24px 4px 0px", btn: [78, 90] },
+    paper: { name: "paper bag", w: 80, d: 46, h: 38, o: "40px 23px 0px", btn: [104, 76] },
+  };
+  // a ball of radius R standing on z = 0, in rings of n round strips, bg(lit) the paint of a strip
+  function ball(host, R, n, rings, bg) {
+    var rad = function (z) {
+      return Math.sqrt(Math.max(0.3, R * R - (z - R) * (z - R)));
+    };
+    for (var j = 0; j < rings; j++) {
+      var z0 = (2 * R * j) / rings,
+        z1 = (2 * R * (j + 1)) / rings;
+      shell(host, { z: z0, h: z1 - z0, r0: rad(z0), r1: rad(z1), n: n, bg: (function (jj) { return function (l) { return bg(l, jj); }; })(j) });
+    }
+  }
+  function toyDraw(c, kind, k) {
+    var cx = k.w / 2,
+      cy = k.d / 2;
+    var at = function (x, y, z, extra) {
+      return el("span", "toy-body", c, "left:" + x + "px;top:" + y + "px;transform:translateZ(" + (z || 0) + "px)" + (extra || ""));
+    };
+    if (kind === "yarn") {
+      // (wound in bands of two reds, tilted ring by ring, so that it is seen to turn as it rolls)
+      ball(at(cx, cy, 0), 26, 12, 6, function (l, j) {
+        return "repeating-linear-gradient(" + (j % 2 ? 125 : 35) + "deg," + shade(j % 2 ? "#ee8a7a" : "#e2574a", l) + " 0 5px," + shade(j % 2 ? "#b8402f" : "#8f2a1f", l) + " 5px 8px)";
+      });
+    } else if (kind === "ball") {
+      ball(at(cx, cy, 0), 21, 7, 4, function (l) {
+        return "linear-gradient(125deg," + shade("#f1f4f8", l) + "," + shade("#8e98a5", l - 0.06) + ")";
+      });
+    } else if (kind === "mouse") {
+      var fur = function (l) {
+        return shade("#b9b2cc", l);
+      };
+      ball(at(cx, cy, 0, " scale3d(0.95,1.55,0.8)"), 22, 10, 5, fur);
+      [-1, 1].forEach(function (s) {
+        ball(at(cx + s * 15, cy + 26, 21), 8.5, 8, 3, function (l) {
+          return shade("#f0b3ab", l);
         });
-        if (!behind) break;
-      }
-      if (tries === 200) console.warn("[room] no free place for " + named(e) + ": " + faults(e, fixed, false).join("; "));
-      fixed.push({ el: e, b: bounds(e), name: named(e) });
+        ball(at(cx + s * 7, cy + 31, 21), 2.6, 6, 2, function () {
+          return "#1b1b1b";
+        });
+      });
+      ball(at(cx, cy + 38, 10), 4, 6, 2, function (l) {
+        return shade("#e0707d", l);
+      });
+      // its tail, lying on the desk behind it
+      var tail = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      tail.setAttribute("class", "toytail");
+      tail.setAttribute("viewBox", "0 0 52 40");
+      tail.style.cssText = "left:0;top:-30px;width:52px;height:40px;transform:translateZ(1px)";
+      tail.innerHTML = '<path d="M26 40 C 26 24, 44 22, 40 8 S 14 4, 12 0" fill="none" stroke="' + "#6e6785" + '" stroke-width="3" stroke-linecap="round"/>';
+      c.appendChild(tail);
+    } else if (kind === "bag") {
+      var b = box(c, { x: 4, y: 4, w: 40, d: 28, z: 0, h: 50, color: "#e8c15a", r: 3 });
+      box(c, { x: 7, y: 7, w: 34, d: 22, z: 50, h: 8, color: "#b98f2e" });
+      var fish = '<svg viewBox="0 0 40 50" aria-hidden="true" style="width:100%;height:100%"><path d="M8 25 Q20 14 30 25 Q20 36 8 25 Z M30 25 L37 19 L37 31 Z" fill="#fff" opacity=".94"/><circle cx="13" cy="23.5" r="1.6" fill="#1b1b1b"/></svg>';
+      b.querySelector("i.s").innerHTML = fish;
+    } else if (kind === "paper") {
+      var p = box(c, { x: 6, y: 5, w: 68, d: 36, z: 0, h: 34, color: "#d2a572", west: "radial-gradient(ellipse at 50% 58%, #3b2a18 0 54%, #b98a52 56%)" });
+      p.querySelector("i.t").style.backgroundImage = "linear-gradient(118deg, transparent 38%, rgba(0,0,0,.16) 39% 41%, transparent 42%), linear-gradient(32deg, transparent 58%, rgba(0,0,0,.12) 59% 61%, transparent 62%)";
+    }
+  }
+  // the toys for this visit, drawn and put down (after the loose things, which they keep clear of)
+  function toys() {
+    if (/[?&]review\b/.test(location.search)) return;
+    var ask = (function () { try { return decodeURIComponent(location.search); } catch (e) { return ""; } })().match(/[?&]toys(?:=([a-z,]*))?(?:&|$)/);
+    var pool = Object.keys(TOYS).filter(function (k) {
+      return k !== "paper";
+    });
+    if (!ask && Math.random() < 0.2) pool.push("paper");
+    var listed = ask && ask[1] ? ask[1].split(",").filter(function (k, i, all) {
+      return TOYS[k] && all.indexOf(k) === i;
+    }) : null;
+    var mine = ask ? listed || Object.keys(TOYS) : pool.sort(function () { return Math.random() - 0.5; }).slice(0, 2 + Math.floor(Math.random() * 3));
+    var fixed = inTheWay();
+    [].forEach.call(stage.querySelectorAll(".loose"), function (o) {
+      fixed.push({ el: o, b: bounds(o), name: named(o) });
+    });
+    var tall = tallOnes();
+    mine.forEach(function (kind) {
+      var k = TOYS[kind];
+      var c = el("span", "toyspot", room, "width:" + k.w + "px;height:" + k.d + "px;transform-origin:" + k.o);
+      c.dataset.kind = kind;
+      toyDraw(c, kind, k);
+      var btn = el("button", "toy toy-" + kind, c, "width:" + k.btn[0] + "px;height:" + k.btn[1] + "px;margin:" + -k.btn[1] / 2 + "px 0 0 " + -k.btn[0] / 2 + "px;--lift:" + Math.round(k.h * 0.5) + "px");
+      btn.type = "button";
+      btn.setAttribute("aria-label", "Play with the " + k.name);
+      btn.inert = true;
+      put(c, fixed, tall, false);
+    });
+  }
+
+  function spread(again) {
+    var fixed = inTheWay(),
+      tall = tallOnes();
+    [].forEach.call(stage.querySelectorAll(".loose"), function (e) {
+      put(e, fixed, tall, again);
     });
   }
 
@@ -1813,8 +1930,9 @@
     MAX = 1.15,
     MIN = ROOM_FIT.min,
     BASE = { x: 179, y: 73 }; // the stage's own offsets (room.css)
+  // (but not the toys, which are put down inside the frame it makes: willy-toys.js)
   function usable() {
-    return [].filter.call(fit.querySelectorAll("a[href], button, [tabindex]:not([tabindex='-1'])"), function (e) {
+    return [].filter.call(fit.querySelectorAll("a[href], button:not(.toy), [tabindex]:not([tabindex='-1'])"), function (e) {
       if (e.closest("[hidden], [inert]")) return false;
       var cs = getComputedStyle(e);
       if (cs.visibility === "hidden" || cs.display === "none") return false;
@@ -1915,6 +2033,7 @@
     setTimeout(lightUp, 4000);
   } else setLight(lightWas !== "off");
   spread();
+  toys();
   frame();
   if (dawn) strike(false);
   if (window.RADIO) showRadio(RADIO.state());
@@ -2072,7 +2191,7 @@
         });
       if (pcCase && kb) all.push({ b: bounds(pcCase, function (e) { return !keyboard(e); }), name: "the keyboard", e: kb });
       lows = all.filter(function (o) {
-        return !o.of && Math.abs(o.b.z0) < 3 && o.b.z1 <= LOW; // standing on the desk, not under it (the keyboard's rim, a hair into the desk)
+        return !o.of && Math.abs(o.b.z0) < 3 && o.b.z1 <= LOW && !(o.e && o.e.classList.contains("toyspot")); // standing on the desk, not under it (the keyboard's rim, a hair into the desk); not a toy, which he goes round
       });
       solids = all.filter(function (o) {
         return lows.indexOf(o) < 0;
@@ -2327,6 +2446,32 @@
         out.nest.inside = { x0: nst.offsetLeft + NEST.t, x1: nst.offsetLeft + NEST.w - NEST.t, y0: nst.offsetTop + NEST.t, y1: nst.offsetTop + NEST.d - NEST.t, h: NEST.h }; // (what is inside its walls)
       }
       return out;
+    },
+    // the screen box the room is framed to, as it is now: round everything usable in it but the toys (the
+    // toys stay inside it, so that no size of window puts one out of the frame)
+    usableBox: function () {
+      var u = union(usable());
+      return { left: u.l, top: u.t, right: u.r, bottom: u.b };
+    },
+    // a function that puts a thing e, a toy, down on the desk where it goes into nothing and is not behind
+    // the computer, the jar or the mug, as the loose things are, each time it is called; what stands in the
+    // way (but the other toys, which move) is measured once, when this is called, and the room's solids are
+    // measured again after each
+    placer: function () {
+      var base = inTheWay().filter(function (o) {
+        return !o.el.classList.contains("toyspot");
+      });
+      [].forEach.call(stage.querySelectorAll(".loose"), function (o) {
+        base.push({ el: o, b: bounds(o), name: named(o) });
+      });
+      var tall = tallOnes();
+      return function (e) {
+        var others = [].filter.call(stage.querySelectorAll(".toyspot"), function (t) {
+          return t !== e;
+        });
+        put(e, base.concat(others.map(function (t) { return { el: t, b: bounds(t), name: named(t) }; })), tall, false);
+        solids = lows = null;
+      };
     },
     // what is low enough to walk over, each by name, how high and where on the desk, and its
     // element
