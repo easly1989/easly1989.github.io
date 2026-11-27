@@ -26,8 +26,8 @@ const TREAT = '<svg viewBox="0 0 26 14" aria-hidden="true"><path d="M1 7 Q10 -1 
 
 export function toys({ room, stage, ROOM, announce }) {
   const spots = [],
-    treats = [],
-    place = ROOM.placer();
+    treats = [];
+  let place = () => {}; // (ROOM.placer(), made as they are placed: settle)
   // where he can stand beside a thing at x, y, half px across, facing it, in the clips need names, from as far
   // as reach px (willy-life.js, canStand: up to three places), and whether he can walk to one from where he
   // starts (willy-room.js): a toy is put only where he can come to it, and so is a treat
@@ -58,13 +58,14 @@ export function toys({ room, stage, ROOM, announce }) {
   const put = async (el, need = [], far = 180) => {
     for (let tries = 0; tries < 12 && performance.now() < until; tries++) {
       await new Promise((r) => setTimeout(r, 0)); // (the page's own timers run between: the room's light has its time to keep)
+      if (performance.now() >= until) return;
       place(el);
       moved(); // (what he fits among has changed)
       const { offsetLeft: x, offsetTop: y, offsetWidth: w, offsetHeight: h } = el;
       if (inFrame(el) && !(start && Math.hypot(x + w / 2 - start.x, y + h / 2 - start.y) < 150) && (await comes(x + w / 2, y + h / 2, Math.max(w, h) / 2, need, far, false))) return;
     }
     // (nowhere he can come to: at least where it is seen)
-    for (let tries = 0; tries < 30 && !inFrame(el); tries++) place(el);
+    for (let tries = 0; tries < 30 && !inFrame(el) && performance.now() < until; tries++) place(el);
     moved();
   };
 
@@ -150,6 +151,12 @@ export function toys({ room, stage, ROOM, announce }) {
           t.dataset.y = Math.round(y);
           room.append(t);
           treats.push(t);
+          // (one he cannot come to is only for the look of it: gone after a few seconds, so that it never holds a place)
+          if (!reachable)
+            setTimeout(() => {
+              const i = treats.indexOf(t);
+              if (i >= 0) treats.splice(i, 1)[0].remove();
+            }, 8000);
         }
     } finally {
       s.spilling = false;
@@ -161,6 +168,7 @@ export function toys({ room, stage, ROOM, announce }) {
     // in all: after that, wherever each is seen)
     settle: async (can, go, from, changed) => {
       [canStand, walkTo, start, moved] = [can, go, from, changed];
+      place = ROOM.placer(); // (measures what stands in the way now, not as it was when the room was made)
       until = performance.now() + 400;
       // (Willy waits for no more than that: a walk that takes longer to look for is left to finish, and no toy is moved again)
       await Promise.race([(async () => {

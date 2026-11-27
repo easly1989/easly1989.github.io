@@ -2893,7 +2893,7 @@ html:not(.iso) .strip {
     transform: translateZ(12px) rotateZ(180deg);
   }
   99% {
-    transform: rotateZ(360deg);
+    transform: translateZ(0px) rotateZ(360deg);
   }
 }
 @keyframes toy-tip {
@@ -2961,7 +2961,7 @@ html:not(.iso) .strip {
     transform: scale3d(1.2, 1.2, 0.62);
   }
   .iso:where(:not(.motion-ok)) .toyspot.go[data-kind="mouse"] {
-    transform: rotateZ(140deg);
+    transform: translateZ(12px) rotateZ(180deg);
   }
   .iso:where(:not(.motion-ok)) .toyspot.go[data-kind="bag"] {
     transform: rotate3d(1, 0, 0, 90deg);

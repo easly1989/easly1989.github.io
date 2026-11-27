@@ -533,7 +533,8 @@ async function live() {
   }
   if (!at) throw new Error("no room on the desk");
   // his toys go where he can walk to them from here, and what falls meets them there
-  await toy.settle(ACTIONS.canStand, (to) => M.go(at, to).then(Boolean), at, () => P.forget());
+  // (a toy that cannot be placed costs only its place, not his life)
+  await toy.settle(ACTIONS.canStand, (to) => M.go(at, to).then(Boolean), at, () => P.forget()).catch((e) => console.warn("[toys] not settled", e));
   P.forget();
   room.fall.rebox();
   // what he looks at as he rests, now and then something else: one of the room's sources that is

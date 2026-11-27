@@ -756,7 +756,7 @@
   // the toys for this visit, drawn and put down (after the loose things, which they keep clear of)
   function toys() {
     if (/[?&]review\b/.test(location.search)) return;
-    var ask = decodeURIComponent(location.search).match(/[?&]toys(?:=([a-z,]*))?(?:&|$)/);
+    var ask = (function () { try { return decodeURIComponent(location.search); } catch (e) { return ""; } })().match(/[?&]toys(?:=([a-z,]*))?(?:&|$)/);
     var pool = Object.keys(TOYS).filter(function (k) {
       return k !== "paper";
     });
