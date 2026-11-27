@@ -45,6 +45,7 @@
       window.ROOM_FIT = { min: 0.7, margin: 16 };
       (function () {
         var on = false,
+          dev = false,
           box = null,
           root = document.documentElement;
         try {
@@ -58,6 +59,16 @@
             clean.searchParams.delete("room");
             history.replaceState(history.state, "", clean.pathname + clean.search + clean.hash);
           }
+          // while the room is rebuilt (issue #160) the room is a page that says so; ?roomdev keeps the
+          // way to the room being built in this browser, ?roomdev=0 takes it away
+          var d = new URLSearchParams(location.search).get("roomdev");
+          if (d !== null) {
+            localStorage.setItem("room-dev", d === "0" ? "0" : "1");
+            var cleanDev = new URL(location.href);
+            cleanDev.searchParams.delete("roomdev");
+            history.replaceState(history.state, "", cleanDev.pathname + cleanDev.search + cleanDev.hash);
+          }
+          dev = localStorage.getItem("room-dev") === "1";
           on = localStorage.getItem("site:room") === "1";
           box = JSON.parse(localStorage.getItem("room-box"));
         } catch (e) {
@@ -78,6 +89,16 @@
           addEventListener("resize", function () {
             if (on && fits()) location.reload();
             root.classList.toggle("room-fits", fits());
+          });
+          return;
+        }
+        if (!dev) {
+          // the room is being rebuilt: the page that says so, with the way back to the plain version
+          root.classList.add("wip");
+          var wipBar = document.querySelectorAll('meta[name="theme-color"]');
+          wipBar[0].content = wipBar[1].content = "#12306b";
+          addEventListener("resize", function () {
+            if (!fits()) location.reload();
           });
           return;
         }
@@ -121,6 +142,109 @@
          which room.js sets out in 3D, and the professional page is not shown with it */
       html.iso .pro {
         display: none;
+      }
+      /* while the room is rebuilt (issue #160), a chosen room is this page: a blueprint of the room
+         drawing itself, what is done, and the way back to the plain version */
+      .room-wip {
+        display: none;
+      }
+      html.wip .pro {
+        display: none;
+      }
+      html.wip .room-wip {
+        position: fixed;
+        inset: 0;
+        z-index: 5;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        text-align: center;
+        overflow: auto;
+        color: #e8f0ff;
+        background-color: #12306b;
+        background-image: linear-gradient(#ffffff14 1px, transparent 1px), linear-gradient(90deg, #ffffff14 1px, transparent 1px);
+        background-size: 28px 28px;
+        font: 17px/1.5 system-ui, sans-serif;
+      }
+      .room-wip svg {
+        display: block;
+        width: min(440px, 88vw);
+        height: auto;
+        margin: 0 auto 18px;
+      }
+      .room-wip path {
+        fill: none;
+        stroke: #cfe0ff;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-dasharray: 1000;
+        stroke-dashoffset: 1000;
+        animation: wip-draw 5s ease infinite;
+      }
+      .room-wip path:nth-child(2) { animation-delay: 0.4s; }
+      .room-wip path:nth-child(3) { animation-delay: 0.8s; }
+      .room-wip path:nth-child(4) { animation-delay: 1.2s; }
+      @keyframes wip-draw {
+        0% { stroke-dashoffset: 1000; }
+        55%, 85% { stroke-dashoffset: 0; }
+        100% { stroke-dashoffset: -1000; }
+      }
+      /* at rest the drawing is complete; it moves only where motion is allowed */
+      @media (prefers-reduced-motion: reduce) {
+        :where(html:not(.motion-ok)) .room-wip path {
+          animation: none;
+          stroke-dashoffset: 0;
+        }
+      }
+      .room-wip h1 {
+        margin: 0 0 0.4em;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+      .room-wip p {
+        max-width: 34em;
+        margin: 0 auto 1.2em;
+      }
+      .room-wip ul {
+        display: inline-block;
+        margin: 0 auto 1.4em;
+        padding: 0;
+        list-style: none;
+        text-align: left;
+        font: 15px/1.7 ui-monospace, monospace;
+      }
+      .room-wip .sr {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+      }
+      .room-wip li::before {
+        content: "[ ] ";
+        opacity: 0.7;
+      }
+      .room-wip li.done::before {
+        content: "[x] ";
+        color: #7dffb0;
+        opacity: 1;
+      }
+      .room-wip a {
+        display: inline-block;
+        padding: 0.7em 1.3em;
+        border-radius: 999px;
+        background: #e8f0ff;
+        color: #12306b;
+        font-weight: 700;
+        text-decoration: none;
+      }
+      .room-wip a:focus-visible {
+        outline: 3px solid #4fd8ff;
+        outline-offset: 3px;
       }
       /* the room's 1280 x 880 mat, which room.css turns and room.js frames */
       .fit {
@@ -1546,6 +1670,26 @@
   <body data-page="home">
     <!-- The professional home: the page everyone gets, unless they chose the room. Its rows
          are written by tools/sync.py from data/projects/ and lead to pro/<id>.html. -->
+    <!-- The room while it is rebuilt (issue #160): shown in place of it (html.wip, set by the head's
+         script) to a reader who chose the room. -->
+    <main class="room-wip" aria-labelledby="wip-title">
+      <svg viewBox="0 0 440 300" aria-hidden="true">
+        <path pathLength="1000" d="M220 110 L400 200 L220 290 L40 200 Z" />
+        <path pathLength="1000" d="M40 200 V110 L220 20 L400 110 V200 M220 20 V110" />
+        <path pathLength="1000" d="M220 150 L310 195 L220 240 L130 195 Z" />
+        <path pathLength="1000" d="M130 195 V225 M310 195 V225 M220 240 V270 M220 170 L270 195 L220 220 L170 195 Z" />
+      </svg>
+      <h1 id="wip-title">Room: work in progress</h1>
+      <ul aria-label="Progress">
+        <li class="done"><span class="sr">done: </span>the plan</li>
+        <li><span class="sr">to do: </span>walls, floor, desk</li>
+        <li><span class="sr">to do: </span>the objects, one by one</li>
+        <li><span class="sr">to do: </span>Willy</li>
+        <li><span class="sr">to do: </span>light, night, weather</li>
+      </ul>
+      <p>I'm rebuilding it. The plain version is open meanwhile.</p>
+      <a href="?room=0">Back to the plain version</a>
+    </main>
     <div class="pro">
       <a class="skip" href="#projects">Skip to the projects</a>
       <div class="bar wrap">

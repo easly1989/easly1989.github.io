@@ -15,7 +15,7 @@ CHROME = os.environ.get("CHROME", r"C:\Program Files\Google\Chrome\Application\c
 
 
 class Browser:
-    def __init__(self, width=1300, height=900, headless=True, flags=()):
+    def __init__(self, width=1300, height=900, headless=True, flags=(), room_dev=True):
         self.profile = tempfile.mkdtemp(prefix="cdp-")
         args = [CHROME, "--remote-debugging-port=0", f"--user-data-dir={self.profile}",
                 "--no-first-run", "--no-default-browser-check", f"--window-size={width},{height}",
@@ -40,6 +40,11 @@ class Browser:
         self.n = 0
         self.call("Page.enable")
         self.call("Runtime.enable")
+        if room_dev:
+            # while the room is rebuilt (#160) a chosen room is the work-in-progress page; the checks
+            # that look at the room keep the way to it (checks/wip.py is the one that does not)
+            self.call("Page.addScriptToEvaluateOnNewDocument",
+                      source="try { localStorage.setItem('room-dev', '1'); } catch (e) {}")
 
     def call(self, method, **params):
         self.n += 1
