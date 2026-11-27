@@ -55,6 +55,15 @@ try:
     b.nav(base + "/index.html?roomdev=0", 2)
     check(b.js("localStorage.getItem('room-dev') === '0'") and b.js(f"({CLS})('wip')"), "?roomdev=0 takes it away: the page says so again")
 
+    # the window narrows below what holds the room, and widens again: the page follows, with no
+    # room in between
+    b.size(860, 900)
+    time.sleep(2)
+    check(not b.js(f"({CLS})('wip')") and b.js(PRO_SHOWN), "a window narrowed too small for the room gets the professional page")
+    b.size(1440, 900)
+    time.sleep(2)
+    check(b.js(f"({CLS})('wip')") and b.js(WIP_SHOWN), "and widened again, the work-in-progress page")
+
     b.size(390, 800, mobile=True)
     b.nav(base + "/index.html", 2)
     check(not b.js(f"({CLS})('wip')") and not b.js(f"({CLS})('iso')") and b.js(PRO_SHOWN), "a phone gets the professional page")
