@@ -326,6 +326,7 @@ async function start() {
   window.ROOMGL = api;
 
   scheme.addEventListener("change", paint);
+  addEventListener("gl-redraw", invalidate); // (an object that moves by itself, as the radio's projector, asks for frames)
   addEventListener("resize", resize);
   canvas.addEventListener("webglcontextlost", (e) => e.preventDefault());
   canvas.addEventListener("webglcontextrestored", invalidate);

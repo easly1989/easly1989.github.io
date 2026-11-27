@@ -74,6 +74,24 @@ export async function bench(name) {
   const turntable = new THREE.Group();
   turntable.add(group);
   scene.add(turntable);
+  // an object with a state to try (the radio: off, its projector in; on, out) gets a button for it
+  let radio = null;
+  group.traverse((o) => {
+    if (o.userData.radio) radio = o.userData.radio;
+  });
+  if (radio) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.style.cssText = "margin-left:12px;font:inherit";
+    const say2 = () => (btn.textContent = "Radio: " + (radio.isOn() ? "on" : "off"));
+    btn.addEventListener("click", () => {
+      radio.setOn(!radio.isOn());
+      say2();
+    });
+    say2();
+    list.append(btn);
+    api.radio = radio;
+  }
 
   // the camera: the room's direction, but in perspective and near; the mouse turns it round the object
   const cam = new THREE.PerspectiveCamera(28, 1, 10, 5000);
@@ -131,6 +149,7 @@ export async function bench(name) {
     invalidate();
   }
   controls.addEventListener("change", invalidate);
+  addEventListener("gl-redraw", invalidate);
   canvas.addEventListener("webglcontextlost", (e) => e.preventDefault());
   canvas.addEventListener("webglcontextrestored", invalidate);
   scheme.addEventListener("change", paintMat);

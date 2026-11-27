@@ -207,6 +207,30 @@ try:
     check(sum(rr["dial"]) > 470 and rr["dial"][0] > 170, f"the dial is cream ({rr['dial']})")
     check(sum(rr["knob"]) < 330, f"the knob is dark ({rr['knob']})")
     check(sum(rr["grille"]) < sum(rr["dial"]) - 120, f"the grille is darker than the dial ({rr['grille']})")
+    # the tuning dial runs the whole length of the face: cream near the north end (u 20) and near the south end (u 190), not only part way
+    dl = b.js(f"""(() => {{ const at = {AT}; return [at([-42.5, 105 - 20, 93]), at([-42.5, 105 - 190, 93])]; }})()""")
+    check(all(sum(c) > 470 and c[0] > 170 for c in dl), f"the dial takes all the length of the radio's face ({dl})")
+    # the projector: out of the radio only while it plays; off, it is in, turned a half turn and a quarter back, and cut at the top; on, it is out and
+    # turned 45 degrees; under reduced motion at once, where motion is allowed in 0.8 s
+    p0 = b.js("BENCH.radio.pose()")
+    check(not b.js("BENCH.radio.isOn()") and p0["out"] == 0 and not p0["visible"], f"the radio is off at first, its projector in ({p0})")
+    b.js("BENCH.radio.setOn(true)")
+    time.sleep(0.4)
+    p1 = b.js("BENCH.radio.pose()")
+    check(p1["out"] == 1 and abs(p1["z"] - 128) < 0.1 and abs(p1["turn"] - 0.7854) < 0.01 and p1["visible"], f"on, at once under reduced motion, the projector is out and turned 45 degrees ({p1})")
+    b.js("BENCH.radio.setOn(false)")
+    time.sleep(0.4)
+    check(b.js("BENCH.radio.pose().out") == 0 and not b.js("BENCH.radio.pose().visible"), "and off again it goes back in, out of sight")
+    open(b, "?bench=radio", motion="no-preference")
+    wait(b, "!!(window.BENCH && BENCH.ready)")
+    b.js("BENCH.radio.setOn(true)")
+    time.sleep(0.25)
+    mid = b.js("BENCH.radio.pose()")
+    time.sleep(1.2)
+    end = b.js("BENCH.radio.pose()")
+    check(0 < mid["out"] < 1 and mid["visible"] and end["out"] == 1, f"where motion is allowed it comes out turning, not at once ({mid['out']:.2f} a quarter second in, {end['out']} after)")
+    open(b, "?bench=radio")
+    wait(b, "!!(window.BENCH && BENCH.ready)")
 
     # an object that is not there lists what there is
     open(b, "?bench=nothing")

@@ -44,6 +44,7 @@ export function renderer(canvas) {
   r.shadowMap.enabled = true;
   r.shadowMap.type = THREE.PCFShadowMap;
   r.toneMapping = THREE.NoToneMapping;
+  r.localClippingEnabled = true; // (a thing that goes into another, as the radio's projector, is cut at its surface)
   return r;
 }
 // drawn at a size the screen may not have, then scaled down: the edges come out soft; but never more than
