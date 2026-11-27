@@ -22,12 +22,12 @@ class Browser:
         self.proc = None
         atexit.register(self.close)  # (a check that crashes still takes its profile away)
         try:
-            self._start(width, height, headless, flags)
+            self._start(width, height, headless, flags, room_dev)
         except BaseException:
             self.close()
             raise
 
-    def _start(self, width, height, headless, flags):
+    def _start(self, width, height, headless, flags, room_dev):
         args = [CHROME, "--remote-debugging-port=0", f"--user-data-dir={self.profile}",
                 "--no-first-run", "--no-default-browser-check", f"--window-size={width},{height}",
                 # keep painting when the window opens behind another one
