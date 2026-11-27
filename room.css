@@ -2666,6 +2666,23 @@ html:not(.iso) .strip {
   pointer-events: none;
 }
 
+/* the soil of the plant's pot, spilled on the desk where the pot's mouth pointed (willy-room.js, "rested"):
+   a patch with a few clods beside it, turned to point the way it spilled */
+.iso .soil {
+  position: absolute;
+  left: -38px;
+  top: -26px;
+  width: 96px;
+  height: 56px;
+  border-radius: 55% 45% 60% 40% / 50% 55% 45% 50%;
+  background: var(--soil);
+  box-shadow:
+    52px 10px 0 -14px var(--soil),
+    -22px 8px 0 -16px var(--soil),
+    30px -16px 0 -17px var(--soil);
+  pointer-events: none;
+}
+
 /* ---- what Willy knocks about (#72, willy-room.js) ---------------------------------- */
 /* tapped by his paw, the mug or the jar rocks on its foot, away from it, and settles */
 .iso .thing.wobble {

@@ -88,6 +88,7 @@ async function start() {
     const mat = dimOutside(new THREE.MeshLambertMaterial({ color: 0xffffff, side: THREE.DoubleSide, shadowSide: THREE.DoubleSide, alphaTest: 0.5 }));
     const me = new THREE.Mesh(g, mat);
     me.castShadow = me.receiveShadow = true;
+    me.frustumCulled = false; // (it moves with the pot it is on, follow(): not judged by where it began)
     me.renderOrder = 2;
     me.visible = false;
     const svg = f.e.querySelector("svg").cloneNode(true),
@@ -253,7 +254,7 @@ async function start() {
   // What moves on its own, lifted when pointed at: its faces go with it (follow()), as long as
   // it is moving, and a little longer
   const movers = new Map();
-  for (const f of body.concat(backs))
+  for (const f of body.concat(backs, cut))
     if (f.mover) {
       if (!movers.has(f.mover)) movers.set(f.mover, { key: "", faces: [] });
       movers.get(f.mover).faces.push(f);
@@ -290,6 +291,17 @@ async function start() {
     if (moved) {
       write(solid, body);
       write(hidden, backs);
+      // (and the leaves, each cut to its drawing, with the pot they are on)
+      cut.forEach((f, i) => {
+        if (!f.mover) return;
+        const g = cutMeshes[i].geometry;
+        [0, 1, 2, 0, 2, 3].forEach((c, k) => {
+          g.attributes.position.setXYZ(k, f.q[c].x, f.q[c].y, f.q[c].z);
+          g.attributes.normal.setXYZ(k, f.n.x, f.n.y, f.n.z);
+          g.attributes.uv.setXY(k, ...f.uv[c]);
+        });
+        for (const a of Object.values(g.attributes)) a.needsUpdate = true;
+      });
     }
     let cast = moved;
     for (const o of MODELS) {
@@ -695,7 +707,7 @@ const SKIP = /\b(shade|anchor|burst|hit-plane|window-light|beam-corner|radio-lam
 const MAY = ".window .sky, .window .pane, .pc .glass, .neon h1, .plexi, .light-switch, .light-switch *";
 const GLOWS = ".window .sky, .window .pane, .pc.on .glass, .neon h1, .plexi, .lights-off .light-switch, .lights-off .light-switch *, .dawn .light-switch, .dawn .light-switch *";
 const CUT = ".plant .leaves"; // cut to the shape of the drawing it holds
-const MOVERS = ".thing, .pc-mouse, .chair-tie, .loose"; // what moves, with its faces (the tie, as it is put on; the odds and ends, as they fall)
+const MOVERS = ".thing, .pc-mouse, .chair-tie, .loose, .plant"; // what moves, with its faces (the tie, as it is put on; the odds and ends, as they fall; the plant, knocked off the shelf)
 const BIG = 4e6; // px², a wall or the floor: lit, and casting nothing, since nothing is behind it
 const probe = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
 const colours = new Map();

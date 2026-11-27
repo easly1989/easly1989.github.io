@@ -250,6 +250,31 @@ async function live() {
     setTimeout(() => effect((crt) => crt.thud()), 350); // (out of sight, on the floor)
     if (aimed && e.detail === aimed.el) announce(aimed.line, true), (aimed = null);
   });
+  // the plant, off the shelf (desk.tipPlant): the crack as the pot lands, and, once it lies still, its
+  // soil: a patch of it on the desk where the pot's mouth points (a pinch, if it stands upright), and
+  // the room's solids and his routes measured again, with the pot where it is
+  stage.addEventListener("landed", () => {
+    effect((crt) => (crt.crack(), setTimeout(() => crt.thud(), 120)));
+    announce("The plant's pot hits the desk and cracks.", true);
+  });
+  stage.addEventListener("rested", (e) => {
+    ROOM.refresh();
+    P.forget();
+    const at = room.fall.where(e.detail);
+    if (at && !room.querySelector(".soil")) {
+      const lean = 1 - at.up[2], // (0 upright, 1 on its side, 2 upside down)
+        n = Math.hypot(at.up[0], at.up[1]) || 1,
+        out = lean > 0.15 ? 50 : 0,
+        sx = Math.round(at.x + (at.up[0] / n) * out),
+        sy = Math.round(at.y + (at.up[1] / n) * out),
+        soil = document.createElement("i");
+      soil.className = "soil";
+      soil.setAttribute("aria-hidden", "true");
+      // (on a book or a card if it spilled there, not inside it)
+      soil.style.transform = "translate3d(" + sx + "px," + sy + "px," + (ROOM.ground(sx, sy, 0) + 1) + "px) rotate(" + Math.round((Math.atan2(at.up[1], at.up[0]) * 180) / Math.PI) + "deg) scale(" + (lean > 0.15 ? 1 : 0.45) + ")";
+      room.append(soil);
+    }
+  });
   let carried = null; // the leaf in his mouth
   const LEAF = '<svg viewBox="0 0 44 20" aria-hidden="true"><path d="M1 10C10 1 30 0 43 10 30 20 10 19 1 10z" /><path class="vein" d="M3 10H40" /></svg>';
   const mat = stage.querySelector(".loose")?.parentElement || stage; // (what the odds and ends lie in, found while some are still there)
@@ -295,9 +320,17 @@ async function live() {
         [sx, sy] = ROOM.toScreen(x, y, SURF.desk.z);
       return !r || sx < r.left - 20 || sx > r.right + 20 || sy < r.top - 20 || sy > r.bottom + 20;
     },
+    // off the shelf, with a push along it, a little away from the wall, hard enough to go over its end
+    // (38 px from the pot's middle) and, as it falls, to land on its side; whether it went
+    tipPlant() {
+      const pot = room.querySelector(".plant");
+      if (!pot || pot.classList.contains("fallen") || !room.fall.tip(pot, [-80, -620, 0])) return false;
+      pot.classList.add("fallen");
+      return true;
+    },
     plant() {
       const pot = room.querySelector(".plant");
-      if (!pot || !pot.querySelector(".leaves path:not(.taken)")) return null;
+      if (!pot || pot.classList.contains("fallen") || !pot.querySelector(".leaves path:not(.taken)")) return null;
       const c = corners(pot);
       return { x: (c[0].x + c[2].x) / 2, y: (c[0].y + c[2].y) / 2, z: SURF.shelf ? SURF.shelf.z + 120 : 280 };
     },

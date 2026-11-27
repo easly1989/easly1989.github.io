@@ -2296,8 +2296,12 @@
       return solids.concat(lows).filter(function (o) {
         return o.name !== "the chair";
       }).map(function (o) {
-        return { name: o.name, x0: o.b.x0, y0: o.b.y0, z0: o.b.z0, x1: o.b.x1, y1: o.b.y1, z1: o.b.z1 };
+        return { name: o.name, el: o.e, x0: o.b.x0, y0: o.b.y0, z0: o.b.z0, x1: o.b.x1, y1: o.b.y1, z1: o.b.z1 };
       });
+    },
+    // measured again, from where things lie now: the plant, once it is off the shelf
+    refresh: function () {
+      solids = lows = null;
     },
     // what Willy has business with, by kind: the objects of SPEC (ledger, agenda, camera, mug,
     // jar...) and the neon navigation, each as its box in room px and its element
