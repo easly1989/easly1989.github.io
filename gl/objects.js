@@ -17,10 +17,21 @@ export const OBJECTS = {
         H = 124,
         Ri = R - wall;
       // the body: a foot ring, the side a touch wider at the top than the base, a rounded lip, the inside down to a rounded bottom
+      // (the outside, from the foot up to the lip, then the lip and the inside down to the bottom)
+      const outside = [[0, 0], [54, 0], [58, 0.6], [60.5, 3], [62.8, 12], [64.4, 40], [65.4, 80], [R, 112], [R, 116.5]];
       const body = lathe([
-        [0, 0], [54, 0], [58, 0.6], [60.5, 3], [62.8, 12], [64.4, 40], [65.4, 80], [R, 112], [R, 116.5], [65.1, 120.6], [63.2, 123.2], [60.6, H], [57.4, H], [54.8, 123.2], [53.4, 120.6], [Ri - 0.6, 116.5],
+        ...outside, [65.1, 120.6], [63.2, 123.2], [60.6, H], [57.4, H], [54.8, 123.2], [53.4, 120.6], [Ri - 0.6, 116.5],
         [Ri - 0.6, 24], [Ri - 2.4, 14], [Ri - 7, 9.2], [Ri - 16, 7.6], [0, 7.2],
       ]);
+      // the radius of the outside at a height, by the straight pieces between the points above
+      const radiusAt = (z) => {
+        for (let i = 1; i < outside.length; i++) {
+          const [r0, z0] = outside[i - 1],
+            [r1, z1] = outside[i];
+          if (z <= z1) return r0 + ((r1 - r0) * (z - z0)) / (z1 - z0 || 1);
+        }
+        return R;
+      };
       group.add(mesh(body, material.china()));
       // the coffee, 12 px under the rim, a touch higher at the wall (it clings to it)
       const coffee = lathe([[0, H - 12.4], [Ri - 4, H - 12], [Ri - 0.7, H - 10.6], [Ri - 0.7, H - 10.2], [Ri - 4, H - 11], [0, H - 11.4]], 64);
@@ -38,10 +49,12 @@ export const OBJECTS = {
         g.fillText("Buy me", 85, 25);
         g.fillText("a coffee", 85, 55);
       });
-      const print = new THREE.CylinderGeometry(R + 0.2, R + 0.2, 80, 64, 1, true, -Math.PI / 4 - arc / 2, arc);
-      print.rotateX(Math.PI / 2); // (up is z; the cylinder's theta 0 faces south, and grows towards the east)
-      print.translate(0, 0, 66);
-      group.add(mesh(print, material.decal(map), { cast: false }));
+      // (a piece of the body's own curve, 26 to 106 px up and 0.2 px out of it, so that it lies on the china at every height)
+      const skin = [];
+      for (let z = 26; z <= 106; z += 4) skin.push([radiusAt(z) + 0.2, z]);
+      const print = mesh(lathe(skin, 64, -Math.PI / 4 - arc / 2, arc), material.decal(map), { cast: false });
+      print.name = "print";
+      group.add(print);
       return { group, height: H };
     },
   },

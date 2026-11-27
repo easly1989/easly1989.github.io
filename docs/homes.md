@@ -66,7 +66,8 @@ screen. The tickets are #161 to #175. The room's objects are made in `gl/objects
 z = 0, its origin at the middle of its foot) from the helpers of `gl/kit.js` (the room's light and palette,
 turned, extruded, bevelled and swept shapes, materials, and words and pictures painted to textures in the site's
 fonts), and looked at alone on the workbench, `?roomgl&bench=<name>` (`gl/bench.js`: drag to turn the view, the wheel
-to come nearer), before they go in the room.
+to come nearer), before they go in the room; it needs what the scene needs (a stored room choice, `room-dev`, `room-gl`,
+a window that holds the room), and the name in the address is only ever shown as text.
 
 The room is built by `room.js` from the bench's markup in `<div class="mat" hidden>`, before the
 first frame (`#room-ready` holds it), and framed to the window: it scales until every link and

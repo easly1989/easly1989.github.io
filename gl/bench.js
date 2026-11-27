@@ -20,9 +20,20 @@ export async function bench(name) {
   const list = document.createElement("nav");
   list.setAttribute("aria-label", "Workbench");
   list.style.cssText = "position:fixed;left:12px;top:12px;z-index:2;font:14px system-ui,sans-serif;color:#e8f0ff;background:#000a;padding:8px 12px;border-radius:8px";
-  list.innerHTML = "Workbench: " + names.map((n) => `<a href="?bench=${n}" style="color:#9fd0ff;margin-left:8px">${n}</a>`).join("") + (api.name ? "" : `<br>${name ? "No such object: " + name : "Pick an object."}`);
+  // (built with text, never with the address's words as markup: the name comes from the query string)
+  list.append("Workbench:");
+  for (const n of names) {
+    const a = document.createElement("a");
+    a.href = "?bench=" + encodeURIComponent(n);
+    a.textContent = n;
+    a.style.cssText = "color:#9fd0ff;margin-left:8px";
+    list.append(a);
+  }
+  const say = (text) => {
+    list.append(document.createElement("br"), text);
+  };
   document.body.append(list);
-  if (!api.name) return;
+  if (!api.name) return say(name ? "No such object: " + name : "Pick an object.");
 
   const canvas = document.createElement("canvas");
   canvas.className = "room-gl";
@@ -49,7 +60,16 @@ export async function bench(name) {
   }
 
   // the object, turning on a turntable
-  const { group, height } = await OBJECTS[api.name].build(renderer);
+  let built;
+  try {
+    built = await OBJECTS[api.name].build(renderer);
+  } catch (e) {
+    // (said here, to the one looking at it: this is a tool, and a failure is the point of it)
+    console.warn("[bench] could not build", api.name, e);
+    canvas.remove();
+    return say("Could not build " + api.name + ": " + (e && e.message ? e.message : e));
+  }
+  const { group, height } = built;
   const turntable = new THREE.Group();
   turntable.add(group);
   scene.add(turntable);
@@ -84,7 +104,11 @@ export async function bench(name) {
     pending = false;
     if (!reduced) turntable.rotation.z += 0.004;
     controls.update();
-    composer.render();
+    try {
+      composer.render();
+    } catch (e) {
+      return say("Drawing failed: " + (e && e.message ? e.message : e));
+    }
     api.drawn++;
     if (!reduced) invalidate();
   }
@@ -104,6 +128,8 @@ export async function bench(name) {
     invalidate();
   }
   controls.addEventListener("change", invalidate);
+  canvas.addEventListener("webglcontextlost", (e) => e.preventDefault());
+  canvas.addEventListener("webglcontextrestored", invalidate);
   scheme.addEventListener("change", paintMat);
   addEventListener("resize", resize);
   addEventListener("pagehide", (e) => {

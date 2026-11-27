@@ -63,7 +63,11 @@ function finish(canvas, renderer, repeat = false) {
 // so that words are in their own letters and not in a stand-in.
 export async function paint(renderer, w, h, draw, { k = 4, repeat = false } = {}) {
   try {
-    await Promise.all(['800 30px "Bricolage Grotesque"', '400 16px "Atkinson Hyperlegible"', '700 16px "Atkinson Hyperlegible"'].map((f) => document.fonts.load(f)));
+    // (for at most 3 s: a font file that never arrives must not keep an object from being drawn, in a stand-in)
+    await Promise.race([
+      Promise.all(['800 30px "Bricolage Grotesque"', '400 16px "Atkinson Hyperlegible"', '700 16px "Atkinson Hyperlegible"'].map((f) => document.fonts.load(f))),
+      new Promise((r) => setTimeout(r, 3000)),
+    ]);
   } catch (e) {}
   const cv = document.createElement("canvas");
   cv.width = Math.round(w * k);
@@ -141,10 +145,11 @@ export const material = {
 // ---- shapes -------------------------------------------------------------------------------------------------
 // A shape turned round the z axis: `profile` is [radius, height] points from the axis, up the outside, over and down the
 // inside (a closed outline is a hollow thing); a point twice makes a crease, and the rest are smoothed.
-export function lathe(profile, segments = 96) {
+// (`from` and `span` make only a part of the turn, in radians from the south, growing to the east: a print round a side)
+export function lathe(profile, segments = 96, from = 0, span = Math.PI * 2) {
   const pts = [];
   profile.forEach((p) => pts.push(new THREE.Vector2(p[0], p[1])));
-  const g = new THREE.LatheGeometry(pts, segments);
+  const g = new THREE.LatheGeometry(pts, segments, from, span);
   g.rotateX(Math.PI / 2); // (the lathe turns round y: up is now z)
   return g;
 }
