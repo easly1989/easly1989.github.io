@@ -1,13 +1,12 @@
 // The old computer, its keyboard and its mouse (issue #160, ticket 04), as the CSS room has them in size and
 // place and drawn as real things: a beige case with a dished glass in a dark bezel, a floppy drive, a speaker, a power
 // switch, vents along its side and a yellow note stuck on it; a keyboard on its feet with sixty-four keys and their legends;
-// a ball mouse (the CC0 model the room already uses, assets/mouse) on its cord. Measured from the CSS room (px):
+// a ball mouse on its cord. Measured from the CSS room (px):
 // the case 368 wide (x), 280 deep (y) and 320 high; the keyboard 400 by 136 in front of it; the mouse 68 by 88 to its right.
 // Each is built with its origin at the middle of its foot, x east, y north (the case's back), z up; the room puts the set
 // down turned 12 degrees counterclockwise (seen from above), as the CSS room's `rotateZ(-12deg)`.
 
 import { THREE, mesh, material, paint, roundedBox, roundedRect, onFace, profile, sweep, extrude } from "./kit.js";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 // the case
 const W = 368,
@@ -225,41 +224,64 @@ export async function keyboard(renderer) {
   return { group, height: BACK };
 }
 
-// the mouse: the room's CC0 model of a ball mouse (assets/mouse, "Mouse" by CreativeTrio) recoloured beige, its nose to the back,
-// 68 by 88, its wheel the darker patch at its top left; and its cord, 2.2 px thick, running out of its nose, round behind
-// the keyboard and into the east side of the case (at x = 184, 140 px from the back, y = -4 here)
+// the mouse: a ball mouse of the computer's beige, 68 by 88, its nose to the back (the room's CC0 model of it, assets/mouse, has too few
+// faces to be smooth: this is made of a smooth surface), a dome whose plan is a rounded rectangle a little narrower at the nose, with
+// two buttons set off by a seam and a wheel between them; and its cord, 2.2 px thick, running out of its nose, round behind the
+// keyboard and into the east side of the case (at x = 184, 140 px from the back, y = -4 here)
+const MOUSE = { a: 34, b: 44, c: 27, n: 2.9, q: 2.3 }; // half the width and the length, the height, the squareness of the plan, of the dome
+// the height of the dome over a point of its plan, 0 at its edge (the plan's norm t: 1 at the edge)
+const taper = (y) => 1 - 0.14 * Math.max(0, y / MOUSE.b);
+const norm = (x, y) => (Math.abs(x / (MOUSE.a * taper(y))) ** MOUSE.n + Math.abs(y / MOUSE.b) ** MOUSE.n) ** (1 / MOUSE.n);
+const domeAt = (x, y) => MOUSE.c * Math.max(0, 1 - Math.min(1, norm(x, y)) ** MOUSE.q) ** (1 / MOUSE.q);
 export async function mouse() {
   const group = new THREE.Group();
-  const gltf = await new GLTFLoader().loadAsync("assets/mouse/mouse.glb");
-  let geo;
-  gltf.scene.updateMatrixWorld(true);
-  gltf.scene.traverse((o) => {
-    if (o.isMesh && !geo) geo = o.geometry.clone().applyMatrix4(o.matrixWorld);
-  });
-  const uv = geo.attributes.uv,
-    col = new Float32Array(3 * uv.count),
-    body = new THREE.Color("#d6ccb2"),
-    wheel = new THREE.Color("#6f6858");
-  for (let i = 0; i < uv.count; i++) (uv.getX(i) < 0.25 && uv.getY(i) < 0.19 ? wheel : body).toArray(col, 3 * i);
-  geo.setAttribute("color", new THREE.BufferAttribute(col, 3));
-  geo.computeBoundingBox();
+  const { a, b, n } = MOUSE;
+  // the surface: rings from the middle out, each point of a ring on the superellipse of the plan
+  const RING = 96,
+    RAD = 28;
+  const pos = [],
+    idx = [];
+  const sg = (v, p) => Math.sign(v) * Math.abs(v) ** p;
+  for (let j = 0; j <= RAD; j++) {
+    const t = j / RAD;
+    for (let i = 0; i < RING; i++) {
+      const th = (i / RING) * Math.PI * 2;
+      const y = b * sg(Math.sin(th), 2 / n) * t,
+        x = a * taper(y) * sg(Math.cos(th), 2 / n) * t;
+      pos.push(x, y, domeAt(x, y));
+    }
+  }
+  for (let j = 0; j < RAD; j++)
+    for (let i = 0; i < RING; i++) {
+      const k = j * RING + i,
+        k1 = j * RING + ((i + 1) % RING);
+      idx.push(k, k + RING, k1, k1, k + RING, k1 + RING);
+    }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+  geo.setIndex(idx);
   geo.computeVertexNormals();
-  // (the model is y-up with its nose at -z: turned so that its nose is at +y, and set on z = 0, 88 long, centred)
-  const bb = geo.boundingBox,
-    s = 88 / (bb.max.z - bb.min.z),
-    c = bb.getCenter(new THREE.Vector3());
-  geo.translate(-c.x, -bb.min.y, -c.z);
-  geo.scale(s, s, s);
-  geo.rotateX(Math.PI / 2);
-  const m = mesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.5, metalness: 0 }));
-  group.add(m);
-  const height = s * (bb.max.y - bb.min.y);
+  const beige = new THREE.MeshPhysicalMaterial({ color: "#d6ccb2", roughness: 0.42, metalness: 0, clearcoat: 0.15, clearcoatRoughness: 0.5, side: THREE.DoubleSide });
+  group.add(mesh(geo, beige));
+  // the seams, a groove 1.1 px across: between the buttons down the middle of the front half, and across where they end
+  const dark = new THREE.MeshStandardMaterial({ color: "#7d755f", roughness: 0.8 });
+  const groove = (pts) => group.add(mesh(sweep(pts.map(([x, y]) => [x, y, domeAt(x, y) + 0.1]), 0.55, { radial: 6 }), dark, { cast: false }));
+  groove(Array.from({ length: 9 }, (_, i) => [0, 6 + i * 4.1]));
+  groove(Array.from({ length: 13 }, (_, i) => [-26 + i * 4.33, 6]));
+  // the wheel, a dark pill let into the seam between the buttons
+  const wheel = mesh(roundedBox(6, 12, 4, 1.6, 3), plasticDark());
+  wheel.position.set(0, 24, domeAt(0, 24) - 1.6);
+  wheel.rotation.x = -Math.atan2(domeAt(0, 28) - domeAt(0, 20), 8);
+  group.add(wheel);
+  const height = MOUSE.c;
   // the cord, from the nose (the mouse at (298, -264) from the case's middle, 44 px to its back) to the case's east side
   const cord = sweep([[0, 44, 2.2], [0, 84, 2.2], [-34, 190, 2.2], [-100, 252, 2.2], [-114, 262, 2.2]], 2.2, { radial: 8 });
   const cordMesh = mesh(cord, new THREE.MeshStandardMaterial({ color: "#8b836c", roughness: 0.85 }));
+  cordMesh.name = "cord";
   group.add(cordMesh);
   return { group, height, cord: cordMesh };
 }
+const plasticDark = () => new THREE.MeshStandardMaterial({ color: "#6f6858", roughness: 0.5 });
 
 // the set, as it stands on the desk: the case on the desk (4 px under the mat's top), the keyboard in front of it and the
 // mouse and its cord to its right; the origin is the middle of the case's foot

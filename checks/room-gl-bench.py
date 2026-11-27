@@ -141,9 +141,14 @@ try:
     open(b, "?bench=mouse")
     check(wait(b, "!!(window.BENCH && BENCH.ready)"), "the mouse starts on the bench")
     time.sleep(0.5)
+    check(b.js("BENCH.camera.position.length() < 2500"), "the camera stands near it, not far off, and it is in view")
+    mv = b.js(f"""(() => {{ const at = {AT}; const s = BENCH.project(0, 0, 14); return [s, at([0, 0, 25])]; }})()""")
+    check(120 < mv[0][0] < 1320 and 100 < mv[0][1] < 800 and sum(mv[1]) > 380, f"the mouse is in the middle of the window, beige ({mv})")
     mb = b.js(f"({BOUNDS})(BENCH.group.children[0])")
-    check(abs((mb[1] - mb[0]) - 68) <= 8 and abs((mb[3] - mb[2]) - 88) <= 2 and mb[4] >= -0.5 and 20 <= mb[5] <= 40, f"the mouse is about 68 by 88 and stands on z = 0 ({[round(v, 1) for v in mb]})")
-    cb = b.js(f"({BOUNDS})(BENCH.group.children[1])")
+    check(abs((mb[1] - mb[0]) - 68) <= 3 and abs((mb[3] - mb[2]) - 88) <= 2 and mb[4] >= -0.5 and 24 <= mb[5] <= 30, f"the mouse is 68 by 88 and 27 high, standing on z = 0 ({[round(v, 1) for v in mb]})")
+    # it is smooth: the surface has the rings of a dome, not the few faces of a model
+    check(b.js("BENCH.group.children[0].geometry.attributes.position.count") > 2000, "its surface is smooth: made of more than two thousand points")
+    cb = b.js(f"({BOUNDS})(BENCH.group.getObjectByName('cord'))")
     check(cb[3] > 255 and cb[0] < -105 and cb[2] < 50, f"its cord leaves the nose and runs 114 px west and 260 south ({[round(v, 1) for v in cb]})")
 
     # the three together, as on the desk: the cord meets the case's east side
@@ -152,7 +157,7 @@ try:
     time.sleep(0.5)
     parts = b.js("(() => BENCH.group.children.map((c) => [Math.round(c.position.x), Math.round(c.position.y), Math.round(c.position.z)]))()")
     check(parts == [[0, 0, -4], [0, -240, 0], [298, -264, 0]], f"the keyboard stands 240 px in front of the case's middle, the mouse 298 to its right and 264 in front ({parts})")
-    cord = b.js(f"({BOUNDS})(BENCH.group.children[2].children[1])")
+    cord = b.js(f"({BOUNDS})(BENCH.group.getObjectByName('cord'))")
     check(abs(cord[0] - 184) < 5, f"the cord ends at the case's east side, x = 184 ({cord[0]:.0f})")
 
     # an object that is not there lists what there is
