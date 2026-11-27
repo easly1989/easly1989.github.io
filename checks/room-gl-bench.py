@@ -118,13 +118,16 @@ try:
     check(wait(b, "!!(window.BENCH && BENCH.ready)"), "the old computer starts on the bench")
     time.sleep(0.5)
     bb = b.js(f"({BOUNDS})(BENCH.group)")
-    check(366 <= bb[1] - bb[0] <= 385 and 280 <= bb[3] - bb[2] <= 300 and abs(bb[5] - 320) <= 1.5 and bb[4] >= -4,
-          f"the case is 368 px wide (the note curls 10 px off its side), 280 deep (the bezel and glass 13 more) and 320 high, on its feet ({[round(v, 1) for v in bb]})")
-    px = b.js(f"""(() => {{ const at = {AT}; return {{ glass: at([-36, -146, 204]), note: at([-185, -46, 240]), caseTop: at([0, 0, 316]), drive: at([-64, -146, 56]) }}; }})()""")
+    cs = b.js(f"({BOUNDS})(BENCH.group.children[0])")
+    check(abs((cs[1] - cs[0]) - 368) <= 1 and abs((cs[3] - cs[2]) - 280) <= 1 and abs(cs[5] - 320) <= 1 and abs(cs[4]) <= 1,
+          f"the case is 368 wide, 280 deep and 320 high, on z = 0 ({[round(v, 1) for v in cs]})")
+    check(bb[1] - bb[0] <= 385 and 285 <= bb[3] - bb[2] <= 300 and bb[4] >= -1,
+          f"with the note (it curls 10 px off the side) and the bezel and glass (13 px off the front) it is no wider or deeper than that ({[round(v, 1) for v in bb]})")
+    px = b.js(f"""(() => {{ const at = {AT}; return {{ glass: at([-36, -146, 204]), note: at([-185, -46, 165]), caseTop: at([0, 0, 316]), drive: at([-64, -146, 56]) }}; }})()""")
     check(sum(px["glass"]) < 200, f"the screen is a dark tube ({px['glass']})")
     check(px["note"][0] > 190 and px["note"][1] > 160 and px["note"][2] < 150, f"the note is yellow ({px['note']})")
     check(sum(px["caseTop"]) > 400, f"the case is beige ({px['caseTop']})")
-    ink = b.js("""(() => { let n = 0; for (let v = -110; v <= 60; v += 4) for (let z = 150; z <= 280; z += 4) { const c = BENCH.pixel(...BENCH.project(-185, v, z)); if (c[0] < 120 && c[1] < 110) n++; } return n; })()""")
+    ink = b.js("""(() => { let n = 0; for (let v = -125; v <= 35; v += 4) for (let z = 200; z <= 280; z += 3) { const c = BENCH.pixel(...BENCH.project(-185, v, z)); if (c[0] < 120 && c[1] < 110) n++; } return n; })()""")
     check(ink >= 25, f"'Write to me' and its line are written on the note, in dark ink ({ink} dark samples)")
 
     # the keyboard: 400 by 136, 34 high at the back, sixty-four keys and a spacebar, every key with its legend
@@ -132,7 +135,13 @@ try:
     check(wait(b, "!!(window.BENCH && BENCH.ready)"), "the keyboard starts on the bench")
     time.sleep(0.5)
     kb = b.js(f"({BOUNDS})(BENCH.group)")
-    check(abs((kb[1] - kb[0]) - 400) <= 3 and 136 <= kb[3] - kb[2] <= 144 and 38 <= kb[5] <= 45, f"the keyboard is 400 by 136 (tilted, 141 on the desk) and 34 high at the back, 42 with its keys ({[round(v, 1) for v in kb]})")
+    check(abs((kb[1] - kb[0]) - 400) <= 3 and 136 <= kb[3] - kb[2] <= 140 and 26 <= kb[5] <= 34, f"the keyboard is 400 by 136 and 10 px high at the front, 22 at the back, about 30 with its keys ({[round(v, 1) for v in kb]})")
+    # its legends read the right way on the screen: the left of the sheet is on the left, its top up
+    lo = b.js("""(() => { const g = BENCH.group.getObjectByName('legends').geometry, p = g.attributes.position, uv = g.attributes.uv;
+        const at = (u, v) => { let best = 0, d = 9; for (let i = 0; i < uv.count; i++) { const e = Math.abs(uv.getX(i) - u) + Math.abs(uv.getY(i) - v); if (e < d) { d = e; best = i; } }
+          const w = new BENCH.THREE.Vector3(p.getX(best), p.getY(best), p.getZ(best)).applyMatrix4(BENCH.group.getObjectByName('legends').matrixWorld); return BENCH.project(w.x, w.y, w.z); };
+        const l = at(0, 0.5), r = at(1, 0.5), t = at(0.5, 1), u = at(0.5, 0); return { left: l[0], right: r[0], top: t[1], low: u[1] }; })()""")
+    check(lo["left"] < lo["right"] - 100 and lo["top"] < lo["low"] + 200 and lo["top"] != lo["low"], f"the legends are not mirrored: their left is on the screen's left ({lo})")
     check(b.js("(() => { let n = 0; BENCH.group.traverse((o) => { if (o.isInstancedMesh) n = o.count; }); return n; })()") == 64, "it has sixty-four keys and a spacebar of its own")
     leg = b.js("""(() => { const cv = BENCH.group.getObjectByName('legends').material.map.image, d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 128) n++; return n; })()""")
     check(leg > 6000, f"the legends are painted ({leg} px of ink)")
@@ -158,7 +167,7 @@ try:
     parts = b.js("(() => BENCH.group.children.map((c) => [Math.round(c.position.x), Math.round(c.position.y), Math.round(c.position.z)]))()")
     check(parts == [[0, 0, -4], [0, -240, 0], [298, -264, 0]], f"the keyboard stands 240 px in front of the case's middle, the mouse 298 to its right and 264 in front ({parts})")
     cord = b.js(f"({BOUNDS})(BENCH.group.getObjectByName('cord'))")
-    check(abs(cord[0] - 184) < 5, f"the cord ends at the case's east side, x = 184 ({cord[0]:.0f})")
+    check(172 < cord[0] < 184, f"the cord goes into the case's east side, which is at x = 184, a few px deep ({cord[0]:.0f})")
 
     # an object that is not there lists what there is
     open(b, "?bench=nothing")

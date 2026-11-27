@@ -61,14 +61,15 @@ function finish(canvas, renderer, repeat = false) {
 // Something printed or painted: `w` x `h` px of the room, drawn at `k` texture px to each (2 to 4 keeps lines and
 // letters crisp up close), by draw(ctx, k), whose units are the room's px. The fonts the site uses are waited for,
 // so that words are in their own letters and not in a stand-in.
+let fontsReady = null;
 export async function paint(renderer, w, h, draw, { k = 4, repeat = false } = {}) {
-  try {
-    // (for at most 3 s: a font file that never arrives must not keep an object from being drawn, in a stand-in)
-    await Promise.race([
-      Promise.all(['800 30px "Bricolage Grotesque"', '400 16px "Atkinson Hyperlegible"', '700 16px "Atkinson Hyperlegible"'].map((f) => document.fonts.load(f))),
-      new Promise((r) => setTimeout(r, 3000)),
-    ]);
-  } catch (e) {}
+  // (once for all that is painted, and for at most 3 s: a font file that never arrives must not keep an object from being
+  // drawn, in a stand-in)
+  fontsReady ||= Promise.race([
+    Promise.all(['800 30px "Bricolage Grotesque"', '400 16px "Atkinson Hyperlegible"', '700 16px "Atkinson Hyperlegible"'].map((f) => document.fonts.load(f))).catch(() => {}),
+    new Promise((r) => setTimeout(r, 3000)),
+  ]);
+  await fontsReady;
   const cv = document.createElement("canvas");
   cv.width = Math.round(w * k);
   cv.height = Math.round(h * k);

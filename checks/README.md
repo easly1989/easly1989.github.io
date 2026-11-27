@@ -60,7 +60,7 @@ of motion that forgets it measures a room in which Willy only sleeps.
   the floor's, a chair's) land within 1 px of where the CSS room puts them at 1280×720, 1366×768, 1440×900,
   1920×1080 and 2560×1080 (and at 1200×1000, bound by width, and at 2560×1440, the largest scale), and again
   after a resize; the old computer, its keyboard and its mouse (#164) are where the CSS room has them,
-  nine points of their own frame within 4 px at each size; the box it keeps for the head is the CSS room's; the
+  nine points of their own frame within 1.5 px at each size; the box it keeps for the head is the CSS room's; the
   mat, the desk, a wall and the floor are drawn in their own colours, darker in the dark scheme; without
   WebGL 2 the home is the professional page. Headless (software drawing): seams and look are judged in a
   real Chrome with a GPU.

@@ -53,13 +53,8 @@ export async function computer(renderer) {
   const group = new THREE.Group();
   const beige = plastic(BEIGE);
   const dark = plastic(DARK, 0.6);
-  // the case: a box with its edges rounded, a hair narrower at the top as a tube's housing is; feet of rubber under it
+  // the case: a box with its edges rounded
   group.add(mesh(roundedBox(W, D, H, 14, 4), beige));
-  for (const [x, y] of [[-150, -110], [150, -110], [-150, 110], [150, 110]]) {
-    const foot = mesh(roundedBox(40, 30, 3, 1.4, 2), material.rubber());
-    foot.position.set(x, y, -3);
-    group.add(foot);
-  }
   const FY = -D / 2; // the front face
   // the bezel round the glass: a dark frame 14 px wide standing 8 px off the front, the glass 248 by 184 inside it
   const GX = -W / 2 + 24 + 124, // the glass's middle, from the case's left (24 px in) and top (24 px down)
@@ -78,10 +73,10 @@ export async function computer(renderer) {
   drive.position.set(DX, FY - 2.5, DZ - 24);
   group.add(drive);
   const slot = mesh(roundedBox(144, 3, 12, 1, 1), plastic("#2b2823", 0.7));
-  slot.position.set(DX, FY - 6, DZ - 24 + 14);
+  slot.position.set(DX, FY - 6, DZ - 24 + 16); // (its middle 26 px under the drive's top, as the CSS room's)
   group.add(slot);
   const busy = mesh(roundedBox(20, 3, 12, 1, 1), plastic("#6a4a35", 0.5));
-  busy.position.set(-W / 2 + 208 + 10, FY - 1.5, H - 256 - 6);
+  busy.position.set(-W / 2 + 208 + 10, FY - 1.5, H - 256 - 12); // (its top at 64 px under the case's top)
   group.add(busy);
 
   // the speaker: three slits 4 px wide, 12 apart; the power switch, a rocker with its light, at the bottom right
@@ -95,7 +90,7 @@ export async function computer(renderer) {
   group.add(rocker);
   const led = mesh(new THREE.CylinderGeometry(6, 6, 3, 20), plastic("#4d5a4f", 0.4));
   led.rotation.x = Math.PI / 2;
-  led.position.set(-W / 2 + 344, FY - 1.5, 84);
+  led.position.set(-W / 2 + 350, FY - 1.5, 78);
   group.add(led);
 
   // the side the camera sees: vents, eight upright slots 8 px wide and 96 long, 24 apart
@@ -158,19 +153,20 @@ export async function computer(renderer) {
   return { group, height: H };
 }
 
-// the keyboard: 400 by 136 on its feet, 16 px high at the front and 34 at the back, a well of 352 by 80 with four rows of sixteen keys
-// 16 px square on a pitch of 22 by 20, and a spacebar 160 by 16, every key with its legend
+// the keyboard: 400 by 136 on its feet, 10 px high at the front and 22 at the back (the CSS room's 5 degrees of tilt), a well of 352 by 80
+// with four rows of sixteen keys 16 px square and 5.6 high on a pitch of 22 by 20, and a spacebar 160 by 16, every key with its legend
 export async function keyboard(renderer) {
   const group = new THREE.Group();
   const body = plastic("#d5cbb2", 0.55);
   const KW = 400,
     KD = 136,
-    FRONT = 16,
-    BACK = 34;
-  group.add(mesh(profile([[-KD / 2, 0], [KD / 2, 0], [KD / 2, BACK], [-KD / 2, FRONT]], KW, 2.5), body));
+    FRONT = 10,
+    BACK = 22,
+    BEVEL = 1;
+  group.add(mesh(profile([[-KD / 2, 0], [KD / 2, 0], [KD / 2, BACK], [-KD / 2, FRONT]], KW, BEVEL), body));
   const tilt = Math.atan2(BACK - FRONT, KD);
   const deck = new THREE.Group();
-  deck.position.set(0, -KD / 2, FRONT);
+  deck.position.set(0, -KD / 2, FRONT + BEVEL); // (the bevel raises the top by its size)
   deck.rotation.x = tilt;
   group.add(deck);
   // the well the keys stand in, a shade darker
@@ -275,7 +271,8 @@ export async function mouse() {
   group.add(wheel);
   const height = MOUSE.c;
   // the cord, from the nose (the mouse at (298, -264) from the case's middle, 44 px to its back) to the case's east side
-  const cord = sweep([[0, 44, 2.2], [0, 84, 2.2], [-34, 190, 2.2], [-100, 252, 2.2], [-114, 262, 2.2]], 2.2, { radial: 8 });
+  // (it lies on the mat, and past the mat's edge on the desk, 4 px lower, and its end goes 4 px into the case)
+  const cord = sweep([[0, 44, 2.2], [0, 84, 2.2], [-34, 190, 2.2], [-100, 252, 0.4], [-118, 262, -1.8]], 2.2, { radial: 8 });
   const cordMesh = mesh(cord, new THREE.MeshStandardMaterial({ color: "#8b836c", roughness: 0.85 }));
   cordMesh.name = "cord";
   group.add(cordMesh);

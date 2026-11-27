@@ -93,7 +93,7 @@ try:
         # so its top corners may differ by what 4 px up is on the screen, about 3 px)
         pcn = b.js(NEWPC % json.dumps(PCPTS))
         pcw = max(((abs(pcn[k][0] - old[(w, h, "pc")][k][0]) ** 2 + abs(pcn[k][1] - old[(w, h, "pc")][k][1]) ** 2) ** 0.5, k) for k in PCPTS)
-        check(pcw[0] <= 4.0, f"{w} x {h}: the computer, keyboard and mouse are where the CSS room has them (the worst, {pcw[1]}, {pcw[0]:.2f} px off)")
+        check(pcw[0] <= 1.5, f"{w} x {h}: the computer, keyboard and mouse are where the CSS room has them (the worst, {pcw[1]}, {pcw[0]:.2f} px off)")
         box = json.loads(b.js("localStorage.getItem('room-box')"))
         ob = old[(w, h, "box")]
         check(all(abs(box[k] - ob[k]) <= 1 for k in ("w", "h", "dw", "dh")), f"{w} x {h}: the box it keeps for the head is the CSS room's ({box} against {ob})")
