@@ -1,9 +1,11 @@
 """A small DevTools driver: a throwaway Chrome, with its own profile, on a random port.
 Set CHROME to the browser's path if it is not where Windows installs it."""
+import atexit
 import base64
 import json
 import os
 import pathlib
+import shutil
 import subprocess
 import tempfile
 import time
@@ -17,6 +19,15 @@ CHROME = os.environ.get("CHROME", r"C:\Program Files\Google\Chrome\Application\c
 class Browser:
     def __init__(self, width=1300, height=900, headless=True, flags=()):
         self.profile = tempfile.mkdtemp(prefix="cdp-")
+        self.proc = None
+        atexit.register(self.close)  # (a check that crashes still takes its profile away)
+        try:
+            self._start(width, height, headless, flags)
+        except BaseException:
+            self.close()
+            raise
+
+    def _start(self, width, height, headless, flags):
         args = [CHROME, "--remote-debugging-port=0", f"--user-data-dir={self.profile}",
                 "--no-first-run", "--no-default-browser-check", f"--window-size={width},{height}",
                 # keep painting when the window opens behind another one
@@ -73,10 +84,27 @@ class Browser:
         pathlib.Path(path).write_bytes(base64.b64decode(data))
 
     def close(self):
+        """Closes Chrome and deletes its profile (tens of MB each; they piled up in %TEMP%). Safe to call twice."""
         try:
-            self.ws.close()
+            ws = getattr(self, "ws", None)
+            if ws:
+                ws.close()
         finally:
-            if os.name == "nt":
-                subprocess.run(["taskkill", "/F", "/T", "/PID", str(self.proc.pid)], capture_output=True)
-            else:
-                self.proc.kill()
+            if self.proc:
+                if os.name == "nt":
+                    subprocess.run(["taskkill", "/F", "/T", "/PID", str(self.proc.pid)], capture_output=True)
+                else:
+                    self.proc.kill()
+                self.proc = None
+            # (Chrome holds its files for a moment after it is killed, on Windows)
+            for _ in range(20):
+                shutil.rmtree(self.profile, ignore_errors=True)
+                if not os.path.exists(self.profile):
+                    break
+                time.sleep(0.25)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        self.close()
