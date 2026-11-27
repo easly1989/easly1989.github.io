@@ -55,18 +55,33 @@ const FLOOR_BOARDS =["#8a6a4c", "#7d5f43", "#8f6f50", "#7a5c41"]; // the boards'
 const scheme = matchMedia("(prefers-color-scheme: dark)");
 const pal = () => PALETTE[scheme.matches ? "dark" : "light"];
 
+// anything failing: the professional home, for this visit (the head reads the flag), and the reason said; with
+// no way to keep the flag, no reload, or it would never end
+function fail(e) {
+  console.warn("[room-gl] no room", e);
+  try {
+    sessionStorage.setItem("room-gl-failed", "1");
+    if (sessionStorage.getItem("room-gl-failed") === "1") location.reload();
+  } catch (err) {}
+}
+
 async function start() {
   const canvas = document.createElement("canvas");
   canvas.className = "room-gl";
   canvas.setAttribute("aria-hidden", "true");
   document.body.prepend(canvas);
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "high-performance", preserveDrawingBuffer: true });
-  const ratio = () => Math.min(2, Math.max(devicePixelRatio || 1, 1.5)); // (drawn at a size the screen may not have, then scaled down: the edges come out soft)
+  // drawn at a size the screen may not have, then scaled down: the edges come out soft; but never more than
+  // about 10 Mpx, which with the multisampled targets is most of a gigabyte
+  const ratio = () => Math.max(1, Math.min(2, Math.max(devicePixelRatio || 1, 1.5), Math.sqrt(1e7 / (innerWidth * innerHeight))));
   renderer.setPixelRatio(ratio());
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFShadowMap;
   renderer.toneMapping = THREE.NoToneMapping;
 
+  let dirty = false,
+    pending = false,
+    drawn = 0;
   const scene = new THREE.Scene();
   const cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 500, 7000);
   const DIST = 5000;
@@ -257,13 +272,13 @@ async function start() {
     M.desk.color.set(p.desk);
     M.leg.color.set(p.leg);
     M.matEdge.color.set(p.matEdge);
-    M.floor.color.setScalar(p.floor);
+    M.floor.color.setRGB(p.floor, p.floor, p.floor, THREE.SRGBColorSpace); // (the CSS room dimmed the sRGB values)
     M.matTop.color.set("#fff");
     paintMat();
     scene.background = new THREE.Color(p.back);
     hemi.intensity = LIGHT.hemi;
     sun.intensity = LIGHT.sun;
-    dirty = true;
+    invalidate();
   }
 
   // ---- the frame: room.js's, with the box it measured --------------------------------------------
@@ -312,19 +327,28 @@ async function start() {
     composer.setPixelRatio(ratio());
     composer.setSize(innerWidth, innerHeight);
     frame();
-    dirty = true;
+    invalidate();
   }
 
-  let dirty = true,
-    drawn = 0;
+  // drawn when something asks for it (a frame at most per frame of the screen), not all the time
   function draw() {
-    if (dirty) {
-      dirty = false;
+    pending = false;
+    if (!dirty) return;
+    dirty = false;
+    try {
       composer.render();
-      drawn++;
-      api.drawn = drawn;
+    } catch (e) {
+      return fail(e);
     }
-    requestAnimationFrame(draw);
+    drawn++;
+    api.drawn = drawn;
+  }
+  function invalidate() {
+    dirty = true;
+    if (!pending) {
+      pending = true;
+      requestAnimationFrame(draw);
+    }
   }
 
   // ---- what the checks and the later tickets ask of it ----------------------------------------------
@@ -349,17 +373,17 @@ async function start() {
       g.drawImage(canvas, x * r, y * r, 1, 1, 0, 0, 1, 1);
       return [...g.getImageData(0, 0, 1, 1).data].slice(0, 3);
     },
-    redraw() {
-      dirty = true;
-    },
+    redraw: invalidate,
   };
   window.ROOMGL = api;
 
   scheme.addEventListener("change", paint);
   addEventListener("resize", resize);
   canvas.addEventListener("webglcontextlost", (e) => e.preventDefault());
-  canvas.addEventListener("webglcontextrestored", () => (dirty = true));
-  addEventListener("pagehide", () => {
+  canvas.addEventListener("webglcontextrestored", invalidate);
+  // (a page kept for Back and Forward keeps its context: only one that is going away lets it go)
+  addEventListener("pagehide", (e) => {
+    if (e.persisted) return;
     renderer.dispose();
     renderer.forceContextLoss();
   });
@@ -372,14 +396,6 @@ async function start() {
   dirty = false;
   api.ready = true;
   document.documentElement.classList.add("gl-ready");
-  requestAnimationFrame(draw);
 }
 
-start().catch((e) => {
-  // anything failing here: the professional home, for this visit, and the reason said
-  console.warn("[room-gl] no room", e);
-  try {
-    sessionStorage.setItem("room-gl-failed", "1");
-  } catch (err) {}
-  location.reload();
-});
+start().catch(fail);

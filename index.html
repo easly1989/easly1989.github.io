@@ -75,6 +75,7 @@
           var g = new URLSearchParams(location.search).get("roomgl");
           if (g !== null) {
             localStorage.setItem("room-gl", g === "0" ? "0" : "1");
+            sessionStorage.removeItem("room-gl-failed"); // (asked for again: tried again)
             var cleanGl = new URL(location.href);
             cleanGl.searchParams.delete("roomgl");
             history.replaceState(history.state, "", cleanGl.pathname + cleanGl.search + cleanGl.hash);
@@ -129,8 +130,11 @@
             '<script type="importmap">{"imports":{"three":"./vendor/three/build/three.module.min.js",' +
               '"./vendor/three/build/three.core.js":"./vendor/three/build/three.core.min.js",' +
               '"three/addons/":"./vendor/three/examples/jsm/"}}</scr' + 'ipt>' +
-              '<script type="module" src="room-gl.js"></scr' + 'ipt>',
+              '<script type="module" src="room-gl.js" onerror="try{sessionStorage.setItem(\'room-gl-failed\',\'1\');location.reload()}catch(e){}"></scr' + 'ipt>',
           );
+          addEventListener("resize", function () {
+            if (!fits()) location.reload();
+          });
           return;
         }
         root.classList.add("iso");
