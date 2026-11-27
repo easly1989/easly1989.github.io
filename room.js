@@ -376,6 +376,15 @@
       } else if (sp.kind === "jar" && i === n) s.classList.add("base");
       host.insertBefore(s, host.firstChild);
     }
+    // Chrome sorts the layers of a 3D scene by cutting them along each other's planes, and where it cuts the cover
+    // the pieces' soft edges let a hairline of what lies under it through: the pages. A few covers of the
+    // cover's own colour, right under it, leave nothing pale to show (gone while the book opens). Each is cut along a
+    // slightly different line, so the more there are the less shows; closer than 0.15px apart, Chrome takes them for one plane
+    // and draws them over the cover.
+    if (sp.kind === "book")
+      [0.15, 0.3, 0.45, 0.75, 0.9, 1.2, 1.4, 1.6].forEach(function (z) {
+        host.insertBefore(el("span", "slice under", null, "inset:0;border-radius:" + sp.r + ";background:" + sp.cover + ";transform:translateZ(-" + z + "px)"), host.firstChild);
+      });
     if (sp.kind === "book") el("span", "wall spine", t, "background:" + sp.cover + ";filter:" + dim(0.85));
     if (sp.kind === "mug") {
       // Its side is upright strips all the way round, not a stack of rings: rings show
