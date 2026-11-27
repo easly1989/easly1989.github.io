@@ -19,6 +19,7 @@ const KINDS = {
 };
 const MAX_TREATS = 3;
 const LONG = 2600; // ms an effect lasts
+const ROLL = 95; // px the yarn rolls out
 
 // a treat, lying on the desk: a little fish
 const TREAT = '<svg viewBox="0 0 26 14" aria-hidden="true"><path d="M1 7 Q10 -1 18 7 Q10 15 1 7 Z M18 7 L25 2 L25 12 Z" fill="#e09a55"/><path d="M4 7 Q10 4 15 7" fill="none" stroke="#a96a30" stroke-width="1"/><circle cx="5" cy="6" r="1" fill="#3b2a18"/></svg>';
@@ -93,12 +94,24 @@ export function toys({ room, stage, ROOM, announce }) {
     }, LONG);
     return true;
   }
-  // the yarn rolls out along a thread, 70 px the way it is sent, and back; the thread lies on the desk
+  // the yarn rolls out along a thread, ROLL px the way it is sent, turning as it goes and growing smaller
+  // as it pays the thread out, and back; the thread lies on the desk
   function unroll(s) {
-    const a = Math.random() * 2 * Math.PI,
-      [dx, dy] = [Math.cos(a) * 70, Math.sin(a) * 70],
-      wave = [-dy, dx].map((v) => (v / 70) * 12);
-    Object.assign(s.el.style, { "--rx": dx.toFixed(1) + "px", "--ry": dy.toFixed(1) + "px", "--ax": (-dy / 70).toFixed(3), "--ay": (dx / 70).toFixed(3), "--rot": ((70 / 26) * 180) / Math.PI + "deg" });
+    // (a way that ends on the desk: 12 to choose from, any if none does)
+    const d = ROOM.desk,
+      cx = s.el.offsetLeft + s.el.offsetWidth / 2,
+      cy = s.el.offsetTop + s.el.offsetHeight / 2,
+      ways = [...Array(12).keys()].map((i) => (i + Math.random()) * (Math.PI / 6)),
+      ok = ways.filter((a) => {
+        const x = cx + Math.cos(a) * (ROLL + 26),
+          y = cy + Math.sin(a) * (ROLL + 26);
+        return x > d.x + 20 && x < d.x + d.w - 20 && y > d.y + 20 && y < d.y + d.d - 20;
+      }),
+      a = (ok.length ? ok : ways)[Math.floor(Math.random() * (ok.length || ways.length))],
+      [dx, dy] = [Math.cos(a) * ROLL, Math.sin(a) * ROLL],
+      wave = [-dy, dx].map((v) => (v / ROLL) * 14);
+    // (custom properties: set one by one, not assigned)
+    for (const [k, v] of Object.entries({ "--rx": dx.toFixed(1) + "px", "--ry": dy.toFixed(1) + "px", "--ax": (-dy / ROLL).toFixed(3), "--ay": (dx / ROLL).toFixed(3), "--rot": ((ROLL / 26) * 180) / Math.PI + "deg" })) s.el.style.setProperty(k, v);
     const t = document.createElement("i");
     t.className = "strand";
     t.setAttribute("aria-hidden", "true");
@@ -117,9 +130,9 @@ export function toys({ room, stage, ROOM, announce }) {
       const cx = s.el.offsetLeft + s.el.offsetWidth / 2,
         cy = s.el.offsetTop + s.el.offsetHeight / 2,
         d = ROOM.desk;
-      // (each where he can come to it; if there is nowhere, some where he cannot, for the look of it)
+      // (each where he can come to it; those that find no such place, three in all, where he cannot, for the look of it)
       for (const reachable of [true, false])
-        for (let tries = 0; treats.length < MAX_TREATS && tries < 25 && (reachable || !treats.length); tries++) {
+        for (let tries = 0; treats.length < MAX_TREATS && tries < 25; tries++) {
           const a = Math.random() * 2 * Math.PI,
             r = 55 + Math.random() * 60,
             x = Math.min(d.x + d.w - 40, Math.max(d.x + 40, cx + Math.cos(a) * r)),

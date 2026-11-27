@@ -691,7 +691,7 @@
     yarn: { name: "yarn", w: 56, d: 56, h: 52, o: "28px 28px 26px", btn: [84, 74] },
     ball: { name: "crinkle ball", w: 52, d: 52, h: 44, o: "26px 26px 0px", btn: [78, 68] },
     mouse: { name: "catnip mouse", w: 52, d: 92, h: 36, o: "26px 46px 0px", btn: [96, 80] },
-    bag: { name: "treat bag", w: 48, d: 36, h: 58, o: "24px 32px 0px", btn: [78, 90] },
+    bag: { name: "treat bag", w: 48, d: 36, h: 58, o: "24px 4px 0px", btn: [78, 90] },
     paper: { name: "paper bag", w: 80, d: 46, h: 38, o: "40px 23px 0px", btn: [104, 76] },
   };
   // a ball of radius R standing on z = 0, in rings of n round strips, bg(lit) the paint of a strip
@@ -702,7 +702,7 @@
     for (var j = 0; j < rings; j++) {
       var z0 = (2 * R * j) / rings,
         z1 = (2 * R * (j + 1)) / rings;
-      shell(host, { z: z0, h: z1 - z0, r0: rad(z0), r1: rad(z1), n: n, bg: bg });
+      shell(host, { z: z0, h: z1 - z0, r0: rad(z0), r1: rad(z1), n: n, bg: (function (jj) { return function (l) { return bg(l, jj); }; })(j) });
     }
   }
   function toyDraw(c, kind, k) {
@@ -712,8 +712,9 @@
       return el("span", "toy-body", c, "left:" + x + "px;top:" + y + "px;transform:translateZ(" + (z || 0) + "px)" + (extra || ""));
     };
     if (kind === "yarn") {
-      ball(at(cx, cy, 0), 26, 12, 6, function (l) {
-        return "repeating-linear-gradient(35deg," + shade("#e2574a", l) + " 0 5px," + shade("#a83428", l) + " 5px 8px)";
+      // (wound in bands of two reds, tilted ring by ring, so that it is seen to turn as it rolls)
+      ball(at(cx, cy, 0), 26, 12, 6, function (l, j) {
+        return "repeating-linear-gradient(" + (j % 2 ? 125 : 35) + "deg," + shade(j % 2 ? "#ee8a7a" : "#e2574a", l) + " 0 5px," + shade(j % 2 ? "#b8402f" : "#8f2a1f", l) + " 5px 8px)";
       });
     } else if (kind === "ball") {
       ball(at(cx, cy, 0), 21, 7, 4, function (l) {

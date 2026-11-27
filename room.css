@@ -2869,7 +2869,7 @@ html:not(.iso) .strip {
   }
   42%,
   58% {
-    transform: translate3d(var(--rx), var(--ry), 0) rotate3d(var(--ax), var(--ay), 0, var(--rot));
+    transform: translate3d(var(--rx), var(--ry), -5px) rotate3d(var(--ax), var(--ay), 0, var(--rot)) scale3d(0.8, 0.8, 0.8);
   }
 }
 @keyframes toy-crinkle {
@@ -2903,7 +2903,7 @@ html:not(.iso) .strip {
   }
   25%,
   70% {
-    transform: rotate3d(1, 0, 0, 68deg);
+    transform: rotate3d(1, 0, 0, 90deg);
   }
 }
 @keyframes toy-rustle {
@@ -2955,7 +2955,7 @@ html:not(.iso) .strip {
     animation: none;
   }
   .iso:where(:not(.motion-ok)) .toyspot.go[data-kind="yarn"] {
-    transform: translate3d(var(--rx), var(--ry), 0) rotate3d(var(--ax), var(--ay), 0, var(--rot));
+    transform: translate3d(var(--rx), var(--ry), -5px) rotate3d(var(--ax), var(--ay), 0, var(--rot)) scale3d(0.8, 0.8, 0.8);
   }
   .iso:where(:not(.motion-ok)) .toyspot.go[data-kind="ball"] {
     transform: scale3d(1.2, 1.2, 0.62);
@@ -2964,7 +2964,7 @@ html:not(.iso) .strip {
     transform: rotateZ(140deg);
   }
   .iso:where(:not(.motion-ok)) .toyspot.go[data-kind="bag"] {
-    transform: rotate3d(1, 0, 0, 68deg);
+    transform: rotate3d(1, 0, 0, 90deg);
   }
   .iso:where(:not(.motion-ok)) .toyspot.go[data-kind="paper"] {
     transform: scale3d(1.08, 1.04, 0.82);
