@@ -73,14 +73,33 @@ export async function bench(name) {
   const { group, height } = built;
   const turntable = new THREE.Group();
   turntable.add(group);
+  turntable.position.z = spec.hangs || 0; // (a thing that hangs from its origin, the tie, is lifted so that it hangs clear of the mat)
   scene.add(turntable);
+  // an object with a state to try (the radio: off, its projector in; on, out) gets a button for it
+  let radio = null;
+  group.traverse((o) => {
+    if (o.userData.radio) radio = o.userData.radio;
+  });
+  if (radio) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.style.cssText = "margin-left:12px;font:inherit";
+    const say2 = () => (btn.textContent = "Radio: " + (radio.isOn() ? "on" : "off"));
+    btn.addEventListener("click", () => {
+      radio.setOn(!radio.isOn());
+      say2();
+    });
+    say2();
+    list.append(btn);
+    api.radio = radio;
+  }
 
   // the camera: the room's direction, but in perspective and near; the mouse turns it round the object
   const cam = new THREE.PerspectiveCamera(28, 1, 10, 5000);
   cam.up.set(0, 0, 1);
   cam.position.set(-1, -1, 0.9).normalize().multiplyScalar(Math.max(520, height * (spec.look || 4)));
   const controls = new OrbitControls(cam, canvas);
-  controls.target.set(0, 0, height * 0.45);
+  controls.target.set(0, 0, spec.hangs ? spec.hangs - 110 : height * 0.45);
   controls.enableDamping = true;
   controls.minDistance = 120;
   controls.maxDistance = 4000;
@@ -131,6 +150,7 @@ export async function bench(name) {
     invalidate();
   }
   controls.addEventListener("change", invalidate);
+  addEventListener("gl-redraw", invalidate);
   canvas.addEventListener("webglcontextlost", (e) => e.preventDefault());
   canvas.addEventListener("webglcontextrestored", invalidate);
   scheme.addEventListener("change", paintMat);

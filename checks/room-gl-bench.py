@@ -169,6 +169,84 @@ try:
     cord = b.js(f"({BOUNDS})(BENCH.group.getObjectByName('cord'))")
     check(172 < cord[0] < 184, f"the cord goes into the case's east side, which is at x = 184, a few px deep ({cord[0]:.0f})")
 
+    # ---- the chair, the wastebasket, the window, the shelf, the plant and the radio (ticket 05) ----
+    def start(name):
+        open(b, "?bench=" + name)
+        ok = wait(b, "!!(window.BENCH && BENCH.ready)")
+        time.sleep(0.5)
+        return ok
+
+    check(start("chair"), "the chair starts on the bench")
+    cb = b.js(f"({BOUNDS})(BENCH.group)")
+    check(340 <= cb[1] - cb[0] <= 390 and 340 <= cb[3] - cb[2] <= 390 and abs(cb[5] - 1020) <= 3 and -1 <= cb[4] <= 5,
+          f"the chair is on its casters, about 180 out each way from its post, and 1020 high with its headrest ({[round(v) for v in cb]})")
+    seatb = b.js(f"({BOUNDS})(BENCH.group.getObjectByName('seat'))")
+    headb = b.js(f"({BOUNDS})(BENCH.group.getObjectByName('head'))")
+    check(abs(seatb[5] - 300) <= 0.6 and abs(headb[5] - 1020) <= 0.6, f"the seat's top is at 300 and the headrest's at 1020, as the CSS room's flat ones, their domes included ({seatb[5]:.1f}, {headb[5]:.1f})")
+    check(b.js("(() => { let n = 0; BENCH.group.traverse((o) => { if (o.isMesh) n++; }); return n; })()") >= 40, "it is made of its parts: arms, five casters of two wheels, hub, ribbed cover, lift, seat, armrests, back in its frame, lumbar pad, headrest")
+
+    check(start("tie"), "the tie starts on the bench, apart from the chair")
+    tb = b.js(f"({BOUNDS})(BENCH.group)")
+    check(0 <= tb[4] <= 8 and tb[5] <= 238 and 44 <= tb[1] - tb[0] <= 50, f"the tie hangs 230 down from the headrest's top (lifted 235 on the bench), its blade 46 wide ({[round(v) for v in tb]})")
+    blade = b.js(f"""(() => {{ const at = {AT}; return at([0, -15, -150]); }})()""")
+    check(blade[0] > 100 and blade[1] < 70 and blade[2] < 70, f"the tie is red ({blade})")
+
+    check(start("bin"), "the wastebasket starts on the bench")
+    bb2 = b.js(f"({BOUNDS})(BENCH.group)")
+    check(118 <= bb2[1] - bb2[0] <= 130 and abs(bb2[5] - 203.4) <= 3 and abs(bb2[4]) <= 1, f"the basket is 120 across its rim and 200 high on its foot ({[round(v, 1) for v in bb2]})")
+    check(b.js("(() => { let n = 0; BENCH.group.traverse((o) => { if (o.isMesh) n++; }); return n; })()") >= 9, "its wire, rim, foot, floor and five sheets of paper are there")
+
+    check(start("window"), "the window starts on the bench")
+    sky = b.js(f"""(() => {{ const at = {AT}; return at([-250, -3, 600]); }})()""")
+    check(sky[2] > sky[0] + 20 and sky[2] > 150, f"the sky is seen through the glass, blue by day ({sky})")
+    wb = b.js(f"({BOUNDS})(BENCH.group)")
+    check(wb[5] >= 2400 and wb[4] <= -500, f"the wall runs from the floor to the ceiling's height round the window ({round(wb[4])} to {round(wb[5])})")
+    check(b.js("(() => { let n = 0; BENCH.group.traverse((o) => { if (o.isInstancedMesh) n += o.count; }); return n; })()") > 100, "the perch hangs on two chains of links")
+
+    check(start("shelf"), "the shelf starts on the bench")
+    leaf = b.js(f"""(() => {{ const at = {AT}; let best = null; for (const [x, y, z] of [[-52, -38, 260], [-48, -34, 270], [-56, -30, 250], [-52, -44, 250]]) {{ const c = at([x, y, z]); if (c[1] - c[2] > 40 && c[1] > c[0] + 25) best = c; }} return best; }})()""")
+    check(leaf is not None, f"the plant's leaves are green above its pot ({leaf})")
+    pot = b.js(f"""(() => {{ const at = {AT}; return at([-52, -66, 200]); }})()""")
+    check(pot[2] > pot[0] + 15, f"the pot is blue ({pot})")
+
+    check(start("radio"), "the radio starts on the bench")
+    rr = b.js(f"""(() => {{ const at = {AT}; return {{ dial: at([-42.5, 35, 93]), knob: at([-47, 77, 24]), grille: at([-42.5, -60, 40]) }}; }})()""")
+    dialp = b.js(f"""(() => {{ const at = {AT}; return at([-42.5, 55, 93]); }})()""")  # (u 50, clear of the needle at u 70)
+    check(sum(dialp) > 470 and dialp[0] > 170 and dialp[2] > 140, f"the dial is cream ({dialp})")
+    check(sum(rr["knob"]) < 330, f"the knob is dark ({rr['knob']})")
+    check(sum(rr["grille"]) < sum(dialp) - 120, f"the grille is darker than the dial ({rr['grille']})")
+    # the tuning dial runs the whole length of the face: cream near the south end (u 190) and lighter than the beige case just above it
+    dl = b.js(f"""(() => {{ const at = {AT}; return [at([-42.5, 105 - 190, 93]), at([-42.5, 105 - 190, 112])]; }})()""")
+    check(dl[0][2] - dl[1][2] > 15 and dl[0][1] - dl[1][1] > 10, f"the dial takes all the length of the radio's face, paler than the case above it at its south end ({dl})")
+    # the projector: out of the radio only while it plays; off, it is in, turned a half turn and a quarter back, and cut at the top; on, it is out and
+    # turned 45 degrees; under reduced motion at once, where motion is allowed in 0.8 s
+    p0 = b.js("BENCH.radio.pose()")
+    check(not b.js("BENCH.radio.isOn()") and p0["out"] == 0 and not p0["visible"], f"the radio is off at first, its projector in ({p0})")
+    b.js("BENCH.radio.setOn(true)")
+    time.sleep(0.4)
+    p1 = b.js("BENCH.radio.pose()")
+    check(p1["out"] == 1 and abs(p1["z"] - 128) < 0.1 and abs(p1["turn"] - 0.7854) < 0.01 and p1["visible"], f"on, at once under reduced motion, the projector is out and turned 45 degrees ({p1})")
+    b.js("BENCH.radio.setOn(false)")
+    time.sleep(0.4)
+    check(b.js("BENCH.radio.pose().out") == 0 and not b.js("BENCH.radio.pose().visible"), "and off again it goes back in, out of sight")
+    open(b, "?bench=radio", motion="no-preference")
+    wait(b, "!!(window.BENCH && BENCH.ready)")
+    slot_off = b.js(f"""(() => {{ const at = {AT}; return at([0, 65, 121]); }})()""")  # (the slot in the top, with the projector in: dark)
+    check(sum(slot_off) < 250, f"off, the projector is not above the case: the slot in its top is dark ({slot_off})")
+    b.js("BENCH.radio.setOn(true)")
+    # (frames can be slow here: wait for it to be on its way, then to be out, rather than for set times)
+    mid = None
+    for _ in range(60):
+        time.sleep(0.25)
+        p = b.js("BENCH.radio.pose()")
+        if 0 < p["out"] < 1 and mid is None:
+            mid = p
+        if p["out"] == 1:
+            break
+    check(mid is not None and mid["visible"] and p["out"] == 1, f"where motion is allowed it comes out turning, not at once ({mid and round(mid['out'], 2)} on the way, {p['out']} at the end)")
+    open(b, "?bench=radio")
+    wait(b, "!!(window.BENCH && BENCH.ready)")
+
     # an object that is not there lists what there is
     open(b, "?bench=nothing")
     time.sleep(2)

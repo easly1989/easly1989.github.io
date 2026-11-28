@@ -33,6 +33,19 @@ PCPTS = {
 }
 OLDPC = "(() => { const pc = document.querySelector('.pc'), m = ROOM.toStage(pc), o = {}; for (const [k, p] of Object.entries(%s)) { const q = m.transformPoint(new DOMPoint(...p)); o[k] = ROOM.toScreen(q.x, q.y, q.z); } return o; })()"
 NEWPC = "(() => { const g = ROOMGL.objects.pc, o = {}; for (const [k, p] of Object.entries(%s)) { const q = g.localToWorld(new ROOMGL.THREE.Vector3(4 * p[0] - 184, 140 - 4 * p[1], 4 * p[2])); o[k] = ROOMGL.project(q.x + 640, 440 - q.y, q.z); } return o; })()"
+# the other things of the room (#165, #164): a point of each in the CSS room's own element (selector, a point of its frame) and the same
+# point in the scene (the object, its point in the object's frame: x east, y north, z up, from the origin the object's file says)
+ITEMS = {
+    "window top left": (".on-wall.window > .window", (0, 0, 0), "window", (-300, -2, 660)),
+    "window bottom right": (".on-wall.window > .window", (600, 380, 0), "window", (300, -2, 280)),
+    "plant pot top": (".plant", (28, 28, 58), "shelf", (-52, -38, 228)),
+    "radio top": (".radio", (42, 105, 120), "shelf", (-54, -585, 290)),
+    "chair seat": (".chair", (170, 145, -260), "chair", (0, 15, 300)),
+    "chair headrest top": (".chair", (170, 297, 460), "chair", (0, -137, 1020)),
+    "wastebasket rim": (".wastebasket", (0, 0, 200), "bin", (0, 0, 200)),
+}
+OLDITEMS = ("(() => { const o = {}; for (const [k, [sel, p]] of Object.entries(%s)) { const e = document.querySelector(sel), q = ROOM.toStage(e).transformPoint(new DOMPoint(...p)); o[k] = ROOM.toScreen(q.x, q.y, q.z); } return o; })()") % json.dumps({k: [v[0], v[1]] for k, v in ITEMS.items()})
+NEWITEMS = ("(() => { const o = {}; for (const [k, [name, p]] of Object.entries(%s)) { const q = ROOMGL.objects[name].localToWorld(new ROOMGL.THREE.Vector3(...p)); o[k] = ROOMGL.project(q.x + 640, 440 - q.y, q.z); } return o; })()") % json.dumps({k: [v[2], v[3]] for k, v in ITEMS.items()})
 READY = "!!(window.ROOMGL && window.ROOMGL.ready)"
 
 failures = []
@@ -72,6 +85,7 @@ try:
         old[(w, h)] = b.js(OLD % json.dumps(POINTS))
         old[(w, h, "box")] = json.loads(b.js("localStorage.getItem('room-box')"))
         old[(w, h, "pc")] = b.js(OLDPC % json.dumps(PCPTS))
+        old[(w, h, "items")] = b.js(OLDITEMS)
 finally:
     b.close()
 
@@ -94,6 +108,13 @@ try:
         pcn = b.js(NEWPC % json.dumps(PCPTS))
         pcw = max(((abs(pcn[k][0] - old[(w, h, "pc")][k][0]) ** 2 + abs(pcn[k][1] - old[(w, h, "pc")][k][1]) ** 2) ** 0.5, k) for k in PCPTS)
         check(pcw[0] <= 1.5, f"{w} x {h}: the computer, keyboard and mouse are where the CSS room has them (the worst, {pcw[1]}, {pcw[0]:.2f} px off)")
+        # the window, the shelf with the plant and the radio, the chair and the wastebasket
+        itn = b.js(NEWITEMS)
+        itw = max(((abs(itn[k][0] - old[(w, h, "items")][k][0]) ** 2 + abs(itn[k][1] - old[(w, h, "items")][k][1]) ** 2) ** 0.5, k) for k in ITEMS)
+        check(itw[0] <= 1.5, f"{w} x {h}: the window, the shelf, the plant, the radio, the chair and the wastebasket are where the CSS room has them (the worst, {itw[1]}, {itw[0]:.2f} px off)")
+        # the tie hangs on the chair's headrest where it stands: its origin is at (-70, -137, 1019) of the chair's frame
+        tie_off = b.js("(() => { const O = ROOMGL.objects, p = O.chair.localToWorld(new ROOMGL.THREE.Vector3(-70, -137, 1019)); return Math.hypot(p.x - O.tie.position.x, p.y - O.tie.position.y, p.z - O.tie.position.z) + Math.abs(O.tie.rotation.z - O.chair.rotation.z); })()")
+        check(tie_off < 0.01, f"{w} x {h}: the tie is on the chair's headrest, turned as the chair is ({tie_off:.4f} off)")
         box = json.loads(b.js("localStorage.getItem('room-box')"))
         ob = old[(w, h, "box")]
         check(all(abs(box[k] - ob[k]) <= 1 for k in ("w", "h", "dw", "dh")), f"{w} x {h}: the box it keeps for the head is the CSS room's ({box} against {ob})")
