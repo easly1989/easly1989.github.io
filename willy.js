@@ -63,60 +63,78 @@ const RAISE = [0.1, 0.2];
 const EASE = 0.05; // s a paw takes to meet a new ground: a step up comes mid-stride
 
 // Willy in the room, with his clips. Throws if there is no WebGL 2 or the model fails to load.
-export async function willy(room, stage, src = "assets/willy.glb") {
-  const cv = document.createElement("canvas");
-  cv.className = "willy";
-  cv.setAttribute("aria-hidden", "true");
-  // (never transitioned, not even by reduced motion's 0.01ms on everything, in styles.css:
-  // cutout() measures where he is the moment he is moved)
-  cv.style.cssText = "position:absolute;left:0;top:0;width:" + W + "px;height:" + H + "px;pointer-events:none;transition:none";
-  const renderer = new THREE.WebGLRenderer({ canvas: cv, alpha: true, antialias: true, failIfMajorPerformanceCaveat: true });
-  room.appendChild(cv);
-  // the fold: the row of his canvas where it is FOLD above his ground, and the part below it,
-  // copied into a canvas of its own lying flat (stand())
-  const b = BIAS / Math.sqrt(3),
+// With a `host` (room-gl.js, ticket 09) he is not drawn into a canvas of his own over the room but into the scene the host draws: the host says
+// how a point of the scene is on the screen (`project`), where the window's canvas is (`rect`), how many screen px a scene px is (`k`), draws a
+// frame when asked (`invalidate`), and runs what is given it (`hooks`) just before and just after each frame: he is worked out standing at the
+// origin, as always, and moved to where he is only while a frame is drawn, so that what hides him, or he hides, is judged by the depth of the
+// scene, and the scene's own light and shadow fall on him and from him.
+export async function willy(room, stage, src = "assets/willy.glb", host = null) {
+  const gl = !!host;
+  const cv = gl ? null : document.createElement("canvas");
+  let renderer = null,
+    low = null,
+    show = () => host.invalidate(),
+    b = 0,
+    fold = 0;
+  if (!gl) {
+    cv.className = "willy";
+    cv.setAttribute("aria-hidden", "true");
+    // (never transitioned, not even by reduced motion's 0.01ms on everything, in styles.css:
+    // cutout() measures where he is the moment he is moved)
+    cv.style.cssText = "position:absolute;left:0;top:0;width:" + W + "px;height:" + H + "px;pointer-events:none;transition:none";
+    renderer = new THREE.WebGLRenderer({ canvas: cv, alpha: true, antialias: true, failIfMajorPerformanceCaveat: true });
+    room.appendChild(cv);
+    // the fold: the row of his canvas where it is FOLD above his ground, and the part below it,
+    // copied into a canvas of its own lying flat (stand())
+    b = BIAS / Math.sqrt(3);
     fold = (ANCHOR_Z + b - FOLD) / Math.sqrt(2 / 3) + H / 2;
-  cv.style.clipPath = "inset(0 0 " + (H - fold - 0.5) + "px 0)";
-  const low = document.createElement("canvas");
-  low.className = "willy-low";
-  low.setAttribute("aria-hidden", "true");
-  low.style.cssText = "position:absolute;left:0;top:0;width:" + W + "px;height:" + (H - fold) + "px;pointer-events:none;transition:none;transform-origin:0 0";
-  room.appendChild(low);
-  const lowPen = low.getContext("2d");
-  const show = () => {
-    renderer.render(scene, cam);
-    if (body && body.drawn) body.drawn();
-    const k = cv.width / W,
-      top = Math.round(fold * k);
-    if (low.width !== cv.width || low.height !== cv.height - top) Object.assign(low, { width: cv.width, height: cv.height - top });
-    lowPen.clearRect(0, 0, low.width, low.height);
-    lowPen.drawImage(cv, 0, top, cv.width, low.height, 0, 0, low.width, low.height);
-  };
-  // drawn at the size the stage shows it at
-  const resize = () => {
-    const s = parseFloat(getComputedStyle(stage).getPropertyValue("--s")) || 1;
-    const z = parseFloat(getComputedStyle(stage).getPropertyValue("--zoom")) || 0.72;
-    renderer.setPixelRatio(devicePixelRatio * s * z);
-    renderer.setSize(W, H, false);
-  };
-  resize();
-  addEventListener("resize", resize);
+    cv.style.clipPath = "inset(0 0 " + (H - fold - 0.5) + "px 0)";
+    low = document.createElement("canvas");
+    low.className = "willy-low";
+    low.setAttribute("aria-hidden", "true");
+    low.style.cssText = "position:absolute;left:0;top:0;width:" + W + "px;height:" + (H - fold) + "px;pointer-events:none;transition:none;transform-origin:0 0";
+    room.appendChild(low);
+    const lowPen = low.getContext("2d");
+    show = () => {
+      renderer.render(scene, cam);
+      if (body && body.drawn) body.drawn();
+      const k = cv.width / W,
+        top = Math.round(fold * k);
+      if (low.width !== cv.width || low.height !== cv.height - top) Object.assign(low, { width: cv.width, height: cv.height - top });
+      lowPen.clearRect(0, 0, low.width, low.height);
+      lowPen.drawImage(cv, 0, top, cv.width, low.height, 0, 0, low.width, low.height);
+    };
+    // drawn at the size the stage shows it at
+    const resize = () => {
+      const s = parseFloat(getComputedStyle(stage).getPropertyValue("--s")) || 1;
+      const z = parseFloat(getComputedStyle(stage).getPropertyValue("--zoom")) || 0.72;
+      renderer.setPixelRatio(devicePixelRatio * s * z);
+      renderer.setSize(W, H, false);
+    };
+    resize();
+    addEventListener("resize", resize);
+  }
 
-  const scene = new THREE.Scene();
-  const cam = new THREE.OrthographicCamera(-W / 2, W / 2, H / 2, -H / 2, 1, 6000);
-  cam.up.set(0.408, 0.408, 0.816).normalize();
-  const target = new THREE.Vector3(0, 0, ANCHOR_Z);
-  cam.position.copy(target).addScaledVector(new THREE.Vector3(-1, -1, 1).normalize(), 3000);
-  cam.lookAt(target);
+  const scene = gl ? host.scene : new THREE.Scene();
+  const cam = gl ? host.camera : new THREE.OrthographicCamera(-W / 2, W / 2, H / 2, -H / 2, 1, 6000);
+  if (!gl) {
+    cam.up.set(0.408, 0.408, 0.816).normalize();
+    const target = new THREE.Vector3(0, 0, ANCHOR_Z);
+    cam.position.copy(target).addScaledVector(new THREE.Vector3(-1, -1, 1).normalize(), 3000);
+    cam.lookAt(target);
+  }
+  // (in the scene he is moved to where he stands only while a frame is drawn: O is where, in the scene's px)
+  const O = new THREE.Vector3();
+  const anchor = new THREE.Group();
   // a soft fill from all round, and the room's own sources (ROOM.lights()) as point lights,
   // moved with him, since his world is centred on him; all five always there, an unlit one at
   // nothing, so that one switching on recompiles no shader
   const sky = new THREE.HemisphereLight(0xffffff, 0x5a6470, FILL);
   sky.position.set(0, 0, 1);
-  scene.add(sky);
+  if (!gl) scene.add(sky); // (in the scene, the scene's own light is on him)
   const lamps = [0, 1, 2, 3, 4].map(() => {
     const l = new THREE.PointLight(0xffffff, 0, 0, 0);
-    scene.add(l);
+    if (!gl) scene.add(l);
     return l;
   });
   let sources = [],
@@ -125,9 +143,10 @@ export async function willy(room, stage, src = "assets/willy.glb") {
   const dark = () => !sources.some((s) => s.name === "room" && s.power);
   // whether the room's light pass lights him (room-light.js): then his canvas draws only his
   // colours, a white light from all round as strong as three.js takes for all of it (π)
-  const passed = () => !!body.drawn;
+  const passed = () => !gl && !!body.drawn;
   // each source where it is from him, as strong as it is now
   const shine = () => {
+    if (gl) return;
     if (passed()) {
       for (const l of lamps) l.intensity = 0;
       sky.color.set(0xffffff);
@@ -157,8 +176,10 @@ export async function willy(room, stage, src = "assets/willy.glb") {
     gltf = await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync(src);
   } catch (e) {
     // no Willy: nothing of him left in the room
-    renderer.dispose();
-    cv.remove();
+    if (!gl) {
+      renderer.dispose();
+      cv.remove();
+    }
     throw e;
   }
   const holder = new THREE.Group();
@@ -166,7 +187,18 @@ export async function willy(room, stage, src = "assets/willy.glb") {
   model.rotation.x = Math.PI / 2; // glTF is y-up; the room is z-up
   model.scale.setScalar(SCALE);
   holder.add(model);
-  scene.add(holder);
+  if (gl) {
+    anchor.add(holder);
+    scene.add(anchor);
+    host.hooks.before.push(() => {
+      anchor.position.copy(O);
+      anchor.updateMatrixWorld(true);
+    });
+    host.hooks.after.push(() => {
+      anchor.position.set(0, 0, 0);
+      anchor.updateMatrixWorld(true);
+    });
+  } else scene.add(holder);
   // him for the room's light pass (room-light.js), as ROOM.willy once he is first placed: what of
   // him it lights (his body, which casts his shadow, and his fur), and whom to tell each time he
   // is drawn, so it draws him in the same frame; again() draws him anew, as when it starts
@@ -179,6 +211,11 @@ export async function willy(room, stage, src = "assets/willy.glb") {
   });
   // matte, so the coat does not shine like plastic
   for (const mesh of skinned) mesh.material = new THREE.MeshLambertMaterial({ map: mesh.material.map });
+  if (gl)
+    for (const mesh of skinned) {
+      mesh.castShadow = true; // (his body only: neither its fur nor its outline casts a shadow of its own)
+      mesh.receiveShadow = true;
+    }
   // his bones' numbers as floats, the same numbers: from bytes, Chrome on Direct3D builds each of
   // his programs again at its first draw, a twentieth of a second for each of twenty-odd
   for (const mesh of skinned) {
@@ -188,14 +225,19 @@ export async function willy(room, stage, src = "assets/willy.glb") {
   fur(skinned);
   model.traverse((o) => o.isSkinnedMesh && !skinned.includes(o) && body.fur.push(o));
   outline(skinned);
+  if (gl)
+    for (const o of body.fur) {
+      o.receiveShadow = true;
+      o.castShadow = false;
+    }
 
   const mixer = new THREE.AnimationMixer(model);
   const clips = Object.fromEntries(gltf.animations.map((c) => [c.name, mixer.clipAction(c)]));
   const size = await measure(model, skinned, mixer, clips);
   // (his body only: neither its fur nor its outline casts a shadow of its own)
   for (const mesh of skinned) mesh.layers.enable(SHADE.layer);
-  const blob = shadow(renderer);
-  room.insertBefore(blob.canvas, cv);
+  const blob = gl ? null : shadow(renderer);
+  if (!gl) room.insertBefore(blob.canvas, cv);
   const legs = LEGS.map((l) => l.map((n) => model.getObjectByName(THREE.PropertyBinding.sanitizeNodeName(n))));
   const legged = legs.every((l) => l.every(Boolean));
   const skull = model.getObjectByName("Head");
@@ -215,11 +257,12 @@ export async function willy(room, stage, src = "assets/willy.glb") {
   const veil = document.createElement("canvas");
   veil.className = "night-willy";
   veil.style.cssText = "position:absolute;inset:0;width:100%;height:100%";
-  window.ROOM.night.append(veil);
+  if (!gl) window.ROOM.night.append(veil);
   const pen = veil.getContext("2d"),
     plain = new THREE.MeshBasicMaterial({ color: 0xffffff });
   let veiled = false;
   const cutout = () => {
+    if (gl) return;
     if (!dark() || passed()) {
       if (veiled) pen.clearRect(0, 0, veil.width, veil.height);
       veiled = false;
@@ -312,6 +355,11 @@ export async function willy(room, stage, src = "assets/willy.glb") {
     }
     const u = under || { z: z + (steps.length ? Math.max(...steps) : 0), by: 0 },
       h = z + lift;
+    if (gl) {
+      host.toScene(x, y, h, O);
+      here = [x, y, h];
+      return;
+    }
     cv.style.transform = "translate3d(" + (x - b - W / 2) + "px," + (y + b - H / 2) + "px," + (h + ANCHOR_Z + b) + "px) rotateZ(45deg) rotateX(-54.7356deg)";
     // the fold's row, where his canvas's rows run (across: along the room's x and y; down: back
     // to front and down), and below it flat, back to front, the same on screen
@@ -353,20 +401,24 @@ export async function willy(room, stage, src = "assets/willy.glb") {
   // lights him
   const paint = () => {
     stand();
-    if (!passed()) blob.cast(scene);
-    cutout();
+    if (!gl) {
+      if (!passed()) blob.cast(scene);
+      cutout();
+    }
     show();
   };
   body.again = paint;
   // his many shaders (one a shell of fur) compiled in the background where the browser can,
   // rather than all at once in his first frame
-  await renderer.compileAsync(scene, cam);
-  // lit as the room is, and drawn again whenever its lights change
-  sources = window.ROOM.lights();
-  window.ROOM.onLights(() => {
+  if (!gl) {
+    await renderer.compileAsync(scene, cam);
+    // lit as the room is, and drawn again whenever its lights change
     sources = window.ROOM.lights();
-    paint();
-  });
+    window.ROOM.onLights(() => {
+      sources = window.ROOM.lights();
+      paint();
+    });
+  }
   const moments = (clip, at) => {
     const m = size[clip].moments;
     return at == null ? m : [m[Math.min(m.length - 1, Math.max(0, Math.round(at * (m.length - 1))))]];
@@ -374,6 +426,19 @@ export async function willy(room, stage, src = "assets/willy.glb") {
 
   return {
     canvas: cv,
+    // (for the checks: his root and his model)
+    holder,
+    model,
+    // (for the checks: whether he is drawn)
+    get visible() {
+      return gl ? anchor.visible : true;
+    },
+    set visible(v) {
+      if (gl) {
+        anchor.visible = !!v;
+        host.invalidate();
+      }
+    },
     clips,
     mixer,
     // where he stands, in room px (z the height of what he stands on), and which way he
@@ -382,7 +447,7 @@ export async function willy(room, stage, src = "assets/willy.glb") {
     place(x, y, z, heading, under = null) {
       at = { x, y, z, heading, under };
       stand();
-      window.ROOM.willy ??= body; // (not before: until then he stands at the room's origin, unposed)
+      if (!gl) window.ROOM.willy ??= body; // (not before: until then he stands at the room's origin, unposed)
     },
     draw(dt) {
       unbend();
@@ -409,12 +474,14 @@ export async function willy(room, stage, src = "assets/willy.glb") {
     // him shows: not what stands in front of him hides (half behind the computer, the box goes
     // round the half that shows; all of him hidden, round all of him).
     area(seen = false) {
-      const r = cv.getBoundingClientRect(),
-        k = r.width / W,
+      const r = gl ? host.rect() : cv.getBoundingClientRect(),
+        k = gl ? host.k() : r.width / W,
         v = new THREE.Vector3(),
         pts = new Map();
       for (const bn of bones) {
-        bn.getWorldPosition(v).project(cam);
+        bn.getWorldPosition(v);
+        if (gl) v.add(O);
+        v.project(cam);
         pts.set(bn, [r.left + ((v.x + 1) / 2) * r.width, r.top + ((1 - v.y) / 2) * r.height]);
       }
       const hulls = seen ? window.ROOM.before(shape(size.idle, at.x, at.y, at.z, at.heading, 0)) : [],
@@ -446,9 +513,10 @@ export async function willy(room, stage, src = "assets/willy.glb") {
     // where the top of his head is on the screen, in the viewport's px
     head() {
       const v = skull.getWorldPosition(new THREE.Vector3());
+      if (gl) v.add(O);
       v.z += 40;
       v.project(cam);
-      const r = cv.getBoundingClientRect();
+      const r = gl ? host.rect() : cv.getBoundingClientRect();
       return [r.left + ((v.x + 1) / 2) * r.width, r.top + ((1 - v.y) / 2) * r.height];
     },
     // whether he fits at x, y, standing at z and facing heading, in that clip: clear of

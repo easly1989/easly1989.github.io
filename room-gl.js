@@ -384,13 +384,23 @@ async function start() {
     invalidate();
   }
 
-  // drawn when something asks for it (a frame at most per frame of the screen), not all the time
+  // drawn when something asks for it (a frame at most per frame of the screen), not all the time; what is in hooks runs just before and just after
+  // each frame (Willy is moved to where he stands only while a frame is drawn: willy.js)
+  const hooks = { before: [], after: [] };
+  function render() {
+    for (const f of hooks.before) f();
+    try {
+      composer.render();
+    } finally {
+      for (const f of hooks.after) f();
+    }
+  }
   function draw() {
     pending = false;
     if (!dirty) return;
     dirty = false;
     try {
-      composer.render();
+      render();
     } catch (e) {
       return fail(e);
     }
@@ -432,6 +442,17 @@ async function start() {
       return [...g.getImageData(0, 0, 1, 1).data].slice(0, 3);
     },
     redraw: invalidate,
+    // what Willy is drawn into (willy.js, `host`): the scene and its camera, the frame hooks, a frame on request, where the window's canvas is, how many
+    // screen px a px of the scene is, and the CSS room's point (x east, y south, from the stage's top left) as the scene has it
+    host: {
+      scene,
+      camera: cam,
+      hooks,
+      invalidate,
+      rect: () => ({ left: 0, top: 0, width: innerWidth, height: innerHeight }),
+      k: () => innerWidth / ((cam.right - cam.left) / cam.zoom),
+      toScene: (x, y, z, out) => out.set(x - 640, 440 - y, z),
+    },
   };
   window.ROOMGL = api;
 
@@ -449,12 +470,18 @@ async function start() {
 
   paint();
   resize();
-  composer.render(); // (the first frame, before anything is said to be ready)
+  render(); // (the first frame, before anything is said to be ready)
   drawn++;
   api.drawn = drawn;
   dirty = false;
   api.ready = true;
   document.documentElement.classList.add("gl-ready");
+  // Willy (willy-gl.js), drawn into this scene, once the room is up: for now only with ?willy (he comes by default when the scene replaces the CSS room)
+  if (/[?&]willy\b/.test(location.search)) {
+    const { roomApi } = await import("./gl/room-api.js");
+    window.ROOM = roomApi({ objects, project: api.project });
+    import("./willy-gl.js").catch((e) => console.warn("No Willy:", e));
+  }
 }
 
 start().catch(fail);

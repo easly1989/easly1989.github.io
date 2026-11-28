@@ -166,5 +166,18 @@ hanging and swinging a little: its bones are laid along a line by code (`drape()
 surface first looks for a landing he can turn round in, so he never lands in a pocket by the
 computer's case. `checks/willy-props.py` covers it.
 
+In the scene (`?roomgl&willy`, #169) he is the same cat in the same three.js scene as the room
+(`willy-gl.js`, and `willy.js` with a `host`, room-gl.js `api.host`): no canvas of his own, no flat copy
+and no shadow canvas. He is worked out standing at the origin and moved to where he is only while a frame is
+drawn (`host.hooks`), so the scene's depth hides him behind the computer and the scene's light and shadow fall
+on him and from him; the pet button and the bubble are placed from the scene's camera. His world is the
+scene's, made into the CSS room's `ROOM` for him (`gl/room-api.js`): the surfaces (desk, cushion, shelf, the
+computer's top) and the jumps between them as the CSS room names them, and what he keeps out of or walks over,
+each the outline of the thing itself as seen from above (the hull of its vertices, so a round jar is round).
+What of his world is not in the scene yet is left out, and the everyday actions that need it do not come up:
+the toys and what he knocks off (#173), the old computer's keyboard and mouse (#174), the objects that are
+links (#171). Without `?willy` he is not there; the scene brings him by default when it replaces the CSS room
+(#175).
+
 On the professional home he is the drawing peeking in (The professional home, above). He is on no
 other page: the playful pages have no cat.

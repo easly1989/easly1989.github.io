@@ -128,12 +128,14 @@ export async function windowSet(renderer) {
   // the sill: 660 wide and 78 deep, 20 thick, its top at the window's bottom edge
   const sillBoard = mesh(roundedBox(660, 78, 20, 3, 2), sill);
   sillBoard.position.set(0, -39, WIN.top - WIN.h - 20);
+  sillBoard.name = "sill";
   group.add(sillBoard);
 
   // the cat's perch: a board 360 by 190 hung over the sill's front on two chains from the wall over the frame, a fleece on it
   const PERCH = { w: 360, d: 190, z: WIN.top - WIN.h + 24, dx: 0 };
   const board = mesh(roundedBox(PERCH.w, PERCH.d, 14, 4, 2), std("perch", 0.6));
   board.position.set(PERCH.dx, -PERCH.d / 2, PERCH.z - 14);
+  board.name = "perch-board";
   group.add(board);
   // the fleece: a plump cushion 324 by 164 and 26 high, fuller at its sides, pressed in a little in the middle where the cat lies, its pile a
   // bump map and a sheen on it as of long soft hair
@@ -146,6 +148,7 @@ export async function windowSet(renderer) {
   fleeceMat.bumpScale = 1.6;
   const fleece = mesh(warp(pillow(162, 82, 26, 3.2, 0.55), dent), fleeceMat);
   fleece.position.set(PERCH.dx, -(PERCH.d - 26) / 2 - 12, PERCH.z);
+  fleece.name = "fleece";
   group.add(fleece);
   // the chains: links of a gold wire, 6 px apart, each turned a quarter from the last, from the wall (just over the frame) to the board's front corner
   const gold = new THREE.MeshStandardMaterial({ color: "#c9a24a", roughness: 0.35, metalness: 0.9 });
