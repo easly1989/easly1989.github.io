@@ -230,6 +230,9 @@ async function start() {
     const onChair = new THREE.Vector3(-70, -137, 1019).applyAxisAngle(new THREE.Vector3(0, 0, 1), turn).add(new THREE.Vector3(90, -800, FLOOR));
     await put("tie", onChair.x, onChair.y, onChair.z, turn);
     await put("bin", 625, -635, FLOOR);
+    // the books on the desk, measured on the CSS room: the ledger 4 degrees clockwise, the agenda 4 degrees counterclockwise, from above
+    await put("ledger", -29, 183, 0, (-4 * Math.PI) / 180);
+    await put("agenda", -42, -199, 0, (4 * Math.PI) / 180);
   }
 
   // ---- the frame: room.js's, with the box it measured --------------------------------------------

@@ -97,7 +97,7 @@ export async function bench(name) {
   // the camera: the room's direction, but in perspective and near; the mouse turns it round the object
   const cam = new THREE.PerspectiveCamera(28, 1, 10, 5000);
   cam.up.set(0, 0, 1);
-  cam.position.set(-1, -1, 0.9).normalize().multiplyScalar(Math.max(520, height * (spec.look || 4)));
+  cam.position.set(-1, -1, 0.9).normalize().multiplyScalar(Math.max(spec.near || 520, height * (spec.look || 4)));
   const controls = new OrbitControls(cam, canvas);
   controls.target.set(0, 0, spec.hangs ? spec.hangs - 110 : height * 0.45);
   controls.enableDamping = true;

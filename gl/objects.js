@@ -75,5 +75,8 @@ export const OBJECTS = {
   window: { label: "The window, the sill and the perch", ground: 1400, look: 2.4, build: (r) => import("./window.js").then((m) => m.windowSet(r)) },
   shelf: { label: "The shelf, the plant and the radio", ground: 1000, look: 2.8, build: (r) => import("./shelf.js").then((m) => m.shelf(r)) },
   plant: { label: "The plant", ground: 400, look: 3.4, build: (r) => import("./shelf.js").then((m) => m.plant(r)) },
+  // the two books on the desk (gl/books.js): CloudBank's ledger and Nutreek's agenda, with their covers printed, their bands and the bookmark
+  ledger: { label: "The ledger (CloudBank)", ground: 700, near: 1000, build: (r) => import("./books.js").then((m) => m.ledger(r)) },
+  agenda: { label: "The agenda (Nutreek)", ground: 700, near: 950, build: (r) => import("./books.js").then((m) => m.agenda(r)) },
   radio: { label: "The radio", ground: 500, look: 3, build: (r) => import("./shelf.js").then((m) => m.radio(r)) },
 };
