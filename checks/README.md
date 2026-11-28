@@ -20,6 +20,7 @@ python checks/dark.py
 python checks/peek.py
 python checks/willy-flips.py
 python checks/willy-pet.py
+python checks/willy-gl.py
 python checks/willy-way.py
 python checks/willy-props.py
 python checks/willy-fall.py
@@ -156,6 +157,19 @@ of motion that forgets it measures a room in which Willy only sleeps.
   line, a click elsewhere is not, and his label never changes; with the choice to animate anyway
   he is petted four times mid-action, the line speaks each time and nothing throws. Headless; about
   a minute.
+
+- `willy-gl.py` — Willy in the scene (#169, `?roomgl&willy`): no canvas of his own (the page's one canvas
+  is the scene's); the computer hides him where it stands in front of him (not one px of him changed
+  in its outline), he covers it where he stands in front; his shadow darkens the desk and nothing
+  lightens; his surfaces are the scene's (desk, cushion, shelf, the computer's top); under reduced
+  motion he sleeps on the cushion and his button, labelled, is round where he lies, last in the Tab
+  order, and Enter on him is answered by the live line; with motion he moves about, is always on
+  a surface or over a low thing, and never goes into anything solid (the outlines of the scene's own
+  things). The toys, what falls, the plant, the old computer's keyboard and sounds, the objects that
+  are links and "never flips" on a clock of 1/60 s a frame are not yet in the scene: their checks
+  (`willy-toys.py`, `willy-fall.py`, `willy-push.py`, `willy-plant.py`, `willy-prop-actions.py`,
+  `willy-fly.py`, `willy-way.py`, `willy-props.py`, `willy-sound.py`, `willy-flips.py`, `willy-box.py`)
+  stay as they are and keep checking the CSS room until the scene is the room. Headless; about two minutes.
 
 - `willy-way.py` — Willy never in the way: sent to sit on the CloudBank ledger (through the
   room's `willy` hook, as he would go on his own), it is said on the live line and a click on him

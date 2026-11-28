@@ -1,5 +1,5 @@
 // Neon lettering as real tubes (issue #160, ticket 08): each letter is a few bent lines of one stroke, as a glass-blower bends them, and each line is a
-// glass tube round a pale lit core, its two ends capped in dark glass and held off the board on small posts. The letters are drawn here as lines (a
+// glass tube round a pale lit core, its two ends closed in rounded tips of the glass, held off the board on small posts. The letters are drawn here as lines (a
 // round monoline hand), not taken from a typeface: only the letters the room uses are made (the name, and the navigation's four words).
 // A word is made for a width and a height: its letters stretch to fill the width. The tubes lie in the plane of the board, x east, y up, z out of it.
 
@@ -42,7 +42,6 @@ const G = {
   " ": { w: 0.4, s: [] },
 };
 const GAP = 0.12;
-
 // the corners of a bent line rounded a little (a glass tube is bent, not cut), by cutting each corner back and joining with a curve
 function rounded(pts, r) {
   if (pts.length < 3) return pts;
@@ -87,33 +86,31 @@ export function layout(text, width, height) {
   return { lines: lines.map((l) => rounded(l, 0.07).map(place)), dots: dots.map(place), width, height, unitX: kx };
 }
 
-// the tubes of a word, as meshes of a group: the glass (coloured, clear), the lit core, the dark caps at the ends of each line, the posts that hold
+// the tubes of a word, as meshes of a group: the glass (coloured, clear, each end closed in a round tip of it), the lit core, the posts that hold
 // it off the board, and a dot for each dot of an i and a j; `r` the tube's radius, `lift` how far its middle stands off the board's face
 export function tubes(lay, { r, lift = 5, neon = "#ff4fa0" }) {
   const group = new THREE.Group();
   const col = (t) => new THREE.Color(neon).lerp(new THREE.Color("#ffffff"), t);
   const glass = [],
     core = [],
-    caps = [],
     posts = [];
   const z0 = lift + r;
   const add = (pts, closed) => {
     if (closed) pts = pts.slice(0, -1); // (the last point is the first again)
     const v = pts.map(([x, y]) => new THREE.Vector3(x, y, z0));
     const curve = new THREE.CatmullRomCurve3(v, closed, "centripetal");
-    const seg = Math.max(8, Math.min(200, pts.length * 2));
+    const seg = Math.max(8, Math.min(240, v.length * 2));
     glass.push(new THREE.TubeGeometry(curve, seg, r, 10, closed));
     core.push(new THREE.TubeGeometry(curve, seg, r * 0.48, 8, closed));
     if (!closed) {
-      // a dark cap on each end: glass painted black where the electrode is, standing out of the tube's end a little
-      for (const [a, b] of [[v[0], v[1]], [v[v.length - 1], v[v.length - 2]]]) {
-        const dir = a.clone().sub(b).normalize();
-        const m = new THREE.Matrix4().lookAt(new THREE.Vector3(), dir, new THREE.Vector3(0, 0, 1));
-        const cg = new THREE.CylinderGeometry(r * 1.06, r * 1.06, r * 1.1, 12);
-        cg.rotateX(Math.PI / 2);
-        cg.applyMatrix4(m);
-        cg.translate(a.x + dir.x * r * 0.45, a.y + dir.y * r * 0.45, a.z + dir.z * r * 0.45);
-        caps.push(cg);
+      // each end closed in a round tip of the tube's own glass, the lit core going into it
+      for (const a of [v[0], v[v.length - 1]]) {
+        const tip = new THREE.SphereGeometry(r, 14, 10);
+        tip.translate(a.x, a.y, a.z);
+        glass.push(tip);
+        const lit = new THREE.SphereGeometry(r * 0.48, 10, 8);
+        lit.translate(a.x, a.y, a.z);
+        core.push(lit);
       }
     }
     // the posts: one at about every 130 px along the line (at least one for a long one), a thin pin from the board up to the tube's back
@@ -135,8 +132,7 @@ export function tubes(lay, { r, lift = 5, neon = "#ff4fa0" }) {
   const mat = {
     glass: new THREE.MeshPhysicalMaterial({ color: col(0.3), roughness: 0.05, transparent: true, opacity: 0.5, clearcoat: 1, clearcoatRoughness: 0.03, depthWrite: false }),
     core: new THREE.MeshStandardMaterial({ color: col(0.7), emissive: col(0.7), emissiveIntensity: 1, roughness: 0.4 }),
-    dark: new THREE.MeshStandardMaterial({ color: "#1b1b1b", roughness: 0.6 }),
-    post: new THREE.MeshStandardMaterial({ color: "#c9ced2", roughness: 0.3, metalness: 1 }),
+    post: new THREE.MeshStandardMaterial({ color: "#dde1e4", roughness: 0.32, metalness: 0.4 }), // (satin steel: light even where nothing is there to reflect)
   };
   const mk = (geos, m, name, cast = false) => {
     if (!geos.length) return null;
@@ -147,7 +143,7 @@ export function tubes(lay, { r, lift = 5, neon = "#ff4fa0" }) {
   };
   const glassMesh = mk(glass, mat.glass, "tube-glass");
   glassMesh.renderOrder = 5;
-  const parts = [glassMesh, mk(core, mat.core, "tube-core"), mk(caps, mat.dark, "tube-caps", true), mk(posts, mat.post, "tube-posts", true)];
+  const parts = [glassMesh, mk(core, mat.core, "tube-core"), mk(posts, mat.post, "tube-posts", true)];
   for (const p of parts) if (p) group.add(p);
   group.userData.setColor = (c) => {
     mat.glass.color.set(c).lerp(new THREE.Color("#ffffff"), 0.3);

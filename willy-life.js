@@ -216,7 +216,7 @@ function kit({ w, P, M, SURF, avoid = () => [], desk = null }) {
       to = (at.surface === "perch" || at.surface === "top" ? NEAR : [[0, 0]]).map(([dx, dy]) => ({ ...at, x: at.x + dx, y: at.y + dy })).find(fit);
     // (and once he has lain down, a little of his fur where he lies)
     const sheds = desk && /^(lie|sleep)$/.test(down);
-    return to ? [sliding(down, at, to), ...rest.map((m, i) => cue(stay(m.clip, to, m.s), { ...(m.cue || {}), ...(sheds && i === 0 ? { act: () => (m.cue?.act?.(), desk.fur(to)) } : {}) })), sliding(up, to, at)] : null;
+    return to ? [sliding(down, at, to), ...rest.map((m, i) => cue(stay(m.clip, to, m.s), { ...(m.cue || {}), ...(sheds && i === 0 ? { act: () => (m.cue?.act?.(), desk?.fur?.(to)) } : {}) })), sliding(up, to, at)] : null;
   }
   const sitting = (at, s, c = {}) => settled(at, ["sit", { clip: "sit-idle", s, cue: c }, "sit-from"]);
 

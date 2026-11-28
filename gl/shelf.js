@@ -237,17 +237,21 @@ export async function shelf(renderer) {
   const group = new THREE.Group();
   const board = mesh(roundedBox(112, 700, 18, 2, 2), std("sill", 0.6));
   board.position.set(sx(1238) + 56, sy(520) - 350, 152);
+  board.name = "shelf-board";
   group.add(board);
   for (const y of [560, 850, 1160]) {
     const bracket = mesh(roundedBox(60, 14, 60, 2, 2), std("skirting", 0.7));
     bracket.position.set(sx(1290) + 30, sy(y) - 7, 92);
+    bracket.name = "bracket";
     group.add(bracket);
   }
   const p = await plant(renderer);
   p.group.position.set(sx(1270) + 28, sy(530) - 28, 170);
+  p.group.name = "plant";
   group.add(p.group);
   const r = await radio(renderer);
   r.group.position.set(sx(1254) + 42, sy(1000) - 105, 170);
+  r.group.name = "radio";
   group.add(r.group);
   group.userData.radio = r.group.userData.radio;
   return { group, height: 330 };
