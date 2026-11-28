@@ -86,7 +86,7 @@ export async function paint(renderer, w, h, draw, { k = 4, repeat = false } = {}
   // (once for all that is painted, and for at most 3 s: a font file that never arrives must not keep an object from being
   // drawn, in a stand-in)
   fontsReady ||= Promise.race([
-    Promise.all(['800 30px "Bricolage Grotesque"', '400 16px "Atkinson Hyperlegible"', '700 16px "Atkinson Hyperlegible"'].map((f) => document.fonts.load(f))).catch(() => {}),
+    Promise.all(['800 30px "Bricolage Grotesque"', '400 16px "Atkinson Hyperlegible"', '700 16px "Atkinson Hyperlegible"', '500 11px "IBM Plex Mono"'].map((f) => document.fonts.load(f))).catch(() => {}),
     new Promise((r) => setTimeout(r, 3000)),
   ]);
   await fontsReady;

@@ -203,12 +203,16 @@ async function start() {
 
   // ---- the objects, as the CSS room puts them (gl/objects.js, each judged on the workbench first) ----------------
   // the old computer with its keyboard and mouse, turned 12 degrees (the CSS room's `rotateZ(-12deg)`, counterclockwise from above),
-  // its case's middle at (-907.46, 76.17) of the scene, measured on the CSS room
+  // its case's middle at (-907.46, 76.17) of the scene, measured on the CSS room, and then brought 170 px forward (the way its screen faces, towards the
+  // desk's front edge, where the chair is) because the owner finds a computer nearer the edge more real; the post on its top goes with it
   const objects = {};
+  const PC_FORWARD = 170,
+    shifts = { pc: [PC_FORWARD * Math.sin((12 * Math.PI) / 180), -PC_FORWARD * Math.cos((12 * Math.PI) / 180)] };
+  shifts.post = shifts.pc;
   {
     const { OBJECTS } = await import("./gl/objects.js");
     const pc = await OBJECTS.pc.build(renderer);
-    pc.group.position.set(-907.46, 76.17, 0);
+    pc.group.position.set(-907.46 + shifts.pc[0], 76.17 + shifts.pc[1], 0);
     pc.group.rotation.z = (12 * Math.PI) / 180;
     scene.add(pc.group);
     objects.pc = pc.group;
@@ -218,7 +222,7 @@ async function start() {
     const put = async (name, x, y, z, turn = 0) => {
       const o = await OBJECTS[name].build(renderer);
       o.group.position.set(x, y, z);
-      o.group.rotation.z = turn;
+      if (turn) o.group.rotation.z = turn; // (not for a thing that comes turned already, the cards on the wall)
       scene.add(o.group);
       objects[name] = o.group;
     };
@@ -233,6 +237,14 @@ async function start() {
     // the books on the desk, measured on the CSS room: the ledger 4 degrees clockwise, the agenda 4 degrees counterclockwise, from above
     await put("ledger", -29, 183, 0, (-4 * Math.PI) / 180);
     await put("agenda", -42, -199, 0, (4 * Math.PI) / 180);
+    // the mug, the jar, the camera and the pager on the mat, the post on the computer's top, the cards taped to the right wall: measured on the CSS room
+    // (the mug, the jar, the camera and the pager are rotated as the CSS room's `rotateZ` has them: 0, 0, 12 and -7 degrees)
+    await put("mug", 325, -265, 0);
+    await put("jar", 365, 295, 0);
+    await put("camera", -400, -195, 0, (-12 * Math.PI) / 180);
+    await put("pager", 550, 21, 0, (7 * Math.PI) / 180);
+    await put("post", -908.76 + shifts.post[0], 79.94 + shifts.post[1], 320);
+    await put("cards", 706, 240.56, 170.33);
   }
 
   // ---- the frame: room.js's, with the box it measured --------------------------------------------
@@ -313,6 +325,8 @@ async function start() {
     camera: cam,
     THREE,
     objects,
+    // where the scene is not the CSS room's on purpose: how far an object was moved, [x, y], from the place the CSS room gives it
+    shifts,
     // the CSS room's point, where it is on the screen, px
     project(x, y, z) {
       const v = at(x, y, z).project(cam);

@@ -78,5 +78,12 @@ export const OBJECTS = {
   // the two books on the desk (gl/books.js): CloudBank's ledger and Nutreek's agenda, with their covers printed, their bands and the bookmark
   ledger: { label: "The ledger (CloudBank)", ground: 700, near: 1000, build: (r) => import("./books.js").then((m) => m.ledger(r)) },
   agenda: { label: "The agenda (Nutreek)", ground: 700, near: 950, build: (r) => import("./books.js").then((m) => m.agenda(r)) },
+  // the rest of the desk and the walls (ticket 07): the instant camera (gl/camera.js), Planora's jar (gl/jar.js), the pager, the post on the computer and the
+  // cards taped to the right wall (gl/things.js)
+  camera: { label: "The camera", ground: 700, near: 900, build: (r) => import("./camera.js").then((m) => m.camera(r)) },
+  jar: { label: "The jar (Planora)", ground: 700, near: 900, build: (r) => import("./jar.js").then((m) => m.jar(r)) },
+  pager: { label: "The pager (ASF Plugins)", ground: 400, near: 330, build: (r) => import("./things.js").then((m) => m.pager(r)) },
+  post: { label: "The post on the computer", ground: 500, near: 600, build: (r) => import("./things.js").then((m) => m.post(r)) },
+  cards: { label: "The cards on the wall", ground: 700, near: 1000, hangs: 130, build: (r) => import("./things.js").then((m) => m.cards(r)) },
   radio: { label: "The radio", ground: 500, look: 3, build: (r) => import("./shelf.js").then((m) => m.radio(r)) },
 };

@@ -259,6 +259,37 @@ try:
     ac = b.js(f"""(() => {{ const at = {AT}; return {{ cover: at([0, 60, 24]), tile: at([-80, 115, 24]), band: at([0, -39.3, 25.4]), ribbon: at([23.6, -148, 3.5]) }}; }})()""")
     check(ac["cover"][1] > ac["cover"][0] + 40 and ac["tile"][0] > 190 and sum(ac["band"]) < 200 and ac["ribbon"][0] > 140 and ac["ribbon"][1] < 90, f"the agenda's cover is green with its white tile, the elastic across it, the red bookmark on the mat ({ac})")
 
+    # ---- the camera, the jar, the pager, the post and the cards (ticket 07) ----
+    check(start("camera"), "the camera starts on the bench")
+    kb = b.js(f"({BOUNDS})(BENCH.group)")
+    check(158 <= kb[1] - kb[0] <= 162 and -90.5 <= kb[2] <= -86 and 99 <= kb[3] <= 103 and abs(kb[4]) <= 1 and 119 <= kb[5] <= 121, f"the camera is 160 wide, 120 high, its eyepiece out of the back and its lens out of the front ({[round(v, 1) for v in kb]})")
+    kc = b.js(f"""(() => {{ const at = {AT}; return {{ plate: at([-60, -75.2, 100]), lens: at([-5, -89, 81]), shutter: at([-56, -84, 64]), base: at([40, -75.2, 20]) }}; }})()""")
+    check(sum(kc["plate"]) > 400 and sum(kc["plate"]) > sum(kc["base"]) + 250 and sum(kc["lens"]) < 220 and kc["shutter"][0] > 140 and kc["shutter"][1] < 110, f"the plate is white, the lens dark glass, the shutter button red and the base black ({kc})")
+
+    check(start("jar"), "the jar starts on the bench")
+    jb = b.js(f"({BOUNDS})(BENCH.group)")
+    check(149 <= jb[1] - jb[0] <= 153 and 149 <= jb[3] - jb[2] <= 153 and abs(jb[4]) <= 1 and 199 <= jb[5] <= 201.5, f"the jar is 150 across and 200 high ({[round(v, 1) for v in jb]})")
+    jl = b.js(f"""(() => {{ const at = {AT}; return {{ label: at([-53.5, -53.5, 100]) }}; }})()""")
+    check(sum(jl["label"]) > 450 and jl["label"][0] > 150, f"the label is paper on the glass, on the side that faces the camera ({jl})")
+
+    check(start("pager"), "the pager starts on the bench")
+    pb = b.js(f"({BOUNDS})(BENCH.group)")
+    check(124 <= pb[1] - pb[0] <= 132 and 77 <= pb[3] - pb[2] <= 80 and abs(pb[4]) <= 1 and 16 <= pb[5] <= 16.5, f"the pager is 120 by 78 and 16 high, its clip and keys a little out of its sides ({[round(v, 1) for v in pb]})")
+    pc = b.js(f"""(() => {{ const at = {AT}; return {{ screen: at([30, 17, 16.2]), tag: at([-50, -19.5, 16.2]), body: at([50, -35, 8]) }}; }})()""")
+    check(sum(pc["screen"]) < 200 and sum(pc["tag"]) > 500 and pc["body"][1] > pc["body"][0] + 25, f"the pager's screen is dark, its label paper, its case in the asf colour ({pc})")
+
+    check(start("post"), "the post starts on the bench")
+    qb = b.js(f"({BOUNDS})(BENCH.group)")
+    check(abs(qb[4]) <= 0.5 and 2 <= qb[5] <= 4.5 and qb[1] - qb[0] >= 280, f"the post is thin, the envelope on it 294 across ({[round(v, 1) for v in qb]})")
+    qc = b.js(f"""(() => {{ const at = {AT}; return {{ seal: at([1.8, -6.1, 3.8]), pocket: at([60, -20, 2.2]) }}; }})()""")
+    check(qc["seal"][0] > qc["seal"][1] + 50 and qc["pocket"][0] > qc["pocket"][2] - 5, f"Cupid's seal is red and the envelope's paper pink ({qc})")
+
+    check(start("cards"), "the cards start on the bench")
+    cb2 = b.js(f"({BOUNDS})(BENCH.group)")
+    check(cb2[1] - cb2[0] <= 9 and cb2[3] - cb2[2] >= 400, f"the cards are thin and stand on the wall's plane, 390 across with their tape ({[round(v, 1) for v in cb2]})")
+    cc = b.js(f"""(() => {{ const at = {AT}; return {{ face: at([-126, 26.4, 0.8]), paper: at([60, -60, 0.8]) }}; }})()""")
+    check(cc["face"][2] > cc["face"][0] + 50 and sum(cc["paper"]) > 450, f"the front card's face is violet on cream paper ({cc})")
+
     # an object that is not there lists what there is
     open(b, "?bench=nothing")
     time.sleep(2)
