@@ -24,6 +24,7 @@ POINTS = {
 }
 OLD = "(() => { const o = {}; for (const [k, p] of Object.entries(%s)) o[k] = ROOM.toScreen(...p); return o; })()"
 NEW = "(() => { const o = {}; for (const [k, p] of Object.entries(%s)) o[k] = ROOMGL.project(...p); return o; })()"
+# (the old computer and the post on it are brought 170 px forward in the scene, ROOMGL.shifts: the checks take that off, to compare with the CSS room)
 # points of the old computer's own frame (its units: 92 wide, 70 deep, 80 tall, four px of the room to a unit), at the CSS room and
 # in the scene: the case's corners at its foot and its top, the keyboard's front corners, the mouse's middle
 PCPTS = {
@@ -32,7 +33,7 @@ PCPTS = {
     "keyboard front left": (-4, 112, 0), "keyboard front right": (96, 112, 0), "mouse": (120.5, 101, 0),
 }
 OLDPC = "(() => { const pc = document.querySelector('.pc'), m = ROOM.toStage(pc), o = {}; for (const [k, p] of Object.entries(%s)) { const q = m.transformPoint(new DOMPoint(...p)); o[k] = ROOM.toScreen(q.x, q.y, q.z); } return o; })()"
-NEWPC = "(() => { const g = ROOMGL.objects.pc, o = {}; for (const [k, p] of Object.entries(%s)) { const q = g.localToWorld(new ROOMGL.THREE.Vector3(4 * p[0] - 184, 140 - 4 * p[1], 4 * p[2])); o[k] = ROOMGL.project(q.x + 640, 440 - q.y, q.z); } return o; })()"
+NEWPC = "(() => { const g = ROOMGL.objects.pc, o = {}; for (const [k, p] of Object.entries(%s)) { const S = ROOMGL.shifts.pc, q = g.localToWorld(new ROOMGL.THREE.Vector3(4 * p[0] - 184, 140 - 4 * p[1], 4 * p[2])); o[k] = ROOMGL.project(q.x - S[0] + 640, 440 - (q.y - S[1]), q.z); } return o; })()"
 # the other things of the room (#165, #164): a point of each in the CSS room's own element (selector, a point of its frame) and the same
 # point in the scene (the object, its point in the object's frame: x east, y north, z up, from the origin the object's file says)
 ITEMS = {
@@ -48,9 +49,19 @@ ITEMS = {
     "ledger se": (".ledger", (250, 330, 0), "ledger", (125, -165, 30)),
     "agenda nw": (".agenda", (0, 0, 0), "agenda", (-110, 145, 24)),
     "agenda se": (".agenda", (220, 290, 0), "agenda", (110, -145, 24)),
+    # the mug's rim, the jar's, the camera's front plate (its top corners), the pager's top corners, the front card's top left corner on the wall (as turned
+    # 3 degrees: its own frame is the wall's, x south, y up), Cupid's envelope on the computer (its top left, in the envelope's own frame, turned 16 degrees)
+    "mug rim": (".thing.mug", (65, 65, 0), "mug", (0, 0, 124)),
+    "jar rim": (".thing.jar", (0, 75, 0), "jar", (-75, 0, 200)),
+    "camera plate nw": (".thing.camera", (0, 118, 0), "camera", (-80, -43, 120)),
+    "camera plate se": (".thing.camera", (160, 150, 0), "camera", (80, -75, 120)),
+    "pager nw": (".thing.pager", (0, 0, 0), "pager", (-60, 39, 16)),
+    "pager se": (".thing.pager", (120, 78, 0), "pager", (60, -39, 16)),
+    "front card nw": (".thing.cards .card:nth-child(3)", (0, 0, 0), "cards", (-199.43, 79.67, 0)),
+    "cupid envelope nw": (".thing.envelope", (0, 0, 0), "post", (-152.1, -3.67, 2.1)),
 }
 OLDITEMS = ("(() => { const o = {}; for (const [k, [sel, p]] of Object.entries(%s)) { const e = document.querySelector(sel), q = ROOM.toStage(e).transformPoint(new DOMPoint(...p)); o[k] = ROOM.toScreen(q.x, q.y, q.z); } return o; })()") % json.dumps({k: [v[0], v[1]] for k, v in ITEMS.items()})
-NEWITEMS = ("(() => { const o = {}; for (const [k, [name, p]] of Object.entries(%s)) { const q = ROOMGL.objects[name].localToWorld(new ROOMGL.THREE.Vector3(...p)); o[k] = ROOMGL.project(q.x + 640, 440 - q.y, q.z); } return o; })()") % json.dumps({k: [v[2], v[3]] for k, v in ITEMS.items()})
+NEWITEMS = ("(() => { const o = {}; for (const [k, [name, p]] of Object.entries(%s)) { const S = ROOMGL.shifts[name] || [0, 0], q = ROOMGL.objects[name].localToWorld(new ROOMGL.THREE.Vector3(...p)); o[k] = ROOMGL.project(q.x - S[0] + 640, 440 - (q.y - S[1]), q.z); } return o; })()") % json.dumps({k: [v[2], v[3]] for k, v in ITEMS.items()})
 READY = "!!(window.ROOMGL && window.ROOMGL.ready)"
 
 failures = []
@@ -116,7 +127,7 @@ try:
         # the window, the shelf with the plant and the radio, the chair and the wastebasket
         itn = b.js(NEWITEMS)
         itw = max(((abs(itn[k][0] - old[(w, h, "items")][k][0]) ** 2 + abs(itn[k][1] - old[(w, h, "items")][k][1]) ** 2) ** 0.5, k) for k in ITEMS)
-        check(itw[0] <= 1.5, f"{w} x {h}: the window, the shelf, the plant, the radio, the chair, the wastebasket and the two books are where the CSS room has them (the worst, {itw[1]}, {itw[0]:.2f} px off)")
+        check(itw[0] <= 1.5, f"{w} x {h}: the window, the shelf, the plant, the radio, the chair, the wastebasket, the two books and the mug, jar, camera, pager, cards and post are where the CSS room has them (the worst, {itw[1]}, {itw[0]:.2f} px off)")
         # the tie hangs on the chair's headrest where it stands: its origin is at (-70, -137, 1019) of the chair's frame
         tie_off = b.js("(() => { const O = ROOMGL.objects, p = O.chair.localToWorld(new ROOMGL.THREE.Vector3(-70, -137, 1019)); return Math.hypot(p.x - O.tie.position.x, p.y - O.tie.position.y, p.z - O.tie.position.z) + Math.abs(O.tie.rotation.z - O.chair.rotation.z); })()")
         check(tie_off < 0.01, f"{w} x {h}: the tie is on the chair's headrest, turned as the chair is ({tie_off:.4f} off)")
@@ -133,7 +144,7 @@ try:
       const at = (p) => ROOMGL.pixel(...ROOMGL.project(...p));
       const grid = (f) => { const l = []; for (let a = -1500; a <= 3000; a += 100) for (let b = -500; b <= 2400; b += 100) l.push(f(a, b)); return l; };
       const WALL = grid((a, b) => [a, -200, b]).filter((p) => p[0] < 1300 && p[2] > 100), FLOOR = grid((a, b) => [a, b + 600, -560]).filter((p) => p[0] < 1300 && p[1] > 1100);"""
-    px = b.js("(() => { " + VIS + " return { mat: at([250, 200, 0]), desk: at([-300, 500, -4]), wall: at(vis(WALL)), floor: at(vis(FLOOR)) }; })()")
+    px = b.js("(() => { " + VIS + " return { mat: at([700, 860, 0]), desk: at([-300, 500, -4]), wall: at(vis(WALL)), floor: at(vis(FLOOR)) }; })()")
     check(len({tuple(v) for v in px.values()}) == 4 and all(sum(v) > 0 for v in px.values()), f"the mat, the desk, a wall and the floor are drawn, each its own colour ({px})")
     check(px["mat"][1] > px["mat"][0] and px["mat"][1] > px["mat"][2], "the mat is green")
 
@@ -141,7 +152,7 @@ try:
     before = b.js("ROOMGL.drawn")
     b.media(prefers_color_scheme="dark")
     check(wait(b, f"ROOMGL.drawn > {before}", 20), "the scheme changing draws the scene again")
-    dark =b.js("(() => { " + VIS + " return { mat: at([250, 200, 0]), wall: at(vis(WALL)) }; })()")
+    dark =b.js("(() => { " + VIS + " return { mat: at([700, 860, 0]), wall: at(vis(WALL)) }; })()")
     check(sum(dark["mat"]) < sum(px["mat"]) and sum(dark["wall"]) < sum(px["wall"]), f"in the dark scheme the mat and the wall are darker ({dark} against {px['mat']}, {px['wall']})")
 
     # a window that grows or shrinks is framed again, to the same points
