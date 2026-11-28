@@ -187,22 +187,29 @@ export async function willy(room, stage, src = "assets/willy.glb", host = null) 
   model.rotation.x = Math.PI / 2; // glTF is y-up; the room is z-up
   model.scale.setScalar(SCALE);
   holder.add(model);
+  const hooked = [];
   if (gl) {
     anchor.add(holder);
+    anchor.visible = false; // (until he is first placed: until then he would stand at the scene's origin, unposed)
     scene.add(anchor);
-    host.hooks.before.push(() => {
-      anchor.position.copy(O);
-      anchor.updateMatrixWorld(true);
-    });
-    host.hooks.after.push(() => {
-      anchor.position.set(0, 0, 0);
-      anchor.updateMatrixWorld(true);
-    });
+    hooked.push(
+      () => {
+        anchor.position.copy(O);
+        anchor.updateMatrixWorld(true);
+      },
+      () => {
+        anchor.position.set(0, 0, 0);
+        anchor.updateMatrixWorld(true);
+      },
+    );
+    host.hooks.before.push(hooked[0]);
+    host.hooks.after.push(hooked[1]);
   } else scene.add(holder);
   // him for the room's light pass (room-light.js), as ROOM.willy once he is first placed: what of
   // him it lights (his body, which casts his shadow, and his fur), and whom to tell each time he
   // is drawn, so it draws him in the same frame; again() draws him anew, as when it starts
   // lighting him or stops
+  let placed = false;
   const body = { holder, here: () => here, body: [], fur: [], drawn: null, again: null };
   const skinned = body.body;
   model.traverse((o) => {
@@ -410,7 +417,15 @@ export async function willy(room, stage, src = "assets/willy.glb", host = null) 
   body.again = paint;
   // his many shaders (one a shell of fur) compiled in the background where the browser can,
   // rather than all at once in his first frame
-  if (!gl) {
+  if (gl) {
+    // (his many shaders compiled where the browser can, in the background, rather than all in his first frame: he is shown for that)
+    anchor.visible = true;
+    try {
+      await host.compile?.();
+    } finally {
+      anchor.visible = placed;
+    }
+  } else {
     await renderer.compileAsync(scene, cam);
     // lit as the room is, and drawn again whenever its lights change
     sources = window.ROOM.lights();
@@ -429,6 +444,14 @@ export async function willy(room, stage, src = "assets/willy.glb", host = null) 
     // (for the checks: his root and his model)
     holder,
     model,
+    // out of the scene altogether (a failure of what runs him leaves nothing standing there)
+    dispose() {
+      if (!gl) return;
+      scene.remove(anchor);
+      host.hooks.before.splice(host.hooks.before.indexOf(hooked[0]), 1);
+      host.hooks.after.splice(host.hooks.after.indexOf(hooked[1]), 1);
+      host.invalidate();
+    },
     // (for the checks: whether he is drawn)
     get visible() {
       return gl ? anchor.visible : true;
@@ -446,6 +469,8 @@ export async function willy(room, stage, src = "assets/willy.glb", host = null) 
     // under him (stand())
     place(x, y, z, heading, under = null) {
       at = { x, y, z, heading, under };
+      placed = true;
+      if (gl) anchor.visible = true;
       stand();
       if (!gl) window.ROOM.willy ??= body; // (not before: until then he stands at the room's origin, unposed)
     },

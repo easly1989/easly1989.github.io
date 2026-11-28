@@ -449,6 +449,7 @@ async function start() {
       camera: cam,
       hooks,
       invalidate,
+      compile: () => renderer.compileAsync(scene, cam),
       rect: () => ({ left: 0, top: 0, width: innerWidth, height: innerHeight }),
       k: () => innerWidth / ((cam.right - cam.left) / cam.zoom),
       toScene: (x, y, z, out) => out.set(x - 640, 440 - y, z),
@@ -477,10 +478,15 @@ async function start() {
   api.ready = true;
   document.documentElement.classList.add("gl-ready");
   // Willy (willy-gl.js), drawn into this scene, once the room is up: for now only with ?willy (he comes by default when the scene replaces the CSS room)
-  if (/[?&]willy\b/.test(location.search)) {
-    const { roomApi } = await import("./gl/room-api.js");
-    window.ROOM = roomApi({ objects, project: api.project });
-    import("./willy-gl.js").catch((e) => console.warn("No Willy:", e));
+  const asked = new URLSearchParams(location.search).get("willy");
+  if (asked !== null && asked !== "0") {
+    try {
+      const { roomApi } = await import("./gl/room-api.js");
+      window.ROOM = roomApi({ objects, project: api.project });
+      import("./willy-gl.js").catch((e) => console.warn("No Willy:", e));
+    } catch (e) {
+      console.warn("No Willy:", e); // (nothing of his is a reason to lose the room)
+    }
   }
 }
 

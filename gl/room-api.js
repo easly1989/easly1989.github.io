@@ -73,6 +73,22 @@ function hull(pts) {
   return lower.slice(0, -1).concat(upper.slice(0, -1));
 }
 
+// a convex outline with no more than n vertices: the one whose corner adds least to the area is dropped, again and again (a subset of the corners of a
+// convex outline is convex, a little inside it)
+function simplify(h, n) {
+  const area = (a, b, c) => Math.abs((b[0] - a[0]) * (c[1] - a[1]) - (c[0] - a[0]) * (b[1] - a[1])) / 2;
+  while (h.length > n) {
+    let k = 0,
+      least = Infinity;
+    for (let i = 0; i < h.length; i++) {
+      const a = area(h[(i + h.length - 1) % h.length], h[i], h[(i + 1) % h.length]);
+      if (a < least) (least = a), (k = i);
+    }
+    h.splice(k, 1);
+  }
+  return h;
+}
+
 export function roomApi({ objects, project }) {
   const stage = (sx, sy) => [sx + 640, 440 - sy];
 
@@ -112,7 +128,7 @@ export function roomApi({ objects, project }) {
     const c = Math.cos(turn),
       s = Math.sin(turn);
     const parts = shapes.map(({ pts }) => {
-      const q = hull(pts).map(([x, y]) => stage(pos.x + x * c - y * s, pos.y + x * s + y * c));
+      const q = simplify(hull(pts), 28).map(([x, y]) => stage(pos.x + x * c - y * s, pos.y + x * s + y * c));
       const xs = q.map((p) => p[0]),
         ys = q.map((p) => p[1]);
       return { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys), q };
@@ -242,8 +258,9 @@ export function roomApi({ objects, project }) {
     (o.faces ??= o.b.parts.flatMap((p) => {
       const { z0, z1 } = o.b,
         q = p.q;
-      const side = (i) => [[q[i][0], q[i][1], z0], [q[(i + 1) % 4][0], q[(i + 1) % 4][1], z0], [q[(i + 1) % 4][0], q[(i + 1) % 4][1], z1], [q[i][0], q[i][1], z1]];
-      return [0, 1, 2, 3].map(side).concat([q.map((c) => [c[0], c[1], z1])]);
+      const n = q.length;
+      const side = (i) => [[q[i][0], q[i][1], z0], [q[(i + 1) % n][0], q[(i + 1) % n][1], z0], [q[(i + 1) % n][0], q[(i + 1) % n][1], z1], [q[i][0], q[i][1], z1]];
+      return [...Array(n).keys()].map(side).concat([q.map((c) => [c[0], c[1], z1])]);
     }));
   const before = (w) =>
     solid()

@@ -78,7 +78,8 @@ COMPARE = """(async (x, y, heading, what) => {
   for (let px = Math.floor(a.left - pad); px < a.right + pad; px += 5) for (let py = Math.floor(a.top - pad); py < a.bottom + pad; py += 5) if (px > 0 && py > 0 && px < innerWidth && py < innerHeight) pts.push([px, py]);
   const skins = [];
   ROOMGL.scene.traverse((o) => { if (o.isSkinnedMesh) skins.push(o); });
-  const set = (v) => { if (what === 'shadow') for (const o of skins) o.castShadow = v; else W.w.visible = v; };
+  const was = skins.map((o) => o.castShadow);
+  const set = (v) => { if (what === 'shadow') skins.forEach((o, i) => (o.castShadow = v && was[i])); else W.w.visible = v; };
   const withHim = h.read(pts);
   set(false);
   await h.frames(3);
@@ -106,7 +107,7 @@ try:
     # without ?willy there is no Willy: the room is as it was
     ok = load(b, True, "?room") is None
     time.sleep(1)
-    check(ok and not b.js("!!document.querySelector('.willy-pet')"), "without ?willy there is no Willy and no button for him")
+    check(ok and b.js("!!(window.ROOMGL && ROOMGL.ready)") and not b.js("!!document.querySelector('.willy-pet')"), "without ?willy the scene is up and there is no Willy and no button for him")
 
     # ---- under reduced motion: asleep on the cushion, in the scene, with no canvas of his own ----
     check(load(b, True), "Willy is there under reduced motion")
@@ -118,6 +119,12 @@ try:
     check(names == "desk,perch,shelf,top", f"his surfaces come from the scene: the desk, the cushion, the shelf and the computer's top ({names})")
     now = b.js("(() => { const n = ROOMGL.willy.now(); return { clip: n.clip, z: n.z, perch: ROOMGL.willy.SURF.perch.z }; })()")
     check(now["clip"].startswith("sleep") and now["z"] == now["perch"], f"he sleeps on the cushion ({now})")
+    # his surfaces' heights are the scene's own: the fleece's top, the shelf board's top, the computer's top with Cupid's letter on it
+    tops = b.js("""(() => { const T = ROOMGL.THREE, O = ROOMGL.objects, top = (g, name) => { let m = null; g.traverse((o) => { if (!m && o.name === name) m = o; }); return new T.Box3().setFromObject(m).max.z; };
+      const pc = new T.Box3().setFromObject(O.post).max.z;
+      return { fleece: top(O.window, 'fleece'), shelf: top(O.shelf, 'shelf-board'), post: pc, surfaces: Object.fromEntries(ROOM.surfaces.map((s) => [s.name, s.z])) }; })()""")
+    sf = tops["surfaces"]
+    check(abs(sf["perch"] - tops["fleece"]) <= 4 and abs(sf["shelf"] - tops["shelf"]) <= 2 and abs(sf["top"] - tops["post"]) <= 5, f"they stand at the heights of what they are in the scene ({sf} against {tops})")
     # his button: the last Tab stop, labelled; Enter is answered, and the live line says what he did
     box = b.js("(() => { const t = document.querySelector('.willy-pet'); if (!t || t.hidden) return null; const r = t.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2, label: t.getAttribute('aria-label'), l: r.left, t: r.top, r: r.right, b: r.bottom }; })()")
     check(box is not None and box["label"] == LABEL, f"his button is there, on him ({box})")
@@ -156,8 +163,10 @@ try:
     ok_ = [t for t in tried if t[2] >= 40 and t[4] >= 40]
     best = min(ok_, key=lambda t: t[3] / t[2]) if ok_ else None
     check(best is not None, f"he can be held where the computer is in front of part of him and part of him shows ({tried})")
-    if best:
-        check(best[3] <= max(6, best[2] * 0.01), f"behind the computer, what of him is over it is hidden by it: {best[2]} px in its outline, {best[3]} of them changed by him (x, y, in outline, changed in it, changed in all: {best})")
+    # (every place where a good part of him is over the computer's outline, not the luckiest one)
+    over = [t for t in tried if t[2] >= 150]
+    bad = [t for t in over if t[3] > max(6, t[2] * 0.01)]
+    check(len(over) >= 3 and not bad, f"behind the computer, what of him is over it is hidden by it, in each of {len(over)} places; the ones where he is not: {bad} (x, y, px in its outline, changed in it, changed in all)")
     front = None
     for x, y, hd in spots["front"]:
         r = b.js(f"{COMPARE}({x}, {y}, {hd}, 'hides')")

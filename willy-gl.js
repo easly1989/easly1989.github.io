@@ -25,12 +25,14 @@ const ROOM = window.ROOM;
   document.head.append(css);
 }
 
-let ready;
+let ready,
+  kept = null; // (the model the scene has, to take out of it if what runs him fails)
 ROOM.holdLight(new Promise((r) => (ready = r)));
 live()
   .catch((e) => {
     console.warn("No Willy:", e);
     GL.willy = null;
+    kept?.dispose();
   })
   .finally(() => ready());
 
@@ -40,6 +42,7 @@ const LOOK_ABOUT = [3, 7];
 async function live() {
   const [{ willy }, { planner }, { moves }, { pick, everyday, reactions, react, bothered }] = await Promise.all([import("./willy.js"), import("./willy-paths.js"), import("./willy-moves.js"), import("./willy-life.js")]);
   const w = await willy(null, null, "assets/willy.glb", GL.host);
+  kept = w;
   const P = planner({ surfaces: ROOM.surfaces, jumps: ROOM.jumps, fits: w.fits });
   const M = moves(w, P, ROOM.surfaces);
   const SURF = Object.fromEntries(ROOM.surfaces.map((s) => [s.name, s]));
@@ -132,7 +135,14 @@ async function live() {
     t.scale.setScalar(shed ? 1.8 : 1);
     GL.scene.add(t);
     tufts.push(t);
-    if (tufts.length > 6) GL.scene.remove(tufts.shift());
+    if (tufts.length > 6) {
+      const old = tufts.shift();
+      GL.scene.remove(old);
+      old.traverse((o) => {
+        o.geometry?.dispose();
+        o.material?.dispose();
+      });
+    }
     GL.host.invalidate();
   };
   let lastReaction = null;
@@ -330,6 +340,12 @@ async function live() {
     }
     return show.length - 1;
   };
+  // (one chain of frames at a time: held, the ones asked for are dropped)
+  let token = 0;
+  const go = () => {
+    const mine = token;
+    requestAnimationFrame((time) => mine === token && frame(time));
+  };
   let show = lookingAbout(at),
     cued = -1,
     total = show.reduce((n, m) => n + m.dur, 0),
@@ -407,6 +423,7 @@ async function live() {
     // held where they put him, standing, and drawn: for judging what hides him and what shadow he casts
     hold(x, y, surface = "desk", heading = 270, clip = "idle") {
       held = true;
+      token++;
       const s = SURF[surface];
       M.pose({ x, y, z: s.z, h: heading, clip, time: 0 });
       w.draw(0);
@@ -414,8 +431,9 @@ async function live() {
     },
     release() {
       held = false;
+      token++;
       last = null;
-      requestAnimationFrame(frame);
+      go();
     },
   };
   async function answering(kind) {
@@ -432,7 +450,7 @@ async function live() {
       blend = { from: p, at: null };
     }
     last = null;
-    requestAnimationFrame(frame);
+    go();
   }
   // one frame: where the show has got to, drawn only if he is anywhere new; at its end, the
   // next trip is found while he holds his last pose (the page's frames go on meanwhile)
@@ -468,7 +486,7 @@ async function live() {
           t = 0;
           cued = -1;
           last = null;
-          requestAnimationFrame(frame);
+          go();
         });
       return;
     }
@@ -511,7 +529,7 @@ async function live() {
         saying = 0;
       } else bubble();
     }
-    requestAnimationFrame(frame);
+    go();
   }
   frame(performance.now());
   ready();
