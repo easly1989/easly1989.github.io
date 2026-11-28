@@ -59,6 +59,19 @@ ITEMS = {
     "pager se": (".thing.pager", (120, 78, 0), "pager", (60, -39, 16)),
     "front card nw": (".thing.cards .card:nth-child(3)", (0, 0, 0), "cards", (-199.43, 79.67, 0)),
     "cupid envelope nw": (".thing.envelope", (0, 0, 0), "post", (-152.1, -3.67, 2.1)),
+    # the walls' dressing, in each one's plane (x along it as a reader reads, y up, z out of the wall): the neon name's board, the poster (turned a degree),
+    # the navigation's board, the switch's plate; Willy's box (its floor's corners), the socket (in the cable's frame, at the desk's back edge)
+    "sign nw": (".on-wall.neon h1", (0, 0, 0), "sign", (-368.5, 68, 0)),
+    "sign se": (".on-wall.neon h1", (737, 136, 0), "sign", (368.5, -68, 0)),
+    "poster nw": (".on-wall.poster .intro", (0, 0, 0), "poster", (-321.71, 133.88, 0)),
+    "nav nw": (".navwall nav", (0, 0, 0), "nav", (-350, 48, 0)),
+    "nav se": (".navwall nav", (700, 96, 0), "nav", (350, -48, 0)),
+    "switch nw": (".light-switch", (0, 0, 0), "switch", (-32, 50, 10)),
+    "switch se": (".light-switch", (64, 100, 0), "switch", (32, -50, 10)),
+    "nest floor nw": (".nest-floor", (0, 0, 0), "nest", (-125, 123, 5)),
+    "nest floor se": (".nest-floor", (250, 246, 0), "nest", (125, -123, 5)),
+    "socket nw": (".socket", (0, 0, 0), "cable", (-40.5, 47, -430)),
+    "socket se": (".socket", (70, 70, 0), "cable", (29.5, 47, -500)),
 }
 OLDITEMS = ("(() => { const o = {}; for (const [k, [sel, p]] of Object.entries(%s)) { const e = document.querySelector(sel), q = ROOM.toStage(e).transformPoint(new DOMPoint(...p)); o[k] = ROOM.toScreen(q.x, q.y, q.z); } return o; })()") % json.dumps({k: [v[0], v[1]] for k, v in ITEMS.items()})
 NEWITEMS = ("(() => { const o = {}; for (const [k, [name, p]] of Object.entries(%s)) { const S = ROOMGL.shifts[name] || [0, 0], q = ROOMGL.objects[name].localToWorld(new ROOMGL.THREE.Vector3(...p)); o[k] = ROOMGL.project(q.x - S[0] + 640, 440 - (q.y - S[1]), q.z); } return o; })()") % json.dumps({k: [v[2], v[3]] for k, v in ITEMS.items()})
@@ -127,7 +140,7 @@ try:
         # the window, the shelf with the plant and the radio, the chair and the wastebasket
         itn = b.js(NEWITEMS)
         itw = max(((abs(itn[k][0] - old[(w, h, "items")][k][0]) ** 2 + abs(itn[k][1] - old[(w, h, "items")][k][1]) ** 2) ** 0.5, k) for k in ITEMS)
-        check(itw[0] <= 1.5, f"{w} x {h}: the window, the shelf, the plant, the radio, the chair, the wastebasket, the two books and the mug, jar, camera, pager, cards and post are where the CSS room has them (the worst, {itw[1]}, {itw[0]:.2f} px off)")
+        check(itw[0] <= 1.5, f"{w} x {h}: the window, the shelf, the plant, the radio, the chair, the wastebasket, the two books and the mug, jar, camera, pager, cards, post, neon name, poster, navigation, switch, box and socket are where the CSS room has them (the worst, {itw[1]}, {itw[0]:.2f} px off)")
         # the tie hangs on the chair's headrest where it stands: its origin is at (-70, -137, 1019) of the chair's frame
         tie_off = b.js("(() => { const O = ROOMGL.objects, p = O.chair.localToWorld(new ROOMGL.THREE.Vector3(-70, -137, 1019)); return Math.hypot(p.x - O.tie.position.x, p.y - O.tie.position.y, p.z - O.tie.position.z) + Math.abs(O.tie.rotation.z - O.chair.rotation.z); })()")
         check(tie_off < 0.01, f"{w} x {h}: the tie is on the chair's headrest, turned as the chair is ({tie_off:.4f} off)")
@@ -143,7 +156,7 @@ try:
     VIS = """const vis = (list) => list.find((p) => { const s = ROOMGL.project(...p); return s[0] > 20 && s[0] < innerWidth - 20 && s[1] > 20 && s[1] < innerHeight - 20; });
       const at = (p) => ROOMGL.pixel(...ROOMGL.project(...p));
       const grid = (f) => { const l = []; for (let a = -1500; a <= 3000; a += 100) for (let b = -500; b <= 2400; b += 100) l.push(f(a, b)); return l; };
-      const WALL = grid((a, b) => [a, -200, b]).filter((p) => p[0] < 1300 && p[2] > 100), FLOOR = grid((a, b) => [a, b + 600, -560]).filter((p) => p[0] < 1300 && p[1] > 1100);"""
+      const WALL = grid((a, b) => [a, -200, b]).filter((p) => p[0] < 1300 && p[2] > 100 && !(p[0] > -490 && p[0] < 320 && p[2] < 680) && !(p[0] > 400 && p[0] < 1040 && p[2] < 680)), FLOOR = grid((a, b) => [a, b + 600, -560]).filter((p) => p[0] < 1300 && p[1] > 1100);"""
     px = b.js("(() => { " + VIS + " return { mat: at([700, 860, 0]), desk: at([-300, 500, -4]), wall: at(vis(WALL)), floor: at(vis(FLOOR)) }; })()")
     check(len({tuple(v) for v in px.values()}) == 4 and all(sum(v) > 0 for v in px.values()), f"the mat, the desk, a wall and the floor are drawn, each its own colour ({px})")
     check(px["mat"][1] > px["mat"][0] and px["mat"][1] > px["mat"][2], "the mat is green")
@@ -154,6 +167,22 @@ try:
     check(wait(b, f"ROOMGL.drawn > {before}", 20), "the scheme changing draws the scene again")
     dark =b.js("(() => { " + VIS + " return { mat: at([700, 860, 0]), wall: at(vis(WALL)) }; })()")
     check(sum(dark["mat"]) < sum(px["mat"]) and sum(dark["wall"]) < sum(px["wall"]), f"in the dark scheme the mat and the wall are darker ({dark} against {px['mat']}, {px['wall']})")
+
+    # the odds and ends: three to five of the seven on a visit, clear of each other and of every solid thing, all on the desk; all seven with ?odds
+    SEVEN = {"pencil", "eraser", "clip", "coin", "bottle-cap", "usb-stick", "rubber-band"}
+    meet = lambda p, q: p["x0"] < q["x1"] - 1 and p["x1"] > q["x0"] + 1 and p["y0"] < q["y1"] - 1 and p["y1"] > q["y0"] + 1
+    def odds_check(lo, count_ok, what):
+        mine = [s_ for s_ in lo["solids"] if s_["name"] in SEVEN]
+        rest = [s_ for s_ in lo["solids"] if s_["name"] not in SEVEN]
+        check(count_ok(len(lo["names"])) and len(mine) == len(lo["names"]), f"{what}: {len(lo['names'])} of the seven odds and ends are drawn ({lo['names']})")
+        check(not any(meet(p, q) for p in mine for q in rest) and not any(meet(p, q) for i, p in enumerate(mine) for q in mine[i + 1:]), f"{what}: they lie clear of each other and of every solid thing")
+        check(all(-1200 <= p["x0"] and p["x1"] <= 690 and -590 <= p["y0"] and p["y1"] <= 590 for p in mine), f"{what}: they all lie on the desk")
+    odds_check(b.js("ROOMGL.loose"), lambda n: 3 <= n <= 5, "on a visit")
+    b.media(prefers_color_scheme="light")
+    start(b, 1440, 900, "?room&odds", "localStorage.setItem('site:room','1');localStorage.setItem('room-gl','1')")
+    wait(b, READY)
+    time.sleep(0.5)
+    odds_check(b.js("ROOMGL.loose"), lambda n: n == 7, "with ?odds")
 
     # a window that grows or shrinks is framed again, to the same points
     before = b.js("ROOMGL.drawn")

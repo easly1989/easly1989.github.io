@@ -206,6 +206,14 @@ async function start() {
   // its case's middle at (-907.46, 76.17) of the scene, measured on the CSS room, and then brought 170 px forward (the way its screen faces, towards the
   // desk's front edge, where the chair is) because the owner finds a computer nearer the edge more real; the post on its top goes with it
   const objects = {};
+  const api_loose = { names: [], solids: [] }; // (what the checks ask: which of the seven were drawn, and the solids they keep clear of)
+  // the typeface of the neon (the CSS room's page loads it with its styles; the scene's page does not), before anything is printed in it
+  if (!document.querySelector('link[href*="Tilt+Neon"]')) {
+    const l = document.createElement("link");
+    l.rel = "stylesheet";
+    l.href = "https://fonts.googleapis.com/css2?family=Tilt+Neon&display=swap";
+    document.head.append(l);
+  }
   const PC_FORWARD = 170,
     shifts = { pc: [PC_FORWARD * Math.sin((12 * Math.PI) / 180), -PC_FORWARD * Math.cos((12 * Math.PI) / 180)] };
   shifts.post = shifts.pc;
@@ -245,6 +253,91 @@ async function start() {
     await put("pager", 550, 21, 0, (7 * Math.PI) / 180);
     await put("post", -908.76 + shifts.post[0], 79.94 + shifts.post[1], 320);
     await put("cards", 706, 240.56, 170.33);
+    // what is on the walls and under the desk, measured on the CSS room: the neon name and the poster on the back wall (2 px proud of its face, at y = 638),
+    // the light switch beside them, the navigation on the right wall (at x = 708); Willy's box at the desk's back left; the cable from the computer's back
+    // (it goes with the computer, ROOMGL.shifts) over the desk's back edge to the socket
+    await put("sign", -701.5, 638, 592);
+    await put("poster", -678.29, 638, 206.12);
+    await put("switch", -1078, 638, 250);
+    await put("nav", 708, -20, 337);
+    await put("nest", -343, 457, 0);
+    {
+      const cb = await (await import("./gl/desk.js")).cable(renderer, { shift: [shifts.pc[0], shifts.pc[1]] });
+      cb.group.position.set(-399.5 - 640, 440 + 152, 0);
+      scene.add(cb.group);
+      objects.cable = cb.group;
+    }
+    // the odds and ends, a few of the seven on each visit, put where they go into nothing (all seven with ?odds)
+    await scatter(objects, scene, renderer);
+  }
+
+  // ---- where the loose things go, on every visit (room.js: put, faults, tallOnes) ----------------------------------
+  // Three to five of the seven (all of them with ?odds), anywhere on the desk where they go into no solid thing and are not hidden, on the screen,
+  // behind the computer, the jar or the mug; a turn up to 40 degrees either way; the next is judged against the ones before it.
+  async function scatter(objects, scene, renderer) {
+    const { LOOSE } = await import("./gl/loose.js");
+    const names = Object.keys(LOOSE);
+    const keep = /[?&]odds\b/.test(location.search) ? names.length : 3 + Math.floor(Math.random() * 3);
+    while (names.length > keep) names.splice(Math.floor(Math.random() * names.length), 1);
+    const DESK = { x0: -1200, x1: 690, y0: -590, y1: 590 }; // (the desk's top, scene px: css x -560 to 1330, y -150 to 1030)
+    const MAT = { x0: -680, x1: 680, y0: -480, y1: 480 };
+    // the solid things on the desk, as plan boxes with the heights they stand between; and the tall ones' boxes on the screen (a fixed isometric
+    // projection: right = (1,-1,0), up = (1,1,2)): the computer, the jar, the mug
+    const solids = [];
+    const rectOf = (g, name) => {
+      const b = new THREE.Box3().setFromObject(g);
+      return { name, x0: b.min.x, x1: b.max.x, y0: b.min.y, y1: b.max.y, z0: b.min.z, z1: b.max.z, box: b };
+    };
+    for (const n of ["pc", "ledger", "agenda", "camera", "jar", "mug", "pager", "nest"]) if (objects[n]) solids.push(rectOf(objects[n], n));
+    const scr = (x, y, z) => [(x - y) / Math.SQRT2, (x + y + 2 * z) / Math.sqrt(6)];
+    const screenBox = (b) => {
+      const o = { l: 1e9, r: -1e9, t: 1e9, b: -1e9 };
+      for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) {
+        const [u, v] = scr(x, y, z);
+        o.l = Math.min(o.l, u);
+        o.r = Math.max(o.r, u);
+        o.t = Math.min(o.t, v);
+        o.b = Math.max(o.b, v);
+      }
+      return o;
+    };
+    const tall = solids.filter((s) => ["pc", "jar", "mug"].includes(s.name)).map((s) => screenBox(s.box));
+    const placed = [];
+    for (const name of names) {
+      const o = await LOOSE[name](renderer);
+      const local = new THREE.Box3().setFromObject(o.group);
+      let ok = false;
+      for (let tries = 0; tries < 200 && !ok; tries++) {
+        const x = DESK.x0 + 40 + Math.random() * (DESK.x1 - DESK.x0 - 80),
+          y = DESK.y0 + 40 + Math.random() * (DESK.y1 - DESK.y0 - 80),
+          turn = ((Math.random() * 80 - 40) * Math.PI) / 180;
+        // (its plan box turned: the four corners of the local one)
+        const c = Math.cos(turn),
+          s = Math.sin(turn);
+        const xs = [],
+          ys = [];
+        for (const px of [local.min.x, local.max.x]) for (const py of [local.min.y, local.max.y]) {
+          xs.push(x + px * c - py * s);
+          ys.push(y + px * s + py * c);
+        }
+        const r = { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) };
+        if (r.x0 < DESK.x0 || r.x1 > DESK.x1 || r.y0 < DESK.y0 || r.y1 > DESK.y1) continue;
+        if (solids.some((q) => r.x0 < q.x1 - 1 && r.x1 > q.x0 + 1 && r.y0 < q.y1 - 1 && r.y1 > q.y0 + 1)) continue;
+        const [u, v] = scr(x, y, 4);
+        if (tall.some((t) => u > t.l - 14 && u < t.r + 14 && v > t.t - 14 && v < t.b + 14)) continue;
+        const onMat = r.x0 > MAT.x0 && r.x1 < MAT.x1 && r.y0 > MAT.y0 && r.y1 < MAT.y1;
+        o.group.position.set(x, y, onMat ? 0 : -4); // (on the bare desk, 4 lower than the mat's top)
+        o.group.rotation.z = turn;
+        scene.add(o.group);
+        objects["loose-" + name] = o.group;
+        solids.push({ name, ...r, z0: 0, z1: o.height });
+        placed.push(name);
+        ok = true;
+      }
+      if (!ok) console.warn("[room-gl] no free place for", name);
+    }
+    api_loose.names = placed;
+    api_loose.solids = solids.map(({ name, x0, x1, y0, y1 }) => ({ name, x0, x1, y0, y1 }));
   }
 
   // ---- the frame: room.js's, with the box it measured --------------------------------------------
@@ -327,6 +420,7 @@ async function start() {
     objects,
     // where the scene is not the CSS room's on purpose: how far an object was moved, [x, y], from the place the CSS room gives it
     shifts,
+    loose: api_loose,
     // the CSS room's point, where it is on the screen, px
     project(x, y, z) {
       const v = at(x, y, z).project(cam);

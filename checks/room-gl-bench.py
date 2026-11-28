@@ -290,6 +290,42 @@ try:
     cc = b.js(f"""(() => {{ const at = {AT}; return {{ face: at([-126, 26.4, 0.8]), paper: at([60, -60, 0.8]) }}; }})()""")
     check(cc["face"][2] > cc["face"][0] + 50 and sum(cc["paper"]) > 450, f"the front card's face is violet on cream paper ({cc})")
 
+    # ---- the odds and ends, Willy's box, the cable and what hangs on the walls (ticket 08) ----
+    check(start("loose"), "the odds and ends start on the bench")
+    ob = b.js(f"({BOUNDS})(BENCH.group)")
+    check(ob[4] >= -3.5 and ob[5] <= 13, f"the seven lie flat on the mat, none more than 12 thick (boxes of turned things, a little loose) ({[round(v, 1) for v in ob]})")
+    check(b.js("(() => { let n = 0; BENCH.group.traverse((o) => { if (o.isMesh) n++; }); return n; })()") >= 16, "the pencil, eraser, clip, coin, cap, stick and band are made of their parts")
+
+    check(start("nest"), "Willy's box starts on the bench")
+    nb = b.js(f"({BOUNDS})(BENCH.group)")
+    check(260 <= nb[1] - nb[0] <= 264 and nb[3] > 126 and -190 <= nb[2] <= -184 and -4.5 <= nb[4] <= -3.5 and 89 <= nb[5] <= 91.5, f"the box is 262 across, 90 high, its flap folded out to the south ({[round(v, 1) for v in nb]})")
+
+    check(start("cable"), "the cable starts on the bench")
+    cbb = b.js(f"({BOUNDS})(BENCH.group)")
+    check(-502 <= cbb[4] <= -498 and cbb[5] <= 6, f"the cable lies on the desk, goes over its back edge and down to the socket, 500 under the mat ({[round(v, 1) for v in cbb]})")
+
+    SCAN = """(() => {{ const at = {AT}; const out = {{ pale: 0, cyan: 0, pink: 0 }}; for (let x = {x0}; x <= {x1}; x += {dx}) for (let y = {y0}; y <= {y1}; y += {dy}) {{ const c = at([x, y, {z}]); if (c[0] > 225 && c[1] > 170 && c[2] > 190) out.pale++; if (c[2] > 200 && c[1] > 200 && c[0] < 235) out.cyan++; if (c[0] > 200 && c[1] < 150 && c[2] > 100) out.pink++; }} return out; }})()"""
+    check(start("sign"), "the neon name starts on the bench")
+    sg = b.js(SCAN.format(AT=AT, x0=-330, x1=300, dx=12, y0=-28, y1=40, dy=8, z=3.2))
+    corner = b.js(f"""(() => {{ const at = {AT}; return at([340, -42, 3.2]); }})()""")
+    check(sg["pale"] > 8 and sg["pink"] > 5 and sum(corner) < 260, f"the name is a pale tube in pink glass on a dark board ({sg}, board {corner})")
+    b.js("BENCH.group.userData.neon.setColor('#3fd2ff')")
+    time.sleep(1.5)
+    sg2 = b.js(SCAN.format(AT=AT, x0=-330, x1=300, dx=12, y0=-28, y1=40, dy=8, z=3.2))
+    check(sg2["cyan"] > 5 and sg2["pink"] < sg["pink"], f"struck in another colour, the tube is blue ({sg2})")
+
+    check(start("poster"), "the poster starts on the bench")
+    bar = b.js(f"""(() => {{ const at = {AT}; return {{ bar: at([-270, -122, 3.2]), paper: at([260, 30, 3.2]) }}; }})()""")
+    check(bar["bar"][2] > bar["bar"][0] + 40 and sum(bar["paper"]) > 380, f"the poster is paper with the bar of the six colours at its foot, blue first ({bar})")
+
+    check(start("nav"), "the navigation starts on the bench")
+    nv = b.js(SCAN.format(AT=AT, x0=-320, x1=320, dx=10, y0=-20, y1=20, dy=6, z=3.2))
+    check(nv["cyan"] > 5 and nv["pale"] > 5, f"the navigation's words are neon, the pages' blue and this one's pink ({nv})")
+
+    check(start("switch"), "the light switch starts on the bench")
+    sw = b.js(f"""(() => {{ const at = {AT}; return {{ plate: at([-26, -40, 10.6]) }}; }})()""")
+    check(sum(sw["plate"]) > 400 and b.js("BENCH.group.userData.lightSwitch.isOn()"), f"the switch is a cream plate with its rocker, on ({sw})")
+
     # an object that is not there lists what there is
     open(b, "?bench=nothing")
     time.sleep(2)

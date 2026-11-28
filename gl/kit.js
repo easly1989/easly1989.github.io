@@ -86,7 +86,7 @@ export async function paint(renderer, w, h, draw, { k = 4, repeat = false } = {}
   // (once for all that is painted, and for at most 3 s: a font file that never arrives must not keep an object from being
   // drawn, in a stand-in)
   fontsReady ||= Promise.race([
-    Promise.all(['800 30px "Bricolage Grotesque"', '400 16px "Atkinson Hyperlegible"', '700 16px "Atkinson Hyperlegible"', '500 11px "IBM Plex Mono"'].map((f) => document.fonts.load(f))).catch(() => {}),
+    Promise.all(['800 30px "Bricolage Grotesque"', '400 16px "Atkinson Hyperlegible"', '700 16px "Atkinson Hyperlegible"', '500 11px "IBM Plex Mono"', '400 40px "Tilt Neon"'].map((f) => document.fonts.load(f))).catch(() => {}),
     new Promise((r) => setTimeout(r, 3000)),
   ]);
   await fontsReady;
@@ -97,6 +97,22 @@ export async function paint(renderer, w, h, draw, { k = 4, repeat = false } = {}
   g.scale(k, k);
   draw(g, k);
   return finish(cv, renderer, repeat);
+}
+// Something printed in the colours of the scheme (words on a wall, paper): drawn again when the colour scheme changes. `draw(ctx, k)` reads pal() or
+// scheme.matches for what changes; the texture is the same object, so what uses it follows.
+export async function paintLive(renderer, w, h, draw, opts = {}) {
+  const tex = await paint(renderer, w, h, draw, opts);
+  const k = opts.k ?? 4;
+  scheme.addEventListener("change", () => {
+    const g = tex.image.getContext("2d");
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.clearRect(0, 0, tex.image.width, tex.image.height);
+    g.scale(k, k);
+    draw(g, k);
+    tex.needsUpdate = true;
+    window.dispatchEvent(new Event("gl-redraw"));
+  });
+  return tex;
 }
 // wood with a grain, the streaks running along x (alongX) or y, in a greyscale that multiplies the colour
 export function grain(renderer, alongX) {
