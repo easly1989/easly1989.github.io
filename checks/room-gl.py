@@ -43,6 +43,11 @@ ITEMS = {
     "chair seat": (".chair", (170, 145, -260), "chair", (0, 15, 300)),
     "chair headrest top": (".chair", (170, 297, 460), "chair", (0, -137, 1020)),
     "wastebasket rim": (".wastebasket", (0, 0, 200), "bin", (0, 0, 200)),
+    # the books' covers: their top corners (the CSS element's local z is 0 at its top)
+    "ledger nw": (".ledger", (0, 0, 0), "ledger", (-125, 165, 30)),
+    "ledger se": (".ledger", (250, 330, 0), "ledger", (125, -165, 30)),
+    "agenda nw": (".agenda", (0, 0, 0), "agenda", (-110, 145, 24)),
+    "agenda se": (".agenda", (220, 290, 0), "agenda", (110, -145, 24)),
 }
 OLDITEMS = ("(() => { const o = {}; for (const [k, [sel, p]] of Object.entries(%s)) { const e = document.querySelector(sel), q = ROOM.toStage(e).transformPoint(new DOMPoint(...p)); o[k] = ROOM.toScreen(q.x, q.y, q.z); } return o; })()") % json.dumps({k: [v[0], v[1]] for k, v in ITEMS.items()})
 NEWITEMS = ("(() => { const o = {}; for (const [k, [name, p]] of Object.entries(%s)) { const q = ROOMGL.objects[name].localToWorld(new ROOMGL.THREE.Vector3(...p)); o[k] = ROOMGL.project(q.x + 640, 440 - q.y, q.z); } return o; })()") % json.dumps({k: [v[2], v[3]] for k, v in ITEMS.items()})
@@ -111,7 +116,7 @@ try:
         # the window, the shelf with the plant and the radio, the chair and the wastebasket
         itn = b.js(NEWITEMS)
         itw = max(((abs(itn[k][0] - old[(w, h, "items")][k][0]) ** 2 + abs(itn[k][1] - old[(w, h, "items")][k][1]) ** 2) ** 0.5, k) for k in ITEMS)
-        check(itw[0] <= 1.5, f"{w} x {h}: the window, the shelf, the plant, the radio, the chair and the wastebasket are where the CSS room has them (the worst, {itw[1]}, {itw[0]:.2f} px off)")
+        check(itw[0] <= 1.5, f"{w} x {h}: the window, the shelf, the plant, the radio, the chair, the wastebasket and the two books are where the CSS room has them (the worst, {itw[1]}, {itw[0]:.2f} px off)")
         # the tie hangs on the chair's headrest where it stands: its origin is at (-70, -137, 1019) of the chair's frame
         tie_off = b.js("(() => { const O = ROOMGL.objects, p = O.chair.localToWorld(new ROOMGL.THREE.Vector3(-70, -137, 1019)); return Math.hypot(p.x - O.tie.position.x, p.y - O.tie.position.y, p.z - O.tie.position.z) + Math.abs(O.tie.rotation.z - O.chair.rotation.z); })()")
         check(tie_off < 0.01, f"{w} x {h}: the tie is on the chair's headrest, turned as the chair is ({tie_off:.4f} off)")
@@ -128,7 +133,7 @@ try:
       const at = (p) => ROOMGL.pixel(...ROOMGL.project(...p));
       const grid = (f) => { const l = []; for (let a = -1500; a <= 3000; a += 100) for (let b = -500; b <= 2400; b += 100) l.push(f(a, b)); return l; };
       const WALL = grid((a, b) => [a, -200, b]).filter((p) => p[0] < 1300 && p[2] > 100), FLOOR = grid((a, b) => [a, b + 600, -560]).filter((p) => p[0] < 1300 && p[1] > 1100);"""
-    px = b.js("(() => { " + VIS + " return { mat: at([600, 300, 0]), desk: at([-300, 500, -4]), wall: at(vis(WALL)), floor: at(vis(FLOOR)) }; })()")
+    px = b.js("(() => { " + VIS + " return { mat: at([850, 600, 0]), desk: at([-300, 500, -4]), wall: at(vis(WALL)), floor: at(vis(FLOOR)) }; })()")
     check(len({tuple(v) for v in px.values()}) == 4 and all(sum(v) > 0 for v in px.values()), f"the mat, the desk, a wall and the floor are drawn, each its own colour ({px})")
     check(px["mat"][1] > px["mat"][0] and px["mat"][1] > px["mat"][2], "the mat is green")
 
@@ -136,7 +141,7 @@ try:
     before = b.js("ROOMGL.drawn")
     b.media(prefers_color_scheme="dark")
     check(wait(b, f"ROOMGL.drawn > {before}", 20), "the scheme changing draws the scene again")
-    dark =b.js("(() => { " + VIS + " return { mat: at([600, 300, 0]), wall: at(vis(WALL)) }; })()")
+    dark =b.js("(() => { " + VIS + " return { mat: at([850, 600, 0]), wall: at(vis(WALL)) }; })()")
     check(sum(dark["mat"]) < sum(px["mat"]) and sum(dark["wall"]) < sum(px["wall"]), f"in the dark scheme the mat and the wall are darker ({dark} against {px['mat']}, {px['wall']})")
 
     # a window that grows or shrinks is framed again, to the same points

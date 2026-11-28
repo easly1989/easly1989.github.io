@@ -60,7 +60,8 @@ of motion that forgets it measures a room in which Willy only sleeps.
   the floor's, a chair's) land within 1 px of where the CSS room puts them at 1280×720, 1366×768, 1440×900,
   1920×1080 and 2560×1080 (and at 1200×1000, bound by width, and at 2560×1440, the largest scale), and again
   after a resize; the old computer, its keyboard and its mouse (#164) are where the CSS room has them,
-  nine points of their own frame within 1.5 px at each size; the box it keeps for the head is the CSS room's; the
+  nine points of their own frame within 1.5 px at each size, and the chair, the tie on its headrest, the
+  window, the shelf, the plant, the radio, the wastebasket and the two books (#165, #166) at theirs; the box it keeps for the head is the CSS room's; the
   mat, the desk, a wall and the floor are drawn in their own colours, darker in the dark scheme; without
   WebGL 2 the home is the professional page. Headless (software drawing): seams and look are judged in a
   real Chrome with a GPU.
@@ -73,7 +74,9 @@ of motion that forgets it measures a room in which Willy only sleeps.
   list of those that are. The old computer (#164): the case is 368 wide, 280 deep and 320 high on its feet, the
   screen a dark tube, the note yellow with "Write to me" and its line in dark ink; the keyboard is 400 by 136 with
   sixty-four keys and a spacebar and its legends painted; the mouse is 68 by 88 with its cord running 114 px west
-  and 260 south; the three together stand where the desk has them and the cord meets the case's east side. Headless.
+  and 260 south; the three together stand where the desk has them and the cord meets the case's east side. The two books (#166): the
+  ledger 250 by 330 and 30 thick with its blue cover, the logo's white tile and the dark band across it; the
+  agenda 220 by 290 and 24 thick with its green cover, its tile, its elastic and the red bookmark on the mat. Headless.
 - `fps.py` — the room keeps pace with a 60 Hz display while Willy walks, in both schemes, with
   its light on and off, with the radio playing and with the computer on; he rests between walks, so a sample is taken
   again until he has walked through enough of it. It draws without vsync, so it measures what a
