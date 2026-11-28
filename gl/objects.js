@@ -85,5 +85,13 @@ export const OBJECTS = {
   pager: { label: "The pager (ASF Plugins)", ground: 400, near: 330, build: (r) => import("./things.js").then((m) => m.pager(r)) },
   post: { label: "The post on the computer", ground: 500, near: 600, build: (r) => import("./things.js").then((m) => m.post(r)) },
   cards: { label: "The cards on the wall", ground: 700, near: 1000, hangs: 130, build: (r) => import("./things.js").then((m) => m.cards(r)) },
+  // the odds and ends, Willy's box and the cable (ticket 08: gl/loose.js, gl/desk.js), and what hangs on the walls (gl/walls.js)
+  loose: { label: "The odds and ends", ground: 500, near: 400, build: (r) => import("./loose.js").then((m) => m.looseSet(r)) },
+  nest: { label: "Willy's box", ground: 600, near: 700, build: (r) => import("./desk.js").then((m) => m.nest(r)) },
+  cable: { label: "The cable and its socket", ground: 1400, near: 1600, build: (r) => import("./desk.js").then((m) => m.cable(r)) },
+  sign: { label: "The neon name", ground: 1000, near: 1100, hangs: 140, build: (r) => import("./walls.js").then((m) => m.sign(r)) },
+  poster: { label: "The poster", ground: 800, near: 800, hangs: 130, build: (r) => import("./walls.js").then((m) => m.poster(r)) },
+  nav: { label: "The neon navigation", ground: 1000, near: 1000, hangs: 70, build: (r) => import("./walls.js").then((m) => m.nav(r)) },
+  switch: { label: "The light switch", ground: 400, near: 450, hangs: 110, build: (r) => import("./walls.js").then((m) => m.lightSwitch(r)) },
   radio: { label: "The radio", ground: 500, look: 3, build: (r) => import("./shelf.js").then((m) => m.radio(r)) },
 };

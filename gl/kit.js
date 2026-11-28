@@ -98,6 +98,22 @@ export async function paint(renderer, w, h, draw, { k = 4, repeat = false } = {}
   draw(g, k);
   return finish(cv, renderer, repeat);
 }
+// Something printed in the colours of the scheme (words on a wall, paper): drawn again when the colour scheme changes. `draw(ctx, k)` reads pal() or
+// scheme.matches for what changes; the texture is the same object, so what uses it follows.
+export async function paintLive(renderer, w, h, draw, opts = {}) {
+  const tex = await paint(renderer, w, h, draw, opts);
+  const k = opts.k ?? 4;
+  scheme.addEventListener("change", () => {
+    const g = tex.image.getContext("2d");
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.clearRect(0, 0, tex.image.width, tex.image.height);
+    g.scale(k, k);
+    draw(g, k);
+    tex.needsUpdate = true;
+    window.dispatchEvent(new Event("gl-redraw"));
+  });
+  return tex;
+}
 // wood with a grain, the streaks running along x (alongX) or y, in a greyscale that multiplies the colour
 export function grain(renderer, alongX) {
   const cv = document.createElement("canvas");
