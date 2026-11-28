@@ -38,7 +38,7 @@ function board(w, d, corners, faceMat, edgeMat) {
   const m = mesh(g, [faceMat, edgeMat]);
   return m;
 }
-// the leaves' edges: fine lines, two to a px, to be the colour of the page and its bump
+// the leaves' edges: fine lines, a row of px to each, to be the colour of the page and its bump
 function leaves(renderer, repeatV) {
   const cv = document.createElement("canvas");
   cv.width = 4;
@@ -99,6 +99,7 @@ function ribbon(points, width, color) {
   return mesh(g, new THREE.MeshStandardMaterial({ color, roughness: 0.45, side: THREE.DoubleSide }));
 }
 
+// (the words are the projects' own, as the CSS room has them from data/projects/; they are written out here, as the scene reads no data file)
 // the printing of a cover: `title` and `sub` at the bottom left (the sub line wrapped to the cover's width), the logo in a white tile at the top left
 async function cover(renderer, { w, d, color, logo, tile, tilePad, tileRadius, tilePos, left, bottom, titleSize, subSize, hinge, year }) {
   const img = new Image();
@@ -120,7 +121,9 @@ async function cover(renderer, { w, d, color, logo, tile, tilePad, tileRadius, t
         g.beginPath();
         g.roundRect(tilePos[0], tilePos[1], tile, tile, tileRadius);
         g.fill();
-        g.drawImage(img, tilePos[0] + tilePad, tilePos[1] + tilePad, tile - 2 * tilePad, tile - 2 * tilePad);
+        try {
+          g.drawImage(img, tilePos[0] + tilePad, tilePos[1] + tilePad, tile - 2 * tilePad, tile - 2 * tilePad);
+        } catch {} // (a logo that did not load leaves its white tile: the book still stands)
         if (year) {
           g.fillStyle = "#fff";
           g.font = '800 17.6px "Bricolage Grotesque", sans-serif';
@@ -160,7 +163,7 @@ async function book(renderer, { w, d, h, corners, color, page, print, extras }) 
   const group = new THREE.Group();
   const cloth = (map) => {
     const m = new THREE.MeshStandardMaterial({ color: map ? "#ffffff" : color, roughness: 0.85, map: map || null });
-    m.bumpMap = noiseTexture(renderer, 128, 1.4, [w / 40, d / 40]);
+    m.bumpMap = noiseTexture(renderer, 128, 1.4, [1 / 40, 1 / 40]); // (the boards' uv is in px: a tile 40 px across)
     m.bumpScale = 0.7;
     return m;
   };
@@ -207,7 +210,7 @@ export async function agenda(renderer) {
       // the elastic across the cover, 62% down; the bookmark out of the pages at the south edge, half way up, 58% across, falling to the mat
       const south = -d / 2 + 5,
         x = -w / 2 + 0.58 * w + 6;
-      const r = ribbon([[south + 5, h / 2], [south, h / 2], [south - 6, 8], [south - 12, 2.2], [south - 18, 0.7], [south - 46, 0.5]], 12, "#c43a3a");
+      const r = ribbon([[south + 5, h / 2], [south, h / 2], [south - 5, 8], [south - 10, 2.2], [south - 14, 0.7], [south - 23, 0.5]], 12, "#c43a3a");
       r.position.x = x;
       return [elastic(w, d, h, "x", d / 2 - 0.62 * d - 4.5, "#143a17"), r];
     },

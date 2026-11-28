@@ -255,8 +255,8 @@ try:
     check(lc["cover"][2] > lc["cover"][0] + 60 and lc["tile"][0] > 190 and sum(lc["band"]) < 200, f"the ledger's cover is blue with the logo's white tile and the dark band across it ({lc})")
     check(start("agenda"), "the agenda starts on the bench")
     ab = b.js(f"({BOUNDS})(BENCH.group)")
-    check(218 <= ab[1] - ab[0] <= 224 and abs(ab[3] - 145) <= 2.5 and -190 <= ab[2] <= -182 and abs(ab[4]) <= 2.2 and 24 <= ab[5] <= 26.2, f"the agenda is 220 by 290 and 24 thick, its elastic a little proud, the bookmark 40 px past the south edge ({[round(v, 1) for v in ab]})")
-    ac = b.js(f"""(() => {{ const at = {AT}; return {{ cover: at([0, 60, 24]), tile: at([-80, 115, 24]), band: at([0, -39.3, 25.7]), ribbon: at([23.6, -170, 0.7]) }}; }})()""")
+    check(218 <= ab[1] - ab[0] <= 224 and abs(ab[3] - 145) <= 2.5 and -168 <= ab[2] <= -160 and abs(ab[4]) <= 2.2 and 24 <= ab[5] <= 26.2, f"the agenda is 220 by 290 and 24 thick, its elastic a little proud, the bookmark about 23 px past the south edge ({[round(v, 1) for v in ab]})")
+    ac = b.js(f"""(() => {{ const at = {AT}; return {{ cover: at([0, 60, 24]), tile: at([-80, 115, 24]), band: at([0, -39.3, 25.4]), ribbon: at([23.6, -148, 3.5]) }}; }})()""")
     check(ac["cover"][1] > ac["cover"][0] + 40 and ac["tile"][0] > 190 and sum(ac["band"]) < 200 and ac["ribbon"][0] > 140 and ac["ribbon"][1] < 90, f"the agenda's cover is green with its white tile, the elastic across it, the red bookmark on the mat ({ac})")
 
     # an object that is not there lists what there is

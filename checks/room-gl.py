@@ -133,7 +133,7 @@ try:
       const at = (p) => ROOMGL.pixel(...ROOMGL.project(...p));
       const grid = (f) => { const l = []; for (let a = -1500; a <= 3000; a += 100) for (let b = -500; b <= 2400; b += 100) l.push(f(a, b)); return l; };
       const WALL = grid((a, b) => [a, -200, b]).filter((p) => p[0] < 1300 && p[2] > 100), FLOOR = grid((a, b) => [a, b + 600, -560]).filter((p) => p[0] < 1300 && p[1] > 1100);"""
-    px = b.js("(() => { " + VIS + " return { mat: at([850, 600, 0]), desk: at([-300, 500, -4]), wall: at(vis(WALL)), floor: at(vis(FLOOR)) }; })()")
+    px = b.js("(() => { " + VIS + " return { mat: at([250, 200, 0]), desk: at([-300, 500, -4]), wall: at(vis(WALL)), floor: at(vis(FLOOR)) }; })()")
     check(len({tuple(v) for v in px.values()}) == 4 and all(sum(v) > 0 for v in px.values()), f"the mat, the desk, a wall and the floor are drawn, each its own colour ({px})")
     check(px["mat"][1] > px["mat"][0] and px["mat"][1] > px["mat"][2], "the mat is green")
 
@@ -141,7 +141,7 @@ try:
     before = b.js("ROOMGL.drawn")
     b.media(prefers_color_scheme="dark")
     check(wait(b, f"ROOMGL.drawn > {before}", 20), "the scheme changing draws the scene again")
-    dark =b.js("(() => { " + VIS + " return { mat: at([850, 600, 0]), wall: at(vis(WALL)) }; })()")
+    dark =b.js("(() => { " + VIS + " return { mat: at([250, 200, 0]), wall: at(vis(WALL)) }; })()")
     check(sum(dark["mat"]) < sum(px["mat"]) and sum(dark["wall"]) < sum(px["wall"]), f"in the dark scheme the mat and the wall are darker ({dark} against {px['mat']}, {px['wall']})")
 
     # a window that grows or shrinks is framed again, to the same points
