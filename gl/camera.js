@@ -91,7 +91,8 @@ export async function camera(renderer) {
   barrel.rotation.x = Math.PI / 2; // (a lathe turns round y: now round z)
   lens.add(barrel);
   const glass = await paint(renderer, 58, 58, (g) => {
-    const rings = [[29, "#1b1b1b"], [19.4, "#3a3a3a"], [16.8, "#10161c"], [9.9, "#2c3a4a"]];
+    // (the CSS room's rings are percentages of the farthest corner, 41 px out: 34%, 58%, 66% are 13.9, 23.8 and 27.1 px)
+    const rings = [[29, "#1b1b1b"], [27.3, "#3a3a3a"], [23.8, "#10161c"], [13.9, "#2c3a4a"]];
     g.translate(29, 29);
     for (const [r, c] of rings) {
       g.fillStyle = c;

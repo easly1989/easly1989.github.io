@@ -20,7 +20,7 @@ const sheet = (w, d, t, map, edge) => {
 const loadImg = async (src) => {
   const img = new Image();
   img.src = src;
-  await img.decode().catch(() => {});
+  await Promise.race([img.decode().catch(() => {}), new Promise((r) => setTimeout(r, 3000))]); // (a picture that never comes must not hold the room back)
   return img;
 };
 const safeDraw = (g, img, ...a) => {
@@ -233,7 +233,7 @@ export async function cards(renderer) {
   const W = 390,
     H = 180;
   const paper = "#fbfbf6";
-  const draw = (face, g) => {
+  const draw = (face, g, bars = [0.8, 0.55]) => {
     g.fillStyle = paper;
     g.beginPath();
     g.roundRect(0, 0, 260, 120, 10);
@@ -276,15 +276,15 @@ export async function cards(renderer) {
       });
     } else {
       g.fillStyle = "#d6d3cc";
-      [[46, 0.8], [66, 0.55]].forEach(([y, f]) => {
+      [[49, bars[0]], [63, bars[1]]].forEach(([y, f]) => {
         g.beginPath();
         g.roundRect(90, y, maxW * f, 8, 4);
         g.fill();
       });
     }
   };
-  const makeCard = async (face) => {
-    const map = await paint(renderer, 260, 120, (g) => draw(face, g), { k: 6 });
+  const makeCard = async (face, bars) => {
+    const map = await paint(renderer, 260, 120, (g) => draw(face, g, bars), { k: 6 });
     map.repeat.set(1 / (W - 0.6), 1 / (H - 0.6)); // (the card's top face has the outline's own px for uv)
     map.offset.set(0.5, 0.5);
     const g = new THREE.ExtrudeGeometry(roundedRect(W - 0.6, H - 0.6, 14.7), { depth: 0.4, bevelEnabled: true, bevelThickness: 0.3, bevelSize: 0.3, bevelSegments: 1, curveSegments: 10 });
@@ -294,8 +294,8 @@ export async function cards(renderer) {
     return mesh(g, [top, edge]);
   };
   // back to front: each a little nearer the room, as the CSS room's order stacks them; their places and turns measured on it (px of the wall, x south, y up)
-  for (const [x, y, deg, face, z] of [[-21.6, -13.8, 12, false, -1.4], [18.2, 5.4, -2, false, -0.7], [0, 0, 3, true, 0]]) {
-    const c = await makeCard(face);
+  for (const [x, y, deg, face, z, bars] of [[-21.6, -13.8, 12, false, -1.4, [0.8, 0.55]], [18.2, 5.4, -2, false, -0.7, [0.7, 0.45]], [0, 0, 3, true, 0]]) {
+    const c = await makeCard(face, bars);
     c.position.set(x, y, z);
     c.rotation.z = (deg * Math.PI) / 180;
     group.add(c);

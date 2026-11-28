@@ -70,7 +70,7 @@ export async function jar(renderer) {
     g.fillStyle = "rgba(255,255,255,0.85)";
     const scr = new Path2D();
     [[30, 0], [100, 8], [92, 40], [100, 70], [70, 100], [40, 82], [12, 90], [0, 52], [18, 24]].forEach(([x, y], i) => {
-      const px = 176 * (0.94 + (x / 100) * 0.13),
+      const px = 176 * (0.84 + (x / 100) * 0.13),
         py = 76 * (0.06 + (y / 100) * 0.62);
       i ? scr.lineTo(px, py) : scr.moveTo(px, py);
     });

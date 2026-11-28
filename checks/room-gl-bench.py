@@ -269,7 +269,7 @@ try:
     check(start("jar"), "the jar starts on the bench")
     jb = b.js(f"({BOUNDS})(BENCH.group)")
     check(149 <= jb[1] - jb[0] <= 153 and 149 <= jb[3] - jb[2] <= 153 and abs(jb[4]) <= 1 and 199 <= jb[5] <= 201.5, f"the jar is 150 across and 200 high ({[round(v, 1) for v in jb]})")
-    jl = b.js(f"""(() => {{ const at = {AT}; return {{ label: at([-53.5, -53.5, 100]), glass: at([0, 70, 120]) }}; }})()""")
+    jl = b.js(f"""(() => {{ const at = {AT}; return {{ label: at([-53.5, -53.5, 100]) }}; }})()""")
     check(sum(jl["label"]) > 450 and jl["label"][0] > 150, f"the label is paper on the glass, on the side that faces the camera ({jl})")
 
     check(start("pager"), "the pager starts on the bench")

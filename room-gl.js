@@ -222,7 +222,7 @@ async function start() {
     const put = async (name, x, y, z, turn = 0) => {
       const o = await OBJECTS[name].build(renderer);
       o.group.position.set(x, y, z);
-      o.group.rotation.z = turn;
+      if (turn) o.group.rotation.z = turn; // (not for a thing that comes turned already, the cards on the wall)
       scene.add(o.group);
       objects[name] = o.group;
     };
