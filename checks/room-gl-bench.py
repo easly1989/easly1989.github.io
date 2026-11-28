@@ -180,6 +180,9 @@ try:
     cb = b.js(f"({BOUNDS})(BENCH.group)")
     check(340 <= cb[1] - cb[0] <= 390 and 340 <= cb[3] - cb[2] <= 390 and abs(cb[5] - 1020) <= 3 and -1 <= cb[4] <= 5,
           f"the chair is on its casters, about 180 out each way from its post, and 1020 high with its headrest ({[round(v) for v in cb]})")
+    seatb = b.js(f"({BOUNDS})(BENCH.group.getObjectByName('seat'))")
+    headb = b.js(f"({BOUNDS})(BENCH.group.getObjectByName('head'))")
+    check(abs(seatb[5] - 300) <= 0.6 and abs(headb[5] - 1020) <= 0.6, f"the seat's top is at 300 and the headrest's at 1020, as the CSS room's flat ones, their domes included ({seatb[5]:.1f}, {headb[5]:.1f})")
     check(b.js("(() => { let n = 0; BENCH.group.traverse((o) => { if (o.isMesh) n++; }); return n; })()") >= 40, "it is made of its parts: arms, five casters of two wheels, hub, ribbed cover, lift, seat, armrests, back in its frame, lumbar pad, headrest")
 
     check(start("tie"), "the tie starts on the bench, apart from the chair")

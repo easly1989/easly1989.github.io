@@ -168,7 +168,7 @@ export async function radio(renderer) {
   // round slot in the top (the case's top, z = 120, clips it), and comes out the same way when the radio plays. setOn(on) does it, in 0.8 s,
   // or at once under reduced motion; it asks for a frame each step ("gl-redraw", which the room and the workbench listen to).
   const slotMat = new THREE.MeshStandardMaterial({ color: "#2a2218", roughness: 0.9, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
-  const slot = mesh(new THREE.CircleGeometry(30, 48), slotMat, { cast: false }); // (30 across its radius, inside the flat of the top)
+  const slot = mesh(new THREE.CircleGeometry(36, 48), slotMat, { cast: false }); // (as wide as the wheel: the case's top is rounded over the last 12 px, so out there it lies a hair under the slot)
   slot.position.set(0, 65, 120.3);
   group.add(slot);
   const clip = new THREE.Plane(new THREE.Vector3(0, 0, 1), -120);
@@ -177,7 +177,7 @@ export async function radio(renderer) {
     m.clipShadows = true;
     return m;
   };
-  const wheel = mesh(new THREE.CylinderGeometry(42, 42, 8, 48), projMat(new THREE.MeshStandardMaterial({ color: "#6f5e4c", roughness: 0.5 }))); // (a brown plate, as the CSS room's wheel)
+  const wheel = mesh(new THREE.CylinderGeometry(36, 36, 8, 48), projMat(new THREE.MeshStandardMaterial({ color: "#6f5e4c", roughness: 0.5 }))); // (a brown plate, as the CSS room's wheel)
   wheel.rotation.x = Math.PI / 2;
   wheel.position.set(0, 0, -4);
   const wedgeGeo = extrude([[0, 0], [52, 0], [52, 14], [0, 32]], 60, 0.8);

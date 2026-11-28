@@ -112,6 +112,9 @@ try:
         itn = b.js(NEWITEMS)
         itw = max(((abs(itn[k][0] - old[(w, h, "items")][k][0]) ** 2 + abs(itn[k][1] - old[(w, h, "items")][k][1]) ** 2) ** 0.5, k) for k in ITEMS)
         check(itw[0] <= 1.5, f"{w} x {h}: the window, the shelf, the plant, the radio, the chair and the wastebasket are where the CSS room has them (the worst, {itw[1]}, {itw[0]:.2f} px off)")
+        # the tie hangs on the chair's headrest where it stands: its origin is at (-70, -137, 1019) of the chair's frame
+        tie_off = b.js("(() => { const O = ROOMGL.objects, p = O.chair.localToWorld(new ROOMGL.THREE.Vector3(-70, -137, 1019)); return Math.hypot(p.x - O.tie.position.x, p.y - O.tie.position.y, p.z - O.tie.position.z) + Math.abs(O.tie.rotation.z - O.chair.rotation.z); })()")
+        check(tie_off < 0.01, f"{w} x {h}: the tie is on the chair's headrest, turned as the chair is ({tie_off:.4f} off)")
         box = json.loads(b.js("localStorage.getItem('room-box')"))
         ob = old[(w, h, "box")]
         check(all(abs(box[k] - ob[k]) <= 1 for k in ("w", "h", "dw", "dh")), f"{w} x {h}: the box it keeps for the head is the CSS room's ({box} against {ob})")

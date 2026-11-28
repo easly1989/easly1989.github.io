@@ -62,22 +62,47 @@ function outline(w, d, r, n = 10) {
   return pts;
 }
 
+// a box, centred, its edges rounded by r, made of a fine grid (6 px) so that a warp can bend its faces: every point of a box of squares is pushed
+// to the radius r from the inner box (RoundedBoxGeometry's flat faces are one quad each, which cannot bend)
+function softBox(w, d, h, r, step = 6) {
+  r = Math.min(r, w / 2, d / 2, h / 2) - 0.01;
+  const g = new THREE.BoxGeometry(w, d, h, Math.ceil(w / step), Math.ceil(d / step), Math.ceil(h / step));
+  const p = g.attributes.position,
+    v = new THREE.Vector3(),
+    c = new THREE.Vector3(),
+    hx = w / 2 - r,
+    hy = d / 2 - r,
+    hz = h / 2 - r;
+  const cl = (x, m) => Math.max(-m, Math.min(m, x));
+  for (let i = 0; i < p.count; i++) {
+    v.fromBufferAttribute(p, i);
+    c.set(cl(v.x, hx), cl(v.y, hy), cl(v.z, hz));
+    v.sub(c).setLength(r).add(c);
+    p.setXYZ(i, v.x, v.y, v.z);
+  }
+  return warp(g, () => {}); // (its normals made, welded across the seams between faces)
+}
+
 export async function chair(renderer) {
   const group = new THREE.Group();
   const seatZ = 300; // from the floor (the CSS room's FLOOR + 300)
   const plastic = std("chairLeg", 0.55);
-  const cloth = std("chair", 0.92);
-  cloth.bumpMap = weave(renderer, [10, 10], "#c4c4c4", "#6e6e6e");
-  cloth.bumpScale = 0.8;
+  // cloth, its weave about 4 px a thread on a face of the given size (uv runs 0 to 1 over a face of a box)
+  const cloth = (rx, ry) => {
+    const m = std("chair", 0.92);
+    m.bumpMap = weave(renderer, [rx, ry], "#c4c4c4", "#6e6e6e");
+    m.bumpScale = 0.8;
+    return m;
+  };
   const piping = std("chair", 0.75);
   const netting = std("chairMesh", 0.95);
-  netting.map = weave(renderer, [1 / 32, 1 / 32], "#a8a8a8", "#444", 8); // (the shape's uv is in px: a tile 32 px across, threads 4 px)
+  netting.map = weave(renderer, [1 / 32, 1 / 32], "#ffffff", "#8a8a8a", 8); // (the panel's uv is in px: a tile 32 px across, threads 4 px)
   netting.bumpMap = netting.map;
   netting.bumpScale = 1.5;
   netting.side = THREE.DoubleSide;
   const chrome = new THREE.MeshStandardMaterial({ color: "#b9c0c6", roughness: 0.18, metalness: 1 });
   const rubber = new THREE.MeshStandardMaterial({ color: "#23272a", roughness: 0.8 });
-  const rbox = (w, d, h, seg, r) => new RoundedBoxGeometry(w, d, h, seg, r); // (centred)
+  const rbox = (w, d, h, seg, r) => softBox(w, d, h, r); // (centred)
 
   // the base: five tapering arms, each with a swivel caster of two wheels on its end, a hub, and the gas lift under its ribbed cover
   for (let a = 0; a < 5; a++) {
@@ -131,7 +156,9 @@ export async function chair(renderer) {
     if (v.z > 4) v.z += 5 * Math.max(0, 1 - (v.x / 165) ** 2) * Math.max(0, 1 - (v.y / 150) ** 2);
   });
   seat.translate(0, 0, 16);
-  group.add(at(mesh(seat, cloth), cx(170), cy(145), seatZ - 37));
+  const seatMesh = mesh(seat, cloth(10, 9));
+  seatMesh.name = "seat";
+  group.add(at(seatMesh, cx(170), cy(145), seatZ - 37));
   const ring = new THREE.CatmullRomCurve3(outline(308, 278, 12).map(([x, y]) => new THREE.Vector3(x, y, 0)), true, "centripetal");
   group.add(at(mesh(new THREE.TubeGeometry(ring, 240, 2, 8, true), piping, { cast: false }), cx(170), cy(145), seatZ - 8));
 
@@ -151,24 +178,41 @@ export async function chair(renderer) {
   group.add(at(mesh(roundedBox(44, 26, 110, 5, 3), plastic), cx(170), cy(288), seatZ - 20));
   const outlinePts = [[-150, 0], [150, 0]];
   for (let i = 0; i <= 24; i++) outlinePts.push([150 - (300 * i) / 24, top(150 - (300 * i) / 24)]);
-  const shape = new THREE.Shape(outlinePts.map(([x, z]) => new THREE.Vector2(x, z)));
-  const panel = new THREE.ExtrudeGeometry(shape, { depth: 4, bevelEnabled: true, bevelThickness: 1, bevelSize: 1, bevelSegments: 1, curveSegments: 4 });
-  panel.rotateX(Math.PI / 2); // (the outline stands up; its depth runs south)
-  warp(panel, (v) => {
-    v.y += arc(v.x);
-  }, false);
+  // the netting: a sheet on a grid, from the foot to the top edge at every x, bowed forward by arc(x); its uv in px
+  const NX = 50,
+    NZ = 40,
+    pp = [],
+    pu = [],
+    pi = [];
+  for (let j = 0; j <= NZ; j++)
+    for (let i = 0; i <= NX; i++) {
+      const x = -150 + (300 * i) / NX,
+        z = (top(x) * j) / NZ;
+      pp.push(x, arc(x) - 2, z);
+      pu.push(x + 150, z);
+    }
+  for (let j = 0; j < NZ; j++)
+    for (let i = 0; i < NX; i++) {
+      const k = j * (NX + 1) + i;
+      pi.push(k, k + 1, k + NX + 1, k + 1, k + NX + 2, k + NX + 1);
+    }
+  const panel = new THREE.BufferGeometry();
+  panel.setAttribute("position", new THREE.Float32BufferAttribute(pp, 3));
+  panel.setAttribute("uv", new THREE.Float32BufferAttribute(pu, 2));
+  panel.setIndex(pi);
+  panel.computeVertexNormals();
   const bx = cx(170),
     by = cy(298) - 2,
     BZ = seatZ + 70; // (its foot)
-  group.add(at(mesh(panel, netting), bx, by, BZ));
+  group.add(at(mesh(panel, netting), bx, by + 2, BZ));
   const rail = densify(outlinePts, 14); // (the frame round it: a rod along its edge)
   const frame = new THREE.CatmullRomCurve3(rail.map(([x, z]) => new THREE.Vector3(x, arc(x) - 2, z)), true, "centripetal");
-  group.add(at(mesh(new THREE.TubeGeometry(frame, rail.length * 3, 5, 10, true), plastic), bx, by, BZ));
+  group.add(at(mesh(new THREE.TubeGeometry(frame, rail.length * 3, 5, 10, true), plastic), bx, by + 2, BZ));
   const lumbar = warp(rbox(220, 20, 70, 8, 9), (v) => {
     v.y += arc(v.x) * 0.9 + (v.y > 0 ? 2 * Math.max(0, 1 - (v.x / 110) ** 2) : 0);
   });
   lumbar.translate(0, 0, 35);
-  group.add(at(mesh(lumbar, cloth), bx, by + 10, seatZ + 150));
+  group.add(at(mesh(lumbar, cloth(7, 2.2)), bx, by + 10, seatZ + 150));
   // the headrest on its stem: padded, curved with the back, 88 thick (high) so that its dome reaches 1020
   group.add(at(mesh(roundedBox(20, 14, 40, 3, 2), chrome), cx(170), cy(299), seatZ + 70 + 520));
   const head = warp(rbox(210, 34, 88, 10, 15), (v) => {
@@ -176,7 +220,9 @@ export async function chair(renderer) {
     if (v.z > 20) v.z += 2 * Math.max(0, 1 - (v.x / 105) ** 2);
   });
   head.translate(0, 0, 44);
-  group.add(at(mesh(head, cloth), cx(170), cy(297), seatZ + 110 + 520));
+  const headMesh = mesh(head, cloth(6.5, 2.7));
+  headMesh.name = "head";
+  group.add(at(headMesh, cx(170), cy(297), seatZ + 110 + 520));
   return { group, height: 1020 };
 }
 
@@ -197,7 +243,7 @@ export async function tie() {
   group.add(at(mesh(down, silk), 0, back - 1, -33));
   const knotGeo = warp(extrude([[-13, 0], [13, 0], [7.3, -32], [-7.3, -32]], 8, 1.6), (v) => {
     v.z -= hug(v.x);
-    v.x *= 1 + 0.06 * Math.sin((v.y / 32) * Math.PI); // (the knot swells)
+    v.x *= 1 + 0.06 * Math.sin((-v.y / 32) * Math.PI); // (the knot swells)
   }, false);
   const knot = mesh(knotGeo, silk);
   knot.rotation.x = Math.PI / 2; // (its outline stands up, its thickness runs south)
