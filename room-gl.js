@@ -319,6 +319,8 @@ async function start() {
         const [u, v] = scr(x, y, 4);
         if (tall.some((t) => u > t.l - 14 && u < t.r + 14 && v > t.t - 14 && v < t.b + 14)) continue;
         const onMat = r.x0 > MAT.x0 && r.x1 < MAT.x1 && r.y0 > MAT.y0 && r.y1 < MAT.y1;
+        const touchesMat = r.x0 < MAT.x1 && r.x1 > MAT.x0 && r.y0 < MAT.y1 && r.y1 > MAT.y0;
+        if (touchesMat && !onMat) continue; // (not across the mat's edge: half of it would be under the mat's top)
         o.group.position.set(x, y, onMat ? 0 : -4); // (on the bare desk, 4 lower than the mat's top)
         o.group.rotation.z = turn;
         scene.add(o.group);

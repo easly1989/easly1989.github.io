@@ -78,7 +78,7 @@ export async function cable(renderer, { shift = [0, 0] } = {}) {
     pts.push(toLocal(x, y, 0.6));
   }
   // over the edge and down behind the desk, then in to the socket (centre at x = -405, z = -465 on the back wall's face, y = -199; its right hole at 65%)
-  pts.push(toLocal(O.x, O.y + 1, -3), toLocal(O.x, O.y + 1.5, -20), toLocal(O.x, O.y + 1.5, -440), toLocal(-396, -170, -460), toLocal(-394.5, -183, -465));
+  pts.push(toLocal(O.x, O.y - 2.5, -3), toLocal(O.x, O.y - 2.5, -20), toLocal(O.x, O.y - 2.5, -440), toLocal(-396, -170, -460), toLocal(-394.5, -183, -465));
   const curve = new THREE.CatmullRomCurve3(pts, false, "centripetal");
   const wire = mesh(new THREE.TubeGeometry(curve, 320, 4.5, 12, false), std("#2b2b2b", 0.6));
   group.add(wire);

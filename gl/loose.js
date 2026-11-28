@@ -18,8 +18,8 @@ export function pencil() {
   };
   along([[0, 0], [2.6, 9.6]], 24, std("#333333", 0.45));
   along([[2.6, 9.6], [R, 28.8]], 24, std("#e8c59a", 0.8));
-  along([[R, 28.8], [R, 220.8]], 6, std("#f2b63d", 0.45));
-  along([[R, 220.8], [R, 240], [0, 240]], 6, std("#dd7777", 0.8));
+  along([[R, 28.8], [R, 220.8]], 6, std("#f2b63d", 0.45, { flatShading: true }));
+  along([[R, 220.8], [R, 240], [0, 240]], 6, std("#dd7777", 0.8, { flatShading: true }));
   group.rotation.x = Math.PI / 6; // (a flat side down)
   const holder = new THREE.Group();
   holder.add(group);
@@ -83,7 +83,6 @@ export async function coin(renderer) {
     g.stroke();
   }, { k: 8 });
   const top = mesh(new THREE.CircleGeometry(21, 64), new THREE.MeshStandardMaterial({ map: face, roughness: 0.3, metalness: 0.6 }), { cast: false });
-  top.scale.set(1.07, 1.07, 1);
   top.position.z = 6.02;
   group.add(top);
   return { group, height: 6 };

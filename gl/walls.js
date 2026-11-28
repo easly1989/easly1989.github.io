@@ -226,9 +226,10 @@ export async function lightSwitch(renderer) {
   const top = mesh(new THREE.PlaneGeometry(28, 56), new THREE.MeshStandardMaterial({ map: grad, roughness: 0.4 }), { cast: false });
   top.position.z = 6.02;
   rocker.add(top);
+  // (the lamp, an orange bead above the rocker, on the plate: it does not tilt with the rocker)
   const lamp = mesh(new THREE.SphereGeometry(3, 16, 12), new THREE.MeshStandardMaterial({ color: "#f5a623", emissive: "#f5a623", emissiveIntensity: 1.2, roughness: 0.4 }), { cast: false });
-  lamp.position.set(0, 37, 1);
-  rocker.add(lamp);
+  lamp.position.set(0, 37, 10.6);
+  inner.add(lamp);
   rocker.position.z = 10;
   rocker.rotation.x = (-14 * Math.PI) / 180; // (on: its top is pressed in towards the wall)
   inner.add(rocker);
