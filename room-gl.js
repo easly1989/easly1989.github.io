@@ -214,7 +214,7 @@ async function start() {
     objects.pc = pc.group;
     // each of the others at the CSS room's place (px, as the scene has them: x east, y north, from the stage's middle): the back wall with its
     // window, sill and perch; the shelf on the right wall with the plant and the radio; the chair, turned 28 degrees clockwise from above (the
-    // CSS room's `rotateZ(28deg)`), on the floor; the wastebasket, on the floor
+    // CSS room's `rotateZ(28deg)`), on the floor, and its tie; the wastebasket, on the floor
     const put = async (name, x, y, z, turn = 0) => {
       const o = await OBJECTS[name].build(renderer);
       o.group.position.set(x, y, z);
@@ -224,7 +224,11 @@ async function start() {
     };
     await put("window", 80, 640, 0);
     await put("shelf", 710, -80, 0);
-    await put("chair", 90, -800, FLOOR, (-28 * Math.PI) / 180);
+    const turn = (-28 * Math.PI) / 180;
+    await put("chair", 90, -800, FLOOR, turn);
+    // the tie hangs on the chair's headrest, at (-70, -137, 1019) of the chair's frame, turned as the chair is
+    const onChair = new THREE.Vector3(-70, -137, 1019).applyAxisAngle(new THREE.Vector3(0, 0, 1), turn).add(new THREE.Vector3(90, -800, FLOOR));
+    await put("tie", onChair.x, onChair.y, onChair.z, turn);
     await put("bin", 625, -635, FLOOR);
   }
 

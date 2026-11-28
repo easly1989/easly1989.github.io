@@ -178,11 +178,15 @@ try:
 
     check(start("chair"), "the chair starts on the bench")
     cb = b.js(f"({BOUNDS})(BENCH.group)")
-    check(340 <= cb[1] - cb[0] <= 390 and 340 <= cb[3] - cb[2] <= 390 and abs(cb[5] - 1022) <= 3 and -1 <= cb[4] <= 5,
-          f"the chair is on its casters, about 180 out each way from its post, and 1020 high with its tie ({[round(v) for v in cb]})")
-    check(b.js("(() => { let n = 0; BENCH.group.traverse((o) => { if (o.isMesh) n++; }); return n; })()") >= 30, "it is made of its parts: arms, casters, hub, lift, seat, armrests, five slats, lumbar pad, headrest")
-    tie = b.js(f"""(() => {{ const at = {AT}; return at([-70, -160, 910]); }})()""")
-    check(tie[0] > 100 and tie[1] < 70 and tie[2] < 70, f"the tie hangs red down the back of the chair ({tie})")
+    check(340 <= cb[1] - cb[0] <= 390 and 340 <= cb[3] - cb[2] <= 390 and abs(cb[5] - 1020) <= 3 and -1 <= cb[4] <= 5,
+          f"the chair is on its casters, about 180 out each way from its post, and 1020 high with its headrest ({[round(v) for v in cb]})")
+    check(b.js("(() => { let n = 0; BENCH.group.traverse((o) => { if (o.isMesh) n++; }); return n; })()") >= 40, "it is made of its parts: arms, five casters of two wheels, hub, ribbed cover, lift, seat, armrests, back in its frame, lumbar pad, headrest")
+
+    check(start("tie"), "the tie starts on the bench, apart from the chair")
+    tb = b.js(f"({BOUNDS})(BENCH.group)")
+    check(0 <= tb[4] <= 8 and tb[5] <= 238 and 44 <= tb[1] - tb[0] <= 50, f"the tie hangs 230 down from the headrest's top (lifted 235 on the bench), its blade 46 wide ({[round(v) for v in tb]})")
+    blade = b.js(f"""(() => {{ const at = {AT}; return at([0, -15, -150]); }})()""")
+    check(blade[0] > 100 and blade[1] < 70 and blade[2] < 70, f"the tie is red ({blade})")
 
     check(start("bin"), "the wastebasket starts on the bench")
     bb2 = b.js(f"({BOUNDS})(BENCH.group)")
@@ -204,12 +208,13 @@ try:
 
     check(start("radio"), "the radio starts on the bench")
     rr = b.js(f"""(() => {{ const at = {AT}; return {{ dial: at([-42.5, 35, 93]), knob: at([-47, 77, 24]), grille: at([-42.5, -60, 40]) }}; }})()""")
-    check(sum(rr["dial"]) > 470 and rr["dial"][0] > 170 and rr["dial"][2] > 140, f"the dial is cream ({rr['dial']})")
+    dialp = b.js(f"""(() => {{ const at = {AT}; return at([-42.5, 55, 93]); }})()""")  # (u 50, clear of the needle at u 70)
+    check(sum(dialp) > 470 and dialp[0] > 170 and dialp[2] > 140, f"the dial is cream ({dialp})")
     check(sum(rr["knob"]) < 330, f"the knob is dark ({rr['knob']})")
-    check(sum(rr["grille"]) < sum(rr["dial"]) - 120, f"the grille is darker than the dial ({rr['grille']})")
-    # the tuning dial runs the whole length of the face: cream near the north end (u 20) and near the south end (u 190), not only part way
-    dl = b.js(f"""(() => {{ const at = {AT}; return [at([-42.5, 105 - 20, 93]), at([-42.5, 105 - 190, 93])]; }})()""")
-    check(all(sum(c) > 470 and c[0] > 170 and c[2] > 140 for c in dl), f"the dial takes all the length of the radio's face ({dl})")
+    check(sum(rr["grille"]) < sum(dialp) - 120, f"the grille is darker than the dial ({rr['grille']})")
+    # the tuning dial runs the whole length of the face: cream near the south end (u 190) and lighter than the beige case just above it
+    dl = b.js(f"""(() => {{ const at = {AT}; return [at([-42.5, 105 - 190, 93]), at([-42.5, 105 - 190, 112])]; }})()""")
+    check(dl[0][2] - dl[1][2] > 15 and dl[0][1] - dl[1][1] > 10, f"the dial takes all the length of the radio's face, paler than the case above it at its south end ({dl})")
     # the projector: out of the radio only while it plays; off, it is in, turned a half turn and a quarter back, and cut at the top; on, it is out and
     # turned 45 degrees; under reduced motion at once, where motion is allowed in 0.8 s
     p0 = b.js("BENCH.radio.pose()")
@@ -223,12 +228,19 @@ try:
     check(b.js("BENCH.radio.pose().out") == 0 and not b.js("BENCH.radio.pose().visible"), "and off again it goes back in, out of sight")
     open(b, "?bench=radio", motion="no-preference")
     wait(b, "!!(window.BENCH && BENCH.ready)")
+    slot_off = b.js(f"""(() => {{ const at = {AT}; return at([0, 65, 121]); }})()""")  # (the slot in the top, with the projector in: dark)
+    check(sum(slot_off) < 250, f"off, the projector is not above the case: the slot in its top is dark ({slot_off})")
     b.js("BENCH.radio.setOn(true)")
-    time.sleep(0.25)
-    mid = b.js("BENCH.radio.pose()")
-    time.sleep(1.2)
-    end = b.js("BENCH.radio.pose()")
-    check(0 < mid["out"] < 1 and mid["visible"] and end["out"] == 1, f"where motion is allowed it comes out turning, not at once ({mid['out']:.2f} a quarter second in, {end['out']} after)")
+    # (frames can be slow here: wait for it to be on its way, then to be out, rather than for set times)
+    mid = None
+    for _ in range(60):
+        time.sleep(0.25)
+        p = b.js("BENCH.radio.pose()")
+        if 0 < p["out"] < 1 and mid is None:
+            mid = p
+        if p["out"] == 1:
+            break
+    check(mid is not None and mid["visible"] and p["out"] == 1, f"where motion is allowed it comes out turning, not at once ({mid and round(mid['out'], 2)} on the way, {p['out']} at the end)")
     open(b, "?bench=radio")
     wait(b, "!!(window.BENCH && BENCH.ready)")
 

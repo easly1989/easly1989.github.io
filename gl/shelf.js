@@ -4,7 +4,7 @@
 // The shelf is 112 deep and 700 long, its board 18 thick with its top 170 up, on three brackets; the plant stands at its north end
 // (a blue glazed pot 56 square and 58 high), the radio at its south end (84 by 210 and 120 high, in beige) with a projector on it.
 
-import { THREE, mesh, tint, roundedBox, extrude, paint } from "./kit.js";
+import { THREE, mesh, tint, roundedBox, roundedRect, extrude, paint, noiseTexture } from "./kit.js";
 
 const std = (key, roughness = 0.7, extra) => tint(new THREE.MeshStandardMaterial({ roughness, ...extra }), key);
 // the shelf's own px (css x, y) to the set's frame
@@ -14,8 +14,10 @@ const sy = (y) => -(y - 520);
 // a leaf: a blade lofted from its base up and out, `len` long, `wid` across at its widest, bending over by `bend` radians, folded along
 // its middle, drawn double-sided; it lies in the x-z plane, rising from the origin along +x as it bends
 function leaf(len, wid, bend, material) {
-  const N = 14;
+  const N = 18,
+    COLS = [-1, -0.5, 0, 0.5, 1];
   const pos = [],
+    uv = [],
     idx = [];
   let x = 0,
     z = 0,
@@ -27,37 +29,89 @@ function leaf(len, wid, bend, material) {
       x += Math.sin(a) * (len / N);
       z += Math.cos(a) * (len / N);
     }
-    const w = wid * Math.min(1, t / 0.18) * Math.pow(1 - t, 0.55); // (widest near the base, to a point)
-    for (const s of [-1, 0, 1]) pos.push(x, s * w * 0.5, z + (s === 0 ? w * 0.12 : 0)); // (a fold: the middle stands up)
+    const w = wid * Math.min(1, t / 0.14) * Math.pow(1 - t, 0.5) * (1 + 0.18 * Math.sin(t * 9)); // (widest near the base, to a point, a little wavy)
+    for (const s of COLS) {
+      // a fold along the middle (the midrib stands up, the edges droop and curl), the blade's own width across
+      pos.push(x, s * w * 0.5, z + (1 - Math.abs(s)) * w * 0.16 - s * s * w * 0.1);
+      uv.push((s + 1) / 2, t);
+    }
   }
   for (let i = 0; i < N; i++)
-    for (let k = 0; k < 2; k++) {
-      const a0 = i * 3 + k,
-        b0 = (i + 1) * 3 + k;
+    for (let k = 0; k < COLS.length - 1; k++) {
+      const a0 = i * COLS.length + k,
+        b0 = (i + 1) * COLS.length + k;
       idx.push(a0, b0, a0 + 1, a0 + 1, b0, b0 + 1);
     }
   const g = new THREE.BufferGeometry();
   g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2));
   g.setIndex(idx);
   g.computeVertexNormals();
   return mesh(g, material);
 }
+// the veins of a leaf as a picture, a pale midrib and side veins slanting up from it, to be the leaf's colour map and bump
+function veins(renderer) {
+  const cv = document.createElement("canvas");
+  cv.width = 128;
+  cv.height = 512;
+  const g = cv.getContext("2d");
+  g.fillStyle = "#e4eadc";
+  g.fillRect(0, 0, 128, 512);
+  g.strokeStyle = "rgba(255,255,255,0.9)";
+  g.lineWidth = 6;
+  g.beginPath();
+  g.moveTo(64, 0);
+  g.lineTo(64, 512);
+  g.stroke();
+  g.strokeStyle = "rgba(120,140,110,0.55)";
+  g.lineWidth = 2;
+  for (let y = 20; y < 512; y += 26) {
+    g.beginPath();
+    g.moveTo(64, y);
+    g.quadraticCurveTo(96, y - 14, 126, y - 44);
+    g.moveTo(64, y);
+    g.quadraticCurveTo(32, y - 14, 2, y - 44);
+    g.stroke();
+  }
+  const t = new THREE.CanvasTexture(cv);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  return t;
+}
 
-export async function plant() {
+export async function plant(renderer) {
   const group = new THREE.Group();
-  group.add(mesh(roundedBox(56, 56, 58, 8, 4), std("pot", 0.25)));
-  // the soil, in the pot's mouth, a little under its rim
-  const soil = mesh(new THREE.CylinderGeometry(20, 21, 3, 24), std("soil", 1));
-  soil.rotation.x = Math.PI / 2;
-  soil.position.set(0, 0, 55.5);
+  // the pot: a square body in blue glaze, a rim standing out round its mouth, a foot ring
+  const glaze = tint(new THREE.MeshPhysicalMaterial({ roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.12 }), "pot");
+  group.add(mesh(roundedBox(56, 56, 52, 8, 4), glaze));
+  const lip = new THREE.ExtrudeGeometry(roundedRect(60, 60, 9, roundedRect(46, 46, 6)), { depth: 4, bevelEnabled: true, bevelThickness: 1, bevelSize: 1, bevelSegments: 3, curveSegments: 8 });
+  lip.translate(0, 0, 53);
+  group.add(mesh(lip, glaze));
+  group.add(mesh(roundedBox(50, 50, 3, 2, 2), glaze)); // (its foot: the pot's own base, set in)
+  // the soil in its mouth, rough, with a few pebbles on it
+  const soilMat = std("soil", 1);
+  soilMat.bumpMap = noiseTexture(renderer, 128, 3, [2, 2]);
+  soilMat.bumpScale = 3;
+  const soil = mesh(roundedBox(45, 45, 4, 2, 2), soilMat);
+  soil.position.z = 51;
   group.add(soil);
-  // nine leaves in four greens, round the base, upright and arching out
-  const greens = ["#4f8a3c", "#5a9a44", "#447a34", "#5f9e48"].map((c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.55, side: THREE.DoubleSide }));
-  const spec = [[0, 96, 0.8], [40, 110, 1.0], [80, 84, 0.9], [120, 102, 1.1], [160, 78, 0.7], [200, 106, 1.0], [240, 90, 0.85], [280, 112, 1.2], [320, 88, 0.95]];
+  let seed = 31;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const stone = new THREE.MeshStandardMaterial({ color: "#8a8478", roughness: 0.8 });
+  for (let i = 0; i < 7; i++) {
+    const p = mesh(new THREE.IcosahedronGeometry(1.6 + rnd() * 1.6, 1), stone);
+    p.scale.z = 0.6;
+    p.position.set((rnd() - 0.5) * 38, (rnd() - 0.5) * 38, 55.4);
+    group.add(p);
+  }
+  // thirteen leaves in four greens, with their veins, round the base: tall ones in the middle, longer ones arching out, a few low
+  const tex = veins(renderer);
+  const greens = ["#4f8a3c", "#5a9a44", "#447a34", "#66a24c"].map((c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.5, side: THREE.DoubleSide, map: tex, bumpMap: tex, bumpScale: 0.6 }));
+  const spec = [[0, 96, 0.8], [28, 110, 1.0], [55, 84, 0.9], [83, 102, 1.1], [110, 78, 0.7], [138, 106, 1.0], [166, 90, 0.85], [195, 112, 1.2], [222, 88, 0.95], [250, 100, 1.05], [277, 76, 0.75], [305, 108, 1.1], [333, 92, 0.9]];
   spec.forEach(([deg, len, bend], i) => {
-    const l = leaf(len, 20, bend, greens[i % greens.length]);
+    const l = leaf(len, 20 + (i % 3) * 2, bend, greens[i % greens.length]);
     l.rotation.z = (deg * Math.PI) / 180;
-    l.position.set(Math.cos((deg * Math.PI) / 180) * 3, Math.sin((deg * Math.PI) / 180) * 3, 56);
+    l.position.set(Math.cos((deg * Math.PI) / 180) * 3, Math.sin((deg * Math.PI) / 180) * 3, 54);
     group.add(l);
   });
   return { group, height: 58 + 110 };
@@ -114,17 +168,16 @@ export async function radio(renderer) {
   // round slot in the top (the case's top, z = 120, clips it), and comes out the same way when the radio plays. setOn(on) does it, in 0.8 s,
   // or at once under reduced motion; it asks for a frame each step ("gl-redraw", which the room and the workbench listen to).
   const slotMat = new THREE.MeshStandardMaterial({ color: "#2a2218", roughness: 0.9, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
-  const slot = mesh(new THREE.CircleGeometry(43.5, 48), slotMat, { cast: false });
+  const slot = mesh(new THREE.CircleGeometry(30, 48), slotMat, { cast: false }); // (30 across its radius, inside the flat of the top)
   slot.position.set(0, 65, 120.3);
   group.add(slot);
   const clip = new THREE.Plane(new THREE.Vector3(0, 0, 1), -120);
-  const projMat = () => {
-    const m = std("radio", 0.5);
+  const projMat = (m = std("radio", 0.5)) => {
     m.clippingPlanes = [clip];
+    m.clipShadows = true;
     return m;
   };
-  const wheel = mesh(new THREE.CylinderGeometry(42, 42, 8, 48), projMat());
-  wheel.material.color.set("#6f5e4c"); // (a brown plate, as the CSS room's wheel)
+  const wheel = mesh(new THREE.CylinderGeometry(42, 42, 8, 48), projMat(new THREE.MeshStandardMaterial({ color: "#6f5e4c", roughness: 0.5 }))); // (a brown plate, as the CSS room's wheel)
   wheel.rotation.x = Math.PI / 2;
   wheel.position.set(0, 0, -4);
   const wedgeGeo = extrude([[0, 0], [52, 0], [52, 14], [0, 32]], 60, 0.8);
@@ -155,12 +208,12 @@ export async function radio(renderer) {
         t = on ? 1 : 0;
         return pose();
       }
-      let last = performance.now();
+      let last = null; // (the first frame's own time, which may be before now: a step is never a negative one)
       const step = (now) => {
-        t = Math.max(0, Math.min(1, t + ((on ? 1 : -1) * (now - last)) / 800));
+        t = Math.max(0, Math.min(1, t + ((on ? 1 : -1) * (now - (last ?? now))) / 800));
         last = now;
         pose();
-        if (t > 0 && t < 1) raf = requestAnimationFrame(step);
+        if (t !== (on ? 1 : 0)) raf = requestAnimationFrame(step);
       };
       raf = requestAnimationFrame(step);
     },
@@ -190,7 +243,7 @@ export async function shelf(renderer) {
     bracket.position.set(sx(1290) + 30, sy(y) - 7, 92);
     group.add(bracket);
   }
-  const p = await plant();
+  const p = await plant(renderer);
   p.group.position.set(sx(1270) + 28, sy(530) - 28, 170);
   group.add(p.group);
   const r = await radio(renderer);

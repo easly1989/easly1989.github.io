@@ -73,6 +73,7 @@ export async function bench(name) {
   const { group, height } = built;
   const turntable = new THREE.Group();
   turntable.add(group);
+  turntable.position.z = spec.hangs || 0; // (a thing that hangs from its origin, the tie, is lifted so that it hangs clear of the mat)
   scene.add(turntable);
   // an object with a state to try (the radio: off, its projector in; on, out) gets a button for it
   let radio = null;
@@ -98,7 +99,7 @@ export async function bench(name) {
   cam.up.set(0, 0, 1);
   cam.position.set(-1, -1, 0.9).normalize().multiplyScalar(Math.max(520, height * (spec.look || 4)));
   const controls = new OrbitControls(cam, canvas);
-  controls.target.set(0, 0, height * 0.45);
+  controls.target.set(0, 0, spec.hangs ? spec.hangs - 110 : height * 0.45);
   controls.enableDamping = true;
   controls.minDistance = 120;
   controls.maxDistance = 4000;

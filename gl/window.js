@@ -4,7 +4,7 @@
 // The set's origin is on the wall's face, at the window's middle (css x = 720, y = -200), x east, y north (the wall is behind it, at
 // y from 0 to 24), z up from the mat: the room puts it down at (80, 640, 0) of the scene.
 
-import { THREE, mesh, tint, pal, scheme, roundedBox, roundedRect, onFace, paint } from "./kit.js";
+import { THREE, mesh, tint, pal, scheme, roundedBox, roundedRect, onFace, paint, pillow, warp, noiseTexture } from "./kit.js";
 
 const FAR = -3200 - 720, // the wall's west end, from the window's middle
   EAST = 1374 - 720; // and its east end, past the right wall's face
@@ -135,7 +135,16 @@ export async function windowSet(renderer) {
   const board = mesh(roundedBox(PERCH.w, PERCH.d, 14, 4, 2), std("perch", 0.6));
   board.position.set(PERCH.dx, -PERCH.d / 2, PERCH.z - 14);
   group.add(board);
-  const fleece = mesh(roundedBox(PERCH.w - 36, PERCH.d - 26, 26, 34, 4), std("fleece", 1));
+  // the fleece: a plump cushion 324 by 164 and 26 high, fuller at its sides, pressed in a little in the middle where the cat lies, its pile a
+  // bump map and a sheen on it as of long soft hair
+  const dent = (v) => {
+    const r = (v.x / 120) ** 2 + (v.y / 52) ** 2;
+    if (v.z > 14) v.z -= 4 * Math.max(0, 1 - r);
+  };
+  const fleeceMat = tint(new THREE.MeshPhysicalMaterial({ roughness: 1, sheen: 1, sheenRoughness: 0.55, sheenColor: new THREE.Color("#ffffff") }), "fleece");
+  fleeceMat.bumpMap = noiseTexture(renderer, 256, 1.8, [7, 3.5]);
+  fleeceMat.bumpScale = 1.6;
+  const fleece = mesh(warp(pillow(162, 82, 26, 3.2, 0.55), dent), fleeceMat);
   fleece.position.set(PERCH.dx, -(PERCH.d - 26) / 2 - 12, PERCH.z);
   group.add(fleece);
   // the chains: links of a gold wire, 6 px apart, each turned a quarter from the last, from the wall (just over the frame) to the board's front corner
