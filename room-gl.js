@@ -207,13 +207,6 @@ async function start() {
   // desk's front edge, where the chair is) because the owner finds a computer nearer the edge more real; the post on its top goes with it
   const objects = {};
   const api_loose = { names: [], solids: [] }; // (what the checks ask: which of the seven were drawn, and the solids they keep clear of)
-  // the typeface of the neon (the CSS room's page loads it with its styles; the scene's page does not), before anything is printed in it
-  if (!document.querySelector('link[href*="Tilt+Neon"]')) {
-    const l = document.createElement("link");
-    l.rel = "stylesheet";
-    l.href = "https://fonts.googleapis.com/css2?family=Tilt+Neon&display=swap";
-    document.head.append(l);
-  }
   const PC_FORWARD = 170,
     shifts = { pc: [PC_FORWARD * Math.sin((12 * Math.PI) / 180), -PC_FORWARD * Math.cos((12 * Math.PI) / 180)] };
   shifts.post = shifts.pc;
